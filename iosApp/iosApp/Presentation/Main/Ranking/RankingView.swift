@@ -57,7 +57,7 @@ struct RankingView: View {
         }
         .task(id: "\(viewModel.uiState.ads.count)-\(viewModel.uiState.selectedAdIndex)") {
             guard viewModel.uiState.ads.count > 1 else { return }
-            let delayNanos: UInt64 = viewModel.uiState.selectedAdIndex == 1 ? 15_000_000_000 : 5_000_000_000
+            let delayNanos: UInt64 = (viewModel.uiState.selectedAdIndex == 1 || viewModel.uiState.selectedAdIndex == 2) ? 15_000_000_000 : 5_000_000_000
             try? await Task.sleep(nanoseconds: delayNanos)
             guard !Task.isCancelled else { return }
             let nextIndex = (viewModel.uiState.selectedAdIndex + 1) % viewModel.uiState.ads.count
@@ -113,7 +113,8 @@ private struct RankingContentView: View {
             ad: uiState.currentAd,
             selectedIndex: uiState.selectedAdIndex,
             size: uiState.ads.count,
-            nativeAdHandle: uiState.nativeAd,
+            nativeAdHandleSlot1: uiState.nativeAdSlot1,
+            nativeAdHandleSlot2: uiState.nativeAdSlot2,
             bannerHeight: uiState.bannerHeight,
             onHeightMeasured: { onAction(.updateBannerHeight($0)) },
             onSelect: { onAction(.selectAd($0)) }
@@ -232,7 +233,9 @@ struct RankingPromoBanner: View {
 
     let size: Int
 
-    let nativeAdHandle: (any NativeAdHandle)?
+    let nativeAdHandleSlot1: (any NativeAdHandle)?
+
+    let nativeAdHandleSlot2: (any NativeAdHandle)?
 
     let bannerHeight: CGFloat
 
@@ -242,8 +245,8 @@ struct RankingPromoBanner: View {
 
     var body: some View {
         ZStack {
-            if selectedIndex == 1 {
-                RankingNativeAdCard(nativeAdHandle: nativeAdHandle)
+            if selectedIndex == 1 || selectedIndex == 2 {
+                RankingNativeAdCard(nativeAdHandle: selectedIndex == 1 ? nativeAdHandleSlot1 : nativeAdHandleSlot2)
                     .frame(maxWidth: .infinity)
                     .frame(height: bannerHeight > 0 ? bannerHeight : 120)
                     .clipped()
@@ -322,7 +325,7 @@ struct RankingPromoBanner: View {
     }
 
     private func indicatorColor(for index: Int) -> Color {
-        if selectedIndex == 1 {
+        if selectedIndex == 1 || selectedIndex == 2 {
             return index == selectedIndex ? Color(hex: "EF6797") : Color(hex: "E3D9E0")
         } else {
             return index == selectedIndex ? Color.white : Color.white.opacity(0.5)

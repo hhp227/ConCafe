@@ -158,17 +158,20 @@ final class RankingViewModel: ObservableObject {
     }
 
     private func loadNativeAd() {
-        guard uiState.nativeAd == nil else { return }
+        guard uiState.nativeAdSlot1 == nil || uiState.nativeAdSlot2 == nil else { return }
         guard tasks[.nativeAd] == nil || tasks[.nativeAd]?.isCancelled == true else { return }
         tasks[.nativeAd] = Task {
-            let ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke())
-            uiState.nativeAd = ad
+            let slot1Ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke(slot: 1))
+            let slot2Ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke(slot: 2))
+            uiState.nativeAdSlot1 = slot1Ad
+            uiState.nativeAdSlot2 = slot2Ad
         }
     }
 
     private func clearNativeAd() {
         clearNativeAdUseCase.invoke()
-        uiState.nativeAd = nil
+        uiState.nativeAdSlot1 = nil
+        uiState.nativeAdSlot2 = nil
     }
 
     func onAction(_ action: RankingAction) {

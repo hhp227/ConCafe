@@ -7,16 +7,17 @@ import com.hhp227.concafe.domain.repository.NativeAdRepository
 class NativeAdRepositoryImpl(
     private val dataSource: NativeAdDataSource
 ) : NativeAdRepository {
-    private var cachedAd: NativeAdHandle? = null
+    private val cachedAds = mutableMapOf<Int, NativeAdHandle?>()
 
-    override suspend fun loadAd(): NativeAdHandle? {
-        if (cachedAd != null) return cachedAd
-        cachedAd = dataSource.loadAd()
-        return cachedAd
+    override suspend fun loadAd(slot: Int): NativeAdHandle? {
+        cachedAds[slot]?.let { return it }
+        val loaded = dataSource.loadAd(slot)
+        cachedAds[slot] = loaded
+        return loaded
     }
 
     override fun clear() {
-        cachedAd?.destroy()
-        cachedAd = null
+        cachedAds.values.forEach { it?.destroy() }
+        cachedAds.clear()
     }
 }

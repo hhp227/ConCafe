@@ -141,13 +141,17 @@ class RankingViewModel(
     }
 
     private fun loadNativeAd() {
-        if (_uiState.value.nativeAd != null) return
+        if (_uiState.value.nativeAdSlot1 != null && _uiState.value.nativeAdSlot2 != null) return
         if (jobs[TaskKey.LOAD_NATIVE_AD]?.isActive == true) return
         jobs[TaskKey.LOAD_NATIVE_AD] = viewModelScope.launch {
-            val ad = loadNativeAdUseCase.invoke()
+            val slot1Ad = loadNativeAdUseCase.invoke(slot = 1)
+            val slot2Ad = loadNativeAdUseCase.invoke(slot = 2)
 
             _uiState.update {
-                it.copy(nativeAd = ad)
+                it.copy(
+                    nativeAdSlot1 = slot1Ad,
+                    nativeAdSlot2 = slot2Ad
+                )
             }
         }
     }
@@ -155,7 +159,7 @@ class RankingViewModel(
     private fun clearAd() {
         clearNativeAdUseCase.invoke()
         _uiState.update {
-            it.copy(nativeAd = null)
+            it.copy(nativeAdSlot1 = null, nativeAdSlot2 = null)
         }
     }
 

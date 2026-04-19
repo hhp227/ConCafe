@@ -30,7 +30,7 @@ class IosNativeAdDataSourceImpl: NSObject, NativeAdDataSource {
     
     private var adLoader: GADAdLoader?
 
-    func loadAd() async throws -> (any NativeAdHandle)? {
+    func loadAd(slot: Int32) async throws -> (any NativeAdHandle)? {
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
 
@@ -38,7 +38,7 @@ class IosNativeAdDataSourceImpl: NSObject, NativeAdDataSource {
             #if DEBUG
             adUnitId = "ca-app-pub-3940256099942544/3986624511"
             #else
-            adUnitId = "ca-app-pub-6216021268300256/5283160617"
+            adUnitId = (slot == 2) ? "ca-app-pub-6216021268300256/7952443563" : "ca-app-pub-6216021268300256/5283160617"
             #endif
 
             let loader = GADAdLoader(

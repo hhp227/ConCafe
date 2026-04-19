@@ -5,7 +5,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class JvmNativeAdDataSource : NativeAdDataSource {
-    override suspend fun loadAd(): NativeAdHandle? = suspendCancellableCoroutine { cont ->
+    override suspend fun loadAd(slot: Int): NativeAdHandle? = suspendCancellableCoroutine { cont ->
         cont.resume(null)
     }
 }

@@ -6,7 +6,7 @@ import com.hhp227.concafe.domain.repository.NativeAdRepository
 class LoadNativeAdUseCase(
     private val repository: NativeAdRepository
 ) {
-    suspend operator fun invoke(): NativeAdHandle? {
-        return repository.loadAd()
+    suspend operator fun invoke(slot: Int): NativeAdHandle? {
+        return repository.loadAd(slot)
     }
 }

@@ -18,7 +18,8 @@ data class RankingUiState(
     val maidRankings: List<RankingFeedEntry> = emptyList(),
     val cafeRankings: List<RankingFeedEntry> = emptyList(),
     val bannerHeightPx: Int = 0,
-    val nativeAd: NativeAdHandle? = null
+    val nativeAdSlot1: NativeAdHandle? = null,
+    val nativeAdSlot2: NativeAdHandle? = null
 ) {
     enum class TabType(val label: String) {
         MAIDS("캐스트 랭킹"),

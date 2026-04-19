@@ -74,7 +74,7 @@ fun RankingScreen(
     }
     LaunchedEffect(uiState.ads.size, uiState.selectedAdIndex) {
         if (uiState.ads.size <= 1) return@LaunchedEffect
-        delay(if (uiState.selectedAdIndex == 1) 15_000 else 5_000)
+        delay(if (uiState.selectedAdIndex == 1 || uiState.selectedAdIndex == 2) 15_000 else 5_000)
         viewModel.onAction(
             RankingAction.SelectAd((uiState.selectedAdIndex + 1) % uiState.ads.size)
         )
@@ -130,7 +130,8 @@ private fun RankingContent(
                 ad = uiState.currentAd,
                 selectedIndex = uiState.selectedAdIndex,
                 size = uiState.ads.size,
-                nativeAdHandle = uiState.nativeAd,
+                nativeAdHandleSlot1 = uiState.nativeAdSlot1,
+                nativeAdHandleSlot2 = uiState.nativeAdSlot2,
                 bannerHeightPx = uiState.bannerHeightPx,
                 onHeightMeasured = { height ->
                     onAction(RankingAction.UpdateBannerHeight(height))
@@ -239,7 +240,8 @@ fun RankingPromoBanner(
     ad: RankingPromoAd,
     selectedIndex: Int,
     size: Int,
-    nativeAdHandle: NativeAdHandle?,
+    nativeAdHandleSlot1: NativeAdHandle?,
+    nativeAdHandleSlot2: NativeAdHandle?,
     bannerHeightPx: Int,
     onHeightMeasured: (Int) -> Unit,
     onSelect: (Int) -> Unit
@@ -255,20 +257,17 @@ fun RankingPromoBanner(
         shape = RoundedCornerShape(28.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Crossfade(targetState = selectedIndex) { index ->
-            if (index == 1) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            Brush.linearGradient(
-                                listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
+        Box {
+            Crossfade(targetState = selectedIndex) { index ->
+                if (index == 1 || index == 2) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
+                                )
                             )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column(
-                        modifier = if (bannerHeightPx > 0) Modifier.height(bannerHeightDp) else Modifier,
-                        verticalArrangement = if (bannerHeightPx > 0) Arrangement.SpaceBetween else Arrangement.spacedBy(16.dp)
+                            .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 36.dp)
                     ) {
                         RankingNativeAd(
                             modifier = Modifier
@@ -280,106 +279,101 @@ fun RankingPromoBanner(
                                         Modifier.heightIn(min = 120.dp)
                                     }
                                 ),
-                            nativeAdHandle = nativeAdHandle
+                            nativeAdHandle = if (index == 1) nativeAdHandleSlot1 else nativeAdHandleSlot2
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(size) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 3.dp)
-                                        .clip(RoundedCornerShape(999.dp))
-                                        .background(if (index == selectedIndex) colorFromHex("EF6797") else colorFromHex("E3D9E0"))
-                                        .clickable { onSelect(index) }
-                                        .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
                                 )
+                            )
+                            .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 36.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .heightIn(min = 120.dp)
+                                .onSizeChanged { sizeInfo ->
+                                    onHeightMeasured(sizeInfo.height)
+                                },
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(999.dp),
+                                        color = Color.White.copy(alpha = 0.22f)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = ad.icon(),
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                text = ad.badge,
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                    Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
+                                }
+                                Button(
+                                    onClick = {},
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.White,
+                                        contentColor = colorFromHex("262626")
+                                    ),
+                                    shape = RoundedCornerShape(999.dp)
+                                ) {
+                                    Text(stringResource(Res.string.ranking_detail), fontWeight = FontWeight.SemiBold)
+                                }
                             }
                         }
                     }
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            Brush.linearGradient(
-                                listOf(colorFromHex(ad.startColorHex), colorFromHex(ad.endColorHex))
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column(
+            }
+
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(size) { index ->
+                    Box(
                         modifier = Modifier
-                            .heightIn(min = 120.dp)
-                            .onSizeChanged { sizeInfo ->
-                                onHeightMeasured(sizeInfo.height)
-                            },
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = Color.White.copy(alpha = 0.22f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = ad.icon(),
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text(
-                                            text = ad.badge,
-                                            color = Color.White,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
+                            .padding(horizontal = 3.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(
+                                when {
+                                    selectedIndex == index && (selectedIndex == 1 || selectedIndex == 2) -> colorFromHex("EF6797")
+                                    selectedIndex == index -> Color.White
+                                    selectedIndex == 1 || selectedIndex == 2 -> colorFromHex("E3D9E0")
+                                    else -> Color.White.copy(alpha = 0.5f)
                                 }
-                                Text(ad.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Text(ad.subtitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                Text(ad.desc, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.bodySmall)
-                            }
-                            Button(
-                                onClick = {},
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White,
-                                    contentColor = colorFromHex("262626")
-                                ),
-                                shape = RoundedCornerShape(999.dp)
-                            ) {
-                                Text(stringResource(Res.string.ranking_detail), fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(size) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(horizontal = 3.dp)
-                                        .clip(RoundedCornerShape(999.dp))
-                                        .background(if (index == selectedIndex) Color.White else Color.White.copy(alpha = 0.5f))
-                                        .clickable { onSelect(index) }
-                                        .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
-                                )
-                            }
-                        }
-                    }
+                            )
+                            .clickable { onSelect(index) }
+                            .size(width = if (index == selectedIndex) 22.dp else 8.dp, height = 8.dp)
+                    )
                 }
             }
         }

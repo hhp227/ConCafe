@@ -15,7 +15,7 @@ import kotlin.coroutines.resume
 class AndroidNativeAdDataSource(
     private val context: Context
 ) : NativeAdDataSource {
-    override suspend fun loadAd(): NativeAdHandle? =
+    override suspend fun loadAd(slot: Int): NativeAdHandle? =
         suspendCancellableCoroutine { cont ->
             MobileAds.initialize(context) { _ ->
                 if (!cont.isActive) return@initialize
@@ -23,7 +23,10 @@ class AndroidNativeAdDataSource(
                 val adUnitId = if ((context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
                     RANKING_NATIVE_TEST_AD_UNIT_ID
                 } else {
-                    RANKING_NATIVE_AD_UNIT_ID
+                    when (slot) {
+                        2 -> RANKING_NATIVE_AD_UNIT_ID_SLOT_2
+                        else -> RANKING_NATIVE_AD_UNIT_ID_SLOT_1
+                    }
                 }
                 val loader = AdLoader.Builder(context, adUnitId)
                     .forNativeAd { ad ->
@@ -41,7 +44,8 @@ class AndroidNativeAdDataSource(
         }
 
     companion object {
-        private const val RANKING_NATIVE_AD_UNIT_ID = "ca-app-pub-6216021268300256/6596242282"
+        private const val RANKING_NATIVE_AD_UNIT_ID_SLOT_1 = "ca-app-pub-6216021268300256/6596242282"
+        private const val RANKING_NATIVE_AD_UNIT_ID_SLOT_2 = "ca-app-pub-6216021268300256/8770701214"
 
         private const val RANKING_NATIVE_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
     }

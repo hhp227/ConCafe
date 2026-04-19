@@ -66,7 +66,8 @@ struct RankingUiState {
     var maidRankings: [Shared.RankingFeedEntry] = []
     var cafeRankings: [Shared.RankingFeedEntry] = []
     var bannerHeight: CGFloat = 0
-    var nativeAd: (any NativeAdHandle)? = nil
+    var nativeAdSlot1: (any NativeAdHandle)? = nil
+    var nativeAdSlot2: (any NativeAdHandle)? = nil
 
     var currentAd: Shared.RankingPromoAd {
         ads.isEmpty
