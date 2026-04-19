@@ -751,7 +751,7 @@ private struct CafeDashboardContentView: View {
         if rating <= 0 {
             return "-"
         }
-        return String(format: "%.1f", floor(rating * 10) / 10.0)
+        return RatingUtils.formatOneDecimalTruncated(rating)
     }
 
     private var externalLinkSection: some View {

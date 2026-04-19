@@ -475,7 +475,7 @@ private struct CastRecentActivitySection: View {
                     label: String(localized: String.LocalizationValue("cast_activity_follower"), table: "Localizable")
                 )
                 CastActivityCard(
-                    value: String(format: "%.1f", detail.cast.rating),
+                    value: RatingUtils.formatOneDecimal(detail.cast.rating),
                     label: String(localized: String.LocalizationValue("cast_activity_rating"), table: "Localizable")
                 )
             }
@@ -523,7 +523,7 @@ private struct CastRecentReviewSection: View {
                             HStack {
                                 Text(review.userNickname)
                                     .font(.subheadline.weight(.semibold))
-                                Text("\(review.rating)")
+                                Text(RatingUtils.formatOneDecimal(review.rating))
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(Color(hex: "EF6797"))
                                     .padding(.horizontal, 8)

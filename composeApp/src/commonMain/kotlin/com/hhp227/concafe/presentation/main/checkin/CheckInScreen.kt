@@ -31,6 +31,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
@@ -97,8 +98,6 @@ import concafe.composeapp.generated.resources.common_close
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
-import kotlin.math.abs
-import kotlin.math.roundToInt
 import org.koin.core.context.GlobalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -817,7 +816,7 @@ private fun PopularCafeCard(
 ) {
     CafeSummaryCard(
         name = cafe.name,
-        rating = formatRatingOneDecimal(cafe.rating),
+        rating = RatingUtils.formatOneDecimal(cafe.rating),
         location = cafe.locationLabel,
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
@@ -828,12 +827,7 @@ private fun PopularCafeCard(
     )
 }
 
-private fun formatRatingOneDecimal(rating: Double): String {
-    val roundedRating = (rating * 10).roundToInt()
-    val integer = roundedRating / 10
-    val decimal = abs(roundedRating % 10)
-    return "$integer.$decimal"
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

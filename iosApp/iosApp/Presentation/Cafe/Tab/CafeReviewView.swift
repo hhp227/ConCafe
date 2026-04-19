@@ -30,7 +30,7 @@ struct CafeReviewView: View {
                     .font(.system(size: 28))
                     .foregroundStyle(Color.yellow)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(format: "%.1f", detail.cafe.ratingAvg))
+                    Text(RatingUtils.formatOneDecimal(detail.cafe.ratingAvg))
                         .font(.title2.bold())
                     Text(
                         String(

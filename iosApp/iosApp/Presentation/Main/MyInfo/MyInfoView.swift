@@ -168,11 +168,7 @@ private struct GuestMyInfoView: View {
                     }
                     if !uiState.popularCafes.isEmpty {
                         ForEach(uiState.popularCafes, id: \.id) { cafe in
-                            let ratingText = String(
-                                format: "%.1f",
-                                locale: Locale(identifier: "en_US_POSIX"),
-                                cafe.ratingAvg
-                            )
+                            let ratingText = RatingUtils.formatOneDecimal(cafe.ratingAvg)
                             let conceptType = localizedCafeConceptType(cafe.conceptType)
                             let imageCornerRadius: CGFloat = 12
 
@@ -452,7 +448,7 @@ private struct ProfileMyInfoView: View {
             return [
                 .init(title: String(localized: String.LocalizationValue("myinfo_metric_total_followers"), table: "Localizable"), value: "\(uiState.castDetail?.cast.followerCount ?? 0)", highlight: false),
                 .init(title: String(localized: String.LocalizationValue("myinfo_metric_work_schedule"), table: "Localizable"), value: "\(currentWeekScheduleCount)", highlight: true),
-                .init(title: String(localized: String.LocalizationValue("myinfo_metric_rating"), table: "Localizable"), value: String(format: "%.1f", uiState.castDetail?.cast.rating ?? 0), highlight: false)
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_rating"), table: "Localizable"), value: RatingUtils.formatOneDecimal(uiState.castDetail?.cast.rating ?? 0), highlight: false)
             ]
         case UserRole.cafeOwner:
             let cafeCount = uiState.ownedCafes.count
@@ -461,7 +457,7 @@ private struct ProfileMyInfoView: View {
             return [
                 .init(title: String(localized: String.LocalizationValue("myinfo_metric_operating_cafes"), table: "Localizable"), value: "\(cafeCount)", highlight: false),
                 .init(title: String(localized: String.LocalizationValue("myinfo_metric_affiliated_casts"), table: "Localizable"), value: "\(castCount)", highlight: true),
-                .init(title: String(localized: String.LocalizationValue("myinfo_metric_average_rating"), table: "Localizable"), value: String(format: "%.1f", rating), highlight: false)
+                .init(title: String(localized: String.LocalizationValue("myinfo_metric_average_rating"), table: "Localizable"), value: RatingUtils.formatOneDecimal(rating), highlight: false)
             ]
         default:
             return [
@@ -676,7 +672,7 @@ private struct ProfileMyInfoView: View {
     }
 
     private func favoriteCafeRating(_ rating: Double) -> String {
-        String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), rating)
+        RatingUtils.formatOneDecimal(rating)
     }
 
     private func localizedCafeConceptType(_ rawConceptType: String) -> String {

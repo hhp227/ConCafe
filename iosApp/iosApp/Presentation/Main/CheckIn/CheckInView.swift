@@ -184,7 +184,7 @@ private struct CheckInGuestContentView: View {
                             ForEach(uiState.popularCafes, id: \.id) { cafe in
                                 CafeSummaryCard(
                                     name: cafe.name,
-                                    rating: String(format: "%.1f", cafe.rating),
+                                    rating: RatingUtils.formatOneDecimal(cafe.rating),
                                     conceptType: nil,
                                     location: cafe.locationLabel,
                                     thumbnailImage: cafe.thumbnailImage,

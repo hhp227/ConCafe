@@ -251,7 +251,7 @@ private struct CafeContentView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
                     .foregroundStyle(Color.yellow)
-                    Text(String(format: "%.1f", detail.cafe.ratingAvg))
+                    Text(RatingUtils.formatOneDecimal(detail.cafe.ratingAvg))
                     .fontWeight(.semibold)
                     Text("(\(detail.cafe.reviewCount))")
                     .foregroundStyle(.secondary)

@@ -36,6 +36,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
@@ -61,7 +62,6 @@ import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
 import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
-import kotlin.math.roundToInt
 
 @Composable
 fun ExploreScreen(
@@ -367,12 +367,7 @@ private fun ExplorePagingTrigger(
 
 @Composable
 private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
-    val roundedRating = (cafe.ratingAvg * 10).roundToInt() / 10.0
-    val ratingText = if (roundedRating % 1.0 == 0.0) {
-        "${roundedRating.toInt()}.0"
-    } else {
-        roundedRating.toString()
-    }
+    val ratingText = RatingUtils.formatOneDecimal(cafe.ratingAvg)
 
     CafeSummaryCard(
         name = cafe.name,

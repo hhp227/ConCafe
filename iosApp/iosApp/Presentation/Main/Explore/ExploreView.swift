@@ -226,7 +226,7 @@ private struct ExploreContentView: View {
     private func cafeCard(_ cafe: Cafe) -> some View {
         CafeSummaryCard(
             name: cafe.name,
-            rating: String(format: "%.1f", cafe.ratingAvg),
+            rating: RatingUtils.formatOneDecimal(cafe.ratingAvg),
             conceptType: localizedCafeConceptType(cafe.conceptType),
             location: cafe.region.city,
             thumbnailImage: cafe.thumbnailImage,

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
@@ -1579,7 +1580,6 @@ private fun formatRating(rating: Double): String {
     return if (rating <= 0) {
         "-"
     } else {
-        val normalized = (rating * 10).toInt() / 10.0
-        normalized.toString()
+        RatingUtils.formatOneDecimalTruncated(rating)
     }
 }
