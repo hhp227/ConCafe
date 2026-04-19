@@ -71,32 +71,6 @@ extension IosNativeAdDataSourceImpl: GADNativeAdLoaderDelegate {
 }
 
 #if canImport(GoogleMobileAds)
-private final class InsetLabel: UILabel {
-    var textInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-
-    override func textRect(forBounds bounds: CGRect, limitedToNumberOfLines numberOfLines: Int) -> CGRect {
-        let insetBounds = bounds.inset(by: textInsets)
-        var textRect = super.textRect(forBounds: insetBounds, limitedToNumberOfLines: numberOfLines)
-        textRect.origin.x -= textInsets.left
-        textRect.origin.y -= textInsets.top
-        textRect.size.width += textInsets.left + textInsets.right
-        textRect.size.height += textInsets.top + textInsets.bottom
-        return textRect
-    }
-
-    override func drawText(in rect: CGRect) {
-        super.drawText(in: rect.inset(by: textInsets))
-    }
-
-    override var intrinsicContentSize: CGSize {
-        let baseSize = super.intrinsicContentSize
-        return CGSize(
-            width: baseSize.width + textInsets.left + textInsets.right,
-            height: baseSize.height + textInsets.top + textInsets.bottom
-        )
-    }
-}
-
 struct RankingNativeAdCard: View {
     let nativeAdHandle: (any NativeAdHandle)?
 
@@ -161,7 +135,8 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         let container = UIStackView()
         let topRow = UIStackView()
         let metaStack = UIStackView()
-        let badgeLabel = InsetLabel()
+        let badgeChip = UIView()
+        let badgeLabel = UILabel()
         let sponsorLabel = UILabel()
         let headlineLabel = UILabel()
         let bodyLabel = UILabel()
@@ -182,9 +157,11 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
 
         topRow.axis = .horizontal
         topRow.alignment = .top
+        topRow.distribution = .fill
         topRow.spacing = 10
 
         metaStack.axis = .vertical
+        metaStack.alignment = .leading
         metaStack.spacing = 6
         metaStack.setContentHuggingPriority(.required, for: .horizontal)
         metaStack.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -194,24 +171,43 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
+        badgeChip.backgroundColor = UIColor.white.withAlphaComponent(0.46)
+        badgeChip.layer.cornerRadius = 11
+        badgeChip.clipsToBounds = true
+        badgeChip.isHidden = false
+        badgeChip.alpha = 1
+        badgeChip.translatesAutoresizingMaskIntoConstraints = false
+        badgeChip.setContentHuggingPriority(.required, for: .horizontal)
+        badgeChip.setContentCompressionResistancePriority(.required, for: .horizontal)
+        badgeChip.heightAnchor.constraint(greaterThanOrEqualToConstant: 22).isActive = true
+        badgeChip.widthAnchor.constraint(greaterThanOrEqualToConstant: 46).isActive = true
+        badgeChip.tag = 99100
+
         badgeLabel.text = String(
             localized: "ranking_native_ad_badge",
             defaultValue: "광고",
             table: "Localizable"
         )
+        if badgeLabel.text?.isEmpty != false {
+            badgeLabel.text = "광고"
+        }
         badgeLabel.font = .systemFont(ofSize: 12, weight: .bold)
         badgeLabel.textColor = UIColor(Color(hex: "B74D73"))
-        badgeLabel.backgroundColor = UIColor.white.withAlphaComponent(0.46)
         badgeLabel.textAlignment = .center
-        badgeLabel.textInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
-        badgeLabel.layer.cornerRadius = 999
-        badgeLabel.clipsToBounds = true
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
         badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
         badgeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         badgeLabel.setContentHuggingPriority(.required, for: .vertical)
         badgeLabel.setContentCompressionResistancePriority(.required, for: .vertical)
-        badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 46).isActive = true
-        badgeLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 22).isActive = true
+        badgeLabel.tag = 99101
+
+        badgeChip.addSubview(badgeLabel)
+        NSLayoutConstraint.activate([
+            badgeLabel.leadingAnchor.constraint(equalTo: badgeChip.leadingAnchor, constant: 10),
+            badgeLabel.trailingAnchor.constraint(equalTo: badgeChip.trailingAnchor, constant: -10),
+            badgeLabel.topAnchor.constraint(equalTo: badgeChip.topAnchor, constant: 4),
+            badgeLabel.bottomAnchor.constraint(equalTo: badgeChip.bottomAnchor, constant: -4)
+        ])
 
         sponsorLabel.font = .systemFont(ofSize: 11, weight: .medium)
         sponsorLabel.textColor = UIColor(Color(hex: "927D8A"))
@@ -235,7 +231,7 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         callToActionButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         callToActionButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 36).isActive = true
 
-        metaStack.addArrangedSubview(badgeLabel)
+        metaStack.addArrangedSubview(badgeChip)
         metaStack.addArrangedSubview(sponsorLabel)
         topRow.addArrangedSubview(metaStack)
         topRow.addArrangedSubview(spacer)
@@ -249,18 +245,25 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         nativeAdView.bodyView = bodyLabel
         nativeAdView.advertiserView = sponsorLabel
         nativeAdView.callToActionView = callToActionButton
-        badgeLabel.tag = 99101
 
         return nativeAdView
     }
 
     func updateUIView(_ nativeAdView: GADNativeAdView, context: Context) {
+        if let badgeChip = nativeAdView.viewWithTag(99100) {
+            badgeChip.isHidden = false
+            badgeChip.alpha = 1
+        }
         if let badgeLabel = nativeAdView.viewWithTag(99101) as? UILabel {
             badgeLabel.text = String(
                 localized: "ranking_native_ad_badge",
                 defaultValue: "광고",
                 table: "Localizable"
             )
+            if badgeLabel.text?.isEmpty != false {
+                badgeLabel.text = "광고"
+            }
+            badgeLabel.sizeToFit()
             badgeLabel.isHidden = false
             badgeLabel.alpha = 1
         }
