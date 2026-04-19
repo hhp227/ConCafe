@@ -246,8 +246,14 @@ struct RankingPromoBanner: View {
     var body: some View {
         ZStack {
             if selectedIndex == 1 || selectedIndex == 2 {
+                LinearGradient(
+                    colors: [Color(hex: ad.startColorHex), Color(hex: ad.endColorHex)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
                 RankingNativeAdCard(nativeAdHandle: selectedIndex == 1 ? nativeAdHandleSlot1 : nativeAdHandleSlot2)
-                    .frame(maxWidth: .infinity)
+                    .padding(20)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .frame(height: bannerHeight > 0 ? bannerHeight : 120)
                     .clipped()
             } else {

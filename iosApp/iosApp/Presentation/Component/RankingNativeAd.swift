@@ -124,13 +124,6 @@ struct RankingNativeAdCard: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
     }
 }
 
@@ -294,13 +287,6 @@ private struct RankingNativeAdCard: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "FFEAF3"), Color(hex: "FFDCEB")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
     }
 }
 #endif
