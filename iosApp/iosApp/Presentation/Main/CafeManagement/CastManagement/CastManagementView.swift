@@ -83,7 +83,11 @@ private struct CastManagementContentView: View {
             } else {
                 switch uiState.viewMode {
                 case .week:
-                    WeekScheduleView(columns: uiState.weekColumns)
+                    ScrollView {
+                        WeekScheduleView(columns: uiState.weekColumns)
+                            .padding(.top, 4)
+                            .padding(.bottom, 16)
+                    }
                 case .month:
                     MonthScheduleView(offset: uiState.monthOffset, cells: uiState.monthCells)
                 }
@@ -142,91 +146,96 @@ private struct ViewModeSelector: View {
 private struct WeekScheduleView: View {
     let columns: [CastManagementUiState.WeekColumn]
 
-    private let headerDayOfWeek = String(localized: String.LocalizationValue("cast_management_header_day_of_week"), table: "Localizable")
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(columns) { col in
+                WeekDayCard(column: col)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+}
 
-    private let headerWorkingCast = String(localized: String.LocalizationValue("cast_management_header_working_cast"), table: "Localizable")
+private struct WeekDayCard: View {
+    let column: CastManagementUiState.WeekColumn
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    headerCell(text: headerDayOfWeek, isFirst: true)
-                    ForEach(columns) { col in
-                        headerCell(text: col.dayLabel)
-                    }
-                }
-                Divider()
-                HStack(alignment: .top, spacing: 0) {
-                    castLabelCell(text: headerWorkingCast)
-                    ForEach(columns) { col in
-                        castNamesCell(names: col.castNames, dateLabel: col.dateLabel)
-                    }
-                }
-            }
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
-            )
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-        }
-    }
+        let isWorking = !column.castNames.isEmpty
 
-    @ViewBuilder
-    private func headerCell(text: String, isFirst: Bool = false) -> some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(isFirst ? .secondary : Color(hex: "EF6797"))
-            .frame(width: isFirst ? 72 : 80, height: 44)
-            .background(Color(hex: "FFD1DC").opacity(0.12))
-            .overlay(alignment: .trailing) {
-                Rectangle()
-                    .fill(Color(hex: "FFD1DC").opacity(0.2))
-                    .frame(width: 1)
+        HStack(alignment: .center, spacing: 14) {
+            VStack(spacing: 2) {
+                Text(column.dayLabel)
+                    .font(.system(size: 15, weight: .heavy))
+                    .foregroundStyle(isWorking ? Color(hex: "EF6797") : .secondary)
+                Text(column.dateLabel)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
             }
-    }
-
-    @ViewBuilder
-    private func castLabelCell(text: String) -> some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .frame(width: 72)
-            .frame(minHeight: 60)
-            .padding(.vertical, 8)
-            .overlay(alignment: .trailing) {
-                Rectangle()
-                    .fill(Color(hex: "FFD1DC").opacity(0.2))
-                    .frame(width: 1)
-            }
-    }
-
-    @ViewBuilder
-    private func castNamesCell(names: [String], dateLabel: String) -> some View {
-        VStack(spacing: 4) {
-            Text(dateLabel)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-            if names.isEmpty {
+            .frame(width: 52, height: 52)
+            .background(isWorking ? Color(hex: "FFF0F4") : Color(uiColor: UIColor.secondarySystemFill))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            if !isWorking {
                 Text("-")
-                    .font(.caption)
-                    .foregroundStyle(Color.secondary.opacity(0.5))
-                    .frame(maxWidth: .infinity)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
             } else {
-                ForEach(names, id: \.self) { name in
-                    CastNameChip(name: name)
+                FlowLayout(spacing: 6) {
+                    ForEach(column.castNames, id: \.self) { name in
+                        CastNameChip(name: name)
+                    }
                 }
+                Spacer(minLength: 0)
             }
         }
-        .frame(width: 80)
-        .frame(minHeight: 60)
-        .padding(.vertical, 8)
-        .overlay(alignment: .trailing) {
-            Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
-                .frame(width: 1)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
+    }
+}
+
+private struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+
+            if x + size.width > maxWidth, x > 0 {
+                x = 0
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
+        }
+        return CGSize(width: maxWidth, height: y + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+
+            if x + size.width > bounds.maxX, x > bounds.minX {
+                x = bounds.minX
+                y += lineHeight + spacing
+                lineHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            lineHeight = max(lineHeight, size.height)
         }
     }
 }

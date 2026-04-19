@@ -2,7 +2,6 @@ package com.hhp227.concafe.presentation.main.cafemanagement.castmanagement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -125,6 +124,7 @@ private fun CastManagementContentScreen(
                     )
                     if (uiState.periodStart.isNotEmpty()) {
                         val periodLabel = formatPeriodLabel(uiState.viewMode, uiState.periodStart, uiState.periodEnd)
+
                         Text(
                             text = stringResource(Res.string.cast_management_period_schedule, periodLabel, uiState.cafeName),
                             style = MaterialTheme.typography.titleSmall,
@@ -203,80 +203,70 @@ private fun ViewModeSelector(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WeekScheduleView(columns: List<CastManagementUiState.WeekColumn>) {
-    val borderColor = MaterialTheme.colorScheme.outlineVariant
-    val headerBg = colorFromHex("FFF8FB")
-    val cellBg = MaterialTheme.colorScheme.surface
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        columns.forEach { col ->
+            WeekDayCard(column = col)
+        }
+    }
+}
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun WeekDayCard(column: CastManagementUiState.WeekColumn) {
+    val isWorking = column.castNames.isNotEmpty()
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
+        shadowElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(modifier = Modifier.width(120.dp)) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .background(headerBg)
-                        .border(0.5.dp, borderColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(stringResource(Res.string.cast_management_header_day_of_week), fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = colorFromHex("5F4B55"))
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                        .background(headerBg)
-                        .border(0.5.dp, borderColor)
-                        .padding(8.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(stringResource(Res.string.cast_management_header_working_cast), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = colorFromHex("4A3645"))
-                }
+            Column(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        color = if (isWorking) colorFromHex("FFF0F4") else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = resolveDayLabel(column.dayLabelKey),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 15.sp,
+                    color = if (isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = column.dateLabel,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            columns.forEach { col ->
-                Column(modifier = Modifier.width(110.dp)) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .background(headerBg)
-                            .border(0.5.dp, borderColor),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(resolveDayLabel(col.dayLabelKey), fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = colorFromHex("5F4B55"))
-                        Text(col.dateLabel, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp)
-                            .background(cellBg)
-                            .border(0.5.dp, borderColor)
-                            .padding(6.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (col.castNames.isEmpty()) {
-                            CastNameChip("-", isWorking = false)
-                        } else {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                col.castNames.forEach { name ->
-                                    CastNameChip(name, isWorking = true)
-                                }
-                            }
-                        }
+            if (!isWorking) {
+                Text(
+                    text = "-",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    column.castNames.forEach { name ->
+                        CastNameChip(name, isWorking = true)
                     }
                 }
             }
