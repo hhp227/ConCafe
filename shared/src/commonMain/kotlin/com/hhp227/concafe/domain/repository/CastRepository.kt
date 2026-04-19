@@ -64,4 +64,6 @@ interface CastRepository {
     suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot>
 
     suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary>
+
+    suspend fun getCafeCasts(cafeId: String): List<Cast>
 }

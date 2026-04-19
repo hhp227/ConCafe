@@ -92,6 +92,9 @@ fun ScheduleScreen(
         viewModel.event.collect { event ->
             when (event) {
                 ScheduleEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is ScheduleEvent.NavigateToCastManagement -> onNavigationAction(
+                    NavigationAction.NavigateToCastManagement(event.cafeId, event.cafeName)
+                )
                 is ScheduleEvent.ShowMessage -> {
                     snackbarHostState.showSnackbar(
                         when (event.message) {

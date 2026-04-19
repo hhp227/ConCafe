@@ -53,6 +53,8 @@ struct ScheduleView: View {
                 onNavigationAction(.navigateBack)
             case .showMessage(let message):
                 alertMessage = message
+            case .navigateToCastManagement(let cafeId, let cafeName):
+                onNavigationAction(.navigateToCastManagement(cafeId: cafeId, cafeName: cafeName))
             }
         }
         .alert(

@@ -914,4 +914,21 @@
     <string name="ranking_native_ad_title">ConCafe Plus Membership</string>
     <string name="ranking_native_ad_desc">Unlock premium cast perks, special stamps, and surprise coupons with Plus.</string>
     <string name="ranking_native_ad_sponsor">Ad provided by ConCafe</string>
+    <string name="cast_management_screen_title">Cast Schedule</string>
+    <string name="cast_management_back">Back</string>
+    <string name="cast_management_view_week">Weekly</string>
+    <string name="cast_management_view_month">Monthly</string>
+    <string name="cast_management_period_schedule">%1$s %2$s Schedule</string>
+    <string name="cast_management_period_week">%1$d/%2$d - %3$d/%4$d</string>
+    <string name="cast_management_period_month">%1$d/%2$d</string>
+    <string name="cast_management_header_day_of_week">Day</string>
+    <string name="cast_management_header_working_cast">Working Cast</string>
+    <string name="cast_management_error_load_failed">Failed to load data.</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
 </resources>

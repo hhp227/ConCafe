@@ -7,6 +7,8 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 
 data class ScheduleUiState(
     val managedCastId: String = "",
+    val managedCafeId: String = "",
+    val managedCafeName: String = "",
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val isEditSheetVisible: Boolean = false,

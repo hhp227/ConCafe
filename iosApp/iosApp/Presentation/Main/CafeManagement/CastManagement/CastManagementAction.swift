@@ -8,5 +8,6 @@
 import Foundation
 
 enum CastManagementAction {
-    
+    case clickBack
+    case changeViewMode(CastScheduleViewMode)
 }

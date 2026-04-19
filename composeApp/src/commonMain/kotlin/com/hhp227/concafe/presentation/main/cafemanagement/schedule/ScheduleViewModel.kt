@@ -132,6 +132,8 @@ class ScheduleViewModel(
                     }
                     _uiState.value = ScheduleUiState(
                         managedCastId = data.detail.cast.id,
+                        managedCafeId = data.detail.cafe.id,
+                        managedCafeName = data.detail.cafe.name,
                         isLoading = false,
                         isSaving = false,
                         errorMessage = null,
@@ -169,7 +171,16 @@ class ScheduleViewModel(
                 }
             }
             ScheduleAction.ClickCalendar -> {
-                _uiState.update { it.copy(infoMessage = "schedule_info_calendar_next_step") }
+                val state = _uiState.value
+                val cafeId = state.managedCafeId
+                val cafeName = state.managedCafeName
+                if (cafeId.isBlank()) {
+                    _uiState.update { it.copy(infoMessage = "schedule_info_calendar_next_step") }
+                } else {
+                    viewModelScope.launch {
+                        _event.emit(ScheduleEvent.NavigateToCastManagement(cafeId, cafeName))
+                    }
+                }
             }
             is ScheduleAction.SelectDay -> {
                 _uiState.update { state ->

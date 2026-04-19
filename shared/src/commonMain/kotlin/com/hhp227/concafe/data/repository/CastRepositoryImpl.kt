@@ -236,6 +236,9 @@ class CastRepositoryImpl(
         }
     }
 
+    override suspend fun getCafeCasts(cafeId: String): List<Cast> {
+        return castRemoteDataSource.fetchCafeCasts(cafeId)
+    }
 }
 
 private fun todayDate(): String {

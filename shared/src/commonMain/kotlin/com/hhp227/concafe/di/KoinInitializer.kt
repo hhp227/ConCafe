@@ -97,6 +97,7 @@ import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeScheduleCalendarUseCase
 import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
@@ -842,6 +843,13 @@ fun resolveGetAdminOperationsMetricsUseCase(): GetAdminOperationsMetricsUseCase 
 }
 
 fun resolveGetAdminInquiryPageUseCase(): GetAdminInquiryPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCafeScheduleCalendarUseCase(): GetCafeScheduleCalendarUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
