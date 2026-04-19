@@ -52,6 +52,19 @@ enum ImageUrlUtils {
     }
 }
 
+struct DefaultCachedAsyncImagePlaceholder: View {
+    var body: some View {
+        ZStack {
+            Color.black.opacity(25.0 / 255.0)
+            Image(systemName: "photo")
+                .font(.system(size: 36, weight: .regular))
+                .foregroundStyle(Color.gray)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+    }
+}
+
 struct CachedAsyncImage<Placeholder: View>: View {
     let url: URL?
 
@@ -95,6 +108,21 @@ struct CachedAsyncImage<Placeholder: View>: View {
         guard let url else { return "" }
         let sizeTag = displaySize.maxPixels.map { "\($0)" } ?? "full"
         return "\(url.absoluteString)|\(sizeTag)"
+    }
+}
+
+extension CachedAsyncImage where Placeholder == DefaultCachedAsyncImagePlaceholder {
+    init(
+        url: URL?,
+        contentMode: ContentMode = .fill,
+        displaySize: ImageDisplaySize = .thumbnail
+    ) {
+        self.init(
+            url: url,
+            placeholder: DefaultCachedAsyncImagePlaceholder(),
+            contentMode: contentMode,
+            displaySize: displaySize
+        )
     }
 }
 
