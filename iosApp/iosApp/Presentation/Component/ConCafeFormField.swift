@@ -50,7 +50,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 52)
-            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -162,7 +162,7 @@ struct ConCafeFormEditor: View {
                         .padding(.vertical, 20)
                 }
             }
-            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)

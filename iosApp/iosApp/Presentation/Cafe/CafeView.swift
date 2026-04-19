@@ -150,7 +150,7 @@ private struct CafeContentView: View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
-                .padding(.top, -topSafeArea)
+                    .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
                 Section {
                     tabContent(detail: detail)

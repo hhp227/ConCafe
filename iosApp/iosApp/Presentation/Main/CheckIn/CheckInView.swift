@@ -806,7 +806,7 @@ private struct CheckInTimelineItem: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 Circle()
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
                     .frame(width: 32, height: 32)
                     .overlay(
                         Circle()
@@ -832,7 +832,7 @@ private struct CheckInTimelineItem: View {
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(uiColor: .tertiarySystemBackground))
+                    .background(colorScheme == .dark ? Color(uiColor: .tertiarySystemBackground) : .white)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Text(
@@ -848,7 +848,7 @@ private struct CheckInTimelineItem: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
             .padding(.bottom, 24)
@@ -867,6 +867,8 @@ private struct CheckInTimelineItem: View {
 }
 
 private struct CheckInEmptyState: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let title: String
 
     let description: String
@@ -882,7 +884,7 @@ private struct CheckInEmptyState: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 16)
     }
