@@ -147,7 +147,7 @@ private struct NotificationSettingsContentView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
     }
 
     private var heroCard: some View {

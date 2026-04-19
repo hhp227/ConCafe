@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -42,6 +43,8 @@ fun ConCafeFormField(
     trailingContent: @Composable (() -> Unit)? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val isDarkMode = isSystemInDarkTheme()
+    val containerColor = if (isDarkMode) colorScheme.surfaceVariant else Color.White
     var textFieldValue by remember {
         mutableStateOf(
             TextFieldValue(
@@ -102,8 +105,8 @@ fun ConCafeFormField(
             leadingIcon = leadingContent,
             trailingIcon = trailingContent,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.surfaceVariant,
-                unfocusedContainerColor = colorScheme.surfaceVariant,
+                focusedContainerColor = containerColor,
+                unfocusedContainerColor = containerColor,
                 focusedBorderColor = colorFromHex("FFD1DC"),
                 unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.45f)
             )

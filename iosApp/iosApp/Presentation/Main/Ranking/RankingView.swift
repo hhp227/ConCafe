@@ -86,7 +86,7 @@ private struct RankingContentView: View {
             }
             .padding(.vertical, 16)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
     }
 
     private var headerSection: some View {
@@ -101,7 +101,7 @@ private struct RankingContentView: View {
         ConCafeTabBar(
             labels: RankingUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: RankingUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: Color(hex: "FFFBFD"),
+            backgroundColor: Color(hex: "FFF9FC"),
             onSelect: { index in
                 onAction(.changeTab(RankingUiState.TabType.allCases[index]))
             }

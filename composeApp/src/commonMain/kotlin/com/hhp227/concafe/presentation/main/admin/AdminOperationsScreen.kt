@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.admin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -61,6 +62,7 @@ fun AdminOperationsScreen(
     )
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isDarkMode = isSystemInDarkTheme()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -77,10 +79,16 @@ fun AdminOperationsScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFCFD"))
-                )
+            .then(
+                if (isDarkMode) {
+                    Modifier.background(colorFromHex("FFFBFD"))
+                } else {
+                    Modifier.background(
+                        Brush.verticalGradient(
+                            colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFCFD"))
+                        )
+                    )
+                }
             ),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -121,7 +129,9 @@ private fun BannerRegisterCard(
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -281,7 +291,9 @@ private fun InquirySection(
         if (uiState.inquiries.isEmpty()) {
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
+                )
             ) {
                 Text(
                     text = stringResource(Res.string.admin_inquiry_empty),
@@ -324,7 +336,9 @@ private fun InquiryCard(
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -409,7 +423,9 @@ private fun PendingClaimCard(
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
+        )
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -486,7 +502,9 @@ private fun QuickMenuSection(
             Card(
                 modifier = Modifier.fillMaxWidth().clickable { onAction(AdminOperationsAction.ClickQuickMenu(menu.id)) },
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
+                )
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),

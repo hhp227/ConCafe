@@ -134,7 +134,7 @@ private fun CastContentScreen(
         )
 
     Scaffold(
-        containerColor = colorFromHex("FFF9FC"),
+        containerColor = colorFromHex("FFFBFD"),
         topBar = {
             TopAppBar(
                 title = {
@@ -169,7 +169,7 @@ private fun CastContentScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(colorFromHex("FFF9FC")),
+                        .background(colorFromHex("FFFBFD")),
                     contentPadding = PaddingValues(
                         bottom = innerPadding.calculateBottomPadding() + 28.dp
                     ),

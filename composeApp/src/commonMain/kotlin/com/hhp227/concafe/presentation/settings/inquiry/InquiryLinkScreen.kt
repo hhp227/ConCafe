@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.settings.inquiry
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -77,6 +78,8 @@ private fun InquiryLinkContentScreen(
     snackbarHostState: SnackbarHostState,
     onAction: (InquiryLinkAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -136,10 +139,16 @@ private fun InquiryLinkContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
-                    )
+                .then(
+                    if (isDarkMode) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
@@ -220,7 +229,7 @@ private fun InquiryTypeDropdown(
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(16.dp),
-            color = colorFromHex("F8F5F6"),
+            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else colorFromHex("F8F5F6"),
             border = BorderStroke(1.dp, Color(0x4DFFD1DC)),
             modifier = Modifier.fillMaxWidth()
         ) {

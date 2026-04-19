@@ -9,6 +9,8 @@ import SwiftUI
 import Shared
 
 struct AdminOperationsView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     @StateObject private var viewModel = AdminOperationsViewModel()
 
     let onNavigationAction: (NavigationAction) -> Void
@@ -30,11 +32,17 @@ struct AdminOperationsView: View {
             .padding(.bottom, 24)
         }
         .background(
-            LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFCFD")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if colorScheme == .dark {
+                    Color(hex: "FFF9FC")
+                } else {
+                    LinearGradient(
+                        colors: [Color(hex: "F8F5F6"), Color(hex: "FFFCFD")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
         )
         .onReceive(viewModel.event) { event in
             switch event {
@@ -210,7 +218,11 @@ struct AdminOperationsView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(
+            colorScheme == .dark
+                ? Color(uiColor: .secondarySystemBackground)
+                : Color.white
+        )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
@@ -259,7 +271,11 @@ struct AdminOperationsView: View {
                             .foregroundStyle(Color(hex: "B5AEB5"))
                     }
                     .padding(16)
-                    .background(Color.white)
+                    .background(
+                        colorScheme == .dark
+                            ? Color(uiColor: .secondarySystemBackground)
+                            : Color.white
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -277,7 +293,11 @@ struct AdminOperationsView: View {
                     .foregroundStyle(Color(hex: "7A707A"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
-                    .background(Color.white)
+                    .background(
+                        colorScheme == .dark
+                            ? Color(uiColor: .secondarySystemBackground)
+                            : Color.white
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             } else {
                 ForEach(viewModel.uiState.inquiries, id: \.id) { inquiry in
@@ -336,7 +356,11 @@ struct AdminOperationsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.white)
+        .background(
+            colorScheme == .dark
+                ? Color(uiColor: .secondarySystemBackground)
+                : Color.white
+        )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
@@ -384,7 +408,11 @@ struct AdminOperationsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
-        .background(Color.white)
+        .background(
+            colorScheme == .dark
+                ? Color(uiColor: .secondarySystemBackground)
+                : Color.white
+        )
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

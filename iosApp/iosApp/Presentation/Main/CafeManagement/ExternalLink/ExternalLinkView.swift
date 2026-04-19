@@ -43,11 +43,13 @@ struct ExternalLinkView: View {
 }
 
 private struct ExternalLinkContentView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let uiState: ExternalLinkUiState
 
     var body: some View {
         ExternalWebView(urlString: uiState.url)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color.white)
     }
 }
 
