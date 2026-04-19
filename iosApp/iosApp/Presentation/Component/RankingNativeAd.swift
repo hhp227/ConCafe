@@ -191,6 +191,7 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         headlineLabel.font = .systemFont(ofSize: 19, weight: .bold)
         headlineLabel.textColor = UIColor(Color(hex: "2B2330"))
         headlineLabel.numberOfLines = 2
+        headlineLabel.lineBreakMode = .byTruncatingTail
 
         bodyLabel.font = .systemFont(ofSize: 13, weight: .regular)
         bodyLabel.textColor = UIColor(Color(hex: "6F6670"))

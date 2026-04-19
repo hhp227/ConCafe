@@ -97,7 +97,7 @@ private fun NativeAdContentLayout(nativeAd: NativeAd) {
                 color = Color.White,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 

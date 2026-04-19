@@ -1704,6 +1704,17 @@ async function syncBirthdayNotifications(): Promise<void> {
   if (castSnapshot.empty) {
     return;
   }
+  const settingsCache = new Map<string, UserNotificationSettings>();
+  const loadCachedSettings = async (userId: string): Promise<UserNotificationSettings> => {
+    const cached = settingsCache.get(userId);
+
+    if (cached != null) {
+      return cached;
+    }
+    const loaded = await loadUserNotificationSettings(userId);
+    settingsCache.set(userId, loaded);
+    return loaded;
+  };
   const createdAt = new Date().toISOString();
   await processInBatches(castSnapshot.docs, async (castDoc) => {
     const castId = castDoc.id;
@@ -1728,7 +1739,7 @@ async function syncBirthdayNotifications(): Promise<void> {
     let skippedBySettingsCount = 0;
 
     await processInBatches(recipientUserIds, async (userId) => {
-      const settings = await loadUserNotificationSettings(userId);
+      const settings = await loadCachedSettings(userId);
 
       if (!settings.isPushNotificationsEnabled || !settings.isBirthdayNotificationsEnabled) {
         skippedBySettingsCount += 1;

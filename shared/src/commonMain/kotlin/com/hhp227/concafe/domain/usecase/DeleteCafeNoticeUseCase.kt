@@ -12,12 +12,12 @@ class DeleteCafeNoticeUseCase(
 ) {
     suspend operator fun invoke(cafeId: String, noticeId: String): AppResult<String> {
         return try {
-            val noticeId = noticeRepository.deleteCafeNotice(cafeId, noticeId)
+            val deletedNoticeId = noticeRepository.deleteCafeNotice(cafeId, noticeId)
 
             noticeManagementEventPublisher.publish(
-                NoticeManagementEvent.NoticeDeleted(cafeId, noticeId)
+                NoticeManagementEvent.NoticeDeleted(cafeId, deletedNoticeId)
             )
-            AppResult.Success(noticeId)
+            AppResult.Success(deletedNoticeId)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

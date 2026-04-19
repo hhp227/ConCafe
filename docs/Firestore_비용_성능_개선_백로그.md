@@ -1,6 +1,6 @@
 # ConCafe Firestore 비용/성능 개선 백로그
 
-기준 일자: 2026-04-10
+기준 일자: 2026-04-19
 
 기준 문서:
 - [ConCafe_구현_실행작업_백로그.md](./ConCafe_%EA%B5%AC%ED%98%84_%EC%8B%A4%ED%96%89%EC%9E%91%EC%97%85_%EB%B0%B1%EB%A1%9C%EA%B7%B8.md)
@@ -32,6 +32,13 @@
 - 카페/캐스트 검색이 Firestore 쿼리에서 충분히 줄어들지 않고, 앱에서 후필터링한다.
 - 캐스트 ID만 있을 때 `castId -> cafeId`를 빠르게 찾지 못해 전체 카페 순회 fallback이 있다.
 - Cloud Functions 일부가 문서 1건 변경마다 관련 컬렉션 전체를 다시 읽어 재집계한다.
+
+## 2026-04-19 전수조사 추가 확인 이슈
+- `fetchCafeTodayCheckInCountRemote()`가 기존에 카페 방문 문서를 전량 읽어 당일 카운트를 계산했다.
+- `fetchCafeTodayReviewCountRemote()`가 기존에 리뷰를 최대 2000건 읽어 당일 카운트를 계산했다.
+- `hasReviewForVisitRemote()`가 존재 여부 확인인데도 `visitId` 매칭 리뷰를 전량 읽었다.
+- 캐스트/카페 검색은 현재도 서버 필터링보다 앱 후필터링 비중이 높아 데이터 증가 시 read가 급증할 수 있다.
+- Functions 알림 fan-out 경로는 수신자 상한이 있어도 사용자별 설정/토큰 read + 알림 write가 수신자 수에 비례한다.
 
 ## 목표 지표
 
@@ -128,21 +135,21 @@
 
 ### A-06. 카페 검색의 후필터링 감소
 - 우선순위: P1
-- 상태: TODO
+- 상태: DOING
 - 체크:
-  - [ ] `approved == true`를 쿼리에서 처리할지 구조 확정
+  - [x] `approved == true`를 쿼리에서 처리할지 구조 확정 (우선 `LATEST` 제외 정렬에 서버 필터 적용)
   - [ ] 검색어 prefix 또는 검색 전용 필드 도입 여부 결정
-  - [ ] 현재 앱단 `approved`, `name contains` 후필터링 루프 축소
+  - [-] 현재 앱단 `approved`, `name contains` 후필터링 루프 축소
 - 완료 기준:
   - pageSize를 채우기 위해 과도한 batch 재조회가 줄어든다.
 
 ### A-07. 캐스트 검색의 지역 필터 비용 개선
 - 우선순위: P1
-- 상태: TODO
+- 상태: DOING
 - 체크:
-  - [ ] `loadCafeIdsByRegionRemote()` 의존 구조 재검토
+  - [x] `loadCafeIdsByRegionRemote()` 의존 구조 재검토
   - [ ] 캐스트 문서에 지역 검색용 denormalized 필드 도입 여부 결정
-  - [ ] collectionGroup 전체 조회 후 앱 필터링 비중 축소
+  - [-] collectionGroup 전체 조회 후 앱 필터링 비중 축소 (`targetCafeIds <= 10` + `POPULAR/FOLLOWERS`에서 server `cafeId IN` 적용)
 - 완료 기준:
   - 지역 필터 시 카페 목록 전체를 먼저 읽는 간접 비용이 줄어든다.
 
@@ -175,6 +182,26 @@
   - [x] 홈에 필요한 카페/캐스트 요약 필드만 사용하도록 정리
 - 완료 기준:
   - 홈 화면 1회 진입 시 중복 상세 조회가 없다.
+
+### A-11. 카페 대시보드의 오늘 카운트 집계 쿼리 전환
+- 우선순위: P0
+- 상태: DONE
+- 체크:
+  - [x] `fetchCafeTodayCheckInCountRemote()`를 날짜 prefix + `runAggregationQuery(count)` 기반으로 전환
+  - [x] `fetchCafeTodayReviewCountRemote()`를 날짜 prefix + `runAggregationQuery(count)` 기반으로 전환
+  - [x] 클라이언트 전체 문서 스캔 기반 당일 카운트 제거
+- 완료 기준:
+  - 당일 리뷰/체크인 수 계산 시 전체 문서 read가 발생하지 않는다.
+
+### A-12. 존재 여부 조회 경량화(limit=1)
+- 우선순위: P1
+- 상태: DONE
+- 체크:
+  - [x] `runFieldScopedQuery()`에 `limit` 인자 추가
+  - [x] `hasReviewForVisitRemote()`를 `limit = 1` 기반 존재 여부 확인으로 전환
+  - [x] 존재 여부 판단을 위한 불필요 파싱 제거
+- 완료 기준:
+  - 존재 여부 조회에서 전체 매칭 문서를 읽지 않는다.
 
 ## B. 데이터 모델/집계 구조 개선
 
@@ -281,6 +308,17 @@
 - 완료 기준:
   - 데이터가 증가해도 랭킹 작업 비용이 급증하지 않는다.
 
+### C-07. 알림 fan-out의 사용자별 read 증폭 완화
+- 우선순위: P1
+- 상태: DOING
+- 체크:
+  - [-] fan-out 처리 중 `notificationSettings`, `deviceTokens` read 캐시/재사용 전략 확정
+    - [x] `syncBirthdayNotifications()` 동일 invocation 내 `notificationSettings` 캐시 적용
+  - [ ] 고빈도 이벤트(공지/이벤트/팬공지)별 read/write 상한 지표 정의
+  - [ ] 큐 기반 분산 처리 필요 여부와 기준 트래픽 정의
+- 완료 기준:
+  - 이벤트 1건당 사용자별 read/write 증폭이 운영 기준 이하로 통제된다.
+
 ## D. 인덱스/쿼리 정비
 
 ### D-01. 현재 쿼리와 인덱스 매핑 점검
@@ -348,6 +386,11 @@
 - [x] C-05 알림 fan-out 비용 관리
 - [x] C-06 랭킹 동기화 최적화
 
+### 4차 묶음
+- [x] A-11 카페 대시보드 오늘 카운트 집계 쿼리 전환
+- [x] A-12 존재 여부 조회 경량화(limit=1)
+- [ ] C-07 알림 fan-out 사용자별 read 증폭 완화
+
 ## 작업 로그
 
 ### 2026-04-10
@@ -369,6 +412,15 @@
 - [x] 홈 인기 캐스트 카페명 해결 시 카페 상세 재조회를 제거하고 nearby fallback 반복 상한을 조정
 - [x] 개선 전후 측정 템플릿 문서화
 - [-] 기준선 수집 시작
+
+### 2026-04-19
+- [x] 성능/Firestore 비용 전수조사 재실시(클라이언트 + Functions + Hosting 페이지)
+- [x] 카페 대시보드의 당일 체크인/리뷰 카운트를 aggregation query 기반으로 전환
+- [x] 방문-리뷰 존재 여부 조회를 `limit = 1` 기반 존재 확인으로 전환
+- [x] 카페 검색에서 `LATEST` 제외 정렬의 `approved` 서버 필터 푸시다운 적용
+- [x] 캐스트 검색에서 일부 케이스(`targetCafeIds <= 10`, `POPULAR/FOLLOWERS`) `cafeId IN` 서버 필터 적용
+- [x] 생일 알림 fan-out 경로에서 동일 invocation 내 `notificationSettings` 중복 read 제거(메모리 캐시)
+- [x] 전수조사 결과를 백로그에 반영하고 후속 TODO 재정렬
 
 ## 측정 가이드
 
