@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct CafeNoticeView: View {
@@ -18,8 +19,6 @@ struct CafeNoticeView: View {
     let isLoadingMore: Bool
 
     let onLoadMore: () -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     @State private var expandedNoticeIds: Set<String> = []
 
@@ -35,7 +34,7 @@ struct CafeNoticeView: View {
             LazyVStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 if !events.isEmpty {
@@ -56,7 +55,7 @@ struct CafeNoticeView: View {
                     .frame(height: 6)
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_notice"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 ForEach(notices, id: \.id) { notice in

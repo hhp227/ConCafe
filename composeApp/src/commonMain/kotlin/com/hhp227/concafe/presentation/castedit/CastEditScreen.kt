@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.castedit
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -137,7 +138,7 @@ private fun CastEditContentScreen(
             Surface(
                 modifier = Modifier
                     .keyboardBottomInsets(),
-                color = Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -178,10 +179,16 @@ private fun CastEditContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {

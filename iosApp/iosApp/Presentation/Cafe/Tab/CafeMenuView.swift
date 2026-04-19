@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct CafeMenuView: View {
@@ -14,8 +15,6 @@ struct CafeMenuView: View {
     let goods: [Goods]
 
     let isLoading: Bool
-    
-    @Environment(\.colorScheme) private var colorScheme
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -187,7 +186,7 @@ struct CafeMenuView: View {
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
             .font(.headline.weight(.bold))
-            .foregroundStyle(colorScheme == .dark ? .white : Color(hex: "1F1A22"))
+            .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
     }
 
     private func emptyCard(_ text: String) -> some View {

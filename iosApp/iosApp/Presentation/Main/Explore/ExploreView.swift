@@ -53,8 +53,6 @@ struct ExploreView: View {
 }
 
 private struct ExploreContentView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     @FocusState private var isSearchFocused: Bool
     
     let uiState: ExploreUiState
@@ -281,7 +279,7 @@ private struct ExploreContentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(maid.name)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .primary)
                     .lineLimit(1)
                 Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
                     .font(.caption)

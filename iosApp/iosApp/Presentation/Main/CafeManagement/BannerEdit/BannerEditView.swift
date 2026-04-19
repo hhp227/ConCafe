@@ -56,6 +56,13 @@ struct BannerEditView: View {
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction
             )
+            .compatPresentationBackground(
+                Color(
+                    uiColor: UIColor {
+                        $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
+                    }
+                )
+            )
             .compatLargeSheetDetent()
         }
         .onReceive(viewModel.event) { event in
@@ -123,6 +130,7 @@ private struct BannerEditContentView: View {
     let onAction: (BannerEditAction) -> Void
 
     let onPickImage: () -> Void
+    
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -167,11 +175,17 @@ private struct BannerEditContentView: View {
                 .padding(.bottom, 100)
             }
             .background(
-                LinearGradient(
-                    colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                Group {
+                    if UITraitCollection.current.userInterfaceStyle == .dark {
+                        Color(hex: "FFF9FC")
+                    } else {
+                        LinearGradient(
+                            colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
             )
             bottomSaveBar()
         }
@@ -398,7 +412,11 @@ private struct BannerEditContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 16)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                ? Color(hex: "FFF9FC")
+                : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!uiState.isSaveEnabled)
@@ -636,7 +654,7 @@ private struct BannerSelectorSheet: View {
             }
         }
         .padding(.top, 16)
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private func selectorOptionButton(

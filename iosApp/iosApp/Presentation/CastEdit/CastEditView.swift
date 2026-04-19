@@ -98,6 +98,7 @@ struct CastEditView: View {
 }
 
 private struct CastEditContentView: View {
+
     let uiState: CastEditUiState
 
     let onAction: (CastEditAction) -> Void
@@ -170,13 +171,19 @@ private struct CastEditContentView: View {
             }
         }
         .background(
-            LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
+                    Color(hex: "FFF9FC")
+                } else {
+                    LinearGradient(
+                        colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
         )
-        .background(Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(hex: "F8F5F6"))
         .sheet(isPresented: $isBirthdayPickerPresented) {
             CompatNavigationContainer(title: String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable")) {
                 VStack {
@@ -420,7 +427,11 @@ private struct CastEditContentView: View {
         }
         .buttonStyle(.plain)
         .padding(16)
-        .background(Color.white.opacity(0.92))
+        .background(
+            UITraitCollection.current.userInterfaceStyle == .dark
+                ? Color(hex: "FFF9FC")
+                : Color.white.opacity(0.92)
+        )
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
@@ -453,6 +464,7 @@ private struct CastEditContentView: View {
 }
 
 private struct BirthdayInputField: View {
+
     @Binding var text: String
 
     let onTapCalendar: () -> Void
@@ -473,7 +485,11 @@ private struct BirthdayInputField: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 52)
-            .background(Color(hex: "F8F5F6"))
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                    ? Color(uiColor: .tertiarySystemBackground)
+                    : Color(hex: "F8F5F6")
+            )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)

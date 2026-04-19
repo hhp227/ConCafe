@@ -158,7 +158,11 @@ struct MenuGoodsEditView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white.opacity(0.92))
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                ? Color(hex: "FFF9FC")
+                : Color.white.opacity(0.92)
+            )
         }
     }
 

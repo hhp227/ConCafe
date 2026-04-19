@@ -156,6 +156,8 @@ final class ScheduleViewModel: ObservableObject {
                     }
                     uiState = ScheduleUiState(
                         managedCastId: data.detail.cast.id,
+                        managedCafeId: data.detail.cafe.id,
+                        managedCafeName: data.detail.cafe.name,
                         isLoading: false,
                         isSaving: false,
                         errorMessage: nil,
@@ -200,7 +202,13 @@ final class ScheduleViewModel: ObservableObject {
         case .clickMore:
             uiState.infoMessage = "schedule_info_more_next_step"
         case .clickCalendar:
-            uiState.infoMessage = "schedule_info_calendar_next_step"
+            let cafeId = uiState.managedCafeId
+            let cafeName = uiState.managedCafeName
+            if cafeId.isEmpty {
+                uiState.infoMessage = "schedule_info_calendar_next_step"
+            } else {
+                event.send(.navigateToCastManagement(cafeId: cafeId, cafeName: cafeName))
+            }
         case .selectDay(let id):
             uiState.selectedDayId = id
         case .clickEditDay(let id):

@@ -914,4 +914,21 @@
     <string name="ranking_native_ad_title">ConCafe Plus 멤버십</string>
     <string name="ranking_native_ad_desc">프리미엄 캐스트 혜택, 스페셜 스탬프, 깜짝 쿠폰을 Plus에서 만나보세요.</string>
     <string name="ranking_native_ad_sponsor">ConCafe 제공 광고</string>
+    <string name="cast_management_screen_title">캐스트 스케줄</string>
+    <string name="cast_management_back">뒤로</string>
+    <string name="cast_management_view_week">1주</string>
+    <string name="cast_management_view_month">1달</string>
+    <string name="cast_management_period_schedule">%1$s %2$s 스케줄</string>
+    <string name="cast_management_period_week">%1$d월 %2$d일 - %3$d월 %4$d일</string>
+    <string name="cast_management_period_month">%1$d년 %2$d월</string>
+    <string name="cast_management_header_day_of_week">요일</string>
+    <string name="cast_management_header_working_cast">근무 캐스트</string>
+    <string name="cast_management_error_load_failed">데이터를 불러오지 못했습니다.</string>
+    <string name="day_mon">월</string>
+    <string name="day_tue">화</string>
+    <string name="day_wed">수</string>
+    <string name="day_thu">목</string>
+    <string name="day_fri">금</string>
+    <string name="day_sat">토</string>
+    <string name="day_sun">일</string>
 </resources>

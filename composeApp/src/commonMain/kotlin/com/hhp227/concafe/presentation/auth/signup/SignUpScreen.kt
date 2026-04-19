@@ -136,7 +136,6 @@ private fun SignUpContentScreen(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     val density = LocalDensity.current
     val imeBottomPadding = with(density) { WindowInsets.ime.getBottom(this).toDp() }
 
@@ -149,11 +148,11 @@ private fun SignUpContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        if (isDarkMode) {
+                        if (isSystemInDarkTheme()) {
                             listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surfaceVariant
+                                colorFromHex("FFFBFD"),
+                                colorFromHex("FFFBFD"),
+                                colorFromHex("FFFBFD")
                             )
                         } else {
                             listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
@@ -525,7 +524,6 @@ private fun SignUpTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -537,10 +535,10 @@ private fun SignUpTextField(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-            unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+            focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+            unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
             focusedBorderColor = colorFromHex("EF6797"),
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
             focusedLabelColor = colorFromHex("EF6797"),
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -557,7 +555,6 @@ private fun PhoneVerificationSection(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     var phoneFieldValue by remember(uiState.phone) {
         mutableStateOf(TextFieldValue(uiState.phone, TextRange(uiState.phone.length)))
     }
@@ -579,10 +576,10 @@ private fun PhoneVerificationSection(
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                        unfocusedContainerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                        focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                        unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                         focusedBorderColor = colorFromHex("EF6797"),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
                         focusedLabelColor = colorFromHex("EF6797"),
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -648,16 +645,15 @@ private fun CafeSelectionSection(
     uiState: SignUpUiState,
     onAction: (SignUpAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(text = label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            color = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
             tonalElevation = 0.dp,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = if (isDarkMode) 0.65f else 0.35f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f))
         ) {
             Row(
                 modifier = Modifier
@@ -686,7 +682,7 @@ private fun CafeSelectionSection(
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White
+                    containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White
                 )
             ) {
                 Column {

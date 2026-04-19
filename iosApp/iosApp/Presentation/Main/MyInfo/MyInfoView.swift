@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct MyInfoView: View {
@@ -32,7 +33,7 @@ struct MyInfoView: View {
                 )
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
@@ -815,7 +816,7 @@ private struct MyInfoSectionTitle: View {
     var body: some View {
         Text(title)
             .font(.headline.weight(.bold))
-            .foregroundStyle(.primary)
+            .foregroundStyle(Color(hex: "2B2330"))
     }
 }
 

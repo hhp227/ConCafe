@@ -388,8 +388,6 @@ fun RankingPromoBanner(
 
 @Composable
 private fun RankingEmptyPlaceholder() {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -407,12 +405,12 @@ private fun RankingEmptyPlaceholder() {
                 text = stringResource(Res.string.ranking_empty_title),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.ranking_empty_desc),
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -425,8 +423,6 @@ fun RankingEntryCard(
     isMaid: Boolean,
     onClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -474,7 +470,7 @@ fun RankingEntryCard(
                 Text(
                     item.symbol,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                    color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
                 )
             }
             Column(
@@ -483,7 +479,7 @@ fun RankingEntryCard(
             ) {
                 Text(
                     item.name,
-                    color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                    color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -491,7 +487,7 @@ fun RankingEntryCard(
                 Text(
                     item.subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else colorFromHex("7E7E7E"),
+                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else colorFromHex("7E7E7E"),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

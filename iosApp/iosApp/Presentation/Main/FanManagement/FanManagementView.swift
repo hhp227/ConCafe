@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct FanManagementView: View {
@@ -113,11 +114,9 @@ private struct FanManagementContentView: View {
             .padding(.top, 16)
         }
         .background(
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            UITraitCollection.current.userInterfaceStyle == .dark
+                ? Color(hex: "FFF9FC")
+                : Color(uiColor: .systemGroupedBackground)
         )
     }
 

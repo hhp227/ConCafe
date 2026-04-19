@@ -214,7 +214,7 @@ private struct CafeInfoEditContentView: View {
             }
             bottomSaveBar()
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private var basicInformationSection: some View {
@@ -476,7 +476,11 @@ private struct CafeInfoEditContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                ? Color(hex: "FFF9FC")
+                : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92)
+            )
         }
     }
 

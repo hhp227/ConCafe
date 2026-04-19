@@ -238,41 +238,52 @@ fun HomeContentScreen(
                     }
                 }
             }
-        if (uiState.birthdayCasts.isNotEmpty()) {
-            item {
-                SectionTitle(stringResource(Res.string.home_section_birthday_cast))
-                Spacer(Modifier.height(10.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
-                    items(uiState.birthdayCasts) { maid ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(74.dp)
-                                    .clip(CircleShape)
-                                    .background(Brush.verticalGradient(listOf(colorFromHex("FFD3E2"), colorFromHex("FFB6D0"))))
+            if (uiState.birthdayCasts.isNotEmpty()) {
+                item {
+                    SectionTitle(stringResource(Res.string.home_section_birthday_cast))
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
+                        items(uiState.birthdayCasts) { maid ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
                             ) {
-                                if (!maid.profileImage.isNullOrBlank()) {
-                                    CompatImageDisplay(
-                                        imageUrl = maid.profileImage,
-                                        modifier = Modifier
-                                            .matchParentSize()
-                                            .clip(CircleShape),
-                                        applyRoundedClip = false
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .size(74.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    colorFromHex("FFD3E2"),
+                                                    colorFromHex("FFB6D0")
+                                                )
+                                            )
+                                        )
+                                ) {
+                                    if (!maid.profileImage.isNullOrBlank()) {
+                                        CompatImageDisplay(
+                                            imageUrl = maid.profileImage,
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .clip(CircleShape),
+                                            applyRoundedClip = false
+                                        )
+                                    }
                                 }
+                                Text(
+                                    maid.name,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-                            Text(maid.name, modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
-        }
         }
     } else {
         Box(
@@ -321,8 +332,6 @@ private fun HomeCafeEventCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Column(
         modifier = modifier.clickable(onClick = onClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -365,7 +374,7 @@ private fun HomeCafeEventCard(
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -645,8 +654,6 @@ private fun NearByCafeItem(
     cafe: Cafe,
     modifier: Modifier = Modifier
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -671,7 +678,7 @@ private fun NearByCafeItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = cafe.name,
-                color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

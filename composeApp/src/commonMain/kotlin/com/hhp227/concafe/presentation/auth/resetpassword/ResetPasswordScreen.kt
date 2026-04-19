@@ -121,14 +121,12 @@ private fun ResetPasswordContentScreen(
     innerPadding: PaddingValues,
     onAction: (ResetPasswordAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    if (isDarkMode) {
+                    if (isSystemInDarkTheme()) {
                         listOf(
                             MaterialTheme.colorScheme.background,
                             MaterialTheme.colorScheme.surface,

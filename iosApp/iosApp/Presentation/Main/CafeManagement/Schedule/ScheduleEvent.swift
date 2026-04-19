@@ -10,4 +10,5 @@ import Foundation
 enum ScheduleEvent {
     case navigateBack
     case showMessage(String)
+    case navigateToCastManagement(cafeId: String, cafeName: String)
 }

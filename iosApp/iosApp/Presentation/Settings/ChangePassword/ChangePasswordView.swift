@@ -91,7 +91,7 @@ struct ChangePasswordView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:

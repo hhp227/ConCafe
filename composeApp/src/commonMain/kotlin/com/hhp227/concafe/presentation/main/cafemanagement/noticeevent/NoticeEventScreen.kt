@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.noticeevent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -166,7 +167,7 @@ private fun NoticeEventContent(
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        containerColor = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -246,10 +247,16 @@ private fun NoticeEventContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {

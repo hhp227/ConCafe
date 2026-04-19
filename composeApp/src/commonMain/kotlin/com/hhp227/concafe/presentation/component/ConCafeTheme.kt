@@ -9,8 +9,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 
 @Composable
 fun ConCafeTheme(content: @Composable () -> Unit) {
-    val isDarkMode = isSystemInDarkTheme()
-    val colorScheme = if (isDarkMode) {
+    val darkMode = isSystemInDarkTheme()
+    val colorScheme = if (darkMode) {
         darkColorScheme(
             primary = colorFromHex("EF6797"),
             secondary = colorFromHex("F7A0C1"),
@@ -32,9 +32,7 @@ fun ConCafeTheme(content: @Composable () -> Unit) {
         )
     }
 
-    SideEffect {
-        setConCafeDarkMode(isDarkMode)
-    }
+    SideEffect { setConCafeDarkMode(darkMode) }
     MaterialTheme(
         colorScheme = colorScheme,
         content = content

@@ -43,7 +43,7 @@ struct InquiryView: View {
         }
         .navigationTitle(String(localized: String.LocalizationValue("inquiry_screen_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
     }
 
     private var inquiryTypeSection: some View {

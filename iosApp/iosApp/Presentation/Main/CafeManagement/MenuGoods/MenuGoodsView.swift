@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Foundation
 import Shared
 
@@ -122,11 +123,17 @@ private struct MenuGoodsContentView: View {
             .padding(.bottom, 24)
         }
         .background(
-            LinearGradient(
-                colors: [Color(hex: "FFF8FB"), Color(hex: "FFF2F6"), Color(hex: "FFFCFD")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
+                    Color(hex: "FFF9FC")
+                } else {
+                    LinearGradient(
+                        colors: [Color(hex: "FFF8FB"), Color(hex: "FFF2F6"), Color(hex: "FFFCFD")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
         )
         .safeAreaInset(edge: .bottom, spacing: 0) {
             HStack {
@@ -217,7 +224,7 @@ private struct MenuGoodsContentView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color.white)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -281,7 +288,7 @@ private struct MenuGoodsContentView: View {
             .tint(Color(hex: "EF6797"))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 48)
-            .background(Color.white)
+            .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -312,7 +319,7 @@ private struct MenuGoodsContentView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .padding(.vertical, 28)
-        .background(Color.white)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -389,7 +396,7 @@ private struct MenuGoodsContentView: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -475,7 +482,7 @@ private struct MenuGoodsContentView: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)

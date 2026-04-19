@@ -83,7 +83,7 @@ private struct AccountSettingsContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
         .sheet(isPresented: Binding(
             get: { uiState.isDeleteDialogVisible },
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
@@ -487,7 +487,7 @@ private struct AccountDeleteConfirmationSheet: View {
                 Spacer()
             }
             .padding(20)
-            .background(Color(hex: "FFFBFD"))
+            .background(Color(hex: "FFF9FC"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

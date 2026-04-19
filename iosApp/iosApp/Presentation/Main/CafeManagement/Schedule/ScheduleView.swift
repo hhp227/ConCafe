@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct ScheduleView: View {
@@ -53,6 +54,8 @@ struct ScheduleView: View {
                 onNavigationAction(.navigateBack)
             case .showMessage(let message):
                 alertMessage = message
+            case .navigateToCastManagement(let cafeId, let cafeName):
+                onNavigationAction(.navigateToCastManagement(cafeId: cafeId, cafeName: cafeName))
             }
         }
         .alert(
@@ -303,11 +306,17 @@ private struct ScheduleContentView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
+                    Color(hex: "FFF9FC")
+                } else {
+                    LinearGradient(
+                        colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
             .ignoresSafeArea()
             if !uiState.isLoading {
                 ScrollView(.vertical, showsIndicators: true) {

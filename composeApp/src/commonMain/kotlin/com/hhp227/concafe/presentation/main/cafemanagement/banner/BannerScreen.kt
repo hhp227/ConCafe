@@ -105,7 +105,7 @@ private fun BannerContentScreen(
     onAction: (BannerAction) -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        containerColor = colorFromHex("FFFBFD"),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column(
@@ -147,7 +147,7 @@ private fun BannerContentScreen(
         },
         bottomBar = {
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                color = colorFromHex("FFFBFD"),
                 shadowElevation = 8.dp
             ) {
                 Button(
@@ -173,7 +173,7 @@ private fun BannerContentScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                .background(colorFromHex("FFFBFD")),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,

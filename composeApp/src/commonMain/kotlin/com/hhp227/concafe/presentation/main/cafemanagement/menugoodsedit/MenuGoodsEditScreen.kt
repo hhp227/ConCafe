@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -132,7 +133,7 @@ private fun MenuGoodsEditContentScreen(
         },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -171,10 +172,16 @@ private fun MenuGoodsEditContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
@@ -290,7 +297,7 @@ private fun PhotoUploadCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.8f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
@@ -321,7 +328,7 @@ private fun PhotoUploadCard(
                         .align(Alignment.BottomEnd)
                         .padding(12.dp),
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.92f),
+                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
                     shadowElevation = 2.dp
                 ) {
                     Icon(
@@ -590,7 +597,7 @@ private fun LoadingCard() {
             .fillMaxWidth()
             .height(220.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
+            .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
             .border(BorderStroke(1.dp, Color(0x55FFD1DC)), RoundedCornerShape(20.dp)),
         contentAlignment = Alignment.Center
     ) {

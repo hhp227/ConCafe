@@ -135,7 +135,7 @@ fun CheckInScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
     ) {
         CheckInContentScreen(
             uiState = uiState,
@@ -535,7 +535,6 @@ private fun CafeMapSection(
     onCafeCheckIn: (String) -> Unit,
     onCheckInClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
@@ -572,7 +571,7 @@ private fun CafeMapSection(
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        if (isDarkMode) {
+                        if (isSystemInDarkTheme()) {
                             listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
                         } else {
                             listOf(colorFromHex("FFF0F6"), colorFromHex("FFFAFC"), colorFromHex("FFF3F8"))
@@ -842,7 +841,6 @@ private fun PopularCastCard(
     cast: CheckInCastSummary,
     onClick: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -900,7 +898,7 @@ private fun PopularCastCard(
             }
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = if (isDarkMode) {
+                color = if (isSystemInDarkTheme()) {
                     colorFromHex("EF6797").copy(alpha = 0.22f)
                 } else {
                     colorFromHex("FFEEF5")
@@ -909,7 +907,7 @@ private fun PopularCastCard(
                 Text(
                     text = stringResource(Res.string.checkin_today_visit_count, cast.todayVisit),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (isDarkMode) colorFromHex("F8B7CF") else colorFromHex("EF6797"),
+                    color = if (isSystemInDarkTheme()) colorFromHex("F8B7CF") else colorFromHex("EF6797"),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -923,7 +921,6 @@ private fun LoginPromotionSection(
     onSignIn: () -> Unit,
     onSignUp: () -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
@@ -954,8 +951,8 @@ private fun LoginPromotionSection(
                 onClick = onSignIn,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDarkMode) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                    contentColor = if (isDarkMode) MaterialTheme.colorScheme.onSurface else colorFromHex("EF6797")
+                    containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                    contentColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.onSurface else colorFromHex("EF6797")
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -1419,7 +1416,6 @@ private fun MoreVisitCard(
     remainingCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val isDarkMode = isSystemInDarkTheme()
 
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -1446,7 +1442,7 @@ private fun MoreVisitCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(Res.string.checkin_more_visit_label),
-                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
@@ -1493,8 +1489,6 @@ fun TimelineItem(
     visit: CheckInVisitEntry,
     modifier: Modifier = Modifier
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     Row(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -1510,7 +1504,7 @@ fun TimelineItem(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
                     modifier = Modifier.padding(6.dp),
-                    tint = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                    tint = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
                 )
             }
             Box(
@@ -1534,14 +1528,14 @@ fun TimelineItem(
                     Text(
                         visit.cafeName,
                         fontWeight = FontWeight.Bold,
-                        color = if (isDarkMode) Color.White else MaterialTheme.colorScheme.onSurface
+                        color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
                     )
                     Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                         Text(
                             text = visit.relativeVisitedLabel(),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontSize = 12.sp,
-                            color = if (isDarkMode) Color.White.copy(alpha = 0.86f) else MaterialTheme.colorScheme.onSurface
+                            color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.86f) else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -1552,7 +1546,7 @@ fun TimelineItem(
                     } else {
                         stringResource(Res.string.checkin_visit_memo_empty)
                     },
-                    color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))

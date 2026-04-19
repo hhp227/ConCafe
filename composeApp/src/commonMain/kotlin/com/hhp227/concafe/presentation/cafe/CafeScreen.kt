@@ -165,7 +165,7 @@ fun CafeContentScreen(
             }
     }
     Scaffold(
-        containerColor = colorFromHex("FFF9FC"),
+        containerColor = colorFromHex("FFFBFD"),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -241,7 +241,7 @@ fun CafeContentScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colorFromHex("FFF9FC")),
+                    .background(colorFromHex("FFFBFD")),
                 contentPadding = PaddingValues(
                     top = 0.dp,
                     bottom = innerPadding.calculateBottomPadding() + 32.dp

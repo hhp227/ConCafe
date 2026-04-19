@@ -39,7 +39,6 @@ fun CafeNoticeScreen(
     canLoadMore: Boolean,
     isLoadingMore: Boolean
 ) {
-    val isDarkMode = isSystemInDarkTheme()
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
 
     if (events.isEmpty() && notices.isEmpty()) {
@@ -56,7 +55,7 @@ fun CafeNoticeScreen(
                 text = stringResource(Res.string.noticeevent_tab_event),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
+                color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
             )
             if (events.isNotEmpty()) {
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -83,7 +82,7 @@ fun CafeNoticeScreen(
                 text = stringResource(Res.string.noticeevent_tab_notice),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isDarkMode) Color.White else colorFromHex("1F1A22")
+                color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
             )
             if (notices.isEmpty()) {
                 EmptyContent(

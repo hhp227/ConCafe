@@ -186,8 +186,6 @@ private fun GuestMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
 ) {
-    val isDarkMode = isSystemInDarkTheme()
-
     val features = listOf(
         GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), colorFromHex("EF6797"), colorFromHex("F57AA8")),
         GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), colorFromHex("9C6ADE"), colorFromHex("B388EB")),
@@ -198,7 +196,7 @@ private fun GuestMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -280,7 +278,7 @@ private fun GuestMyInfoScreen(
                             Text(
                                 feature.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (isDarkMode) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 3,
                                 overflow = TextOverflow.Clip
                             )
@@ -419,7 +417,7 @@ private fun MyInfoSectionTitle(
         modifier = modifier,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface
+        color = colorFromHex("2B2330")
     )
 }
 
@@ -463,7 +461,7 @@ private fun ProfileMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -674,6 +672,7 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
         UserRole.VISITOR -> stringResource(Res.string.myinfo_profile_accent_visitor)
     }
     val profileAccent = title.take(2).uppercase()
+
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)),

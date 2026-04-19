@@ -10,6 +10,8 @@ import Shared
 
 struct ScheduleUiState {
     var managedCastId: String = ""
+    var managedCafeId: String = ""
+    var managedCafeName: String = ""
     var isLoading: Bool = false
     var isSaving: Bool = false
     var isEditSheetVisible: Bool = false

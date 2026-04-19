@@ -95,6 +95,18 @@ struct CompatNavigationContainer<Content: View>: View {
     }
 }
 
+struct CompatPresentationBackgroundModifier: ViewModifier {
+    let color: Color
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content.presentationBackground(color)
+        } else {
+            content
+        }
+    }
+}
+
 struct CompatLargeSheetDetentModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 16.0, *) {
@@ -227,6 +239,10 @@ struct NavigationBarVisibilityConfigurator: UIViewControllerRepresentable {
 }
 
 extension View {
+    func compatPresentationBackground(_ color: Color) -> some View {
+        modifier(CompatPresentationBackgroundModifier(color: color))
+    }
+
     func compatLargeSheetDetent() -> some View {
         modifier(CompatLargeSheetDetentModifier())
     }

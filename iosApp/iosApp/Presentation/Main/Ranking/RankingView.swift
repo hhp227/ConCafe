@@ -86,7 +86,7 @@ private struct RankingContentView: View {
             }
             .padding(.vertical, 16)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(Color(hex: "FFF9FC"))
     }
 
     private var headerSection: some View {
@@ -101,7 +101,7 @@ private struct RankingContentView: View {
         ConCafeTabBar(
             labels: RankingUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: RankingUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: Color(hex: "FFFBFD"),
+            backgroundColor: Color(hex: "FFF9FC"),
             onSelect: { index in
                 onAction(.changeTab(RankingUiState.TabType.allCases[index]))
             }
@@ -331,8 +331,6 @@ struct RankingPromoBanner: View {
 }
 
 struct RankingEntryCard: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let item: Shared.RankingFeedEntry
     
     let isMaid: Bool
@@ -356,11 +354,11 @@ struct RankingEntryCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(colorScheme == .dark ? .white : .primary)
+                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .primary)
                 .lineLimit(1)
                 Text(item.subtitle)
                 .font(.caption)
-                .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
+                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.78) : .secondary)
                 .lineLimit(1)
                 HStack(spacing: 8) {
                     Text("\(item.score) pt")

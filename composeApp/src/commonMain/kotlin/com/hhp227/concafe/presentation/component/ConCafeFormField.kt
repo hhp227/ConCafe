@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -102,8 +103,8 @@ fun ConCafeFormField(
             leadingIcon = leadingContent,
             trailingIcon = trailingContent,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.surfaceVariant,
-                unfocusedContainerColor = colorScheme.surfaceVariant,
+                focusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
                 focusedBorderColor = colorFromHex("FFD1DC"),
                 unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.45f)
             )

@@ -72,7 +72,8 @@ actual fun CompatImageDisplay(
     val coilSize = when (displaySize) {
         ImageDisplaySize.THUMBNAIL -> Size(640, 640)
         ImageDisplaySize.MEDIUM -> Size(1200, 1200)
-        ImageDisplaySize.FULL -> Size.ORIGINAL
+        // Size.ORIGINAL causes crash on high-res photos (>~100MB bitmap limit on Android Canvas)
+        ImageDisplaySize.FULL -> Size(3840, 3840)
     }
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)

@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -92,6 +93,9 @@ fun ScheduleScreen(
         viewModel.event.collect { event ->
             when (event) {
                 ScheduleEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is ScheduleEvent.NavigateToCastManagement -> onNavigationAction(
+                    NavigationAction.NavigateToCastManagement(event.cafeId, event.cafeName)
+                )
                 is ScheduleEvent.ShowMessage -> {
                     snackbarHostState.showSnackbar(
                         when (event.message) {
@@ -400,14 +404,20 @@ private fun ScheduleContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
-                            MaterialTheme.colorScheme.background
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                                    MaterialTheme.colorScheme.background
+                                )
+                            )
                         )
-                    )
+                    }
                 )
                 .padding(innerPadding)
         ) {

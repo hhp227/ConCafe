@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct CafeManagementView: View {
@@ -35,6 +36,7 @@ private struct CafeManagementContentView: View {
     let uiState: CafeManagementUiState
 
     let onAction: (CafeManagementAction) -> Void
+    
 
     var body: some View {
         Group {
@@ -98,13 +100,17 @@ private struct CafeManagementContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
-        .background(
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background {
+            if UITraitCollection.current.userInterfaceStyle == .dark {
+                Color(hex: "FFF9FC")
+            } else {
+                LinearGradient(
+                    colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }
     }
 
     private var heroCard: some View {

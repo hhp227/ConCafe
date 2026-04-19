@@ -46,7 +46,6 @@ private struct SignUpContentView: View {
 
     let onAction: (SignUpAction) -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
 
     private var filteredCafes: [Cafe] {
         if uiState.cafeSearchQuery.isEmpty {
@@ -82,8 +81,8 @@ private struct SignUpContentView: View {
         }
         .background(
             LinearGradient(
-                colors: colorScheme == .dark
-                    ? [Color(uiColor: .systemBackground), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white })]
+                colors: UITraitCollection.current.userInterfaceStyle == .dark
+                    ? [Color(hex: "FFF9FC"), Color(hex: "FFF9FC"), Color(hex: "FFF9FC")]
                     : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -145,12 +144,12 @@ private struct SignUpContentView: View {
                 Spacer()
             }
             .padding(20)
-            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+            .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(
-                        colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E7DFE8"),
+                        UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E7DFE8"),
                         lineWidth: 1
                     )
             )
@@ -298,11 +297,11 @@ private struct SignUpContentView: View {
                     )
                     .frame(height: 52)
                     .padding(.horizontal, 16)
-                    .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                    .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                            .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
                     )
                 }
                 Button(uiState.isPhoneVerified ? String(localized: String.LocalizationValue("signup_phone_verified"), table: "Localizable") : String(localized: String.LocalizationValue("signup_phone_request"), table: "Localizable")) {
@@ -391,11 +390,11 @@ private struct SignUpContentView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
                 )
             }
             if uiState.selectedCafe != nil {
@@ -459,7 +458,7 @@ private struct SignUpContentView: View {
                         }
                     }
                 }
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
         }
@@ -527,11 +526,11 @@ private struct SignUpContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
                 )
         }
     }
@@ -548,11 +547,11 @@ private struct SignUpContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(colorScheme == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
                 )
         }
     }
