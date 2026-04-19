@@ -74,6 +74,16 @@ extension IosNativeAdDataSourceImpl: GADNativeAdLoaderDelegate {
 private final class InsetLabel: UILabel {
     var textInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
 
+    override func textRect(forBounds bounds: CGRect, limitedToNumberOfLines numberOfLines: Int) -> CGRect {
+        let insetBounds = bounds.inset(by: textInsets)
+        var textRect = super.textRect(forBounds: insetBounds, limitedToNumberOfLines: numberOfLines)
+        textRect.origin.x -= textInsets.left
+        textRect.origin.y -= textInsets.top
+        textRect.size.width += textInsets.left + textInsets.right
+        textRect.size.height += textInsets.top + textInsets.bottom
+        return textRect
+    }
+
     override func drawText(in rect: CGRect) {
         super.drawText(in: rect.inset(by: textInsets))
     }
@@ -193,7 +203,7 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         badgeLabel.textColor = UIColor(Color(hex: "B74D73"))
         badgeLabel.backgroundColor = UIColor.white.withAlphaComponent(0.46)
         badgeLabel.textAlignment = .center
-        badgeLabel.textInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
+        badgeLabel.textInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
         badgeLabel.layer.cornerRadius = 999
         badgeLabel.clipsToBounds = true
         badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
@@ -239,11 +249,22 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         nativeAdView.bodyView = bodyLabel
         nativeAdView.advertiserView = sponsorLabel
         nativeAdView.callToActionView = callToActionButton
+        badgeLabel.tag = 99101
 
         return nativeAdView
     }
 
     func updateUIView(_ nativeAdView: GADNativeAdView, context: Context) {
+        if let badgeLabel = nativeAdView.viewWithTag(99101) as? UILabel {
+            badgeLabel.text = String(
+                localized: "ranking_native_ad_badge",
+                defaultValue: "광고",
+                table: "Localizable"
+            )
+            badgeLabel.isHidden = false
+            badgeLabel.alpha = 1
+        }
+
         (nativeAdView.headlineView as? UILabel)?.text = nativeAd.headline
         if let body = nativeAd.body, !body.isEmpty {
             (nativeAdView.bodyView as? UILabel)?.text = body
