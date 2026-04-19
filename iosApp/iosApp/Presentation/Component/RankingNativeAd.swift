@@ -176,6 +176,10 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
 
         metaStack.axis = .vertical
         metaStack.spacing = 6
+        metaStack.setContentHuggingPriority(.required, for: .horizontal)
+        metaStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+        metaStack.setContentHuggingPriority(.required, for: .vertical)
+        metaStack.setContentCompressionResistancePriority(.required, for: .vertical)
 
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -192,6 +196,12 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         badgeLabel.textInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
         badgeLabel.layer.cornerRadius = 999
         badgeLabel.clipsToBounds = true
+        badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
+        badgeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        badgeLabel.setContentHuggingPriority(.required, for: .vertical)
+        badgeLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 46).isActive = true
+        badgeLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 22).isActive = true
 
         sponsorLabel.font = .systemFont(ofSize: 11, weight: .medium)
         sponsorLabel.textColor = UIColor(Color(hex: "927D8A"))
@@ -211,8 +221,8 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         callToActionButton.backgroundColor = UIColor(Color(hex: "FFD1DC"))
         callToActionButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         callToActionButton.layer.cornerRadius = 16
-        callToActionButton.setContentHuggingPriority(.required, for: .horizontal)
-        callToActionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        callToActionButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        callToActionButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         callToActionButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 36).isActive = true
 
         metaStack.addArrangedSubview(badgeLabel)
