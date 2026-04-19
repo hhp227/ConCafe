@@ -112,6 +112,7 @@ fun CheckInScreen(
     onNavigate: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isDarkMode = isSystemInDarkTheme()
     val openLocationSettings = rememberCheckInLocationSettingsOpener()
     val snackbarHostState = remember { SnackbarHostState() }
     var isLocationSettingsAlertVisible by remember { mutableStateOf(false) }
@@ -135,7 +136,7 @@ fun CheckInScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
     ) {
         CheckInContentScreen(
             uiState = uiState,

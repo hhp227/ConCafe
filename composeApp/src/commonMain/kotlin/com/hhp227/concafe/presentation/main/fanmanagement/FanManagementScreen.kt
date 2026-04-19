@@ -121,17 +121,25 @@ private fun FanManagementContentScreen(
     uiState: FanManagementUiState,
     onAction: (FanManagementAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
-                        MaterialTheme.colorScheme.background
+            .then(
+                if (isDarkMode) {
+                    Modifier.background(colorFromHex("FFFBFD"))
+                } else {
+                    Modifier.background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                                MaterialTheme.colorScheme.background
+                            )
+                        )
                     )
-                )
+                }
             )
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)

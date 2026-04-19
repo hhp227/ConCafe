@@ -123,6 +123,8 @@ private struct BannerEditContentView: View {
     let onAction: (BannerEditAction) -> Void
 
     let onPickImage: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -167,11 +169,17 @@ private struct BannerEditContentView: View {
                 .padding(.bottom, 100)
             }
             .background(
-                LinearGradient(
-                    colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                Group {
+                    if colorScheme == .dark {
+                        Color(hex: "FFF9FC")
+                    } else {
+                        LinearGradient(
+                            colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
             )
             bottomSaveBar()
         }
@@ -398,7 +406,11 @@ private struct BannerEditContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 16)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
+            .background(
+                colorScheme == .dark
+                ? Color(hex: "FFF9FC")
+                : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94)
+            )
         }
         .buttonStyle(.plain)
         .disabled(!uiState.isSaveEnabled)

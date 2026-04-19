@@ -151,9 +151,9 @@ private fun SignUpContentScreen(
                     Brush.linearGradient(
                         if (isDarkMode) {
                             listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.colorScheme.surfaceVariant
+                                colorFromHex("FFFBFD"),
+                                colorFromHex("FFFBFD"),
+                                colorFromHex("FFFBFD")
                             )
                         } else {
                             listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))

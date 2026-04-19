@@ -302,14 +302,22 @@ private struct ScheduleContentView: View {
     let uiState: ScheduleUiState
 
     let onAction: (ScheduleAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if colorScheme == .dark {
+                    Color(hex: "FFF9FC")
+                } else {
+                    LinearGradient(
+                        colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
             .ignoresSafeArea()
             if !uiState.isLoading {
                 ScrollView(.vertical, showsIndicators: true) {

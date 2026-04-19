@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -185,6 +186,7 @@ private fun CafeDashboardContentScreen(
     onQrMetricClick: () -> Unit
 ) {
     val cafe = uiState.cafe
+    val isDarkMode = isSystemInDarkTheme()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -204,10 +206,16 @@ private fun CafeDashboardContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f), MaterialTheme.colorScheme.background)
-                    )
+                .then(
+                    if (isDarkMode) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f), MaterialTheme.colorScheme.background)
+                            )
+                        )
+                    }
                 )
         ) {
             if (uiState.isLoading) {

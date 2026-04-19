@@ -35,6 +35,8 @@ private struct CafeManagementContentView: View {
     let uiState: CafeManagementUiState
 
     let onAction: (CafeManagementAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -98,13 +100,17 @@ private struct CafeManagementContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
-        .background(
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background {
+            if colorScheme == .dark {
+                Color(hex: "FFF9FC")
+            } else {
+                LinearGradient(
+                    colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }
     }
 
     private var heroCard: some View {

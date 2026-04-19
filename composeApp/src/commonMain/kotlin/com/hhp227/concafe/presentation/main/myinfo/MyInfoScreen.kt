@@ -198,7 +198,7 @@ private fun GuestMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -419,7 +419,7 @@ private fun MyInfoSectionTitle(
         modifier = modifier,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface
+        color = colorFromHex("2B2330")
     )
 }
 
@@ -460,10 +460,12 @@ private fun ProfileMyInfoScreen(
     uiState: MyInfoUiState,
     onAction: (MyInfoAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

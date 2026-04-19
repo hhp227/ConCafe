@@ -127,7 +127,10 @@ private struct CafeDashboardContentView: View {
     let uiState: CafeDashboardUiState
 
     let onAction: (CafeDashboardAction) -> Void
+
     let onQrMetricTap: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -185,13 +188,17 @@ private struct CafeDashboardContentView: View {
                 }
             }
         }
-        .background(
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background {
+            if colorScheme == .dark {
+                Color(hex: "FFF9FC")
+            } else {
+                LinearGradient(
+                    colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }
     }
 
     private var heroCard: some View {

@@ -14,12 +14,14 @@ struct CheckInView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = CheckInViewModel()
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var isLocationSettingsAlertVisible = false
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
+            (colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemBackground))
                 .ignoresSafeArea()
             Group {
                 if viewModel.uiState.isLoading {

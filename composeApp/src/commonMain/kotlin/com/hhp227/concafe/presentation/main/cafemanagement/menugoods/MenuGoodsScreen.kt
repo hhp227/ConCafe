@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.menugoods
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -125,6 +126,8 @@ private fun MenuGoodsContentScreen(
     uiState: MenuGoodsUiState,
     onAction: (MenuGoodsAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -171,10 +174,16 @@ private fun MenuGoodsContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("FFF8FB"), colorFromHex("FFF2F6"), colorFromHex("FFFCFD"))
-                    )
+                .then(
+                    if (isDarkMode) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(colorFromHex("FFF8FB"), colorFromHex("FFF2F6"), colorFromHex("FFFCFD"))
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
@@ -366,9 +375,11 @@ private fun SearchField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White,
         border = BorderStroke(1.dp, colorFromHex("F1D9E4"))
     ) {
         Row(
@@ -486,11 +497,13 @@ private fun InfoBanner(
 
 @Composable
 private fun LoadingCard() {
+    val isDarkMode = isSystemInDarkTheme()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .background(if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White)
             .border(BorderStroke(1.dp, colorFromHex("F0E2E9")), RoundedCornerShape(24.dp))
             .padding(vertical = 44.dp),
         contentAlignment = Alignment.Center
@@ -503,9 +516,11 @@ private fun LoadingCard() {
 private fun EmptyStateCard(
     isSearchMode: Boolean
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Column(
@@ -554,9 +569,11 @@ private fun MenuItemCard(
     onDelete: () -> Unit,
     onToggleAvailability: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(
@@ -655,9 +672,11 @@ private fun GoodsItemCard(
     onDelete: () -> Unit,
     onToggleAvailability: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White),
         border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
     ) {
         Row(

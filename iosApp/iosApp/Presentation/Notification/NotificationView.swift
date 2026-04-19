@@ -39,6 +39,8 @@ private struct NotificationContentView: View {
     let uiState: NotificationUiState
 
     let onAction: (NotificationAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Group {
@@ -54,16 +56,18 @@ private struct NotificationContentView: View {
                 )
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
     }
 }
 
 private struct NotificationSignInRequiredView: View {
     let onAction: (NotificationAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemGroupedBackground)
+            (colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
                 .ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "bell.badge")
@@ -105,6 +109,8 @@ private struct NotificationSectionsView: View {
     let uiState: NotificationUiState
 
     let onAction: (NotificationAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
@@ -117,7 +123,7 @@ private struct NotificationSectionsView: View {
             .padding(16)
             .padding(.bottom, 20)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
     }
 
     private var summaryCard: some View {

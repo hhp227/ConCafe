@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,7 +77,10 @@ private fun NotificationContentScreen(
     uiState: NotificationUiState,
     onAction: (NotificationAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Scaffold(
+        containerColor = if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.common_notification)) },
@@ -124,10 +128,12 @@ private fun NotificationSignInRequiredScreen(
     modifier: Modifier = Modifier,
     onAction: (NotificationAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -178,10 +184,12 @@ private fun NotificationSectionsScreen(
     uiState: NotificationUiState,
     onAction: (NotificationAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(if (isDarkMode) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {

@@ -109,13 +109,15 @@ private struct BannerContentView: View {
     let uiState: BannerUiState
     
     let onAction: (BannerAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
             ConCafeTabBar(
                 labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
+                backgroundColor: colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                 onSelect: { index in
                     onAction(.selectTab(BannerTab.allCases[index]))
                 }
@@ -141,7 +143,7 @@ private struct BannerContentView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .safeAreaInset(edge: .bottom) {
             Button {
                 onAction(.createBannerTapped)
@@ -161,7 +163,7 @@ private struct BannerContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+            .background(colorScheme == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         }
     }
 

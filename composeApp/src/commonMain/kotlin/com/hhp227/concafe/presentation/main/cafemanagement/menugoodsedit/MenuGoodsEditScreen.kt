@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -104,6 +105,8 @@ private fun MenuGoodsEditContentScreen(
     uiState: MenuGoodsEditUiState,
     onAction: (MenuGoodsEditAction) -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -132,7 +135,7 @@ private fun MenuGoodsEditContentScreen(
         },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = if (isDarkMode) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -171,10 +174,16 @@ private fun MenuGoodsEditContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
-                    )
+                .then(
+                    if (isDarkMode) {
+                        Modifier.background(colorFromHex("FFFBFD"))
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
@@ -265,6 +274,8 @@ private fun PhotoUploadCard(
     imageUrl: String?,
     onClick: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -290,7 +301,7 @@ private fun PhotoUploadCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.8f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
@@ -321,7 +332,7 @@ private fun PhotoUploadCard(
                         .align(Alignment.BottomEnd)
                         .padding(12.dp),
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.92f),
+                    color = if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
                     shadowElevation = 2.dp
                 ) {
                     Icon(
@@ -585,12 +596,14 @@ private fun InfoBanner(
 
 @Composable
 private fun LoadingCard() {
+    val isDarkMode = isSystemInDarkTheme()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(220.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
+            .background(if (isDarkMode) MaterialTheme.colorScheme.surface else Color.White)
             .border(BorderStroke(1.dp, Color(0x55FFD1DC)), RoundedCornerShape(20.dp)),
         contentAlignment = Alignment.Center
     ) {

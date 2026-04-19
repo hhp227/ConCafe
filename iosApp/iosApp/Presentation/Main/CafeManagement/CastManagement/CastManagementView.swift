@@ -93,7 +93,7 @@ private struct CastManagementContentView: View {
                 }
             }
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .systemBackground : .systemGroupedBackground }))
+        .background(Color(hex: "FFF9FC"))
     }
 
     private func formatPeriodLabel(viewMode: CastScheduleViewMode, from: Date, to: Date) -> String {

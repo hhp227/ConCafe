@@ -83,7 +83,7 @@ private struct SignUpContentView: View {
         .background(
             LinearGradient(
                 colors: colorScheme == .dark
-                    ? [Color(uiColor: .systemBackground), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white })]
+                    ? [Color(hex: "FFF9FC"), Color(hex: "FFF9FC"), Color(hex: "FFF9FC")]
                     : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

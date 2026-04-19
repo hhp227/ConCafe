@@ -89,6 +89,8 @@ private struct FanManagementContentView: View {
     let uiState: FanManagementUiState
 
     let onAction: (FanManagementAction) -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ScrollView {
@@ -113,11 +115,9 @@ private struct FanManagementContentView: View {
             .padding(.top, 16)
         }
         .background(
-            LinearGradient(
-                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            colorScheme == .dark
+                ? Color(hex: "FFF9FC")
+                : Color(uiColor: .systemGroupedBackground)
         )
     }
 
