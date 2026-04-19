@@ -181,11 +181,7 @@ private struct WeekDayCard: View {
                     .foregroundStyle(.secondary)
                 Spacer()
             } else {
-                FlowLayout(spacing: 6) {
-                    ForEach(column.castNames, id: \.self) { name in
-                        CastNameChip(name: name)
-                    }
-                }
+                CastNameChipGroup(names: column.castNames)
                 Spacer(minLength: 0)
             }
         }
@@ -197,6 +193,29 @@ private struct WeekDayCard: View {
     }
 }
 
+private struct CastNameChipGroup: View {
+    let names: [String]
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            FlowLayout(spacing: 6) {
+                ForEach(names, id: \.self) { name in
+                    CastNameChip(name: name)
+                }
+            }
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(names, id: \.self) { name in
+                        CastNameChip(name: name)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@available(iOS 16.0, *)
 private struct FlowLayout: Layout {
     var spacing: CGFloat = 6
 
