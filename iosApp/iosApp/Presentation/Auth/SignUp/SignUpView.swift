@@ -83,7 +83,7 @@ private struct SignUpContentView: View {
         .background(
             LinearGradient(
                 colors: colorScheme == .dark
-                    ? [Color(uiColor: .systemBackground), Color(uiColor: .secondarySystemBackground), Color(uiColor: .tertiarySystemBackground)]
+                    ? [Color(uiColor: .systemBackground), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white })]
                     : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -145,7 +145,7 @@ private struct SignUpContentView: View {
                 Spacer()
             }
             .padding(20)
-            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -298,7 +298,7 @@ private struct SignUpContentView: View {
                     )
                     .frame(height: 52)
                     .padding(.horizontal, 16)
-                    .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+                    .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -391,7 +391,7 @@ private struct SignUpContentView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -459,7 +459,7 @@ private struct SignUpContentView: View {
                         }
                     }
                 }
-                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
         }
@@ -527,7 +527,7 @@ private struct SignUpContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -548,7 +548,7 @@ private struct SignUpContentView: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)

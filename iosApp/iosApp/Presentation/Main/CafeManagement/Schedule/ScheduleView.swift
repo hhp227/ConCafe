@@ -116,7 +116,7 @@ struct ScheduleView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         }
     }
 
@@ -172,7 +172,7 @@ private struct ScheduleEditModal: View {
                                     .font(.subheadline.weight(.medium))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(uiState.editStatus == status ? Color(uiColor: .secondarySystemBackground) : Color.clear)
+                                    .background(uiState.editStatus == status ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.clear)
                                     .foregroundStyle(uiState.editStatus == status ? .primary : .secondary)
                                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             }
@@ -180,7 +180,7 @@ private struct ScheduleEditModal: View {
                         }
                     }
                     .padding(6)
-                    .background(Color(uiColor: .tertiarySystemBackground))
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(spacing: 12) {
                         TimePickerField(
@@ -244,7 +244,7 @@ private struct ScheduleEditModal: View {
                 .padding(.bottom, 20)
             }
             .frame(maxWidth: .infinity)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .ignoresSafeArea(edges: .bottom)
         }
@@ -287,7 +287,7 @@ private struct TimePickerField: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 52)
-                .background(isEnabled ? Color(uiColor: .tertiarySystemBackground) : Color(uiColor: .secondarySystemBackground))
+                .background(isEnabled ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(!isEnabled)
@@ -367,7 +367,7 @@ private struct ScheduleContentView: View {
                 }
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground).opacity(0.94))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -413,7 +413,7 @@ private struct ScheduleContentView: View {
                             }
                             .frame(width: 56)
                             .padding(.vertical, 10)
-                            .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemBackground).opacity(0.92))
+                            .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -505,7 +505,7 @@ private struct ScheduleContentView: View {
                         onAction(.clickEditDay(id: schedule.id))
                     } label: {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(uiColor: .tertiarySystemBackground))
+                            .fill(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                             .frame(width: 40, height: 40)
                             .overlay {
                                 Image(systemName: "pencil")
@@ -516,7 +516,7 @@ private struct ScheduleContentView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 14)
-                .background(Color(uiColor: .secondarySystemBackground).opacity(schedule.isWorking ? 0.96 : 0.88))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(schedule.isWorking ? 0.96 : 0.88))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)

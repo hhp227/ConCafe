@@ -121,7 +121,7 @@ struct ResetPasswordView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -144,7 +144,7 @@ struct ResetPasswordView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: .tertiarySystemBackground) : Color(hex: "F8F5F6"))
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(hex: "F8F5F6"))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

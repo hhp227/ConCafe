@@ -93,7 +93,7 @@ private struct NotificationSignInRequiredView: View {
             }
             .padding(24)
             .frame(maxWidth: 420)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .padding(24)
         }
@@ -162,7 +162,7 @@ private struct NotificationSectionsView: View {
 
     private func notificationCard(_ item: NotificationListItem) -> some View {
         let visual = notificationVisual(type: item.type)
-        let containerColor = item.isRead ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF3F8")
+        let containerColor = item.isRead ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "FFF3F8")
         return HStack(alignment: .top, spacing: 12) {
             Circle()
                 .fill(visual.background)

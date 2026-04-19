@@ -165,7 +165,7 @@ private struct RankingEmptyPlaceholderCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
@@ -372,7 +372,7 @@ struct RankingEntryCard: View {
             Spacer()
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
         .onTapGesture {

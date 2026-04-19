@@ -367,7 +367,7 @@ private struct CheckInMapSection: View {
         .background(
             LinearGradient(
                 colors: colorScheme == .dark
-                    ? [Color(uiColor: .secondarySystemBackground), Color(uiColor: .systemBackground)]
+                    ? [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }), Color(uiColor: .systemBackground)]
                     : [Color(hex: "FFF0F6"), Color(hex: "FFFAFC"), Color(hex: "FFF3F8")],
                 startPoint: .top,
                 endPoint: .bottom
@@ -527,7 +527,7 @@ private struct CheckInLoginPromotionSection: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
             .foregroundStyle(Color(hex: "EF6797"))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .font(.subheadline.weight(.bold))
@@ -603,7 +603,7 @@ private struct CheckInCastCard: View {
         }
         .padding(16)
         .frame(width: 200, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: colorScheme == .dark ? .black.opacity(0.20) : .black.opacity(0.03), radius: 8, y: 3)
         .contentShape(Rectangle())
@@ -806,7 +806,7 @@ private struct CheckInTimelineItem: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(spacing: 0) {
                 Circle()
-                    .fill(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
+                    .fill(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
                     .frame(width: 32, height: 32)
                     .overlay(
                         Circle()
@@ -832,7 +832,7 @@ private struct CheckInTimelineItem: View {
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(colorScheme == .dark ? Color(uiColor: .tertiarySystemBackground) : .white)
+                    .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : .white)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 Text(
@@ -848,7 +848,7 @@ private struct CheckInTimelineItem: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
+            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: .black.opacity(0.03), radius: 8, y: 3)
             .padding(.bottom, 24)
@@ -884,7 +884,7 @@ private struct CheckInEmptyState: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : .white)
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : .white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .padding(.horizontal, 16)
     }
@@ -1099,7 +1099,7 @@ private struct CheckInNewVisitSheet: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF1F3"))
+                    .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "FFF1F3"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -1151,14 +1151,14 @@ private struct CheckInNewVisitSheet: View {
         .background(
             LinearGradient(
                 colors: [
-                    colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"),
+                    colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "F8F5F6"),
                     colorScheme == .dark ? Color(uiColor: .systemBackground) : Color(hex: "FFFBFD")
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
-        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "F8F5F6"))
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "F8F5F6"))
     }
 
     init(
@@ -1237,7 +1237,7 @@ private struct CheckInQrScanSheet: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF1F3"))
+                .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "FFF1F3"))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -1273,7 +1273,7 @@ private struct CheckInSectionPlaceholderCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(hex: "FFF2F7"))
+        .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "FFF2F7"))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

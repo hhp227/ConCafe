@@ -203,7 +203,7 @@ private struct NotificationSettingsContentView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
-                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : Color(uiColor: .secondarySystemBackground))
+                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -272,7 +272,7 @@ private struct NotificationSettingsContentView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

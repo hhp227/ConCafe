@@ -115,7 +115,7 @@ private struct BannerContentView: View {
             ConCafeTabBar(
                 labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                backgroundColor: Color(uiColor: .tertiarySystemBackground),
+                backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                 onSelect: { index in
                     onAction(.selectTab(BannerTab.allCases[index]))
                 }
@@ -141,7 +141,7 @@ private struct BannerContentView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(Color(uiColor: .tertiarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .safeAreaInset(edge: .bottom) {
             Button {
                 onAction(.createBannerTapped)
@@ -161,7 +161,7 @@ private struct BannerContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(uiColor: .tertiarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         }
     }
 
@@ -234,7 +234,7 @@ private struct BannerCardView: View {
             }
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)

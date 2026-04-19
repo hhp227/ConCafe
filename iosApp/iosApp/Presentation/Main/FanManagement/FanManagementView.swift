@@ -209,7 +209,7 @@ private struct FanManagementContentView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.95))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.95))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -242,7 +242,7 @@ private struct FanManagementContentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 18)
-                        .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -335,7 +335,7 @@ private struct FanManagementContentView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 16)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.88))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -374,7 +374,7 @@ private struct FanManagementContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 18)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.88))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -442,7 +442,7 @@ private struct CastClaimSheetView: View {
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(.horizontal, 16)
                                             .padding(.vertical, 14)
-                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemBackground))
+                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -484,7 +484,7 @@ private struct CastClaimSheetView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 14)
                     .padding(.bottom, 14)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 }
             }
             .toolbar {

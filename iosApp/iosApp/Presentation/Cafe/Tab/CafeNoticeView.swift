@@ -78,7 +78,7 @@ struct CafeNoticeView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .padding(.horizontal, contentPadding)
@@ -159,7 +159,7 @@ struct CafeNoticeView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

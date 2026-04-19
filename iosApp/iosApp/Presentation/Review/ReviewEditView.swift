@@ -171,7 +171,7 @@ private struct ReviewEditContentView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var photoSection: some View {
@@ -213,7 +213,7 @@ private struct ReviewEditContentView: View {
                         .foregroundStyle(Color(hex: "8B5164"))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(uiColor: .secondarySystemBackground))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(Capsule())
                         .padding(12)
                     }
@@ -236,7 +236,7 @@ private struct ReviewEditContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var reviewSection: some View {
@@ -270,7 +270,7 @@ private struct ReviewEditContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var atmosphereCard: some View {
@@ -301,7 +301,7 @@ private struct ReviewEditContentView: View {
             }
         }
         .padding(16)
-        .background(Color(uiColor: .tertiarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -363,7 +363,7 @@ private struct ReviewEditContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 14)
-                .background(Color(uiColor: .secondarySystemBackground).opacity(0.96))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.96))
             }
         }
     }
@@ -379,7 +379,7 @@ private struct ReviewEditContentView: View {
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemBackground))
+                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()

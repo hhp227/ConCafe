@@ -73,7 +73,7 @@ private struct NoticeEventContentView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             LinearGradient(
-                colors: [Color(uiColor: .tertiarySystemBackground), Color(uiColor: .systemGroupedBackground)],
+                colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -82,7 +82,7 @@ private struct NoticeEventContentView: View {
                 ConCafeTabBar(
                     labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                     selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                    backgroundColor: Color(uiColor: .tertiarySystemBackground),
+                    backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                     onSelect: { index in
                         onAction(.selectTab(NoticeEventTab.allCases[index]))
                     }
@@ -245,7 +245,7 @@ private struct NoticeEventContentView: View {
                 .foregroundStyle(Color(hex: "8F848F"))
         }
         .padding(18)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
@@ -297,7 +297,7 @@ private struct NoticeEventContentView: View {
             }
             .padding(18)
         }
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
         .opacity(item.isDimmed ? 0.74 : 1)
@@ -381,7 +381,7 @@ private struct NoticeEventContentView: View {
             Spacer()
         }
         .padding(.vertical, 28)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
@@ -476,7 +476,7 @@ private struct NoticeEventFormSheet: View {
                                 .tint(Color(hex: "FFD1DC"))
                             }
                             .padding(16)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         }
                         VStack(alignment: .leading, spacing: 8) {
@@ -510,7 +510,7 @@ private struct NoticeEventFormSheet: View {
                                 }
                                 .padding(.horizontal, 16)
                                 .frame(height: 56)
-                                .background(Color(uiColor: .secondarySystemBackground))
+                                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -575,7 +575,7 @@ private struct NoticeEventFormSheet: View {
                                     }
                                 }
                                 .padding(12)
-                                .background(Color(uiColor: .secondarySystemBackground))
+                                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             }
                         }
@@ -587,11 +587,11 @@ private struct NoticeEventFormSheet: View {
             }
             .frame(maxWidth: .infinity)
             .frame(maxHeight: 720)
-            .background(Color(uiColor: .tertiarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
             .ignoresSafeArea(edges: .bottom)
             bottomSubmitBar()
         }
-        .background(Color(uiColor: .tertiarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .sheet(isPresented: $isImagePickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in
@@ -611,7 +611,7 @@ private struct NoticeEventFormSheet: View {
 
     private func bottomSubmitBar() -> some View {
         LinearGradient(
-            colors: [Color.clear, Color(uiColor: .tertiarySystemBackground), Color(uiColor: .tertiarySystemBackground)],
+            colors: [Color.clear, Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white })],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -675,7 +675,7 @@ private struct NoticeEventFormSheet: View {
                         .foregroundStyle(Color(hex: "8B5164"))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(uiColor: .secondarySystemBackground))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(Capsule())
                         .padding(12)
                     }

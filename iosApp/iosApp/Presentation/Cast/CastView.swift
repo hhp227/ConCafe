@@ -323,7 +323,7 @@ private struct CastSummarySection: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 22)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private func statItem(systemName: String, label: String, value: String) -> some View {
@@ -432,7 +432,7 @@ private struct CastScheduleCard: View {
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(isWorking ? Color(hex: "EF6797") : Color(uiColor: .secondarySystemBackground))
+        .background(isWorking ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -448,7 +448,7 @@ private struct CastIntroductionSection: View {
             Text(detail.cast.desc)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 22))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
@@ -501,7 +501,7 @@ private struct CastActivityCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
         .padding(.horizontal, 12)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
@@ -557,7 +557,7 @@ private struct CastRecentReviewSection: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color(uiColor: .secondarySystemBackground))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
                 }
@@ -580,7 +580,7 @@ private struct CastRecentReviewEmptyView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .padding(.horizontal, 16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }

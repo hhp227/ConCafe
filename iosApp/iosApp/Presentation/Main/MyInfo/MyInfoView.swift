@@ -144,7 +144,7 @@ private struct GuestMyInfoView: View {
                             .padding(12)
                             .frame(maxWidth: .infinity, minHeight: 140, maxHeight: 140, alignment: .topLeading)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
                     }
@@ -208,7 +208,7 @@ private struct GuestMyInfoView: View {
                                 Spacer()
                             }
                             .padding(10)
-                            .background(Color(uiColor: .secondarySystemBackground))
+                            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .onTapGesture {
                                 onAction(.cafeTapped(id: cafe.id))
@@ -406,7 +406,7 @@ private struct ProfileMyInfoView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .secondarySystemBackground).opacity(0.94))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -436,7 +436,7 @@ private struct ProfileMyInfoView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .padding(.horizontal, 10)
-        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color(uiColor: .secondarySystemBackground).opacity(0.92))
+        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: metric.highlight ? .clear : Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
         .overlay(
@@ -836,7 +836,7 @@ private struct MyInfoSectionPlaceholderCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

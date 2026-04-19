@@ -214,7 +214,7 @@ private struct CafeInfoEditContentView: View {
             }
             bottomSaveBar()
         }
-        .background(Color(uiColor: .tertiarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private var basicInformationSection: some View {
@@ -368,7 +368,7 @@ private struct CafeInfoEditContentView: View {
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
@@ -395,7 +395,7 @@ private struct CafeInfoEditContentView: View {
                 )
                 .frame(height: 52)
                 .padding(.horizontal, 16)
-                .background(Color(uiColor: .tertiarySystemBackground))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -476,7 +476,7 @@ private struct CafeInfoEditContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.92))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
         }
     }
 
@@ -496,7 +496,7 @@ private struct CafeInfoEditContentView: View {
             content()
         }
         .padding(16)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -619,7 +619,7 @@ private struct CafeInfoEditContentView: View {
             TimeFieldPicker(text: close)
         }
         .padding(12)
-        .background(Color(uiColor: .tertiarySystemBackground))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
@@ -668,7 +668,7 @@ private struct TimeFieldPicker: View {
                     .foregroundStyle(Color(hex: "7C7480"))
             }
             .frame(width: 108, height: 38)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
