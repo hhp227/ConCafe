@@ -34,6 +34,17 @@ struct CafeView: View {
                     case .loadMoreReviews:
                         let count = viewModel.uiState.reviews.count
                         countBeforeLoad.reviews = (countBeforeLoad.reviews == 0) ? -count : count
+                    case .pagingTriggerDisappeared(let tab):
+                        switch tab {
+                        case .casts:
+                            countBeforeLoad.casts = -1
+                        case .notices:
+                            countBeforeLoad.notices = -1
+                        case .reviews:
+                            countBeforeLoad.reviews = -1
+                        default:
+                            break
+                        }
                     default:
                         break
                     }
@@ -362,7 +373,7 @@ private struct CafeContentView: View {
                 canLoadMore: uiState.canLoadMoreCasts,
                 isLoadingMore: uiState.isLoadingMoreCasts,
                 onPagingTriggerDisappear: {
-                    countBeforeLoad.casts = -1
+                    onAction(.pagingTriggerDisappeared(.casts))
                 },
                 onAction: onAction
             )
@@ -381,7 +392,7 @@ private struct CafeContentView: View {
                 currentUserId: uiState.currentUserId,
                 onLoadMore: { onAction(.loadMoreReviews) },
                 onPagingTriggerDisappear: {
-                    countBeforeLoad.reviews = -1
+                    onAction(.pagingTriggerDisappeared(.reviews))
                 },
                 onAction: onAction
             )
@@ -393,7 +404,7 @@ private struct CafeContentView: View {
                 isLoadingMore: uiState.isLoadingMoreNotices,
                 onLoadMore: { onAction(.loadMoreNotices) },
                 onPagingTriggerDisappear: {
-                    countBeforeLoad.notices = -1
+                    onAction(.pagingTriggerDisappeared(.notices))
                 }
             )
         }
