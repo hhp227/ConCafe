@@ -54,32 +54,48 @@ struct ExploreView: View {
 
 private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
-    
+    @State private var lastItemIdBeforeLoad: String? = nil
+    @State private var isNearBottom = false
+
     let uiState: ExploreUiState
-    
+
     let onAction: (ExploreAction) -> Void
-    
+
     private var cafeNameById: [String: String] {
         Dictionary(uniqueKeysWithValues: uiState.cafes.map { ($0.id, $0.name) })
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
-                LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
-                    searchSection
-                    Section {
-                        gridContent(contentWidth: geometry.size.width)
-                            .padding(.horizontal, 12)
-                    } header: {
-                        tabHeader
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
+                        searchSection
+                        Section {
+                            gridContent(contentWidth: geometry.size.width)
+                                .padding(.horizontal, 12)
+                        } header: {
+                            tabHeader
+                        }
                     }
+                    .padding(.vertical, 12)
                 }
-                .padding(.vertical, 12)
+                .background(ScrollViewKeyboardDismissConfigurator())
+                .background(Color(hex: "FFF9FC"))
+                .modifier(ExploreKeyboardDismissModifier())
+                .onChange(of: uiState.cafes.count) { _ in
+                    guard isNearBottom, let id = lastItemIdBeforeLoad else { return }
+                    proxy.scrollTo(id, anchor: .bottom)
+                    lastItemIdBeforeLoad = nil
+                    isNearBottom = false
+                }
+                .onChange(of: uiState.maids.count) { _ in
+                    guard isNearBottom, let id = lastItemIdBeforeLoad else { return }
+                    proxy.scrollTo(id, anchor: .bottom)
+                    lastItemIdBeforeLoad = nil
+                    isNearBottom = false
+                }
             }
-            .background(ScrollViewKeyboardDismissConfigurator())
-            .background(Color(hex: "FFF9FC"))
-            .modifier(ExploreKeyboardDismissModifier())
         }
     }
     
@@ -200,18 +216,22 @@ private struct ExploreContentView: View {
 
         if canLoadMore || isLoadingMore {
             VStack(spacing: 0) {
-                if !isLoadingMore {
-                    Color.clear
-                        .frame(height: 1)
-                        .onAppear {
-                            guard canLoadMore else { return }
-                            if uiState.selectedTab == .cafe {
-                                onAction(.loadMoreCafes)
-                            } else {
-                                onAction(.loadMoreMaids)
-                            }
+                Color.clear
+                    .frame(height: 1)
+                    .onAppear {
+                        guard canLoadMore, !isLoadingMore else { return }
+                        isNearBottom = true
+                        if uiState.selectedTab == .cafe {
+                            lastItemIdBeforeLoad = uiState.cafes.last?.id
+                            onAction(.loadMoreCafes)
+                        } else {
+                            lastItemIdBeforeLoad = uiState.maids.last?.id
+                            onAction(.loadMoreMaids)
                         }
-                }
+                    }
+                    .onDisappear {
+                        isNearBottom = false
+                    }
                 if isLoadingMore {
                     ProgressView()
                         .frame(maxWidth: .infinity)
