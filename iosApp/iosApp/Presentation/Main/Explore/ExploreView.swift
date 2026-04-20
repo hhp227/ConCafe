@@ -54,8 +54,8 @@ struct ExploreView: View {
 
 private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
-    @State private var lastItemIdBeforeLoad: String? = nil
-    @State private var isNearBottom = false
+
+    @State private var countBeforeLoad = 0 // 고질적인 페이지네이션 스크롤 문제때문에 추가
 
     let uiState: ExploreUiState
 
@@ -83,17 +83,15 @@ private struct ExploreContentView: View {
                 .background(ScrollViewKeyboardDismissConfigurator())
                 .background(Color(hex: "FFF9FC"))
                 .modifier(ExploreKeyboardDismissModifier())
-                .onChange(of: uiState.cafes.count) { _ in
-                    guard isNearBottom, let id = lastItemIdBeforeLoad else { return }
-                    proxy.scrollTo(id, anchor: .bottom)
-                    lastItemIdBeforeLoad = nil
-                    isNearBottom = false
+                .onChange(of: uiState.cafes.count) { newCount in
+                    guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
+                    proxy.scrollTo(uiState.cafes[countBeforeLoad - 1].id, anchor: .bottom)
+                    countBeforeLoad = 0
                 }
-                .onChange(of: uiState.maids.count) { _ in
-                    guard isNearBottom, let id = lastItemIdBeforeLoad else { return }
-                    proxy.scrollTo(id, anchor: .bottom)
-                    lastItemIdBeforeLoad = nil
-                    isNearBottom = false
+                .onChange(of: uiState.maids.count) { newCount in
+                    guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
+                    proxy.scrollTo(uiState.maids[countBeforeLoad - 1].id, anchor: .bottom)
+                    countBeforeLoad = 0
                 }
             }
         }
@@ -220,17 +218,16 @@ private struct ExploreContentView: View {
                     .frame(height: 1)
                     .onAppear {
                         guard canLoadMore, !isLoadingMore else { return }
-                        isNearBottom = true
                         if uiState.selectedTab == .cafe {
-                            lastItemIdBeforeLoad = uiState.cafes.last?.id
+                            countBeforeLoad = uiState.cafes.count
                             onAction(.loadMoreCafes)
                         } else {
-                            lastItemIdBeforeLoad = uiState.maids.last?.id
+                            countBeforeLoad = uiState.maids.count
                             onAction(.loadMoreMaids)
                         }
                     }
                     .onDisappear {
-                        isNearBottom = false
+                        countBeforeLoad = 0
                     }
                 if isLoadingMore {
                     ProgressView()
