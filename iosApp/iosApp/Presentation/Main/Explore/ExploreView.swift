@@ -200,17 +200,18 @@ private struct ExploreContentView: View {
 
         if canLoadMore || isLoadingMore {
             VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 1)
-                    .onAppear {
-                        if canLoadMore, !isLoadingMore {
+                if !isLoadingMore {
+                    Color.clear
+                        .frame(height: 1)
+                        .onAppear {
+                            guard canLoadMore else { return }
                             if uiState.selectedTab == .cafe {
                                 onAction(.loadMoreCafes)
                             } else {
                                 onAction(.loadMoreMaids)
                             }
                         }
-                    }
+                }
                 if isLoadingMore {
                     ProgressView()
                         .frame(maxWidth: .infinity)
