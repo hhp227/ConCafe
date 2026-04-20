@@ -51,7 +51,7 @@ struct CafeReviewView: View {
                 emptyCard(String(localized: String.LocalizationValue("cafe_review_empty"), table: "Localizable"))
             } else {
                 LazyVStack(spacing: 12) {
-                    ForEach(Array(reviews.enumerated()), id: \.element.id) { index, review in
+                    ForEach(Array(reviews.enumerated()), id: \.element.id) { _, review in
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 HStack(spacing: 8) {
@@ -144,22 +144,28 @@ struct CafeReviewView: View {
                         .padding(16)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        .onAppear {
-                            if index == reviews.count - 1, canLoadMore, !isLoadingMore {
-                                onLoadMore()
+                    }
+                    if canLoadMore || isLoadingMore {
+                        VStack(spacing: 0) {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    if canLoadMore, !isLoadingMore {
+                                        onLoadMore()
+                                    }
+                                }
+                            if isLoadingMore {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                            } else if canLoadMore {
+                                Text(String(localized: String.LocalizationValue("cafe_review_load_more_hint"), table: "Localizable"))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
                             }
                         }
-                    }
-                    if isLoadingMore {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                    } else if canLoadMore {
-                        Text(String(localized: String.LocalizationValue("cafe_review_load_more_hint"), table: "Localizable"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
                     }
                 }
             }

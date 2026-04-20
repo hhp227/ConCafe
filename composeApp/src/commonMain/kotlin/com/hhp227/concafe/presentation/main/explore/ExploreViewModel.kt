@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.explore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -99,6 +100,7 @@ class ExploreViewModel(
         jobs[TaskKey.CAFE_PAGE]?.cancel()
         jobs[TaskKey.CAFE_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreCafes = append) }
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             val state = _uiState.value
             when (
                 val result = getExploreCafePageUseCase.invoke(
@@ -145,6 +147,7 @@ class ExploreViewModel(
         jobs[TaskKey.MAID_PAGE]?.cancel()
         jobs[TaskKey.MAID_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreMaids = append) }
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             val state = _uiState.value
             when (
                 val result = getExploreCastPageUseCase.invoke(
@@ -332,6 +335,7 @@ class ExploreViewModel(
 
     private companion object {
         private const val PAGE_SIZE = 15
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }
 

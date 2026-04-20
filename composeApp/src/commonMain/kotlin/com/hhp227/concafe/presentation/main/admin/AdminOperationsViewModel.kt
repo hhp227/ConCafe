@@ -169,6 +169,7 @@ class AdminOperationsViewModel(
                 _uiState.update { state ->
                     state.copy(isLoadingMoreInquiries = true)
                 }
+                delay(PAGINATION_DELAY_MILLIS)
             }
             val result = getAdminInquiryPageUseCase.invoke(
                 cursor = cursor,
@@ -455,6 +456,7 @@ class AdminOperationsViewModel(
 
 private const val ADMIN_CLAIM_POLLING_INTERVAL_MILLIS = 60_000L
 private const val ADMIN_INQUIRY_PAGE_SIZE = 10
+private const val PAGINATION_DELAY_MILLIS = 1_000L
 
 private const val ADMIN_BANNER_MENU_ID = "banner"
 

@@ -102,6 +102,10 @@ final class CheckInViewModel: ObservableObject {
             uiState.isLoadingMoreRecentVisits = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCheckInUserFeedUseCase.invoke(cursor: cursor, pageSize: Self.recentVisitPageSize)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -677,6 +681,7 @@ final class CheckInViewModel: ObservableObject {
     private static let todayVisitLimit = 4
 
     private static let recentVisitPageSize: Int32 = 12
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
     private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
         if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }

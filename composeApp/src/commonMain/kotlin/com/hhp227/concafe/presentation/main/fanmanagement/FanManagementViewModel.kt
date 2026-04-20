@@ -343,6 +343,7 @@ class FanManagementViewModel(
                     castClaimSheet = state.castClaimSheet?.copy(isLoadingMore = true)
                 )
             }
+            delay(PAGINATION_DELAY_MILLIS)
             when (val result = getMyRequestableCastPageUseCase.invoke(cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -578,3 +579,4 @@ private data class ClaimUiState(
 )
 
 private const val CLAIM_STATUS_POLLING_INTERVAL_MILLIS = 30_000L
+private const val PAGINATION_DELAY_MILLIS = 1_000L

@@ -95,6 +95,10 @@ final class HomeViewModel: ObservableObject {
             )
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getHomeFeedUseCase.invoke(popularCastCursor: cursor, nearbyCafeCursor: nil)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -189,6 +193,10 @@ final class HomeViewModel: ObservableObject {
             )
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: cursor)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -703,6 +711,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private let maxHomeCafeEvents = 8
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
     private static func dictionary(from source: [AnyHashable: Any]) -> [String: String] {
         source.reduce(into: [:]) { partialResult, entry in

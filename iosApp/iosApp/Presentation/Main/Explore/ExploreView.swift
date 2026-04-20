@@ -156,24 +156,12 @@ private struct ExploreContentView: View {
         } else {
             LazyVGrid(columns: exploreGridColumns(for: contentWidth), spacing: 12) {
                 if uiState.selectedTab == .cafe {
-                    ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { index, cafe in
+                    ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { _, cafe in
                         cafeCard(cafe)
-                            .onAppear {
-                                guard index == uiState.cafes.indices.last,
-                                      uiState.canLoadMoreCafes,
-                                      !uiState.isLoadingMoreCafes else { return }
-                                onAction(.loadMoreCafes)
-                            }
                     }
                 } else {
-                    ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { index, maid in
+                    ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { _, maid in
                         maidCard(maid)
-                            .onAppear {
-                                guard index == uiState.maids.indices.last,
-                                      uiState.canLoadMoreMaids,
-                                      !uiState.isLoadingMoreMaids else { return }
-                                onAction(.loadMoreMaids)
-                        }
                     }
                 }
             }
@@ -210,16 +198,31 @@ private struct ExploreContentView: View {
         let isLoadingMore = uiState.selectedTab == .cafe ? uiState.isLoadingMoreCafes : uiState.isLoadingMoreMaids
         let canLoadMore = uiState.selectedTab == .cafe ? uiState.canLoadMoreCafes : uiState.canLoadMoreMaids
 
-        if isLoadingMore {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.top, 12)
-        } else if canLoadMore {
-            Text(String(localized: String.LocalizationValue("explore_paging_hint"), table: "Localizable"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 1)
+                    .onAppear {
+                        if canLoadMore, !isLoadingMore {
+                            if uiState.selectedTab == .cafe {
+                                onAction(.loadMoreCafes)
+                            } else {
+                                onAction(.loadMoreMaids)
+                            }
+                        }
+                    }
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 12)
+                } else if canLoadMore {
+                    Text(String(localized: String.LocalizationValue("explore_paging_hint"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                }
+            }
         }
     }
 

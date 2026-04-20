@@ -171,6 +171,10 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreCasts = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeCastListPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -243,6 +247,10 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreNotices = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeNoticePageUseCase.invoke(cafeId: self.cafeId, query: "", cursor: cursor, pageSize: 15)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -300,6 +308,10 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreReviews = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeReviewPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor, pageSize: 15)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -482,6 +494,8 @@ final class CafeViewModel: ObservableObject {
             phoneNumber: detail.phoneNumber
         )
     }
+
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 }
 
 private extension CafeEventManagementItem {

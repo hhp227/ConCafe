@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -100,7 +101,7 @@ class HomeViewModel(
         jobs[TaskKey.POPULAR_CAST_PAGE]?.cancel()
         jobs[TaskKey.POPULAR_CAST_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMorePopularCasts = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getHomeFeedUseCase.invoke(popularCastCursor = cursor, nearbyCafeCursor = null)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -135,7 +136,7 @@ class HomeViewModel(
         jobs[TaskKey.NEARBY_CAFE_PAGE]?.cancel()
         jobs[TaskKey.NEARBY_CAFE_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreNearbyCafes = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getHomeFeedUseCase.invoke(popularCastCursor = null, nearbyCafeCursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -424,5 +425,6 @@ class HomeViewModel(
 
     private companion object {
         private const val MAX_HOME_CAFE_EVENTS = 8
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

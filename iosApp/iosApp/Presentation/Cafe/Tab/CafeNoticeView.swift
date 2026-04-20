@@ -92,16 +92,21 @@ struct CafeNoticeView: View {
                 if notices.isEmpty {
                     emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
                         .padding(.horizontal, contentPadding)
-                } else if isLoadingMore {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                } else if canLoadMore {
-                    Color.clear
-                        .frame(height: 1)
-                        .onAppear {
-                            onLoadMore()
+                } else if canLoadMore || isLoadingMore {
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                if canLoadMore, !isLoadingMore {
+                                    onLoadMore()
+                                }
+                            }
+                        if isLoadingMore {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
                         }
+                    }
                 }
             }
             .padding(.horizontal, -contentPadding)

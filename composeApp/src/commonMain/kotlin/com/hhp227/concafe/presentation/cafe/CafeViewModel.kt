@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.cafe
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -163,7 +164,7 @@ class CafeViewModel(
         jobs[JobKey.CAST_PAGE]?.cancel()
         jobs[JobKey.CAST_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreCasts = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeCastListPageUseCase.invoke(cafeId, cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -226,7 +227,7 @@ class CafeViewModel(
         jobs[JobKey.NOTICE_PAGE]?.cancel()
         jobs[JobKey.NOTICE_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreNotices = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeNoticePageUseCase.invoke(cafeId = cafeId, query = "", cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -278,7 +279,7 @@ class CafeViewModel(
         jobs[JobKey.REVIEW_PAGE]?.cancel()
         jobs[JobKey.REVIEW_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreReviews = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeReviewPageUseCase.invoke(cafeId = cafeId, cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -424,6 +425,10 @@ class CafeViewModel(
         MENU_GOODS,
         OBSERVE_DETAIL_EVENT,
         OBSERVE_REVIEW_EVENT
+    }
+
+    private companion object {
+        const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 
     private fun mergeLoadedMenuGoods(detail: com.hhp227.concafe.domain.model.CafeDetail): com.hhp227.concafe.domain.model.CafeDetail {

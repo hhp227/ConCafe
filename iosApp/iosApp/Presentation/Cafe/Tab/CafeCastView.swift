@@ -25,7 +25,7 @@ struct CafeCastView: View {
         } else {
             VStack(spacing: 12) {
                 LazyVGrid(columns: cafeCastGridColumns(for: contentWidth), spacing: 12) {
-                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
+                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { _, maid in
                         let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: maid.todaySchedule)
 
                         ConCafeCastCard(
@@ -37,16 +37,17 @@ struct CafeCastView: View {
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
-                        .onAppear {
-                            guard index == maids.indices.last,
-                                  canLoadMore,
-                                  !isLoadingMore else { return }
-                            onAction(.loadMoreCasts)
-                        }
                     }
                 }
-                if canLoadMore {
-                    Group {
+                if canLoadMore || isLoadingMore {
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                if canLoadMore, !isLoadingMore {
+                                    onAction(.loadMoreCasts)
+                                }
+                            }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)

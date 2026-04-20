@@ -23,6 +23,7 @@ import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -124,7 +125,7 @@ class NoticeEventViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeNoticePageUseCase.invoke(cafeId = cafeId, query = _uiState.value.query, cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -160,7 +161,7 @@ class NoticeEventViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeEventPageUseCase.invoke(cafeId = cafeId, query = _uiState.value.query, cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -474,5 +475,6 @@ class NoticeEventViewModel(
         private const val MSG_IMAGE_ONE_ONLY = "noticeevent_info_image_one_only"
         private const val MSG_IMAGE_PICK_REQUIRED = "noticeevent_info_image_pick_required"
         private const val MSG_RESERVE_SCHEDULE_NEXT_STEP = "noticeevent_info_reserve_schedule_next_step"
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

@@ -171,22 +171,27 @@ private struct NoticeEventContentView: View {
                             ForEach(uiState.notices, id: \.id) { item in
                                 noticeCard(item)
                                     .padding(.horizontal, 16)
-                                    .onAppear {
-                                        if item.id == uiState.notices.last?.id {
-                                            onAction(.loadMoreNotices)
-                                        }
-                                    }
                             }
                         } else {
                             ForEach(uiState.events, id: \.id) { item in
                                 eventCard(item)
                                     .padding(.horizontal, 16)
-                                    .onAppear {
-                                        if item.id == uiState.events.last?.id {
-                                            onAction(.loadMoreEvents)
-                                        }
-                                    }
                             }
+                        }
+                        let canLoadMoreCurrentTab = uiState.selectedTab == .notice ? uiState.canLoadMoreNotices : uiState.canLoadMoreEvents
+
+                        if canLoadMoreCurrentTab || uiState.isCurrentTabLoadingMore {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    if uiState.selectedTab == .notice {
+                                        if canLoadMoreCurrentTab && !uiState.isCurrentTabLoadingMore {
+                                            onAction(.loadMoreNotices)
+                                        }
+                                    } else if canLoadMoreCurrentTab && !uiState.isCurrentTabLoadingMore {
+                                        onAction(.loadMoreEvents)
+                                    }
+                                }
                         }
                         if uiState.isCurrentTabLoadingMore {
                             ProgressView()

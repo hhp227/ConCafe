@@ -94,6 +94,10 @@ final class CafeDashboardViewModel: ObservableObject {
             uiState.isLoadingMoreCasts = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await self.getCafeCastPageUseCase.invoke(
                     cafeId: cafeId,
                     cursor: cursor,
@@ -786,4 +790,5 @@ final class CafeDashboardViewModel: ObservableObject {
     }
 
     private let castClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 }

@@ -105,7 +105,7 @@ class CafeDashboardViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor, pageSize)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -750,3 +750,4 @@ class CafeDashboardViewModel(
 }
 
 private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
+private const val PAGINATION_DELAY_MILLIS = 1_000L
