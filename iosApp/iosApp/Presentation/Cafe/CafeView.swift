@@ -15,13 +15,30 @@ struct CafeView: View {
 
     @State private var alertMessage: String?
 
+    @State private var countBeforeLoad = (casts: 0, notices: 0, reviews: 0)
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
         ScrollViewReader { proxy in
             CafeContentView(
                 uiState: viewModel.uiState,
-                onAction: viewModel.onAction,
+                onAction: { action in
+                    switch action {
+                    case .loadMoreCasts:
+                        let count = viewModel.uiState.casts.count
+                        countBeforeLoad.casts = (countBeforeLoad.casts == 0) ? -count : count
+                    case .loadMoreNotices:
+                        let count = viewModel.uiState.notices.count
+                        countBeforeLoad.notices = (countBeforeLoad.notices == 0) ? -count : count
+                    case .loadMoreReviews:
+                        let count = viewModel.uiState.reviews.count
+                        countBeforeLoad.reviews = (countBeforeLoad.reviews == 0) ? -count : count
+                    default:
+                        break
+                    }
+                    viewModel.onAction(action)
+                },
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
@@ -60,6 +77,33 @@ struct CafeView: View {
                         proxy.scrollTo(topAnchorId, anchor: .top)
                     }
                 }
+            }
+            .onChange(of: viewModel.uiState.casts.count) { newCount in
+                guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
+                let preCount = abs(countBeforeLoad.casts)
+                let wasSubsequent = countBeforeLoad.casts > 0
+                countBeforeLoad.casts = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .casts else { return }
+                proxy.scrollTo(viewModel.uiState.casts[preCount - 1].cast.id, anchor: .bottom)
+            }
+            .onChange(of: viewModel.uiState.notices.count) { newCount in
+                guard countBeforeLoad.notices != 0, countBeforeLoad.notices != -1 else { return }
+                let preCount = abs(countBeforeLoad.notices)
+                let wasSubsequent = countBeforeLoad.notices > 0
+                countBeforeLoad.notices = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .notices else { return }
+                proxy.scrollTo(viewModel.uiState.notices[preCount - 1].id, anchor: .bottom)
+            }
+            .onChange(of: viewModel.uiState.reviews.count) { newCount in
+                guard countBeforeLoad.reviews != 0, countBeforeLoad.reviews != -1 else { return }
+                let preCount = abs(countBeforeLoad.reviews)
+                let wasSubsequent = countBeforeLoad.reviews > 0
+                countBeforeLoad.reviews = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .reviews else { return }
+                proxy.scrollTo(viewModel.uiState.reviews[preCount - 1].id, anchor: .bottom)
             }
         }
     }

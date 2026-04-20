@@ -22,6 +22,8 @@ struct CafeNoticeView: View {
 
     @State private var expandedNoticeIds: Set<String> = []
 
+    @State private var countBeforeLoad: Int = 0
+
     private let contentPadding: CGFloat = 16
 
     var body: some View {
@@ -97,19 +99,33 @@ struct CafeNoticeView: View {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {
-                                if canLoadMore, !isLoadingMore {
-                                    onLoadMore()
-                                }
+                                guard canLoadMore, !isLoadingMore else { return }
+                                let count = notices.count
+                                countBeforeLoad = (countBeforeLoad == 0) ? -count : count
+                                onLoadMore()
                             }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .onDisappear {
+                                countBeforeLoad = -1
+                            }
                     }
                 }
             }
             .padding(.horizontal, -contentPadding)
+        }
+        .onChange(of: notices.count) { newCount in
+            guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
+            let preCount = abs(countBeforeLoad)
+            let wasSubsequent = countBeforeLoad > 0
+            countBeforeLoad = -1
+            guard newCount > preCount else { return }
+            guard wasSubsequent else { return }
         }
     }
 
