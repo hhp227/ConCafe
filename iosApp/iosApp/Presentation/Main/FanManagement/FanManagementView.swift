@@ -113,11 +113,7 @@ private struct FanManagementContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
         }
-        .background(
-            UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
-                : Color(uiColor: .systemGroupedBackground)
-        )
+        .background(Color(hex: "FFF9FC"))
     }
 
     private func infoBanner(message: String) -> some View {

@@ -124,21 +124,7 @@ private fun FanManagementContentScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.background(colorFromHex("FFFBFD"))
-                } else {
-                    Modifier.background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-                }
-            )
+            .background(colorFromHex("FFFBFD"))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),

@@ -132,17 +132,7 @@ private fun CafeManagementContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .then(
-                    if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
-                    } else {
-                        Modifier.background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f), MaterialTheme.colorScheme.background)
-                            )
-                        )
-                    }
-                )
+                .background(colorFromHex("FFFBFD"))
         ) {
             if (!uiState.isLoading) {
                 LazyColumn(
