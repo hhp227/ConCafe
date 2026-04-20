@@ -55,7 +55,8 @@ struct ExploreView: View {
 private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
 
-    @State private var countBeforeLoad = 0 // 고질적인 페이지네이션 스크롤 문제때문에 추가
+    @State private var countBeforeLoad = 0
+    @State private var isFirstPagination = true
 
     let uiState: ExploreUiState
 
@@ -85,13 +86,19 @@ private struct ExploreContentView: View {
                 .modifier(ExploreKeyboardDismissModifier())
                 .onChange(of: uiState.cafes.count) { newCount in
                     guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
+                    defer { countBeforeLoad = 0 }
+                    guard !isFirstPagination else { isFirstPagination = false; return }
                     proxy.scrollTo(uiState.cafes[countBeforeLoad - 1].id, anchor: .bottom)
-                    countBeforeLoad = 0
                 }
                 .onChange(of: uiState.maids.count) { newCount in
                     guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
+                    defer { countBeforeLoad = 0 }
+                    guard !isFirstPagination else { isFirstPagination = false; return }
                     proxy.scrollTo(uiState.maids[countBeforeLoad - 1].id, anchor: .bottom)
+                }
+                .onChange(of: uiState.selectedTab) { _ in
                     countBeforeLoad = 0
+                    isFirstPagination = true
                 }
             }
         }
@@ -226,9 +233,6 @@ private struct ExploreContentView: View {
                             onAction(.loadMoreMaids)
                         }
                     }
-                    .onDisappear {
-                        countBeforeLoad = 0
-                    }
                 if isLoadingMore {
                     ProgressView()
                         .frame(maxWidth: .infinity)
@@ -240,6 +244,9 @@ private struct ExploreContentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 8)
                 }
+                Color.clear
+                    .frame(height: 1)
+                    .onDisappear { countBeforeLoad = 0 }
             }
         }
     }
