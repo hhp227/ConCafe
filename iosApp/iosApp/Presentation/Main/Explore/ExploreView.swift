@@ -56,7 +56,6 @@ private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
 
     @State private var countBeforeLoad = 0
-    @State private var isFirstPagination = true
 
     let uiState: ExploreUiState
 
@@ -85,20 +84,25 @@ private struct ExploreContentView: View {
                 .background(Color(hex: "FFF9FC"))
                 .modifier(ExploreKeyboardDismissModifier())
                 .onChange(of: uiState.cafes.count) { newCount in
-                    guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
-                    defer { countBeforeLoad = 0 }
-                    guard !isFirstPagination else { isFirstPagination = false; return }
-                    proxy.scrollTo(uiState.cafes[countBeforeLoad - 1].id, anchor: .bottom)
+                    guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
+                    let preCount = abs(countBeforeLoad)
+                    let wasSubsequent = countBeforeLoad > 0
+                    countBeforeLoad = -1
+                    guard newCount > preCount else { return }
+                    guard wasSubsequent else { return }
+                    proxy.scrollTo(uiState.cafes[preCount - 1].id, anchor: .bottom)
                 }
                 .onChange(of: uiState.maids.count) { newCount in
-                    guard countBeforeLoad > 0, newCount > countBeforeLoad else { return }
-                    defer { countBeforeLoad = 0 }
-                    guard !isFirstPagination else { isFirstPagination = false; return }
-                    proxy.scrollTo(uiState.maids[countBeforeLoad - 1].id, anchor: .bottom)
+                    guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
+                    let preCount = abs(countBeforeLoad)
+                    let wasSubsequent = countBeforeLoad > 0
+                    countBeforeLoad = -1
+                    guard newCount > preCount else { return }
+                    guard wasSubsequent else { return }
+                    proxy.scrollTo(uiState.maids[preCount - 1].id, anchor: .bottom)
                 }
                 .onChange(of: uiState.selectedTab) { _ in
                     countBeforeLoad = 0
-                    isFirstPagination = true
                 }
             }
         }
@@ -226,10 +230,12 @@ private struct ExploreContentView: View {
                     .onAppear {
                         guard canLoadMore, !isLoadingMore else { return }
                         if uiState.selectedTab == .cafe {
-                            countBeforeLoad = uiState.cafes.count
+                            let count = uiState.cafes.count
+                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
                             onAction(.loadMoreCafes)
                         } else {
-                            countBeforeLoad = uiState.maids.count
+                            let count = uiState.maids.count
+                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
                             onAction(.loadMoreMaids)
                         }
                     }
