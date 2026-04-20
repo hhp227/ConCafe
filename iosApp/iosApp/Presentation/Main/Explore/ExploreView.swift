@@ -55,7 +55,7 @@ struct ExploreView: View {
 private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
 
-    @State private var countBeforeLoad = 0
+    @State private var countBeforeLoad = (cafe: 0, maid: 0)
 
     let uiState: ExploreUiState
 
@@ -84,25 +84,22 @@ private struct ExploreContentView: View {
                 .background(Color(hex: "FFF9FC"))
                 .modifier(ExploreKeyboardDismissModifier())
                 .onChange(of: uiState.cafes.count) { newCount in
-                    guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
-                    let preCount = abs(countBeforeLoad)
-                    let wasSubsequent = countBeforeLoad > 0
-                    countBeforeLoad = -1
+                    guard countBeforeLoad.cafe != 0, countBeforeLoad.cafe != -1 else { return }
+                    let preCount = abs(countBeforeLoad.cafe)
+                    let wasSubsequent = countBeforeLoad.cafe > 0
+                    countBeforeLoad.cafe = -1
                     guard newCount > preCount else { return }
                     guard wasSubsequent else { return }
                     proxy.scrollTo(uiState.cafes[preCount - 1].id, anchor: .bottom)
                 }
                 .onChange(of: uiState.maids.count) { newCount in
-                    guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
-                    let preCount = abs(countBeforeLoad)
-                    let wasSubsequent = countBeforeLoad > 0
-                    countBeforeLoad = -1
+                    guard countBeforeLoad.maid != 0, countBeforeLoad.maid != -1 else { return }
+                    let preCount = abs(countBeforeLoad.maid)
+                    let wasSubsequent = countBeforeLoad.maid > 0
+                    countBeforeLoad.maid = -1
                     guard newCount > preCount else { return }
                     guard wasSubsequent else { return }
                     proxy.scrollTo(uiState.maids[preCount - 1].id, anchor: .bottom)
-                }
-                .onChange(of: uiState.selectedTab) { _ in
-                    countBeforeLoad = 0
                 }
             }
         }
@@ -231,11 +228,11 @@ private struct ExploreContentView: View {
                         guard canLoadMore, !isLoadingMore else { return }
                         if uiState.selectedTab == .cafe {
                             let count = uiState.cafes.count
-                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
+                            countBeforeLoad.cafe = (countBeforeLoad.cafe == 0) ? -count : count
                             onAction(.loadMoreCafes)
                         } else {
                             let count = uiState.maids.count
-                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
+                            countBeforeLoad.maid = (countBeforeLoad.maid == 0) ? -count : count
                             onAction(.loadMoreMaids)
                         }
                     }
@@ -252,7 +249,13 @@ private struct ExploreContentView: View {
                 }
                 Color.clear
                     .frame(height: 1)
-                    .onDisappear { countBeforeLoad = -1 }
+                    .onDisappear {
+                        if uiState.selectedTab == .cafe {
+                            countBeforeLoad.cafe = -1
+                        } else {
+                            countBeforeLoad.maid = -1
+                        }
+                    }
             }
         }
     }
