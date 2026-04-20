@@ -252,7 +252,7 @@ private struct ExploreContentView: View {
                 }
                 Color.clear
                     .frame(height: 1)
-                    .onDisappear { countBeforeLoad = 0 }
+                    .onDisappear { countBeforeLoad = -1 }
             }
         }
     }
