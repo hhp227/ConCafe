@@ -20,6 +20,8 @@ struct CafeReviewView: View {
     let currentUserId: String?
 
     let onLoadMore: () -> Void
+    
+    let onPagingTriggerDisappear: () -> Void
 
     let onAction: (CafeAction) -> Void
 
@@ -167,6 +169,9 @@ struct CafeReviewView: View {
                             }
                             Color.clear
                                 .frame(height: 1)
+                                .onDisappear {
+                                    onPagingTriggerDisappear()
+                                }
                         }
                     }
                 }

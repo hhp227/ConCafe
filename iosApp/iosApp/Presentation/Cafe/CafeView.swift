@@ -81,8 +81,9 @@ struct CafeView: View {
             .onChange(of: viewModel.uiState.casts.count) { newCount in
                 guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
                 let preCount = abs(countBeforeLoad.casts)
+                let wasSubsequent = countBeforeLoad.casts > 0
                 countBeforeLoad.casts = -1
-                guard newCount > preCount, preCount > 0 else { return }
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
                 guard viewModel.uiState.selectedTab == .casts else { return }
                 let targetId = viewModel.uiState.casts[preCount - 1].cast.id
                 DispatchQueue.main.async {
@@ -92,8 +93,9 @@ struct CafeView: View {
             .onChange(of: viewModel.uiState.notices.count) { newCount in
                 guard countBeforeLoad.notices != 0, countBeforeLoad.notices != -1 else { return }
                 let preCount = abs(countBeforeLoad.notices)
+                let wasSubsequent = countBeforeLoad.notices > 0
                 countBeforeLoad.notices = -1
-                guard newCount > preCount, preCount > 0 else { return }
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
                 guard viewModel.uiState.selectedTab == .notices else { return }
                 let targetId = viewModel.uiState.notices[preCount - 1].id
                 DispatchQueue.main.async {
@@ -103,8 +105,9 @@ struct CafeView: View {
             .onChange(of: viewModel.uiState.reviews.count) { newCount in
                 guard countBeforeLoad.reviews != 0, countBeforeLoad.reviews != -1 else { return }
                 let preCount = abs(countBeforeLoad.reviews)
+                let wasSubsequent = countBeforeLoad.reviews > 0
                 countBeforeLoad.reviews = -1
-                guard newCount > preCount, preCount > 0 else { return }
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
                 guard viewModel.uiState.selectedTab == .reviews else { return }
                 let targetId = viewModel.uiState.reviews[preCount - 1].id
                 DispatchQueue.main.async {
@@ -358,6 +361,9 @@ private struct CafeContentView: View {
                 maids: uiState.casts,
                 canLoadMore: uiState.canLoadMoreCasts,
                 isLoadingMore: uiState.isLoadingMoreCasts,
+                onPagingTriggerDisappear: {
+                    countBeforeLoad.casts = -1
+                },
                 onAction: onAction
             )
         case .menu:
@@ -374,6 +380,9 @@ private struct CafeContentView: View {
                 isLoadingMore: uiState.isLoadingMoreReviews,
                 currentUserId: uiState.currentUserId,
                 onLoadMore: { onAction(.loadMoreReviews) },
+                onPagingTriggerDisappear: {
+                    countBeforeLoad.reviews = -1
+                },
                 onAction: onAction
             )
         case .notices:
@@ -382,7 +391,10 @@ private struct CafeContentView: View {
                 notices: uiState.notices,
                 canLoadMore: uiState.canLoadMoreNotices,
                 isLoadingMore: uiState.isLoadingMoreNotices,
-                onLoadMore: { onAction(.loadMoreNotices) }
+                onLoadMore: { onAction(.loadMoreNotices) },
+                onPagingTriggerDisappear: {
+                    countBeforeLoad.notices = -1
+                }
             )
         }
     }

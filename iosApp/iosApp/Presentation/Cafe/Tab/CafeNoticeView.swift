@@ -19,6 +19,8 @@ struct CafeNoticeView: View {
     let isLoadingMore: Bool
 
     let onLoadMore: () -> Void
+    
+    let onPagingTriggerDisappear: () -> Void
 
     @State private var expandedNoticeIds: Set<String> = []
 
@@ -106,6 +108,11 @@ struct CafeNoticeView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .onDisappear {
+                                onPagingTriggerDisappear()
+                            }
                     }
                 }
             }
@@ -170,6 +177,6 @@ struct CafeNoticeView: View {
 
 struct CafeNoticeView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {})
+        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {}, onPagingTriggerDisappear: {})
     }
 }
