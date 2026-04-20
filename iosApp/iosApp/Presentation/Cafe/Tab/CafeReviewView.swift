@@ -144,6 +144,7 @@ struct CafeReviewView: View {
                         .padding(16)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .id(review.id)
                     }
                     if canLoadMore || isLoadingMore {
                         VStack(spacing: 0) {

@@ -88,6 +88,7 @@ struct CafeNoticeView: View {
                             expandedNoticeIds.insert(notice.id)
                         }
                     }
+                    .id(notice.id)
                 }
                 if notices.isEmpty {
                     emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))

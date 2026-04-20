@@ -37,6 +37,7 @@ struct CafeCastView: View {
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
+                        .id(maid.cast.id)
                     }
                 }
                 if canLoadMore || isLoadingMore {
