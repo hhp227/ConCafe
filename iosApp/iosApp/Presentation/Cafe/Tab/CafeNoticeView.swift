@@ -19,6 +19,8 @@ struct CafeNoticeView: View {
     let isLoadingMore: Bool
 
     let onLoadMore: () -> Void
+    
+    let onPagingTriggerDisappear: () -> Void
 
     @State private var expandedNoticeIds: Set<String> = []
 
@@ -88,6 +90,7 @@ struct CafeNoticeView: View {
                             expandedNoticeIds.insert(notice.id)
                         }
                     }
+                    .id(notice.id)
                 }
                 if notices.isEmpty {
                     emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
@@ -97,15 +100,19 @@ struct CafeNoticeView: View {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {
-                                if canLoadMore, !isLoadingMore {
-                                    onLoadMore()
-                                }
+                                guard canLoadMore, !isLoadingMore else { return }
+                                onLoadMore()
                             }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .onDisappear {
+                                onPagingTriggerDisappear()
+                            }
                     }
                 }
             }
@@ -170,6 +177,6 @@ struct CafeNoticeView: View {
 
 struct CafeNoticeView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {})
+        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {}, onPagingTriggerDisappear: {})
     }
 }

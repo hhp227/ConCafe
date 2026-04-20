@@ -419,6 +419,8 @@ final class CafeViewModel: ObservableObject {
             loadMoreReviews()
         case .refresh:
             loadCafeDetail()
+        case .pagingTriggerDisappeared:
+            break
         case .consumeScrollToTopOnReturn:
             uiState.shouldScrollToTopOnReturn = false
         case .editReview(let reviewId):

@@ -15,13 +15,41 @@ struct CafeView: View {
 
     @State private var alertMessage: String?
 
+    @State private var countBeforeLoad = (casts: 0, notices: 0, reviews: 0)
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
         ScrollViewReader { proxy in
             CafeContentView(
                 uiState: viewModel.uiState,
-                onAction: viewModel.onAction,
+                onAction: { action in
+                    switch action {
+                    case .loadMoreCasts:
+                        let count = viewModel.uiState.casts.count
+                        countBeforeLoad.casts = count
+                    case .loadMoreNotices:
+                        let count = viewModel.uiState.notices.count
+                        countBeforeLoad.notices = count
+                    case .loadMoreReviews:
+                        let count = viewModel.uiState.reviews.count
+                        countBeforeLoad.reviews = count
+                    case .pagingTriggerDisappeared(let tab):
+                        switch tab {
+                        case .casts:
+                            countBeforeLoad.casts = -1
+                        case .notices:
+                            countBeforeLoad.notices = -1
+                        case .reviews:
+                            countBeforeLoad.reviews = -1
+                        default:
+                            break
+                        }
+                    default:
+                        break
+                    }
+                    viewModel.onAction(action)
+                },
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
@@ -59,6 +87,42 @@ struct CafeView: View {
                     withAnimation {
                         proxy.scrollTo(topAnchorId, anchor: .top)
                     }
+                }
+            }
+            .onChange(of: viewModel.uiState.casts.count) { newCount in
+                guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
+                let preCount = abs(countBeforeLoad.casts)
+                let wasSubsequent = countBeforeLoad.casts > 0
+                countBeforeLoad.casts = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .casts else { return }
+                let targetId = viewModel.uiState.casts[preCount - 1].cast.id
+                DispatchQueue.main.async {
+                    proxy.scrollTo(targetId, anchor: .bottom)
+                }
+            }
+            .onChange(of: viewModel.uiState.notices.count) { newCount in
+                guard countBeforeLoad.notices != 0, countBeforeLoad.notices != -1 else { return }
+                let preCount = abs(countBeforeLoad.notices)
+                let wasSubsequent = countBeforeLoad.notices > 0
+                countBeforeLoad.notices = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .notices else { return }
+                let targetId = viewModel.uiState.notices[preCount - 1].id
+                DispatchQueue.main.async {
+                    proxy.scrollTo(targetId, anchor: .bottom)
+                }
+            }
+            .onChange(of: viewModel.uiState.reviews.count) { newCount in
+                guard countBeforeLoad.reviews != 0, countBeforeLoad.reviews != -1 else { return }
+                let preCount = abs(countBeforeLoad.reviews)
+                let wasSubsequent = countBeforeLoad.reviews > 0
+                countBeforeLoad.reviews = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .reviews else { return }
+                let targetId = viewModel.uiState.reviews[preCount - 1].id
+                DispatchQueue.main.async {
+                    proxy.scrollTo(targetId, anchor: .bottom)
                 }
             }
         }
@@ -308,6 +372,9 @@ private struct CafeContentView: View {
                 maids: uiState.casts,
                 canLoadMore: uiState.canLoadMoreCasts,
                 isLoadingMore: uiState.isLoadingMoreCasts,
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.casts))
+                },
                 onAction: onAction
             )
         case .menu:
@@ -324,6 +391,9 @@ private struct CafeContentView: View {
                 isLoadingMore: uiState.isLoadingMoreReviews,
                 currentUserId: uiState.currentUserId,
                 onLoadMore: { onAction(.loadMoreReviews) },
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.reviews))
+                },
                 onAction: onAction
             )
         case .notices:
@@ -332,7 +402,10 @@ private struct CafeContentView: View {
                 notices: uiState.notices,
                 canLoadMore: uiState.canLoadMoreNotices,
                 isLoadingMore: uiState.isLoadingMoreNotices,
-                onLoadMore: { onAction(.loadMoreNotices) }
+                onLoadMore: { onAction(.loadMoreNotices) },
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.notices))
+                }
             )
         }
     }

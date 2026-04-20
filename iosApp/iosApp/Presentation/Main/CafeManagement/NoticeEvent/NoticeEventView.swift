@@ -69,158 +69,193 @@ private struct NoticeEventContentView: View {
     let uiState: NoticeEventUiState
 
     let onAction: (NoticeEventAction) -> Void
+    
+    @State private var countBeforeLoad = (notice: 0, event: 0)
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Group {
-                if UITraitCollection.current.userInterfaceStyle == .dark {
-                    Color(hex: "FFF9FC")
-                } else {
-                    LinearGradient(
-                        colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
-                        startPoint: .top,
-                        endPoint: .bottom
+        ScrollViewReader { proxy in
+            ZStack(alignment: .bottomTrailing) {
+                Group {
+                    if UITraitCollection.current.userInterfaceStyle == .dark {
+                        Color(hex: "FFF9FC")
+                    } else {
+                        LinearGradient(
+                            colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
+                .ignoresSafeArea()
+                VStack(spacing: 0) {
+                    ConCafeTabBar(
+                        labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
+                        selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
+                        backgroundColor: UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
+                        onSelect: { index in
+                            onAction(.selectTab(NoticeEventTab.allCases[index]))
+                        }
                     )
-                }
-            }
-            .ignoresSafeArea()
-            VStack(spacing: 0) {
-                ConCafeTabBar(
-                    labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
-                    selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                    backgroundColor: UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
-                    onSelect: { index in
-                        onAction(.selectTab(NoticeEventTab.allCases[index]))
-                    }
-                )
-                ScrollView {
-                    VStack(spacing: 14) {
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(
-                                message: {
-                                    switch infoMessage {
-                                    case "noticeevent_validation_cafe_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_cafe_required"), table: "Localizable")
-                                    case "noticeevent_validation_notice_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_notice_required"), table: "Localizable")
-                                    case "noticeevent_validation_event_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_event_required"), table: "Localizable")
-                                    case "noticeevent_validation_title_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_title_required"), table: "Localizable")
-                                    case "noticeevent_validation_content_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_content_required"), table: "Localizable")
-                                    case "noticeevent_validation_event_image_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_validation_event_image_required"), table: "Localizable")
-                                    case "noticeevent_info_notice_edit_target_not_found":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_edit_target_not_found"), table: "Localizable")
-                                    case "noticeevent_info_event_edit_target_not_found":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_edit_target_not_found"), table: "Localizable")
-                                    case "noticeevent_info_notice_load_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_load_failed"), table: "Localizable")
-                                    case "noticeevent_info_event_load_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_load_failed"), table: "Localizable")
-                                    case "noticeevent_info_notice_created":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_created"), table: "Localizable")
-                                    case "noticeevent_info_notice_updated":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_updated"), table: "Localizable")
-                                    case "noticeevent_info_event_created":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_created"), table: "Localizable")
-                                    case "noticeevent_info_event_updated":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_updated"), table: "Localizable")
-                                    case "noticeevent_info_notice_create_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_create_failed"), table: "Localizable")
-                                    case "noticeevent_info_notice_update_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_update_failed"), table: "Localizable")
-                                    case "noticeevent_info_event_create_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_create_failed"), table: "Localizable")
-                                    case "noticeevent_info_event_update_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_update_failed"), table: "Localizable")
-                                    case "noticeevent_info_notice_delete_success":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_success"), table: "Localizable")
-                                    case "noticeevent_info_notice_delete_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_failed"), table: "Localizable")
-                                    case "noticeevent_info_event_delete_success":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_delete_success"), table: "Localizable")
-                                    case "noticeevent_info_event_delete_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_event_delete_failed"), table: "Localizable")
-                                    case "noticeevent_info_image_upload_failed":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_image_upload_failed"), table: "Localizable")
-                                    case "noticeevent_info_more_events_next_step":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_more_events_next_step"), table: "Localizable")
-                                    case "noticeevent_info_image_pick_required":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_image_pick_required"), table: "Localizable")
-                                    case "noticeevent_info_reserve_schedule_next_step":
-                                        return String(localized: String.LocalizationValue("noticeevent_info_reserve_schedule_next_step"), table: "Localizable")
-                                    default:
-                                        return infoMessage
-                                    }
-                                }()
-                            )
-                            .padding(.horizontal, 16)
-                        }
-                        if uiState.isCurrentTabLoading && uiState.isCurrentTabEmpty {
-                            loadingCard
-                                .padding(.horizontal, 16)
-                        } else if uiState.selectedTab == .notice && uiState.notices.isEmpty {
-                            emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_notice"), table: "Localizable"))
-                                .padding(.horizontal, 16)
-                        } else if uiState.selectedTab == .event && uiState.events.isEmpty {
-                            emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_event"), table: "Localizable"))
-                                .padding(.horizontal, 16)
-                        } else if uiState.selectedTab == .notice {
-                            ForEach(uiState.notices, id: \.id) { item in
-                                noticeCard(item)
-                                    .padding(.horizontal, 16)
-                            }
-                        } else {
-                            ForEach(uiState.events, id: \.id) { item in
-                                eventCard(item)
-                                    .padding(.horizontal, 16)
-                            }
-                        }
-                        let canLoadMoreCurrentTab = uiState.selectedTab == .notice ? uiState.canLoadMoreNotices : uiState.canLoadMoreEvents
-
-                        if canLoadMoreCurrentTab || uiState.isCurrentTabLoadingMore {
-                            Color.clear
-                                .frame(height: 1)
-                                .onAppear {
-                                    if uiState.selectedTab == .notice {
-                                        if canLoadMoreCurrentTab && !uiState.isCurrentTabLoadingMore {
-                                            onAction(.loadMoreNotices)
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(
+                                    message: {
+                                        switch infoMessage {
+                                        case "noticeevent_validation_cafe_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_cafe_required"), table: "Localizable")
+                                        case "noticeevent_validation_notice_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_notice_required"), table: "Localizable")
+                                        case "noticeevent_validation_event_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_event_required"), table: "Localizable")
+                                        case "noticeevent_validation_title_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_title_required"), table: "Localizable")
+                                        case "noticeevent_validation_content_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_content_required"), table: "Localizable")
+                                        case "noticeevent_validation_event_image_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_validation_event_image_required"), table: "Localizable")
+                                        case "noticeevent_info_notice_edit_target_not_found":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_edit_target_not_found"), table: "Localizable")
+                                        case "noticeevent_info_event_edit_target_not_found":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_edit_target_not_found"), table: "Localizable")
+                                        case "noticeevent_info_notice_load_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_load_failed"), table: "Localizable")
+                                        case "noticeevent_info_event_load_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_load_failed"), table: "Localizable")
+                                        case "noticeevent_info_notice_created":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_created"), table: "Localizable")
+                                        case "noticeevent_info_notice_updated":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_updated"), table: "Localizable")
+                                        case "noticeevent_info_event_created":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_created"), table: "Localizable")
+                                        case "noticeevent_info_event_updated":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_updated"), table: "Localizable")
+                                        case "noticeevent_info_notice_create_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_create_failed"), table: "Localizable")
+                                        case "noticeevent_info_notice_update_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_update_failed"), table: "Localizable")
+                                        case "noticeevent_info_event_create_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_create_failed"), table: "Localizable")
+                                        case "noticeevent_info_event_update_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_update_failed"), table: "Localizable")
+                                        case "noticeevent_info_notice_delete_success":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_success"), table: "Localizable")
+                                        case "noticeevent_info_notice_delete_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_notice_delete_failed"), table: "Localizable")
+                                        case "noticeevent_info_event_delete_success":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_delete_success"), table: "Localizable")
+                                        case "noticeevent_info_event_delete_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_event_delete_failed"), table: "Localizable")
+                                        case "noticeevent_info_image_upload_failed":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_image_upload_failed"), table: "Localizable")
+                                        case "noticeevent_info_more_events_next_step":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_more_events_next_step"), table: "Localizable")
+                                        case "noticeevent_info_image_pick_required":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_image_pick_required"), table: "Localizable")
+                                        case "noticeevent_info_reserve_schedule_next_step":
+                                            return String(localized: String.LocalizationValue("noticeevent_info_reserve_schedule_next_step"), table: "Localizable")
+                                        default:
+                                            return infoMessage
                                         }
-                                    } else if canLoadMoreCurrentTab && !uiState.isCurrentTabLoadingMore {
-                                        onAction(.loadMoreEvents)
-                                    }
+                                    }()
+                                )
+                                .padding(.horizontal, 16)
+                            }
+                            if uiState.isCurrentTabLoading && uiState.isCurrentTabEmpty {
+                                loadingCard
+                                    .padding(.horizontal, 16)
+                            } else if uiState.selectedTab == .notice && uiState.notices.isEmpty {
+                                emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_notice"), table: "Localizable"))
+                                    .padding(.horizontal, 16)
+                            } else if uiState.selectedTab == .event && uiState.events.isEmpty {
+                                emptyStateCard(message: String(localized: String.LocalizationValue("noticeevent_empty_event"), table: "Localizable"))
+                                    .padding(.horizontal, 16)
+                            } else if uiState.selectedTab == .notice {
+                                ForEach(uiState.notices, id: \.id) { item in
+                                    noticeCard(item)
+                                        .id(item.id)
+                                        .padding(.horizontal, 16)
                                 }
+                            } else {
+                                ForEach(uiState.events, id: \.id) { item in
+                                    eventCard(item)
+                                        .id(item.id)
+                                        .padding(.horizontal, 16)
+                                }
+                            }
+                            let canLoadMoreCurrentTab = uiState.selectedTab == .notice ? uiState.canLoadMoreNotices : uiState.canLoadMoreEvents
+
+                            if canLoadMoreCurrentTab || uiState.isCurrentTabLoadingMore {
+                                Color.clear
+                                    .frame(height: 1)
+                                    .onAppear {
+                                        if uiState.selectedTab == .notice {
+                                            guard canLoadMoreCurrentTab, !uiState.isCurrentTabLoadingMore else { return }
+                                            let count = uiState.notices.count
+                                            countBeforeLoad.notice = count
+                                            onAction(.loadMoreNotices)
+                                        } else {
+                                            guard canLoadMoreCurrentTab, !uiState.isCurrentTabLoadingMore else { return }
+                                            let count = uiState.events.count
+                                            countBeforeLoad.event = count
+                                            onAction(.loadMoreEvents)
+                                        }
+                                    }
+                                    .onDisappear {
+                                        if uiState.selectedTab == .notice {
+                                            countBeforeLoad.notice = -1
+                                        } else {
+                                            countBeforeLoad.event = -1
+                                        }
+                                    }
+                            }
+                            if uiState.isCurrentTabLoadingMore {
+                                ProgressView()
+                                    .tint(Color(hex: "EF6797"))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                            }
                         }
-                        if uiState.isCurrentTabLoadingMore {
-                            ProgressView()
-                                .tint(Color(hex: "EF6797"))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                        }
+                        .padding(.top, 12)
+                        .padding(.bottom, 110)
                     }
-                    .padding(.top, 12)
-                    .padding(.bottom, 110)
                 }
-            }
-            Button {
-                onAction(.clickRegister)
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                    Text(String(localized: String.LocalizationValue("noticeevent_register_cta"), table: "Localizable"))
-                        .fontWeight(.bold)
+                .onChange(of: uiState.notices.count) { newCount in
+                    guard countBeforeLoad.notice != 0, countBeforeLoad.notice != -1 else { return }
+                    let preCount = abs(countBeforeLoad.notice)
+                    let wasSubsequent = countBeforeLoad.notice > 0
+                    countBeforeLoad.notice = -1
+                    guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                    guard uiState.selectedTab == .notice else { return }
+                    proxy.scrollTo(uiState.notices[preCount - 1].id, anchor: .bottom)
                 }
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(Color(hex: "FFD1DC"))
-                .clipShape(Capsule())
-                .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 14, x: 0, y: 8)
+                .onChange(of: uiState.events.count) { newCount in
+                    guard countBeforeLoad.event != 0, countBeforeLoad.event != -1 else { return }
+                    let preCount = abs(countBeforeLoad.event)
+                    let wasSubsequent = countBeforeLoad.event > 0
+                    countBeforeLoad.event = -1
+                    guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                    guard uiState.selectedTab == .event else { return }
+                    proxy.scrollTo(uiState.events[preCount - 1].id, anchor: .bottom)
+                }
+                Button {
+                    onAction(.clickRegister)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                        Text(String(localized: String.LocalizationValue("noticeevent_register_cta"), table: "Localizable"))
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .background(Color(hex: "FFD1DC"))
+                    .clipShape(Capsule())
+                    .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 14, x: 0, y: 8)
+                }
+                .padding(.trailing, 16)
+                .padding(.bottom, 20)
             }
-            .padding(.trailing, 16)
-            .padding(.bottom, 20)
         }
     }
 

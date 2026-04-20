@@ -20,6 +20,8 @@ struct CafeReviewView: View {
     let currentUserId: String?
 
     let onLoadMore: () -> Void
+    
+    let onPagingTriggerDisappear: () -> Void
 
     let onAction: (CafeAction) -> Void
 
@@ -144,15 +146,15 @@ struct CafeReviewView: View {
                         .padding(16)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .id(review.id)
                     }
                     if canLoadMore || isLoadingMore {
                         VStack(spacing: 0) {
                             Color.clear
                                 .frame(height: 1)
                                 .onAppear {
-                                    if canLoadMore, !isLoadingMore {
-                                        onLoadMore()
-                                    }
+                                    guard canLoadMore, !isLoadingMore else { return }
+                                    onLoadMore()
                                 }
                             if isLoadingMore {
                                 ProgressView()
@@ -165,6 +167,11 @@ struct CafeReviewView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 6)
                             }
+                            Color.clear
+                                .frame(height: 1)
+                                .onDisappear {
+                                    onPagingTriggerDisappear()
+                                }
                         }
                     }
                 }

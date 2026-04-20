@@ -14,6 +14,8 @@ struct CafeCastView: View {
     let canLoadMore: Bool
 
     let isLoadingMore: Bool
+    
+    let onPagingTriggerDisappear: () -> Void
 
     let onAction: (CafeAction) -> Void
 
@@ -37,6 +39,7 @@ struct CafeCastView: View {
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
+                        .id(maid.cast.id)
                     }
                 }
                 if canLoadMore || isLoadingMore {
@@ -44,14 +47,18 @@ struct CafeCastView: View {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {
-                                if canLoadMore, !isLoadingMore {
-                                    onAction(.loadMoreCasts)
-                                }
+                                guard canLoadMore, !isLoadingMore else { return }
+                                onAction(.loadMoreCasts)
                             }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .onDisappear {
+                                onPagingTriggerDisappear()
+                            }
                     }
                     .padding(.top, 12)
                 }
@@ -112,7 +119,7 @@ struct CafeCastView: View {
 
 struct CafeCastView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onAction: { _ in })
+        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onPagingTriggerDisappear: {}, onAction: { _ in })
     }
 }
 
