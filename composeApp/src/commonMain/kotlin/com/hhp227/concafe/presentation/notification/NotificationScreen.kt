@@ -78,7 +78,7 @@ private fun NotificationContentScreen(
     onAction: (NotificationAction) -> Unit
 ) {
     Scaffold(
-        containerColor = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background,
+        containerColor = colorFromHex("FFFBFD"),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.common_notification)) },
@@ -129,7 +129,7 @@ private fun NotificationSignInRequiredScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
+            .background(colorFromHex("FFFBFD"))
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -183,7 +183,7 @@ private fun NotificationSectionsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {

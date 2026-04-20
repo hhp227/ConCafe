@@ -33,7 +33,7 @@ struct MyInfoView: View {
                 )
             }
         }
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(Color(hex: "FFF9FC"))
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
