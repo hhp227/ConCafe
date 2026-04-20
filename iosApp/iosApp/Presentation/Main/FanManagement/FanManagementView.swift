@@ -415,79 +415,100 @@ private struct CastClaimSheetView: View {
     let sheet: FanManagementUiState.CastClaimSheet
     
     let onAction: (FanManagementAction) -> Void
+    
+    @State private var countBeforeLoad: Int = 0
 
     var body: some View {
-        CompatNavigationContainer(title: "프로필 연결") {
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text(sheet.affiliatedCafeName)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color(hex: "EF6797"))
-                        Text(sheet.headline)
-                            .font(.title3.weight(.bold))
-                        Text(sheet.body)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        if !sheet.requestableCasts.isEmpty {
-                            VStack(spacing: 10) {
-                                ForEach(sheet.requestableCasts, id: \.castId) { candidate in
-                                    Button {
-                                        onAction(.selectClaimCandidate(candidate.castId))
-                                    } label: {
-                                        Text(candidate.castName)
-                                            .font(.body.weight(.semibold))
-                                            .foregroundStyle(.primary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 14)
-                                            .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-                                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
-                                            )
+        ScrollViewReader { proxy in
+            CompatNavigationContainer(title: "프로필 연결") {
+                VStack(spacing: 0) {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text(sheet.affiliatedCafeName)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color(hex: "EF6797"))
+                            Text(sheet.headline)
+                                .font(.title3.weight(.bold))
+                            Text(sheet.body)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            if !sheet.requestableCasts.isEmpty {
+                                VStack(spacing: 10) {
+                                    ForEach(sheet.requestableCasts, id: \.castId) { candidate in
+                                        Button {
+                                            onAction(.selectClaimCandidate(candidate.castId))
+                                        } label: {
+                                            Text(candidate.castName)
+                                                .font(.body.weight(.semibold))
+                                                .foregroundStyle(.primary)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 14)
+                                                .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                                )
+                                        }
+                                        .id(candidate.castId)
+                                        .buttonStyle(.plain)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
-                        }
-                        if sheet.canLoadMore || sheet.isLoadingMore {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Color.clear
-                                    .frame(height: 1)
-                                    .onAppear {
-                                        if sheet.canLoadMore, !sheet.isLoadingMore {
+                            if sheet.canLoadMore || sheet.isLoadingMore {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onAppear {
+                                            guard sheet.canLoadMore, !sheet.isLoadingMore else { return }
+                                            let count = sheet.requestableCasts.count
+                                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
                                             onAction(.loadMoreClaimCandidates)
                                         }
-                                    }
-                                Text(sheet.isLoadingMore ? "다음 캐스트 목록을 불러오는 중입니다." : "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    Text(sheet.isLoadingMore ? "다음 캐스트 목록을 불러오는 중입니다." : "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onDisappear {
+                                            countBeforeLoad = -1
+                                        }
+                                }
                             }
+                            Spacer(minLength: 8)
                         }
-                        Spacer(minLength: 8)
+                        .padding(20)
                     }
-                    .padding(20)
+                    if sheet.canSubmit {
+                        Button {
+                            onAction(.submitCastClaim)
+                        } label: {
+                            Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(.primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color(hex: "FFD1DC"))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(sheet.isSubmitting)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 14)
+                        .padding(.bottom, 14)
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                    }
                 }
-                if sheet.canSubmit {
-                    Button {
-                        onAction(.submitCastClaim)
-                    } label: {
-                        Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color(hex: "FFD1DC"))
-                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(sheet.isSubmitting)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 14)
-                    .padding(.bottom, 14)
-                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                .onChange(of: sheet.requestableCasts.count) { newCount in
+                    guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
+                    let preCount = abs(countBeforeLoad)
+                    let wasSubsequent = countBeforeLoad > 0
+                    countBeforeLoad = -1
+                    guard newCount > preCount else { return }
+                    guard wasSubsequent else { return }
+                    guard preCount > 0 else { return }
+                    proxy.scrollTo(sheet.requestableCasts[preCount - 1].castId, anchor: .bottom)
                 }
             }
             .toolbar {

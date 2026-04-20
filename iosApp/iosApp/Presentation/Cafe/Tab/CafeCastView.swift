@@ -19,8 +19,6 @@ struct CafeCastView: View {
 
     @State private var contentWidth: CGFloat = 0
 
-    @State private var countBeforeLoad: Int = 0
-
     var body: some View {
         if maids.isEmpty {
             emptyCard(String(localized: String.LocalizationValue("cafe_cast_empty"), table: "Localizable"))
@@ -47,19 +45,12 @@ struct CafeCastView: View {
                             .frame(height: 1)
                             .onAppear {
                                 guard canLoadMore, !isLoadingMore else { return }
-                                let count = maids.count
-                                countBeforeLoad = (countBeforeLoad == 0) ? -count : count
                                 onAction(.loadMoreCasts)
                             }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         }
-                        Color.clear
-                            .frame(height: 1)
-                            .onDisappear {
-                                countBeforeLoad = -1
-                            }
                     }
                     .padding(.top, 12)
                 }
@@ -75,14 +66,6 @@ struct CafeCastView: View {
                         }
                 }
             )
-        }
-        .onChange(of: maids.count) { newCount in
-            guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
-            let preCount = abs(countBeforeLoad)
-            let wasSubsequent = countBeforeLoad > 0
-            countBeforeLoad = -1
-            guard newCount > preCount else { return }
-            guard wasSubsequent else { return }
         }
     }
 

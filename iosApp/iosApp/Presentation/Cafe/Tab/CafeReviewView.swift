@@ -23,8 +23,6 @@ struct CafeReviewView: View {
 
     let onAction: (CafeAction) -> Void
 
-    @State private var countBeforeLoad: Int = 0
-
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -153,8 +151,6 @@ struct CafeReviewView: View {
                                 .frame(height: 1)
                                 .onAppear {
                                     guard canLoadMore, !isLoadingMore else { return }
-                                    let count = reviews.count
-                                    countBeforeLoad = (countBeforeLoad == 0) ? -count : count
                                     onLoadMore()
                                 }
                             if isLoadingMore {
@@ -170,21 +166,10 @@ struct CafeReviewView: View {
                             }
                             Color.clear
                                 .frame(height: 1)
-                                .onDisappear {
-                                    countBeforeLoad = -1
-                                }
                         }
                     }
                 }
             }
-        }
-        .onChange(of: reviews.count) { newCount in
-            guard countBeforeLoad != 0, countBeforeLoad != -1 else { return }
-            let preCount = abs(countBeforeLoad)
-            let wasSubsequent = countBeforeLoad > 0
-            countBeforeLoad = -1
-            guard newCount > preCount else { return }
-            guard wasSubsequent else { return }
         }
     }
 
