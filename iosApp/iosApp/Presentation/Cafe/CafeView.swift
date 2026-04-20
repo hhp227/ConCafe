@@ -27,13 +27,13 @@ struct CafeView: View {
                     switch action {
                     case .loadMoreCasts:
                         let count = viewModel.uiState.casts.count
-                        countBeforeLoad.casts = (countBeforeLoad.casts == 0) ? -count : count
+                        countBeforeLoad.casts = count
                     case .loadMoreNotices:
                         let count = viewModel.uiState.notices.count
-                        countBeforeLoad.notices = (countBeforeLoad.notices == 0) ? -count : count
+                        countBeforeLoad.notices = count
                     case .loadMoreReviews:
                         let count = viewModel.uiState.reviews.count
-                        countBeforeLoad.reviews = (countBeforeLoad.reviews == 0) ? -count : count
+                        countBeforeLoad.reviews = count
                     case .pagingTriggerDisappeared(let tab):
                         switch tab {
                         case .casts:

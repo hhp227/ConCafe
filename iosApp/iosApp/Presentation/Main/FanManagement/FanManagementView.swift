@@ -460,12 +460,12 @@ private struct CastClaimSheetView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Color.clear
                                         .frame(height: 1)
-                                        .onAppear {
-                                            guard sheet.canLoadMore, !sheet.isLoadingMore else { return }
-                                            let count = sheet.requestableCasts.count
-                                            countBeforeLoad = (countBeforeLoad == 0) ? -count : count
-                                            onAction(.loadMoreClaimCandidates)
-                                        }
+                                    .onAppear {
+                                        guard sheet.canLoadMore, !sheet.isLoadingMore else { return }
+                                        let count = sheet.requestableCasts.count
+                                        countBeforeLoad = count
+                                        onAction(.loadMoreClaimCandidates)
+                                    }
                                     Text(sheet.isLoadingMore ? "다음 캐스트 목록을 불러오는 중입니다." : "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)

@@ -192,12 +192,12 @@ private struct NoticeEventContentView: View {
                                         if uiState.selectedTab == .notice {
                                             guard canLoadMoreCurrentTab, !uiState.isCurrentTabLoadingMore else { return }
                                             let count = uiState.notices.count
-                                            countBeforeLoad.notice = (countBeforeLoad.notice == 0) ? -count : count
+                                            countBeforeLoad.notice = count
                                             onAction(.loadMoreNotices)
                                         } else {
                                             guard canLoadMoreCurrentTab, !uiState.isCurrentTabLoadingMore else { return }
                                             let count = uiState.events.count
-                                            countBeforeLoad.event = (countBeforeLoad.event == 0) ? -count : count
+                                            countBeforeLoad.event = count
                                             onAction(.loadMoreEvents)
                                         }
                                     }
