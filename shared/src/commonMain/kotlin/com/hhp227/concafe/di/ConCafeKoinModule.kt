@@ -84,7 +84,9 @@ val eventModule = module {
 
 val useCaseModule = module {
     single { CafeReviewUserNicknameCache() }
-    factory { GetHomeFeedUseCase(get(), get(), get(), get()) }
+    factory { GetNearbyCafePageUseCase(get()) }
+    factory { GetPopularCastPageUseCase(get(), get()) }
+    factory { GetHomeFeedUseCase(get(), get(), get(), get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }

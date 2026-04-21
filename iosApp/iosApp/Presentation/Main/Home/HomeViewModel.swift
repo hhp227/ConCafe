@@ -14,6 +14,10 @@ import KMPNativeCoroutinesAsync
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let getNearbyCafePageUseCase: GetNearbyCafePageUseCase
+
+    private let getPopularCastPageUseCase: GetPopularCastPageUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
@@ -25,9 +29,9 @@ final class HomeViewModel: ObservableObject {
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
-    
+
     @Published private(set) var uiState = HomeUiState.empty
-    
+
     let event = PassthroughSubject<HomeEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
@@ -37,7 +41,7 @@ final class HomeViewModel: ObservableObject {
 
         Task {
             do {
-                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
+                let result = try await getHomeFeedUseCase.invoke()
 
                 if let success = result as? AppResultSuccess<AnyObject> {
                     if let feed = success.data as? Shared.HomeFeed {
@@ -99,20 +103,20 @@ final class HomeViewModel: ObservableObject {
                     try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
                     if Task.isCancelled { return }
                 }
-                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: cursor, nearbyCafeCursor: nil)
+                let result = try await getPopularCastPageUseCase.invoke(cursor: cursor)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let feed = success.data as? Shared.HomeFeed {
+                   let page = success.data as? Shared.HomePopularCastPage {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
                         banners: uiState.banners,
-                        popularCasts: append ? (uiState.popularCasts + feed.popularCasts) : feed.popularCasts,
+                        popularCasts: append ? (uiState.popularCasts + page.casts) : page.casts,
                         popularCastCafeNames: append
-                            ? uiState.popularCastCafeNames.merging(Self.dictionary(from: feed.popularCastCafeNames)) { _, new in new }
-                            : Self.dictionary(from: feed.popularCastCafeNames),
-                        popularCastCursor: feed.popularCastsNextCursor,
-                        canLoadMorePopularCasts: feed.hasMorePopularCasts,
+                            ? uiState.popularCastCafeNames.merging(Self.dictionary(from: page.cafeNames)) { _, new in new }
+                            : Self.dictionary(from: page.cafeNames),
+                        popularCastCursor: page.nextCursor,
+                        canLoadMorePopularCasts: page.hasNext,
                         isLoadingMorePopularCasts: false,
                         nearbyCafes: uiState.nearbyCafes,
                         nearbyCafeCursor: uiState.nearbyCafeCursor,
@@ -120,7 +124,7 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents
                     )
                 } else {
                     uiState = HomeUiState(
@@ -138,7 +142,7 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents
                     )
                 }
             } catch {
@@ -158,7 +162,7 @@ final class HomeViewModel: ObservableObject {
                     isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                     birthdayCasts: uiState.birthdayCasts,
                     notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                    cafeEvents: uiState.cafeEvents
                 )
             }
         }
@@ -197,10 +201,10 @@ final class HomeViewModel: ObservableObject {
                     try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
                     if Task.isCancelled { return }
                 }
-                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: cursor)
+                let result = try await getNearbyCafePageUseCase.invoke(cursor: cursor)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let feed = success.data as? Shared.HomeFeed {
+                   let page = success.data as? Shared.PagedResult<Shared.Cafe> {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
@@ -210,13 +214,13 @@ final class HomeViewModel: ObservableObject {
                         popularCastCursor: uiState.popularCastCursor,
                         canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                         isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-                        nearbyCafes: append ? (uiState.nearbyCafes + feed.nearbyCafes) : feed.nearbyCafes,
-                        nearbyCafeCursor: feed.nearbyCafesNextCursor,
-                        canLoadMoreNearbyCafes: feed.hasMoreNearbyCafes,
+                        nearbyCafes: append ? (uiState.nearbyCafes + page.items) : page.items,
+                        nearbyCafeCursor: page.nextCursor,
+                        canLoadMoreNearbyCafes: page.hasNext,
                         isLoadingMoreNearbyCafes: false,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents
                     )
                 } else {
                     uiState = HomeUiState(
@@ -234,7 +238,7 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: false,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents
                     )
                 }
             } catch {
@@ -254,7 +258,7 @@ final class HomeViewModel: ObservableObject {
                     isLoadingMoreNearbyCafes: false,
                     birthdayCasts: uiState.birthdayCasts,
                     notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                    cafeEvents: uiState.cafeEvents
                 )
             }
         }
@@ -288,7 +292,7 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents
                     )
                 }
             } catch {
@@ -361,7 +365,7 @@ final class HomeViewModel: ObservableObject {
             do {
                 for try await event in asyncSequence(for: castEventPublisher.events) {
                     switch event {
-                    case let created as Shared.CastEvent.Created:
+                    case is Shared.CastEvent.Created:
                         self.loadPopularCastPage(cursor: nil, append: false)
                     case let updated as Shared.CastEvent.Updated:
                         self.patchCast(updated.cast)
@@ -417,7 +421,7 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents
         )
     }
 
@@ -437,7 +441,7 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents
         )
     }
 
@@ -459,7 +463,7 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents
         )
     }
 
@@ -479,7 +483,7 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.map { $0.id == cast.id ? cast : $0 },
             notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents
         )
     }
 
@@ -499,7 +503,7 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.filter { $0.id != castId },
             notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents
         )
     }
 
@@ -681,6 +685,8 @@ final class HomeViewModel: ObservableObject {
 
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        getNearbyCafePageUseCase: GetNearbyCafePageUseCase = KoinInitializerKt.resolveGetNearbyCafePageUseCase(),
+        getPopularCastPageUseCase: GetPopularCastPageUseCase = KoinInitializerKt.resolveGetPopularCastPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeEventEventPublisher: CafeEventEventPublisher = KoinInitializerKt.resolveCafeEventEventPublisher(),
@@ -689,13 +695,15 @@ final class HomeViewModel: ObservableObject {
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.getNearbyCafePageUseCase = getNearbyCafePageUseCase
+        self.getPopularCastPageUseCase = getPopularCastPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeEventEventPublisher = cafeEventEventPublisher
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
-        
+
         observeSession()
         observeBannerEvent()
         observeCafeEventEvent()
@@ -704,7 +712,7 @@ final class HomeViewModel: ObservableObject {
         observeCastEvent()
         loadHomeFeed()
     }
-    
+
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
