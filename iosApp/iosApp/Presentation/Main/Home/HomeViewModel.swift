@@ -214,7 +214,7 @@ final class HomeViewModel: ObservableObject {
                         popularCastCursor: uiState.popularCastCursor,
                         canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
                         isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-                        nearbyCafes: append ? (uiState.nearbyCafes + page.items) : page.items,
+                        nearbyCafes: append ? (uiState.nearbyCafes + (page.items as? [Cafe] ?? [])) : (page.items as? [Cafe] ?? []),
                         nearbyCafeCursor: page.nextCursor,
                         canLoadMoreNearbyCafes: page.hasNext,
                         isLoadingMoreNearbyCafes: false,
