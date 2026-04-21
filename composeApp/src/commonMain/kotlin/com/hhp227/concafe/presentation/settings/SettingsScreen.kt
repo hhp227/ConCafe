@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -74,6 +75,7 @@ fun SettingsScreen(
         }
     }
     Scaffold(
+        containerColor = colorFromHex("FFFBFD"),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.settings_title)) },
@@ -105,7 +107,9 @@ private fun SettingsContentScreen(
     val settingsItems = settingsItems(uiState.appVersion)
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 16.dp,

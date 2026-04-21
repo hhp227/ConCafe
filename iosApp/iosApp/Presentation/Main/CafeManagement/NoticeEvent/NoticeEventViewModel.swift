@@ -100,6 +100,10 @@ final class NoticeEventViewModel: ObservableObject {
             guard let self else { return }
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeNoticePageUseCase.invoke(
                     cafeId: cafeId,
                     query: uiState.query,
@@ -143,6 +147,10 @@ final class NoticeEventViewModel: ObservableObject {
             guard let self else { return }
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeEventPageUseCase.invoke(
                     cafeId: cafeId,
                     query: uiState.query,
@@ -539,4 +547,6 @@ final class NoticeEventViewModel: ObservableObject {
         static let imagePickRequired = "noticeevent_info_image_pick_required"
         static let reserveScheduleNextStep = "noticeevent_info_reserve_schedule_next_step"
     }
+
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 }

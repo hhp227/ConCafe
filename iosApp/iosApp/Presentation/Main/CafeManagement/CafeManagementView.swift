@@ -100,17 +100,7 @@ private struct CafeManagementContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
-        .background {
-            if UITraitCollection.current.userInterfaceStyle == .dark {
-                Color(hex: "FFF9FC")
-            } else {
-                LinearGradient(
-                    colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            }
-        }
+        .background(Color(hex: "FFF9FC"))
     }
 
     private var heroCard: some View {

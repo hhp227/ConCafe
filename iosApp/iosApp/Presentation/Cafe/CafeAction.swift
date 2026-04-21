@@ -17,6 +17,7 @@ enum CafeAction {
     case loadMoreNotices
     case loadMoreReviews
     case refresh
+    case pagingTriggerDisappeared(CafeUiState.TabType)
     case consumeScrollToTopOnReturn
     case editReview(reviewId: String)
     case deleteReview(reviewId: String)

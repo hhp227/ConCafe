@@ -14,6 +14,8 @@ struct CafeCastView: View {
     let canLoadMore: Bool
 
     let isLoadingMore: Bool
+    
+    let onPagingTriggerDisappear: () -> Void
 
     let onAction: (CafeAction) -> Void
 
@@ -25,7 +27,7 @@ struct CafeCastView: View {
         } else {
             VStack(spacing: 12) {
                 LazyVGrid(columns: cafeCastGridColumns(for: contentWidth), spacing: 12) {
-                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
+                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { _, maid in
                         let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: maid.todaySchedule)
 
                         ConCafeCastCard(
@@ -37,20 +39,26 @@ struct CafeCastView: View {
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
-                        .onAppear {
-                            guard index == maids.indices.last,
-                                  canLoadMore,
-                                  !isLoadingMore else { return }
-                            onAction(.loadMoreCasts)
-                        }
+                        .id(maid.cast.id)
                     }
                 }
-                if canLoadMore {
-                    Group {
+                if canLoadMore || isLoadingMore {
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                guard canLoadMore, !isLoadingMore else { return }
+                                onAction(.loadMoreCasts)
+                            }
                         if isLoadingMore {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .onDisappear {
+                                onPagingTriggerDisappear()
+                            }
                     }
                     .padding(.top, 12)
                 }
@@ -111,7 +119,7 @@ struct CafeCastView: View {
 
 struct CafeCastView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onAction: { _ in })
+        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onPagingTriggerDisappear: {}, onAction: { _ in })
     }
 }
 

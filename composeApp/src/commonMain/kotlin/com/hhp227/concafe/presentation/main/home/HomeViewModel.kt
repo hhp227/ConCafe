@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,11 +30,15 @@ import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
+import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val getNearbyCafePageUseCase: GetNearbyCafePageUseCase,
+    private val getPopularCastPageUseCase: GetPopularCastPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeEventEventPublisher: CafeEventEventPublisher,
@@ -53,10 +58,7 @@ class HomeViewModel(
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val result = getHomeFeedUseCase.invoke(
-                popularCastCursor = null,
-                nearbyCafeCursor = null
-            )
+            val result = getHomeFeedUseCase.invoke()
 
             if (result is AppResult.Success) {
                 _uiState.value = HomeUiState(
@@ -100,19 +102,19 @@ class HomeViewModel(
         jobs[TaskKey.POPULAR_CAST_PAGE]?.cancel()
         jobs[TaskKey.POPULAR_CAST_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMorePopularCasts = append) }
-
-            when (val result = getHomeFeedUseCase.invoke(popularCastCursor = cursor, nearbyCafeCursor = null)) {
+            if (append) delay(PAGINATION_DELAY_MILLIS)
+            when (val result = getPopularCastPageUseCase.invoke(cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            popularCasts = if (append) state.popularCasts + result.data.popularCasts else result.data.popularCasts,
+                            popularCasts = if (append) state.popularCasts + result.data.casts else result.data.casts,
                             popularCastCafeNames = if (append) {
-                                state.popularCastCafeNames + result.data.popularCastCafeNames
+                                state.popularCastCafeNames + result.data.cafeNames
                             } else {
-                                result.data.popularCastCafeNames
+                                result.data.cafeNames
                             },
-                            popularCastCursor = result.data.popularCastsNextCursor,
-                            canLoadMorePopularCasts = result.data.hasMorePopularCasts,
+                            popularCastCursor = result.data.nextCursor,
+                            canLoadMorePopularCasts = result.data.hasNext,
                             isLoadingMorePopularCasts = false
                         )
                     }
@@ -135,14 +137,14 @@ class HomeViewModel(
         jobs[TaskKey.NEARBY_CAFE_PAGE]?.cancel()
         jobs[TaskKey.NEARBY_CAFE_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreNearbyCafes = append) }
-
-            when (val result = getHomeFeedUseCase.invoke(popularCastCursor = null, nearbyCafeCursor = cursor)) {
+            if (append) delay(PAGINATION_DELAY_MILLIS)
+            when (val result = getNearbyCafePageUseCase.invoke(cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            nearbyCafes = if (append) state.nearbyCafes + result.data.nearbyCafes else result.data.nearbyCafes,
-                            nearbyCafeCursor = result.data.nearbyCafesNextCursor,
-                            canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
+                            nearbyCafes = if (append) state.nearbyCafes + result.data.items else result.data.items,
+                            nearbyCafeCursor = result.data.nextCursor,
+                            canLoadMoreNearbyCafes = result.data.hasNext,
                             isLoadingMoreNearbyCafes = false
                         )
                     }
@@ -424,5 +426,6 @@ class HomeViewModel(
 
     private companion object {
         private const val MAX_HOME_CAFE_EVENTS = 8
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

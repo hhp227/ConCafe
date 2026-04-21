@@ -512,6 +512,8 @@ final class FanManagementViewModel: ObservableObject {
         )
         Task {
             do {
+                try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                if Task.isCancelled { return }
                 let result = try await getMyRequestableCastPageUseCase.invoke(cursor: cursor)
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<Shared.CastClaimCandidate>,
@@ -797,6 +799,7 @@ final class FanManagementViewModel: ObservableObject {
     }
 
     private let claimStatusPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 }
 
 private extension FanManagementViewModel {

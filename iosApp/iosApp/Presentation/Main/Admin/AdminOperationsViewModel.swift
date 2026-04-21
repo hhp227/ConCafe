@@ -158,6 +158,12 @@ final class AdminOperationsViewModel: ObservableObject {
         tasks[.inquiryPage] = Task {
             if append {
                 uiState.isLoadingMoreInquiries = true
+                do {
+                    try await Task.sleep(nanoseconds: paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                } catch {
+                    return
+                }
             }
             do {
                 let result = try await getAdminInquiryPageUseCase.invoke(
@@ -442,6 +448,7 @@ final class AdminOperationsViewModel: ObservableObject {
 private let adminBannerMenuId = "banner"
 private let claimPollingIntervalNanoseconds: UInt64 = 60_000_000_000
 private let adminInquiryPageSize: Int32 = 10
+private let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
 private struct AdminPendingSnapshot {
     let registrationClaims: [PendingCafeRegistrationClaimPreview]

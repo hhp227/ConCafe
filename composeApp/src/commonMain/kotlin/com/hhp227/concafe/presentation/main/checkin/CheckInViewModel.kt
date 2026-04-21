@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.core.util.TimeUtils
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -112,7 +113,7 @@ class CheckInViewModel(
         jobs[TaskKey.LOAD_USER_VISIT_PAGE]?.cancel()
         jobs[TaskKey.LOAD_USER_VISIT_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreRecentVisits = append) }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCheckInUserFeedUseCase.invoke(cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -631,6 +632,7 @@ class CheckInViewModel(
 
     private companion object {
         private const val TODAY_VISIT_LIMIT = 4
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
 
         fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
             return when {

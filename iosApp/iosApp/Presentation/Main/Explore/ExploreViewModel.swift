@@ -96,6 +96,10 @@ class ExploreViewModel: ObservableObject {
         tasks[.cafePage] = Task {
             uiState.isLoadingMoreCafes = append
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getExploreCafePageUseCase.invoke(
                     query: queryOrNil,
                     regionKey: uiState.selectedRegion.rawValue,
@@ -136,6 +140,10 @@ class ExploreViewModel: ObservableObject {
         tasks[.maidPage] = Task {
             uiState.isLoadingMoreMaids = append
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getExploreCastPageUseCase.invoke(
                     query: queryOrNil,
                     regionKey: uiState.selectedRegion.rawValue,
@@ -228,6 +236,8 @@ class ExploreViewModel: ObservableObject {
             return matchesCastFilters(cast) ? cast : nil
         }.sortedCasts(by: uiState.selectedSort)
     }
+
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
     private func matchesCafeFilters(_ cafe: Cafe) -> Bool {
         let query = uiState.query.trimmingCharacters(in: .whitespacesAndNewlines)

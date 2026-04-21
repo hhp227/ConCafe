@@ -196,7 +196,7 @@ private fun GuestMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -461,7 +461,7 @@ private fun ProfileMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background),
+            .background(colorFromHex("FFFBFD")),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

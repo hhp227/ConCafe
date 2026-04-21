@@ -14,6 +14,13 @@ data class HomeFeed(
     val cafeEvents: List<HomeCafeEvent>
 )
 
+data class HomePopularCastPage(
+    val casts: List<Cast>,
+    val cafeNames: Map<String, String>,
+    val nextCursor: String?,
+    val hasNext: Boolean
+)
+
 data class HomeCafeEvent(
     val id: String,
     val cafeId: String,
