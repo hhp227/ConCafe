@@ -150,7 +150,7 @@ class HomeViewModel(
                     }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(isLoadingMoreNearbyCafes = false) }
+                    _uiState.update { it.copy(isLoadingMoreNearbyCafes = false, canLoadMoreNearbyCafes = false) }
                 }
             }
         }

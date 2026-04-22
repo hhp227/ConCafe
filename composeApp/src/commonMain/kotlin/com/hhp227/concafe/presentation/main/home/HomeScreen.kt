@@ -202,7 +202,7 @@ fun HomeContentScreen(
                     Column {
                         SectionTitle(
                             text = stringResource(Res.string.home_section_nearby_cafe),
-                            actionLabel = if (uiState.canLoadMoreNearbyCafes) stringResource(Res.string.home_show_more) else null,
+                            actionLabel = if (uiState.canLoadMoreNearbyCafes && uiState.nearbyCafes.isNotEmpty()) stringResource(Res.string.home_show_more) else null,
                             onAction = { onAction(HomeAction.LoadMoreNearbyCafes) }
                         )
                         Spacer(Modifier.height(10.dp))

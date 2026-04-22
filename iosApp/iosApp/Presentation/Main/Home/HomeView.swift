@@ -148,7 +148,7 @@ private struct HomeContentView: View {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle(
                     title: String(localized: String.LocalizationValue("home_section_nearby_cafe"), table: "Localizable"),
-                    actionTitle: uiState.canLoadMoreNearbyCafes ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
+                    actionTitle: uiState.canLoadMoreNearbyCafes && !uiState.nearbyCafes.isEmpty ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
                     onAction: { onAction(.loadMoreNearbyCafes) }
                 )
                 ScrollView(.horizontal, showsIndicators: false) {
