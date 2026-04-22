@@ -1598,14 +1598,18 @@
           el.reviewsTitle.textContent = "리뷰";
           db.collection("reviews")
             .where("cafeId", "==", cafeId)
-            .orderBy("createdAt", "desc")
             .limit(20)
             .get()
             .then(function (snapshot) {
               if (currentDetailCafeId !== cafeId) {
                 return;
               }
-              renderReviews(snapshot.docs);
+              var sorted = snapshot.docs.slice().sort(function (a, b) {
+                var aAt = (a.data() || {}).createdAt || "";
+                var bAt = (b.data() || {}).createdAt || "";
+                return bAt < aAt ? -1 : bAt > aAt ? 1 : 0;
+              });
+              renderReviews(sorted);
             })
             .catch(function (error) {
               if (currentDetailCafeId !== cafeId) {
@@ -1696,6 +1700,7 @@
               userId: currentUser.uid,
               userNickname: currentUser.displayName || "익명",
               userPhotoUrl: currentUser.photoURL || "",
+              visitId: "",
               rating: reviewRating,
               content: content,
               imageUrls: imageUrl ? [imageUrl] : [],
