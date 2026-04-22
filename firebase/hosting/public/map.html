@@ -1596,7 +1596,8 @@
         function loadCafeReviews(cafeId) {
           el.reviewsList.innerHTML = '<p class="reviews-empty">리뷰를 불러오는 중...</p>';
           el.reviewsTitle.textContent = "리뷰";
-          db.collection("cafes").doc(cafeId).collection("reviews")
+          db.collection("reviews")
+            .where("cafeId", "==", cafeId)
             .orderBy("createdAt", "desc")
             .limit(20)
             .get()
@@ -1628,8 +1629,9 @@
             var photo = data.userPhotoUrl
               ? '<img class="review-user-photo" src="' + escapeHtml(data.userPhotoUrl) + '" alt="" />'
               : '<div class="review-user-photo"></div>';
-            var img = data.imageUrl
-              ? '<img class="review-img" src="' + escapeHtml(data.imageUrl) + '" alt="리뷰 이미지" loading="lazy" />'
+            var firstImageUrl = Array.isArray(data.imageUrls) && data.imageUrls.length > 0 ? data.imageUrls[0] : "";
+            var img = firstImageUrl
+              ? '<img class="review-img" src="' + escapeHtml(firstImageUrl) + '" alt="리뷰 이미지" loading="lazy" />'
               : "";
             var dateStr = typeof data.createdAt === "string" ? data.createdAt.slice(0, 10) : "";
             return (
@@ -1689,13 +1691,17 @@
               }
             }
 
-            await db.collection("cafes").doc(cafeId).collection("reviews").add({
+            await db.collection("reviews").add({
+              cafeId: cafeId,
               userId: currentUser.uid,
               userNickname: currentUser.displayName || "익명",
               userPhotoUrl: currentUser.photoURL || "",
               rating: reviewRating,
               content: content,
-              imageUrl: imageUrl,
+              imageUrls: imageUrl ? [imageUrl] : [],
+              visitVerified: false,
+              likeCount: 0,
+              taggedCastIds: [],
               createdAt: new Date().toISOString(),
             });
 
