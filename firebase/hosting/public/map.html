@@ -326,6 +326,113 @@
         color: var(--muted);
       }
 
+      .map-detail-panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 6;
+        width: 320px;
+        background: #fff;
+        border-left: 1px solid rgba(243, 217, 228, 0.86);
+        box-shadow: -18px 0 36px rgba(74, 54, 69, 0.14);
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .map-detail-panel.is-open {
+        transform: translateX(0);
+      }
+
+      .detail-close-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid #f0d6e1;
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--text);
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+        backdrop-filter: blur(6px);
+      }
+
+      .detail-image-wrap {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #fff1f7 0%, #ffe4ef 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .detail-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .detail-image-placeholder {
+        font-size: 52px;
+        opacity: 0.6;
+      }
+
+      .detail-content {
+        padding: 18px 18px 28px;
+        flex: 1;
+      }
+
+      .detail-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #fff1f7;
+        color: var(--primary-strong);
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .detail-name {
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+        line-height: 1.25;
+      }
+
+      .detail-address {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 14px;
+        line-height: 1.4;
+      }
+
+      .detail-divider {
+        border: 0;
+        border-top: 1px solid #f2d4df;
+        margin: 0 0 14px;
+      }
+
+      .detail-note {
+        font-size: 13px;
+        color: #5f5262;
+        line-height: 1.75;
+        white-space: pre-line;
+      }
+
       @media (max-width: 920px) {
         .map-page {
           height: calc(100dvh - 61px);
@@ -373,6 +480,26 @@
 
         .map-empty {
           inset: 14px;
+        }
+
+        .map-detail-panel {
+          width: 100%;
+          right: 0;
+          left: 0;
+          top: auto;
+          height: 62%;
+          transform: translateY(100%);
+          border-left: 0;
+          border-top: 1px solid rgba(243, 217, 228, 0.86);
+          box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.14);
+        }
+
+        .map-detail-panel.is-open {
+          transform: translateY(0);
+        }
+
+        .detail-image-wrap {
+          height: 150px;
         }
       }
     </style>
@@ -476,6 +603,21 @@
                 </p>
               </div>
             </div>
+
+            <div class="map-detail-panel" id="mapDetailPanel" aria-label="카페 상세 정보">
+              <button class="detail-close-btn" id="detailCloseBtn" type="button" aria-label="상세 패널 닫기">✕</button>
+              <div class="detail-image-wrap">
+                <img id="detailImage" src="" alt="카페 이미지" style="display:none;" />
+                <div class="detail-image-placeholder" id="detailImagePlaceholder">🏪</div>
+              </div>
+              <div class="detail-content">
+                <div class="detail-tag" id="detailTag"></div>
+                <strong class="detail-name" id="detailName"></strong>
+                <div class="detail-address" id="detailAddress"></div>
+                <hr class="detail-divider" />
+                <div class="detail-note" id="detailNote"></div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -514,6 +656,14 @@
           recenterButton: document.getElementById("recenterButton"),
           zoomInButton: document.getElementById("zoomInButton"),
           zoomOutButton: document.getElementById("zoomOutButton"),
+          mapDetailPanel: document.getElementById("mapDetailPanel"),
+          detailCloseBtn: document.getElementById("detailCloseBtn"),
+          detailImage: document.getElementById("detailImage"),
+          detailImagePlaceholder: document.getElementById("detailImagePlaceholder"),
+          detailTag: document.getElementById("detailTag"),
+          detailName: document.getElementById("detailName"),
+          detailAddress: document.getElementById("detailAddress"),
+          detailNote: document.getElementById("detailNote"),
         };
 
         const state = {
@@ -636,6 +786,24 @@
             note: desc || businessHours || "카페 상세 정보는 앱에서 확인할 수 있습니다.",
             lat: point.lat,
             lng: point.lng,
+            image: normalizeText(data.thumbnailImage),
+          };
+        }
+
+        function createMarkerIcon(isActive) {
+          var color = isActive ? "#c73d73" : "#ef6797";
+          var w = isActive ? 34 : 28;
+          var h = isActive ? 48 : 40;
+          var svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 34 48">' +
+            '<path d="M17 0C7.611 0 0 7.611 0 17c0 12.426 17 31 17 31S34 29.426 34 17C34 7.611 26.389 0 17 0z"' +
+            ' fill="' + color + '" stroke="white" stroke-width="2.5"/>' +
+            '<circle cx="17" cy="17" r="7" fill="white" fill-opacity="0.92"/>' +
+            '</svg>';
+          return {
+            url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+            scaledSize: new window.google.maps.Size(w, h),
+            anchor: new window.google.maps.Point(w / 2, h),
           };
         }
 
@@ -851,10 +1019,15 @@
           }
 
           infoWindow.setContent(
-            '<div style="min-width:200px;padding:4px 2px;">' +
+            '<div style="min-width:210px;padding:4px 2px 2px;">' +
               '<strong style="display:block;font-size:14px;color:#3d2c38;">' + escapeHtml(cafe.name) + "</strong>" +
               '<div style="margin-top:4px;font-size:12px;color:#7a6f7c;">' + escapeHtml(cafe.district) + " · " + escapeHtml(cafe.theme) + "</div>" +
-              '<div style="margin-top:6px;font-size:12px;color:#5f5262;">' + escapeHtml(cafe.address) + "</div>" +
+              '<div style="margin-top:5px;font-size:12px;color:#5f5262;">' + escapeHtml(cafe.address) + "</div>" +
+              '<button onclick="window.__concafeShowDetail(\'' + cafe.id + '\')" ' +
+                'style="margin-top:10px;width:100%;padding:8px 0;background:linear-gradient(135deg,#ef6797,#da4e84);' +
+                'color:#fff;border:0;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">' +
+                '자세히 보기 →' +
+              "</button>" +
             "</div>"
           );
           infoWindow.open({ map: map, anchor: marker });
@@ -866,15 +1039,8 @@
               return cafe.id === cafeId;
             });
             marker.setVisible(visible);
-            if (window.google && window.google.maps && window.google.maps.SymbolPath) {
-              marker.setIcon({
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: cafeId === state.activeCafeId ? 10 : 8,
-                fillColor: cafeId === state.activeCafeId ? "#da4e84" : "#ef6797",
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 3,
-              });
+            if (window.google && window.google.maps) {
+              marker.setIcon(createMarkerIcon(cafeId === state.activeCafeId));
             }
           });
 
@@ -946,6 +1112,10 @@
             }
           });
           el.resetButton.addEventListener("click", resetSearch);
+          el.detailCloseBtn.addEventListener("click", closeDetailPanel);
+          window.__concafeShowDetail = function (cafeId) {
+            openDetailPanel(getCafeById(cafeId));
+          };
           el.fitAllButton.addEventListener("click", function () {
             fitMapToCafes(getFilteredCafes());
           });
@@ -1031,14 +1201,7 @@
               map: map,
               position: { lat: cafe.lat, lng: cafe.lng },
               title: cafe.name,
-              icon: {
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "#ef6797",
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 3,
-              },
+              icon: createMarkerIcon(false),
             });
 
             marker.addListener("click", function () {
@@ -1054,6 +1217,33 @@
           syncMapTypeFilter();
           syncUI();
           fitMapToCafes(getFilteredCafes());
+        }
+
+        function openDetailPanel(cafe) {
+          if (!cafe) {
+            return;
+          }
+
+          el.detailTag.textContent = cafe.theme || "메이드 카페";
+          el.detailName.textContent = cafe.name;
+          el.detailAddress.textContent = cafe.district + " · " + cafe.address;
+          el.detailNote.textContent = cafe.note || "카페 상세 정보는 앱에서 확인할 수 있습니다.";
+
+          if (cafe.image) {
+            el.detailImage.src = cafe.image;
+            el.detailImage.style.display = "block";
+            el.detailImagePlaceholder.style.display = "none";
+          } else {
+            el.detailImage.src = "";
+            el.detailImage.style.display = "none";
+            el.detailImagePlaceholder.style.display = "";
+          }
+
+          el.mapDetailPanel.classList.add("is-open");
+        }
+
+        function closeDetailPanel() {
+          el.mapDetailPanel.classList.remove("is-open");
         }
 
         function init() {
