@@ -132,6 +132,11 @@
 		0A580DB72F59711000390F67 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DB82F59711000390F67 /* CheckInView.swift */; };
 		0A580DB92F59712000390F67 /* MyInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBA2F59712000390F67 /* MyInfoView.swift */; };
 		0A580DBE2F59730000390F67 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A580DBF2F59730000390F67 /* NotificationView.swift */; };
+		0A64950F2F99413000341F17 /* MapUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A64950E2F99413000341F17 /* MapUiState.swift */; };
+		0A6495112F99415100341F17 /* MapAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6495102F99415100341F17 /* MapAction.swift */; };
+		0A6495132F99417C00341F17 /* MapEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6495122F99417C00341F17 /* MapEvent.swift */; };
+		0A6495152F99419200341F17 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6495142F99419200341F17 /* MapViewModel.swift */; };
+		0A6495172F9941B500341F17 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6495162F9941B500341F17 /* MapView.swift */; };
 		0A6B33462F610B2D0074940F /* MenuGoodsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33452F610B2D0074940F /* MenuGoodsViewModel.swift */; };
 		0A6B33482F610B4F0074940F /* MenuGoodsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33472F610B4F0074940F /* MenuGoodsUiState.swift */; };
 		0A6B334A2F610B700074940F /* MenuGoodsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B33492F610B700074940F /* MenuGoodsView.swift */; };
@@ -364,6 +369,11 @@
 		0A580DBA2F59712000390F67 /* MyInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyInfoView.swift; sourceTree = "<group>"; };
 		0A580DBF2F59730000390F67 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		0A5F07AB2F7826050064CCB3 /* ConCafePush.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = ConCafePush.entitlements; path = iosApp/ConCafePush.entitlements; sourceTree = "<group>"; };
+		0A64950E2F99413000341F17 /* MapUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapUiState.swift; sourceTree = "<group>"; };
+		0A6495102F99415100341F17 /* MapAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapAction.swift; sourceTree = "<group>"; };
+		0A6495122F99417C00341F17 /* MapEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapEvent.swift; sourceTree = "<group>"; };
+		0A6495142F99419200341F17 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		0A6495162F9941B500341F17 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		0A6B33452F610B2D0074940F /* MenuGoodsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsViewModel.swift; sourceTree = "<group>"; };
 		0A6B33472F610B4F0074940F /* MenuGoodsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsUiState.swift; sourceTree = "<group>"; };
 		0A6B33492F610B700074940F /* MenuGoodsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsView.swift; sourceTree = "<group>"; };
@@ -857,6 +867,7 @@
 		0A580DBC2F59714000390F67 /* CheckIn */ = {
 			isa = PBXGroup;
 			children = (
+				0A64950D2F99411C00341F17 /* Map */,
 				0A580DB82F59711000390F67 /* CheckInView.swift */,
 				0A785CAA2F5A7C2F004037A8 /* CheckInEvent.swift */,
 				0A785CAC2F5A7C4D004037A8 /* CheckInViewModel.swift */,
@@ -890,6 +901,18 @@
 				0A3E34862F5E887600AA813D /* NotificationEvent.swift */,
 			);
 			path = Notification;
+			sourceTree = "<group>";
+		};
+		0A64950D2F99411C00341F17 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				0A64950E2F99413000341F17 /* MapUiState.swift */,
+				0A6495102F99415100341F17 /* MapAction.swift */,
+				0A6495122F99417C00341F17 /* MapEvent.swift */,
+				0A6495142F99419200341F17 /* MapViewModel.swift */,
+				0A6495162F9941B500341F17 /* MapView.swift */,
+			);
+			path = Map;
 			sourceTree = "<group>";
 		};
 		0A6B33442F610B0B0074940F /* MenuGoods */ = {
@@ -1239,6 +1262,7 @@
 				0A4C9E1A2F7BB0AB001F94DC /* PictureUiState.swift in Sources */,
 				0A785CC12F5A7E28004037A8 /* CafeViewModel.swift in Sources */,
 				0A8ABA612F5C1C0B00265D4F /* CafeManagementViewModel.swift in Sources */,
+				0A6495132F99417C00341F17 /* MapEvent.swift in Sources */,
 				0A0C66992F5C0DE000B0CDE4 /* SignInView.swift in Sources */,
 				0A785C9A2F5A7723004037A8 /* HomeViewModel.swift in Sources */,
 				0A785CAB2F5A7C2F004037A8 /* CheckInEvent.swift in Sources */,
@@ -1257,6 +1281,7 @@
 				0A6B33572F610CAC0074940F /* NoticeEventEvent.swift in Sources */,
 				0A785C942F5A76B8004037A8 /* HomeAction.swift in Sources */,
 				0A0C66862F5C038D00B0CDE4 /* MainUiState.swift in Sources */,
+				0A6495172F9941B500341F17 /* MapView.swift in Sources */,
 				0A491C912F669FBD005C106F /* BannerEvent.swift in Sources */,
 				0A8ABA6B2F5C1CA400265D4F /* FanManagementUiState.swift in Sources */,
 				0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */,
@@ -1286,6 +1311,7 @@
 				0A785CBB2F5A7DC3004037A8 /* RankingAction.swift in Sources */,
 				0A785CB12F5A7CF1004037A8 /* MyInfoAction.swift in Sources */,
 				0A7E6AA72F78C65E00A03E42 /* RatingBox.swift in Sources */,
+				0A6495112F99415100341F17 /* MapAction.swift in Sources */,
 				0A785CBF2F5A7E11004037A8 /* CastViewModel.swift in Sources */,
 				0A6B33532F610C660074940F /* NoticeEventUiState.swift in Sources */,
 				0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */,
@@ -1358,6 +1384,7 @@
 				0A6B334C2F610B860074940F /* MenuGoodsAction.swift in Sources */,
 				0A3DB80E2F649F6D00064804 /* BannerEditEvent.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
+				0A64950F2F99413000341F17 /* MapUiState.swift in Sources */,
 				0A2C5B282F6561C200D3004E /* NotificationSettingsViewModel.swift in Sources */,
 				0A3DB80A2F649F2E00064804 /* BannerEditUiState.swift in Sources */,
 				0A3E34872F5E887600AA813D /* NotificationEvent.swift in Sources */,
@@ -1366,6 +1393,7 @@
 				0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
 				0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */,
+				0A6495152F99419200341F17 /* MapViewModel.swift in Sources */,
 				0A580DA52F59673E00390F67 /* NavigationEvent.swift in Sources */,
 				0A785C982F5A76FD004037A8 /* HomeUiState.swift in Sources */,
 				0A785CAF2F5A7CD0004037A8 /* MyInfoViewModel.swift in Sources */,
