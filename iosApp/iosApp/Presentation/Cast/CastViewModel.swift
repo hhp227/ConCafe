@@ -47,6 +47,9 @@ final class CastViewModel: ObservableObject {
                                 schedule: detail.schedule,
                                 visitCertificationCount: detail.visitCertificationCount
                             )
+                            if let isFollowing = event.isFollowing?.boolValue {
+                                self.uiState.isFollowing = isFollowing
+                            }
                         }
                     case let event as Shared.CastEvent.Deleted:
                         if event.castId == self.castId {

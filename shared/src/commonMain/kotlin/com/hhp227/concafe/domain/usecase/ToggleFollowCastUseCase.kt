@@ -17,6 +17,7 @@ class ToggleFollowCastUseCase(
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
             val isFollowing = castRepository.isFollowing(currentUser.id, castId)
+            val previousCast = castRepository.getCastsByIds(listOf(castId)).firstOrNull()
 
             if (isFollowing) {
                 castRepository.unfollowCast(currentUser.id, castId)
@@ -25,10 +26,18 @@ class ToggleFollowCastUseCase(
             }
             val updatedCast = castRepository.getCastsByIds(listOf(castId)).firstOrNull()
             if (updatedCast != null) {
+                val adjustedFollowerCount = previousCast?.followerCount?.let { previousCount ->
+                    if (isFollowing) {
+                        minOf(updatedCast.followerCount, (previousCount - 1).coerceAtLeast(0))
+                    } else {
+                        maxOf(updatedCast.followerCount, previousCount + 1)
+                    }
+                } ?: updatedCast.followerCount
+
                 castEventPublisher.publish(
                     CastEvent.Updated(
                         cafeId = updatedCast.cafeId,
-                        cast = updatedCast,
+                        cast = updatedCast.copy(followerCount = adjustedFollowerCount),
                         isFollowing = !isFollowing
                     )
                 )

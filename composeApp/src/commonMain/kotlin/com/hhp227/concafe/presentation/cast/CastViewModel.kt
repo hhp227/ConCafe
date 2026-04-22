@@ -41,7 +41,10 @@ class CastViewModel(
                     }
                     is CastDomainEvent.Updated -> if (event.cast.id == castId) {
                         _uiState.update { state ->
-                            state.copy(detail = state.detail?.copy(cast = event.cast))
+                            state.copy(
+                                detail = state.detail?.copy(cast = event.cast),
+                                isFollowing = event.isFollowing ?: state.isFollowing
+                            )
                         }
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
