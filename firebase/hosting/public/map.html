@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>콘카 | 컨셉 카페 지도</title>
+    <meta
+      name="description"
+      content="콘카 컨셉 카페 지도로 실제 카페 위치를 전체 화면 지도에서 검색하고 확인하세요."
+    />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .map-page {
+        height: calc(100dvh - 65px);
+        min-height: 640px;
+        position: relative;
+      }
+
+      .map-stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 400px minmax(0, 1fr);
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 14% 10%, rgba(255, 228, 239, 0.95) 0%, rgba(255, 248, 251, 0) 44%),
+          linear-gradient(180deg, #fffdfd 0%, var(--bg) 30%, #fff6fa 100%);
+      }
+
+      .map-sidebar {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        gap: 0;
+        min-height: 0;
+        background: rgba(255, 251, 252, 0.97);
+        border-right: 1px solid rgba(243, 217, 228, 0.86);
+        box-shadow: 18px 0 36px rgba(74, 54, 69, 0.08);
+      }
+
+      .map-canvas {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+
+      .map-empty {
+        position: absolute;
+        inset: 24px;
+        z-index: 3;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px dashed #f0b7ce;
+        color: #7d5e6d;
+        backdrop-filter: blur(10px);
+      }
+
+      .map-empty.is-visible {
+        display: flex;
+      }
+
+      .toolbar-card {
+        padding: 20px 18px 16px;
+        border-bottom: 1px solid rgba(243, 217, 228, 0.82);
+      }
+
+      .toolbar-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .toolbar-title {
+        display: grid;
+        gap: 4px;
+      }
+
+      .toolbar-title strong {
+        font-size: 20px;
+        line-height: 1.1;
+      }
+
+      .toolbar-title span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .toolbar-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 70px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .search-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 10px;
+      }
+
+      .search-input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 16px;
+        border: 1px solid #f0d6e1;
+        border-radius: 16px;
+        background: #fff8fb;
+        font: inherit;
+        color: var(--text);
+      }
+
+      .search-button,
+      .ghost-button,
+      .map-icon-button,
+      .result-button {
+        border: 0;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .search-button,
+      .ghost-button {
+        min-height: 48px;
+        padding: 0 16px;
+        border-radius: 16px;
+        font-weight: 700;
+      }
+
+      .search-button {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        color: #fff;
+      }
+
+      .ghost-button {
+        background: #fff;
+        color: var(--primary-strong);
+        border: 1px solid #f0d6e1;
+      }
+
+      .filter-row {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      .filter-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .filter-select {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 14px;
+        border: 1px solid #f0d6e1;
+        border-radius: 14px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .results-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      .results-head {
+        padding: 16px 18px 12px;
+        border-bottom: 1px solid rgba(243, 217, 228, 0.82);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .results-head strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .results-head span {
+        display: block;
+        margin-top: 3px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .results-list {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 12px 14px 16px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .result-button {
+        width: 100%;
+        text-align: left;
+        padding: 14px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid #f2d4df;
+        color: inherit;
+      }
+
+      .result-button.is-active {
+        border-color: #eb8fb1;
+        background: #fff4f8;
+        box-shadow: inset 0 0 0 1px rgba(239, 103, 151, 0.16);
+      }
+
+      .result-top {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .result-button strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      .result-button p {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .status-pill {
+        flex: 0 0 auto;
+        padding: 6px 8px;
+        border-radius: 999px;
+        background: #fff1f7;
+        color: var(--primary-strong);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .map-actions {
+        position: absolute;
+        right: 18px;
+        bottom: 76px;
+        z-index: 4;
+        display: grid;
+        gap: 10px;
+      }
+
+      .map-style-control {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        z-index: 4;
+        width: 150px;
+      }
+
+      .map-style-select {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 14px;
+        border: 1px solid rgba(243, 217, 228, 0.9);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--text);
+        font: inherit;
+        box-shadow: 0 18px 34px rgba(74, 54, 69, 0.16);
+        backdrop-filter: blur(10px);
+      }
+
+      .map-icon-button {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--text);
+        font-size: 22px;
+        box-shadow: 0 18px 34px rgba(74, 54, 69, 0.18);
+      }
+
+      .map-credit {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        z-index: 4;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(243, 217, 228, 0.84);
+        box-shadow: 0 18px 34px rgba(74, 54, 69, 0.12);
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 920px) {
+        .map-page {
+          height: calc(100dvh - 61px);
+          min-height: 0;
+        }
+
+        .map-stage {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(0, 1fr) 40dvh;
+        }
+
+        .map-sidebar {
+          order: 2;
+          border-right: 0;
+          border-top: 1px solid rgba(243, 217, 228, 0.86);
+          box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.08);
+        }
+
+        .map-canvas {
+          order: 1;
+        }
+
+        .search-bar {
+          grid-template-columns: 1fr;
+        }
+
+        .results-panel {
+          min-height: 0;
+        }
+
+        .map-credit {
+          display: none;
+        }
+
+        .map-actions {
+          right: 14px;
+          bottom: calc(40dvh + 78px);
+        }
+
+        .map-style-control {
+          right: 14px;
+          bottom: calc(40dvh + 20px);
+          width: 132px;
+        }
+
+        .map-empty {
+          inset: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <nav class="nav-links" aria-label="운영 페이지 메뉴">
+            <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+            <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+            <a class="nav-link" href="/map">메이드 카페 지도</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="map-page">
+        <section class="map-stage" aria-label="메이드 카페 전체 지도">
+          <aside class="map-sidebar" aria-label="지도 검색 및 결과 패널">
+            <section class="toolbar-card" aria-label="지도 검색">
+              <div class="toolbar-head">
+                <div class="toolbar-title">
+                  <strong>메이드 카페 지도</strong>
+                  <span id="mapHeaderCaption">실제 카페 데이터를 불러오는 중입니다.</span>
+                </div>
+                <div class="toolbar-badge" id="mapCafeCount">0곳</div>
+              </div>
+
+              <div class="search-bar">
+                <input
+                  id="mapSearchInput"
+                  class="search-input"
+                  type="search"
+                  placeholder="카페명, 주소, 지역으로 검색"
+                  aria-label="카페명, 주소, 지역으로 검색"
+                />
+                <button class="search-button" id="searchButton" type="button">검색</button>
+                <button class="ghost-button" id="resetButton" type="button">초기화</button>
+              </div>
+
+              <div class="filter-row">
+                <label class="filter-label" for="regionFilter">지역 필터</label>
+                <select class="filter-select" id="regionFilter" aria-label="지역 필터">
+                  <option value="전체">전체</option>
+                  <option value="서울">서울</option>
+                  <option value="부산">부산</option>
+                  <option value="대구">대구</option>
+                  <option value="도쿄">도쿄</option>
+                  <option value="오사카">오사카</option>
+                  <option value="요코하마">요코하마</option>
+                </select>
+              </div>
+            </section>
+
+            <section class="results-panel" aria-label="검색 결과">
+              <div class="results-head">
+                <div>
+                  <strong id="resultsTitle">검색 결과 0곳</strong>
+                  <span id="resultsSubtitle">Firestore에서 카페 데이터를 불러오는 중입니다.</span>
+                </div>
+                <button class="ghost-button" id="fitAllButton" type="button">전체 보기</button>
+              </div>
+              <div class="results-list" id="sheetList"></div>
+            </section>
+          </aside>
+
+          <div class="map-canvas">
+            <div id="map" aria-label="구글 지도"></div>
+
+            <div class="map-style-control">
+              <select class="map-style-select" id="mapTypeFilter" aria-label="지도 스타일">
+                <option value="roadmap">일반</option>
+                <option value="satellite">위성</option>
+                <option value="hybrid">하이브리드</option>
+                <option value="terrain">지형</option>
+              </select>
+            </div>
+
+            <div class="map-actions">
+              <button class="map-icon-button" id="zoomInButton" type="button" aria-label="지도 확대">+</button>
+              <button class="map-icon-button" id="zoomOutButton" type="button" aria-label="지도 축소">-</button>
+              <button class="map-icon-button" id="recenterButton" type="button" aria-label="검색 결과 위치로 이동">⌖</button>
+            </div>
+
+            <div class="map-credit">
+              <strong style="display: block; color: var(--text); margin-bottom: 3px;">전체 지도 화면</strong>
+              <span>검색 버튼을 누르면 결과 카페 범위로 지도가 이동합니다.</span>
+            </div>
+
+            <div class="map-empty is-visible" id="mapEmpty">
+              <div>
+                <strong>Google Maps API 키가 필요합니다.</strong>
+                <p style="margin: 8px 0 0;">
+                  배포 시 <code>window.CONCAFE_GOOGLE_MAPS_API_KEY</code> 값을 주입하면 실제 지도가 로드됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script>
+      (function () {
+        const firebaseConfig = {
+          apiKey: "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI",
+          authDomain: "concafe-5f7fd.firebaseapp.com",
+          projectId: "concafe-5f7fd",
+          storageBucket: "concafe-5f7fd.firebasestorage.app",
+          messagingSenderId: "387905493709",
+          appId: "1:387905493709:web:registration-page",
+        };
+
+        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+
+        const el = {
+          mapEmpty: document.getElementById("mapEmpty"),
+          mapHeaderCaption: document.getElementById("mapHeaderCaption"),
+          mapCafeCount: document.getElementById("mapCafeCount"),
+          resultsTitle: document.getElementById("resultsTitle"),
+          resultsSubtitle: document.getElementById("resultsSubtitle"),
+          searchInput: document.getElementById("mapSearchInput"),
+          searchButton: document.getElementById("searchButton"),
+          resetButton: document.getElementById("resetButton"),
+          fitAllButton: document.getElementById("fitAllButton"),
+          regionFilter: document.getElementById("regionFilter"),
+          mapTypeFilter: document.getElementById("mapTypeFilter"),
+          list: document.getElementById("sheetList"),
+          recenterButton: document.getElementById("recenterButton"),
+          zoomInButton: document.getElementById("zoomInButton"),
+          zoomOutButton: document.getElementById("zoomOutButton"),
+        };
+
+        const state = {
+          cafes: [],
+          activeDistrict: "전체",
+          activeCafeId: "",
+          appliedKeyword: "",
+          userLocation: null,
+          mapTypeId: "roadmap",
+        };
+        const MAP_TYPE_STORAGE_KEY = "concafe.mapTypeId";
+
+        let map = null;
+        let infoWindow = null;
+        const markers = new Map();
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function normalizeText(value) {
+          return typeof value === "string" ? value.trim() : "";
+        }
+
+        function normalizeRegionLabel(region) {
+          if (!region || typeof region !== "object") {
+            return "";
+          }
+
+          const parts = [
+            normalizeText(region.prefecture),
+            normalizeText(region.city),
+            normalizeText(region.district),
+          ].filter(Boolean);
+
+          if (parts.length > 0) {
+            return parts.join(" ");
+          }
+
+          return normalizeText(region.address);
+        }
+
+        function pickRegionFilter(region) {
+          const parts = [
+            normalizeText(region && region.prefecture),
+            normalizeText(region && region.city),
+            normalizeText(region && region.district),
+            normalizeText(region && region.address),
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          if (parts.indexOf("seoul") !== -1 || parts.indexOf("서울") !== -1 || parts.indexOf("ソウル") !== -1) {
+            return "서울";
+          }
+          if (parts.indexOf("busan") !== -1 || parts.indexOf("부산") !== -1 || parts.indexOf("釜山") !== -1) {
+            return "부산";
+          }
+          if (parts.indexOf("daegu") !== -1 || parts.indexOf("대구") !== -1 || parts.indexOf("大邱") !== -1) {
+            return "대구";
+          }
+          if (parts.indexOf("tokyo") !== -1 || parts.indexOf("도쿄") !== -1 || parts.indexOf("東京") !== -1) {
+            return "도쿄";
+          }
+          if (parts.indexOf("osaka") !== -1 || parts.indexOf("오사카") !== -1 || parts.indexOf("大阪") !== -1) {
+            return "오사카";
+          }
+          if (parts.indexOf("yokohama") !== -1 || parts.indexOf("요코하마") !== -1 || parts.indexOf("横浜") !== -1) {
+            return "요코하마";
+          }
+
+          return "전체";
+        }
+
+        function resolveGeoPoint(region) {
+          if (!region || typeof region !== "object") {
+            return null;
+          }
+
+          const location = region.location;
+          if (location && typeof location === "object") {
+            if (typeof location.latitude === "number" && typeof location.longitude === "number") {
+              return { lat: location.latitude, lng: location.longitude };
+            }
+            if (typeof location._lat === "number" && typeof location._long === "number") {
+              return { lat: location._lat, lng: location._long };
+            }
+          }
+
+          return null;
+        }
+
+        function buildCafeModel(doc) {
+          const data = doc.data() || {};
+          const region = data.region && typeof data.region === "object" ? data.region : {};
+          const point = resolveGeoPoint(region);
+          if (!point || data.approved !== true) {
+            return null;
+          }
+
+          const conceptType = normalizeText(data.conceptType);
+          const desc = normalizeText(data.desc);
+          const businessHours = normalizeText(data.businessHours);
+          const regionLabel = normalizeRegionLabel(region);
+
+          return {
+            id: doc.id,
+            name: normalizeText(data.name) || "이름 없는 카페",
+            district: pickRegionFilter(region),
+            regionLabel: regionLabel,
+            address: normalizeText(region.address) || regionLabel || "주소 정보 없음",
+            theme: conceptType || "메이드 카페",
+            status: "운영중",
+            note: desc || businessHours || "카페 상세 정보는 앱에서 확인할 수 있습니다.",
+            lat: point.lat,
+            lng: point.lng,
+          };
+        }
+
+        function getFilteredCafes() {
+          const keyword = state.appliedKeyword.toLowerCase();
+          return state.cafes.filter(function (cafe) {
+            const matchesDistrict = state.activeDistrict === "전체" || cafe.district === state.activeDistrict;
+            const haystack = [cafe.name, cafe.address, cafe.theme, cafe.district, cafe.regionLabel].join(" ").toLowerCase();
+            const matchesKeyword = keyword.length === 0 || haystack.indexOf(keyword) !== -1;
+            return matchesDistrict && matchesKeyword;
+          });
+        }
+
+        function syncRegionFilter() {
+          if (el.regionFilter) {
+            el.regionFilter.value = state.activeDistrict;
+          }
+        }
+
+        function syncMapTypeFilter() {
+          if (el.mapTypeFilter) {
+            el.mapTypeFilter.value = state.mapTypeId;
+          }
+        }
+
+        function loadSavedMapType() {
+          try {
+            const saved = window.localStorage.getItem(MAP_TYPE_STORAGE_KEY);
+            if (saved === "roadmap" || saved === "satellite" || saved === "hybrid" || saved === "terrain") {
+              state.mapTypeId = saved;
+            }
+          } catch (error) {
+            console.warn("Failed to read saved map type", error);
+          }
+        }
+
+        function persistMapType() {
+          try {
+            window.localStorage.setItem(MAP_TYPE_STORAGE_KEY, state.mapTypeId);
+          } catch (error) {
+            console.warn("Failed to persist map type", error);
+          }
+        }
+
+        function renderList(filteredCafes) {
+          if (!filteredCafes.some(function (cafe) { return cafe.id === state.activeCafeId; })) {
+            state.activeCafeId = filteredCafes[0] ? filteredCafes[0].id : "";
+          }
+
+          if (filteredCafes.length === 0) {
+            el.list.innerHTML =
+              '<article class="result-button" aria-live="polite">' +
+              "<strong>조건에 맞는 카페가 없습니다.</strong>" +
+              "<p>검색어를 바꾸거나 지역 필터를 전체로 돌려보세요.</p>" +
+              "</article>";
+            return;
+          }
+
+          el.list.innerHTML = filteredCafes
+            .map(function (cafe) {
+              const activeClass = cafe.id === state.activeCafeId ? "result-button is-active" : "result-button";
+              return (
+                '<button class="' + activeClass + '" type="button" data-cafe-id="' + escapeHtml(cafe.id) + '">' +
+                '<div class="result-top">' +
+                "<div>" +
+                "<strong>" + escapeHtml(cafe.name) + "</strong>" +
+                "<p>" + escapeHtml(cafe.district) + " · " + escapeHtml(cafe.theme) + "<br />" + escapeHtml(cafe.address) + "</p>" +
+                "</div>" +
+                '<span class="status-pill">' + escapeHtml(cafe.status) + "</span>" +
+                "</div>" +
+                "<p>" + escapeHtml(cafe.note) + "</p>" +
+                "</button>"
+              );
+            })
+            .join("");
+
+          Array.from(el.list.querySelectorAll("[data-cafe-id]")).forEach(function (button) {
+            button.addEventListener("click", function () {
+              const cafeId = button.getAttribute("data-cafe-id") || "";
+              selectCafe(cafeId, true);
+            });
+          });
+        }
+
+        function updateSummary(filteredCafes) {
+          el.mapCafeCount.textContent = state.cafes.length + "곳";
+          el.resultsTitle.textContent = "검색 결과 " + filteredCafes.length + "곳";
+
+          if (filteredCafes.length === 0) {
+            el.resultsSubtitle.textContent = "현재 조건과 일치하는 카페가 없습니다.";
+            return;
+          }
+
+          if (state.appliedKeyword) {
+            el.resultsSubtitle.textContent = '"' + state.appliedKeyword + '" 검색 결과입니다.';
+            return;
+          }
+
+          el.resultsSubtitle.textContent = state.activeDistrict === "전체"
+            ? "전체 지역 카페를 표시하고 있습니다."
+            : state.activeDistrict + " 지역 카페를 표시하고 있습니다.";
+        }
+
+        function getCafeById(cafeId) {
+          return state.cafes.find(function (cafe) {
+            return cafe.id === cafeId;
+          }) || null;
+        }
+
+        function calculateDistanceMeters(from, to) {
+          const earthRadius = 6371000;
+          const toRadians = function (degrees) {
+            return degrees * (Math.PI / 180);
+          };
+
+          const latDelta = toRadians(to.lat - from.lat);
+          const lngDelta = toRadians(to.lng - from.lng);
+          const fromLat = toRadians(from.lat);
+          const toLat = toRadians(to.lat);
+          const a =
+            Math.sin(latDelta / 2) * Math.sin(latDelta / 2) +
+            Math.cos(fromLat) * Math.cos(toLat) *
+            Math.sin(lngDelta / 2) * Math.sin(lngDelta / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return earthRadius * c;
+        }
+
+        function resolveNearestCafe(location) {
+          if (!location || state.cafes.length === 0) {
+            return null;
+          }
+
+          let nearestCafe = null;
+          let nearestDistance = Infinity;
+          state.cafes.forEach(function (cafe) {
+            const distance = calculateDistanceMeters(location, { lat: cafe.lat, lng: cafe.lng });
+            if (distance < nearestDistance) {
+              nearestDistance = distance;
+              nearestCafe = cafe;
+            }
+          });
+          return nearestCafe;
+        }
+
+        function requestBrowserLocation() {
+          return new Promise(function (resolve) {
+            if (!navigator.geolocation) {
+              resolve(null);
+              return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+              function (position) {
+                resolve({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                });
+              },
+              function () {
+                resolve(null);
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 6000,
+                maximumAge: 300000,
+              }
+            );
+          });
+        }
+
+        async function applyNearestDistrictFromUserLocation() {
+          const location = await requestBrowserLocation();
+          state.userLocation = location;
+
+          if (!location) {
+            state.activeDistrict = "전체";
+            if (state.cafes.length === 0) {
+              el.mapHeaderCaption.textContent = "표시 가능한 카페 데이터가 없습니다.";
+            }
+            return;
+          }
+
+          const nearestCafe = resolveNearestCafe(location);
+          if (!nearestCafe) {
+            return;
+          }
+
+          state.activeDistrict = nearestCafe.district || "전체";
+          state.activeCafeId = nearestCafe.id;
+          el.mapHeaderCaption.textContent =
+            "현재 위치 기준 가까운 지역은 " + state.activeDistrict + " 입니다.";
+        }
+
+        function fitMapToCafes(cafesToFit) {
+          if (!map || !window.google || !window.google.maps || cafesToFit.length === 0) {
+            return;
+          }
+
+          const bounds = new window.google.maps.LatLngBounds();
+          cafesToFit.forEach(function (cafe) {
+            bounds.extend({ lat: cafe.lat, lng: cafe.lng });
+          });
+          map.fitBounds(bounds, 80);
+        }
+
+        function openInfoWindow(cafe) {
+          if (!map || !infoWindow || !cafe) {
+            return;
+          }
+
+          const marker = markers.get(cafe.id);
+          if (!marker) {
+            return;
+          }
+
+          infoWindow.setContent(
+            '<div style="min-width:200px;padding:4px 2px;">' +
+              '<strong style="display:block;font-size:14px;color:#3d2c38;">' + escapeHtml(cafe.name) + "</strong>" +
+              '<div style="margin-top:4px;font-size:12px;color:#7a6f7c;">' + escapeHtml(cafe.district) + " · " + escapeHtml(cafe.theme) + "</div>" +
+              '<div style="margin-top:6px;font-size:12px;color:#5f5262;">' + escapeHtml(cafe.address) + "</div>" +
+            "</div>"
+          );
+          infoWindow.open({ map: map, anchor: marker });
+        }
+
+        function refreshMarkers(filteredCafes) {
+          markers.forEach(function (marker, cafeId) {
+            const visible = filteredCafes.some(function (cafe) {
+              return cafe.id === cafeId;
+            });
+            marker.setVisible(visible);
+            if (window.google && window.google.maps && window.google.maps.SymbolPath) {
+              marker.setIcon({
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: cafeId === state.activeCafeId ? 10 : 8,
+                fillColor: cafeId === state.activeCafeId ? "#da4e84" : "#ef6797",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 3,
+              });
+            }
+          });
+
+          const activeCafe = getCafeById(state.activeCafeId);
+          if (activeCafe && filteredCafes.some(function (cafe) { return cafe.id === activeCafe.id; })) {
+            openInfoWindow(activeCafe);
+          } else if (infoWindow) {
+            infoWindow.close();
+          }
+        }
+
+        function selectCafe(cafeId, panToMarker) {
+          state.activeCafeId = cafeId;
+          const filteredCafes = getFilteredCafes();
+          renderList(filteredCafes);
+          updateSummary(filteredCafes);
+          refreshMarkers(filteredCafes);
+
+          const cafe = getCafeById(cafeId);
+          if (map && cafe && panToMarker) {
+            map.panTo({ lat: cafe.lat, lng: cafe.lng });
+            map.setZoom(Math.max(map.getZoom() || 15, 15));
+          }
+        }
+
+        function syncUI() {
+          const filteredCafes = getFilteredCafes();
+          renderList(filteredCafes);
+          updateSummary(filteredCafes);
+          if (map) {
+            refreshMarkers(filteredCafes);
+          }
+          return filteredCafes;
+        }
+
+        function applySearch() {
+          state.appliedKeyword = normalizeText(el.searchInput.value);
+          const filteredCafes = syncUI();
+          fitMapToCafes(filteredCafes);
+        }
+
+        function resetSearch() {
+          el.searchInput.value = "";
+          state.appliedKeyword = "";
+          state.activeDistrict = "전체";
+          syncRegionFilter();
+          const filteredCafes = syncUI();
+          fitMapToCafes(filteredCafes);
+        }
+
+        function bindUI() {
+          el.searchButton.addEventListener("click", applySearch);
+          el.searchInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              applySearch();
+            }
+          });
+          el.regionFilter.addEventListener("change", function () {
+            state.activeDistrict = el.regionFilter.value || "전체";
+            applySearch();
+          });
+          el.mapTypeFilter.addEventListener("change", function () {
+            state.mapTypeId = el.mapTypeFilter.value || "roadmap";
+            syncMapTypeFilter();
+            persistMapType();
+            if (map) {
+              map.setMapTypeId(state.mapTypeId);
+            }
+          });
+          el.resetButton.addEventListener("click", resetSearch);
+          el.fitAllButton.addEventListener("click", function () {
+            fitMapToCafes(getFilteredCafes());
+          });
+          el.recenterButton.addEventListener("click", function () {
+            fitMapToCafes(getFilteredCafes());
+          });
+          el.zoomInButton.addEventListener("click", function () {
+            if (map) {
+              map.setZoom((map.getZoom() || 14) + 1);
+            }
+          });
+          el.zoomOutButton.addEventListener("click", function () {
+            if (map) {
+              map.setZoom((map.getZoom() || 14) - 1);
+            }
+          });
+        }
+
+        function getApiKey() {
+          if (typeof window.CONCAFE_GOOGLE_MAPS_API_KEY === "string") {
+            const runtimeKey = window.CONCAFE_GOOGLE_MAPS_API_KEY.trim();
+            if (runtimeKey) {
+              return runtimeKey;
+            }
+          }
+          return "";
+        }
+
+        async function loadCafes() {
+          el.mapHeaderCaption.textContent = "실제 카페 데이터를 불러오는 중입니다.";
+          const snapshot = await db.collection("cafes").get();
+          state.cafes = snapshot.docs
+            .map(buildCafeModel)
+            .filter(Boolean)
+            .sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+          state.activeCafeId = state.cafes[0] ? state.cafes[0].id : "";
+          await applyNearestDistrictFromUserLocation();
+          syncRegionFilter();
+        }
+
+        function loadGoogleMaps(apiKey) {
+          return new Promise(function (resolve, reject) {
+            if (window.google && window.google.maps) {
+              resolve();
+              return;
+            }
+
+            const callbackName = "__concafeInitGoogleMap";
+            window[callbackName] = function () {
+              resolve();
+              delete window[callbackName];
+            };
+
+            const script = document.createElement("script");
+            script.src =
+              "https://maps.googleapis.com/maps/api/js?key=" +
+              encodeURIComponent(apiKey) +
+              "&language=ko&region=KR&callback=" +
+              callbackName;
+            script.async = true;
+            script.defer = true;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        function initMap() {
+          const initialCenter = state.userLocation || { lat: 37.5665, lng: 126.9780 };
+          map = new window.google.maps.Map(document.getElementById("map"), {
+            center: initialCenter,
+            zoom: state.userLocation ? 13 : 11,
+            disableDefaultUI: true,
+            clickableIcons: false,
+            mapTypeId: state.mapTypeId,
+          });
+
+          infoWindow = new window.google.maps.InfoWindow();
+
+          state.cafes.forEach(function (cafe) {
+            const marker = new window.google.maps.Marker({
+              map: map,
+              position: { lat: cafe.lat, lng: cafe.lng },
+              title: cafe.name,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#ef6797",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 3,
+              },
+            });
+
+            marker.addListener("click", function () {
+              selectCafe(cafe.id, false);
+              openInfoWindow(cafe);
+            });
+
+            markers.set(cafe.id, marker);
+          });
+
+          el.mapEmpty.classList.remove("is-visible");
+          syncRegionFilter();
+          syncMapTypeFilter();
+          syncUI();
+          fitMapToCafes(getFilteredCafes());
+        }
+
+        function init() {
+          loadSavedMapType();
+          bindUI();
+          loadCafes()
+            .then(function () {
+              syncRegionFilter();
+              syncMapTypeFilter();
+              syncUI();
+
+              const apiKey = getApiKey();
+              if (!apiKey) {
+                el.mapEmpty.classList.add("is-visible");
+                return;
+              }
+
+              loadGoogleMaps(apiKey)
+                .then(initMap)
+                .catch(function (error) {
+                  console.error(error);
+                  el.mapEmpty.classList.add("is-visible");
+                });
+            })
+            .catch(function (error) {
+              console.error(error);
+              el.mapHeaderCaption.textContent = "카페 데이터를 불러오지 못했습니다.";
+              el.mapCafeCount.textContent = "0곳";
+              el.resultsTitle.textContent = "검색 결과 0곳";
+              el.resultsSubtitle.textContent = "Firestore 카페 데이터를 불러오지 못했습니다.";
+              syncRegionFilter();
+              syncMapTypeFilter();
+              syncUI();
+            });
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
