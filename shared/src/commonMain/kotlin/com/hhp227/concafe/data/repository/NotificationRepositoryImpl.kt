@@ -21,6 +21,10 @@ class NotificationRepositoryImpl(
         )
     }
 
+    override suspend fun getUnreadNotificationCount(userId: String): Int {
+        return notificationDataSource.getUnreadNotificationCount(userId)
+    }
+
     override suspend fun markAsRead(userId: String, notificationId: String) {
         notificationDataSource.markNotificationAsRead(
             userId = userId,

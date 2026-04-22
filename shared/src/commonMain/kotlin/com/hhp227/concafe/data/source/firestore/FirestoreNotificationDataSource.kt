@@ -45,6 +45,33 @@ class FirestoreNotificationDataSource(
         )
     }
 
+    override suspend fun getUnreadNotificationCount(userId: String): Int {
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId:runAggregationQuery"
+        val body = """
+            {
+              "structuredAggregationQuery": {
+                "aggregations": [
+                  { "alias": "count", "count": {} }
+                ],
+                "structuredQuery": {
+                  "from": [
+                    { "collectionId": "${FirestorePaths.USER_NOTIFICATIONS}" }
+                  ],
+                  "where": {
+                    "fieldFilter": {
+                      "field": { "fieldPath": "isRead" },
+                      "op": "EQUAL",
+                      "value": { "booleanValue": false }
+                    }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = tokenProvider.getIdToken())
+        return parseCountAggregationResponse(response)
+    }
+
     override suspend fun markNotificationAsRead(userId: String, notificationId: String) {
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId/${FirestorePaths.USER_NOTIFICATIONS}/$notificationId"
@@ -313,6 +340,26 @@ class FirestoreNotificationDataSource(
 
     private fun JsonObject.getFirestoreBoolean(key: String): Boolean? {
         return this[key]?.jsonObject?.get("booleanValue")?.jsonPrimitive?.contentOrNull?.toBooleanStrictOrNull()
+    }
+
+    private fun parseCountAggregationResponse(response: String): Int {
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        parsed.forEach { element ->
+            val aggregateFields = element.jsonObject["result"]
+                ?.jsonObject
+                ?.get("aggregateFields")
+                ?.jsonObject
+                ?: return@forEach
+            val countValue = aggregateFields["count"]
+                ?.jsonObject
+                ?.get("integerValue")
+                ?.jsonPrimitive
+                ?.contentOrNull
+            if (countValue != null) {
+                return countValue.toIntOrNull() ?: 0
+            }
+        }
+        return 0
     }
 
     private fun firestoreDocumentBody(fields: Map<String, JsonElement>): String {
