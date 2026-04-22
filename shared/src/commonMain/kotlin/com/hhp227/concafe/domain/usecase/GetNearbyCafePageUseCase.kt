@@ -51,7 +51,7 @@ class GetNearbyCafePageUseCase(
     private fun encodeCursor(state: CursorState): String {
         val sep = "\u001F"
         return listOf(
-            "v1",
+            "v3",
             state.phase.name,
             state.regionKey,
             state.localCursor ?: "",
@@ -63,19 +63,57 @@ class GetNearbyCafePageUseCase(
         val sep = "\u001F"
         if (rawCursor.isNullOrBlank()) return null
         val tokens = rawCursor.split(sep)
-        if (tokens.size != 5 || tokens[0] != "v1") return null
+        if (tokens.size != 5 || tokens[0] != "v3" || tokens[2].isBlank()) return null
         val phase = when (tokens[1]) {
             PagingPhase.LOCAL.name -> PagingPhase.LOCAL
             PagingPhase.GLOBAL.name -> PagingPhase.GLOBAL
-            else -> null
-        } ?: return null
-        if (tokens[2].isBlank()) return null
+            else -> return null
+        }
         return CursorState(
             phase = phase,
             regionKey = tokens[2],
             localCursor = tokens[3].ifBlank { null },
             globalCursor = tokens[4].ifBlank { null }
         )
+    }
+
+    private suspend fun loadGlobalNonLocalPage(
+        regionFilter: ExploreRegionFilter,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<Cafe> {
+        val collectedItems = mutableListOf<Cafe>()
+        var globalCursor = cursor
+        var hasNext = true
+
+        while (hasNext && collectedItems.size < pageSize) {
+            val requestedSize = (pageSize - collectedItems.size).coerceAtLeast(1)
+            val page = cafeRepository.searchCafes(
+                query = null,
+                country = null,
+                city = null,
+                sort = CafeSort.RATING,
+                cursor = globalCursor,
+                pageSize = requestedSize
+            )
+            collectedItems.addAll(page.items.filterNot { isSameRegion(it, regionFilter) })
+            globalCursor = page.nextCursor
+            hasNext = page.hasNext && !globalCursor.isNullOrBlank()
+            if (page.items.isEmpty()) break
+        }
+        return PagedResult(
+            items = collectedItems.take(pageSize),
+            nextCursor = globalCursor,
+            hasNext = hasNext
+        )
+    }
+
+    private suspend fun hasAnyGlobalNonLocal(regionFilter: ExploreRegionFilter): Boolean {
+        return loadGlobalNonLocalPage(
+            regionFilter = regionFilter,
+            cursor = null,
+            pageSize = 1
+        ).items.isNotEmpty()
     }
 
     private suspend fun loadPage(
@@ -103,73 +141,89 @@ class GetNearbyCafePageUseCase(
                 globalCursor = null
             )
         }
-        val collectedItems = mutableListOf<Cafe>()
-        var phase = currentState.phase
-        var localCursor = currentState.localCursor
-        var globalCursor = currentState.globalCursor
-        var localHasNext = false
-        var globalHasNext = false
-        var didQueryGlobal = false
-
-        if (phase == PagingPhase.LOCAL) {
-            val localPage = cafeRepository.searchCafes(
-                query = null,
-                country = nearbyRegionFilter.country,
-                city = nearbyRegionFilter.city,
-                sort = CafeSort.RATING,
-                cursor = localCursor,
-                pageSize = PAGE_SIZE
-            )
-            collectedItems.addAll(localPage.items)
-            localCursor = localPage.nextCursor
-            localHasNext = localPage.hasNext
-            if (!localHasNext) {
-                phase = PagingPhase.GLOBAL
-            }
-        }
-        if (collectedItems.size < PAGE_SIZE && phase == PagingPhase.GLOBAL) {
-            while (collectedItems.size < PAGE_SIZE) {
-                val previousGlobalCursor = globalCursor
-                val globalPage = cafeRepository.searchCafes(
+        return when (currentState.phase) {
+            PagingPhase.LOCAL -> {
+                val localPage = cafeRepository.searchCafes(
                     query = null,
-                    country = null,
-                    city = null,
+                    country = nearbyRegionFilter.country,
+                    city = nearbyRegionFilter.city,
                     sort = CafeSort.RATING,
-                    cursor = globalCursor,
+                    cursor = currentState.localCursor,
                     pageSize = PAGE_SIZE
                 )
-                val nonLocalItems = globalPage.items.filter { !isSameRegion(it, nearbyRegionFilter) }
-                val remaining = PAGE_SIZE - collectedItems.size
-                collectedItems.addAll(nonLocalItems.take(remaining))
-                globalCursor = globalPage.nextCursor
-                globalHasNext = globalPage.hasNext
-                didQueryGlobal = true
-                if (!globalPage.hasNext) break
-                if (globalCursor == previousGlobalCursor) break
+                if (localPage.items.size == PAGE_SIZE) {
+                    val hasNext = if (localPage.hasNext) {
+                        true
+                    } else {
+                        hasAnyGlobalNonLocal(nearbyRegionFilter)
+                    }
+                    val nextCursor = if (hasNext) {
+                        encodeCursor(
+                            CursorState(
+                                phase = if (localPage.hasNext) PagingPhase.LOCAL else PagingPhase.GLOBAL,
+                                regionKey = nearbyRegionFilter.key,
+                                localCursor = localPage.nextCursor,
+                                globalCursor = null
+                            )
+                        )
+                    } else {
+                        null
+                    }
+                    PagedResult(
+                        items = localPage.items,
+                        nextCursor = nextCursor,
+                        hasNext = hasNext
+                    )
+                } else {
+                    val globalPage = loadGlobalNonLocalPage(
+                        regionFilter = nearbyRegionFilter,
+                        cursor = null,
+                        pageSize = PAGE_SIZE - localPage.items.size
+                    )
+                    val items = localPage.items + globalPage.items
+                    val hasNext = globalPage.hasNext
+                    PagedResult(
+                        items = items,
+                        nextCursor = if (hasNext) {
+                            encodeCursor(
+                                CursorState(
+                                    phase = PagingPhase.GLOBAL,
+                                    regionKey = nearbyRegionFilter.key,
+                                    localCursor = localPage.nextCursor,
+                                    globalCursor = globalPage.nextCursor
+                                )
+                            )
+                        } else {
+                            null
+                        },
+                        hasNext = hasNext
+                    )
+                }
+            }
+            PagingPhase.GLOBAL -> {
+                val globalPage = loadGlobalNonLocalPage(
+                    regionFilter = nearbyRegionFilter,
+                    cursor = currentState.globalCursor,
+                    pageSize = PAGE_SIZE
+                )
+                PagedResult(
+                    items = globalPage.items,
+                    nextCursor = if (globalPage.hasNext) {
+                        encodeCursor(
+                            CursorState(
+                                phase = PagingPhase.GLOBAL,
+                                regionKey = nearbyRegionFilter.key,
+                                localCursor = currentState.localCursor,
+                                globalCursor = globalPage.nextCursor
+                            )
+                        )
+                    } else {
+                        null
+                    },
+                    hasNext = globalPage.hasNext
+                )
             }
         }
-        val hasNext = when {
-            phase == PagingPhase.LOCAL -> localHasNext
-            !didQueryGlobal -> true
-            else -> globalHasNext
-        }
-        val nextCursor = if (hasNext) {
-            encodeCursor(
-                CursorState(
-                    phase = phase,
-                    regionKey = nearbyRegionFilter.key,
-                    localCursor = localCursor,
-                    globalCursor = globalCursor
-                )
-            )
-        } else {
-            null
-        }
-        return PagedResult(
-            items = collectedItems,
-            nextCursor = nextCursor,
-            hasNext = hasNext
-        )
     }
 
     suspend operator fun invoke(cursor: String?): AppResult<PagedResult<Cafe>> {
