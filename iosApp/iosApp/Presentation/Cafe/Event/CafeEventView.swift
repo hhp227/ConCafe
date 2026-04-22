@@ -2,7 +2,7 @@
 //  CafeEventView.swift
 //  ConCafe
 //
-//  Created by 홍희표 on 4/23/26.
+//  Created by 홍희표 on 2026/03/16.
 //
 
 import SwiftUI
@@ -13,6 +13,8 @@ struct CafeEventView: View {
     }
 }
 
-#Preview {
-    CafeEventView()
+struct CafeEventView_Previews: PreviewProvider {
+    static var previews: some View {
+        CafeEventView()
+    }
 }

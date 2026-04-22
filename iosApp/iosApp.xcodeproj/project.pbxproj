@@ -73,7 +73,6 @@
 		0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */; };
 		0A34708A2F611DB0005F9A8C /* ConCafeFormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */; };
 		0A3BB97A2F99302300737CDB /* CafeEventUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9792F99302300737CDB /* CafeEventUiState.swift */; };
-		0A3BB97C2F99305500737CDB /* CafeEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97B2F99305500737CDB /* CafeEventView.swift */; };
 		0A3BB97E2F99307900737CDB /* CafeEventViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */; };
 		0A3BB9802F9930A100737CDB /* CafeEventAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */; };
 		0A3BB9822F9930C600737CDB /* CafeEventEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */; };
@@ -305,7 +304,6 @@
 		0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditViewModel.swift; sourceTree = "<group>"; };
 		0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConCafeFormField.swift; sourceTree = "<group>"; };
 		0A3BB9792F99302300737CDB /* CafeEventUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventUiState.swift; sourceTree = "<group>"; };
-		0A3BB97B2F99305500737CDB /* CafeEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventView.swift; sourceTree = "<group>"; };
 		0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventViewModel.swift; sourceTree = "<group>"; };
 		0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventAction.swift; sourceTree = "<group>"; };
 		0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventEvent.swift; sourceTree = "<group>"; };
@@ -602,7 +600,6 @@
 				0A27F1F02F5D6E84003D4763 /* CafeReviewView.swift */,
 				0A27F1F22F5D6EA5003D4763 /* CafeNoticeView.swift */,
 				0A27F1F42F5D6EEC003D4763 /* CafeGoodsView.swift */,
-				0A707BC72F67EC63007F52D1 /* CafeEventView.swift */,
 			);
 			path = Tab;
 			sourceTree = "<group>";
@@ -672,8 +669,8 @@
 		0A3BB9782F99300300737CDB /* Event */ = {
 			isa = PBXGroup;
 			children = (
+				0A707BC72F67EC63007F52D1 /* CafeEventView.swift */,
 				0A3BB9792F99302300737CDB /* CafeEventUiState.swift */,
-				0A3BB97B2F99305500737CDB /* CafeEventView.swift */,
 				0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */,
 				0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */,
 				0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */,
@@ -1384,7 +1381,6 @@
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
 				0A2C5B1F2F65615000D3004E /* AccountSettingsEvent.swift in Sources */,
 				0A2C5B192F6560FD00D3004E /* AccountSettingsViewModel.swift in Sources */,
-				0A3BB97C2F99305500737CDB /* CafeEventView.swift in Sources */,
 				0AB6092E2F69011000591FEE /* ConCafeLogo.swift in Sources */,
 				0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */,
 				0A3470792F611C45005F9A8C /* ExternalLinkAction.swift in Sources */,
