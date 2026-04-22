@@ -563,6 +563,87 @@
         font-size: 12px;
       }
 
+      /* ── Topbar right group ── */
+      .topbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+      /* ── Auth widget ── */
+      .auth-widget { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+      /* ── Auth modal ── */
+      .auth-modal {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(35, 22, 28, 0.48); backdrop-filter: blur(4px);
+        opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      }
+      .auth-modal.is-open { opacity: 1; pointer-events: auto; }
+      .auth-modal-box {
+        position: relative; background: #fff; border-radius: 20px;
+        padding: 32px 28px; width: calc(100% - 32px); max-width: 360px;
+        box-shadow: 0 8px 40px rgba(74, 54, 69, 0.22);
+        transform: translateY(16px); transition: transform 0.2s;
+      }
+      .auth-modal.is-open .auth-modal-box { transform: translateY(0); }
+      .auth-modal-close {
+        position: absolute; top: 14px; right: 14px;
+        background: none; border: none; cursor: pointer;
+        font-size: 16px; color: #a07a8f; line-height: 1; padding: 4px;
+      }
+      .auth-modal-close:hover { color: #3d2c38; }
+      .auth-modal-title { font-size: 20px; font-weight: 800; color: #23161c; margin: 0 0 20px; }
+      .auth-modal-form { display: flex; flex-direction: column; gap: 12px; }
+      .auth-modal-field { display: flex; flex-direction: column; gap: 5px; }
+      .auth-modal-field label { font-size: 12px; font-weight: 700; color: #6d5d64; }
+      .auth-modal-field input {
+        padding: 10px 14px; border-radius: 12px;
+        border: 1px solid #e7d9df; background: #fff8fb;
+        font: inherit; font-size: 14px; color: #23161c; outline: none;
+      }
+      .auth-modal-field input:focus { border-color: #ef6797; }
+      .auth-modal-error { font-size: 12px; color: #c4415f; margin: 0; }
+      .auth-modal-submit {
+        margin-top: 4px; padding: 12px; border-radius: 14px;
+        background: linear-gradient(135deg, #ef6797, #da4e84);
+        color: #fff; border: none; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      }
+      .auth-modal-submit:hover { background: linear-gradient(135deg, #da4e84, #c73d73); }
+      .auth-modal-divider {
+        display: flex; align-items: center; gap: 10px;
+        margin: 16px 0; color: #a07a8f; font-size: 12px;
+      }
+      .auth-modal-divider::before, .auth-modal-divider::after {
+        content: ""; flex: 1; height: 1px; background: #e7d9df;
+      }
+      .auth-modal-google {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; padding: 11px; border-radius: 14px;
+        border: 1px solid #e7d9df; background: #fff;
+        font: inherit; font-size: 13px; font-weight: 700; color: #3d2c38; cursor: pointer;
+      }
+      .auth-modal-google:hover { background: #fdf8fa; border-color: #cfb8c2; }
+      .auth-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 20px;
+        border: 1px solid rgba(239, 103, 151, 0.5);
+        background: #fff1f7; color: #9d2759;
+        font: inherit; font-size: 13px; font-weight: 700;
+        cursor: pointer; white-space: nowrap;
+      }
+      .auth-btn:hover { background: #ffe4ef; }
+      .auth-btn.signout {
+        background: transparent; border-color: rgba(207, 184, 194, 0.5);
+        color: #6d5d64; font-weight: 400; font-size: 12px; padding: 6px 12px;
+      }
+      .auth-user-info { display: flex; align-items: center; gap: 6px; }
+      .auth-user-photo {
+        width: 28px; height: 28px; border-radius: 50%;
+        object-fit: cover; border: 1.5px solid rgba(239, 103, 151, 0.4); flex-shrink: 0;
+      }
+      .auth-user-name {
+        font-size: 13px; font-weight: 700; color: #23161c;
+        max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
       @media (max-width: 960px) {
         .hero {
           grid-template-columns: minmax(0, 1fr);
@@ -613,6 +694,7 @@
       }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   </head>
@@ -626,11 +708,21 @@
               <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
             </span>
           </a>
-          <nav class="nav-links" aria-label="조회 페이지 메뉴">
-            <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
-            <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
-            <a class="nav-link" href="/map">메이드 카페 지도</a>
-          </nav>
+          <div class="topbar-right">
+            <nav class="nav-links" aria-label="조회 페이지 메뉴">
+              <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -755,6 +847,31 @@
       </main>
     </div>
 
+    <!-- Login Modal -->
+    <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="로그인">
+      <div class="auth-modal-box">
+        <button class="auth-modal-close" id="authModalClose" type="button" aria-label="닫기">✕</button>
+        <h2 class="auth-modal-title">로그인</h2>
+        <form class="auth-modal-form" id="emailLoginForm" novalidate>
+          <div class="auth-modal-field">
+            <label for="loginEmail">이메일</label>
+            <input type="email" id="loginEmail" placeholder="이메일 주소" autocomplete="email" />
+          </div>
+          <div class="auth-modal-field">
+            <label for="loginPassword">비밀번호</label>
+            <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" />
+          </div>
+          <p class="auth-modal-error" id="emailLoginError" style="display:none;"></p>
+          <button class="auth-modal-submit" type="submit">로그인</button>
+        </form>
+        <div class="auth-modal-divider"><span>또는</span></div>
+        <button class="auth-modal-google" id="googleSignInModalBtn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google로 로그인
+        </button>
+      </div>
+    </div>
+
     <script>
       (function () {
         const firebaseConfig = {
@@ -795,6 +912,7 @@
 
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
+        const auth = app.auth();
 
         function escapeHtml(value) {
           return String(value == null ? "" : value)
@@ -1353,6 +1471,70 @@
         }
 
         async function boot() {
+          // Auth widget
+          var googleProvider = new firebase.auth.GoogleAuthProvider();
+          var authUserInfo = document.getElementById("authUserInfo");
+          var authUserPhoto = document.getElementById("authUserPhoto");
+          var authUserName = document.getElementById("authUserName");
+          var signInBtn = document.getElementById("signInBtn");
+          var signOutBtnEl = document.getElementById("signOutBtn");
+
+          auth.onAuthStateChanged(function (user) {
+            if (user) {
+              if (authUserPhoto) { authUserPhoto.src = user.photoURL || ""; authUserPhoto.style.display = user.photoURL ? "" : "none"; }
+              if (authUserName) authUserName.textContent = user.displayName || user.email || "사용자";
+              if (authUserInfo) authUserInfo.style.display = "flex";
+              if (signInBtn) signInBtn.style.display = "none";
+            } else {
+              if (authUserInfo) authUserInfo.style.display = "none";
+              if (signInBtn) signInBtn.style.display = "";
+            }
+          });
+          var authModal = document.getElementById("authModal");
+          var authModalClose = document.getElementById("authModalClose");
+          var emailLoginForm = document.getElementById("emailLoginForm");
+          var emailLoginError = document.getElementById("emailLoginError");
+          var googleSignInModalBtn = document.getElementById("googleSignInModalBtn");
+
+          function openAuthModal() { authModal.classList.add("is-open"); }
+          function closeAuthModal() {
+            authModal.classList.remove("is-open");
+            emailLoginError.style.display = "none";
+            emailLoginForm.reset();
+          }
+
+          if (signInBtn) signInBtn.addEventListener("click", openAuthModal);
+          if (authModalClose) authModalClose.addEventListener("click", closeAuthModal);
+          if (authModal) {
+            authModal.addEventListener("click", function (e) { if (e.target === authModal) closeAuthModal(); });
+          }
+          document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAuthModal(); });
+
+          if (emailLoginForm) emailLoginForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var email = document.getElementById("loginEmail").value.trim();
+            var password = document.getElementById("loginPassword").value;
+            emailLoginError.style.display = "none";
+            auth.signInWithEmailAndPassword(email, password).then(function () {
+              closeAuthModal();
+            }).catch(function (err) {
+              emailLoginError.textContent = err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
+                ? "이메일 또는 비밀번호가 올바르지 않습니다."
+                : "로그인에 실패했습니다: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+          if (googleSignInModalBtn) googleSignInModalBtn.addEventListener("click", function () {
+            auth.signInWithPopup(googleProvider).then(function () {
+              closeAuthModal();
+            }).catch(function (err) {
+              emailLoginError.textContent = "Google 로그인 실패: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+
+          if (signOutBtnEl) signOutBtnEl.addEventListener("click", function () { auth.signOut(); });
+
           el.cafeSearch.addEventListener("input", filterCafes);
           el.cafeSelect.addEventListener("change", function () {
             state.selectedCafeId = el.cafeSelect.value;

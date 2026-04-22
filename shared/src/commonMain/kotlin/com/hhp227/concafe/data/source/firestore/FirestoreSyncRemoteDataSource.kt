@@ -735,7 +735,11 @@ class FirestoreSyncRemoteDataSource(
 
     private fun String.isPendingClaimStatus(): Boolean {
         val normalized = trim().uppercase().replace("-", "_").replace(" ", "_")
-        return normalized == "PENDING" || normalized == "승인대기" || normalized == "승인_대기" || normalized == "승인대기중"
+        return normalized == "PENDING" ||
+            normalized == "승인대기" ||
+            normalized == "승인_대기" ||
+            normalized == "승인대기중" ||
+            normalized == "승인_대기_중"
     }
 
     private fun String.toUserRoleOrNull(): UserRole? {

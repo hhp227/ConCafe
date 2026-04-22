@@ -384,6 +384,21 @@ function asNonBlankString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
+function asDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === "object" && value != null && typeof (value as {toDate?: unknown}).toDate === "function") {
+    const resolved = ((value as {toDate: () => Date}).toDate)();
+    return Number.isNaN(resolved.getTime()) ? null : resolved;
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    const resolved = new Date(value);
+    return Number.isNaN(resolved.getTime()) ? null : resolved;
+  }
+  return null;
+}
+
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -5648,6 +5663,27 @@ function resolveClaimExpiresAt(status: string | null): Date | null {
   return null;
 }
 
+function isExpiredReviewedClaim(data: Record<string, unknown> | undefined, now: Date): boolean {
+  const status = asNonBlankString(data?.status);
+  const expiresAt = asDate(data?.expiresAt);
+
+  if (expiresAt != null) {
+    return expiresAt.getTime() <= now.getTime();
+  }
+
+  const reviewedAt = asDate(data?.reviewedAt);
+  if (reviewedAt == null) {
+    return false;
+  }
+  if (isApprovedStatus(status)) {
+    return reviewedAt.getTime() + CLAIM_APPROVED_TTL_MS <= now.getTime();
+  }
+  if (isRejectedStatus(status)) {
+    return reviewedAt.getTime() + CLAIM_REJECTED_TTL_MS <= now.getTime();
+  }
+  return false;
+}
+
 export const onCastClaimWrittenSetExpiry = onDocumentWritten(
   "castClaims/{claimId}",
   async (event) => {
@@ -5726,14 +5762,19 @@ export const onScheduleDeleteExpiredClaims = onSchedule(
     for (const collectionName of claimCollections) {
       const snapshot = await firestore
         .collection(collectionName)
-        .where("expiresAt", "<=", now)
         .get();
 
       if (snapshot.empty) continue;
 
-      for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+      const expiredDocs = snapshot.docs.filter((doc) =>
+        isExpiredReviewedClaim(doc.data() as Record<string, unknown> | undefined, now)
+      );
+
+      if (expiredDocs.length === 0) continue;
+
+      for (let i = 0; i < expiredDocs.length; i += BATCH_SIZE) {
         const batch = firestore.batch();
-        const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+        const chunk = expiredDocs.slice(i, i + BATCH_SIZE);
         chunk.forEach((doc) => batch.delete(doc.ref));
         await batch.commit();
         totalDeleted += chunk.length;

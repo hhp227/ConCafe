@@ -28,6 +28,7 @@ class GetNotificationFeedUseCase(
                 val notifications = notificationRepository
                     .getNotifications(currentUser.id, cursor = null, pageSize = pageSize)
                     .items
+                val unreadCount = notificationRepository.getUnreadNotificationCount(currentUser.id)
                 val sections = SECTION_ORDER.mapNotNull { sectionSpec ->
                     val sectionItems = notifications
                         .filter { it.type in sectionSpec.types }
@@ -57,7 +58,7 @@ class GetNotificationFeedUseCase(
                 AppResult.Success(
                     NotificationFeed(
                         isLoggedIn = true,
-                        unreadCount = notifications.count { !it.isRead },
+                        unreadCount = unreadCount,
                         sections = sections
                     )
                 )
@@ -109,6 +110,11 @@ class GetNotificationFeedUseCase(
                 id = "notice",
                 title = "카페 공지",
                 types = setOf("CAFE_NOTICE", "CAFE_EVENT")
+            ),
+            SectionSpec(
+                id = "check_in",
+                title = "체크인 알림",
+                types = setOf("CAFE_CHECK_IN")
             ),
             SectionSpec(
                 id = "follow",
