@@ -23,26 +23,42 @@ class CafeManagementRepositoryImpl(
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
         val manageableCafes = loadManageableCafes(userId)
-        val ownedCafes = buildOwnedCafeSummaries(manageableCafes)
-        val searchableCafes = manageableCafes.map { cafe ->
-            CafeManagementData.SearchableCafeSummary(
-                id = cafe.id,
-                name = cafe.name,
-                location = "${cafe.region.city} ${cafe.region.address}"
+        val (ownedCafes, searchableCafes, pendingCafeOwnerClaims, pendingCafeRegistrationClaims) = coroutineScope {
+            val ownedCafesDeferred = async { buildOwnedCafeSummaries(manageableCafes) }
+            val searchableCafesDeferred = async {
+                cafeRemoteDataSource.fetchAllCafes()
+                    .sortedBy { cafe -> cafe.name.lowercase() }
+                    .map { cafe ->
+                        CafeManagementData.SearchableCafeSummary(
+                            id = cafe.id,
+                            name = cafe.name,
+                            location = "${cafe.region.city} ${cafe.region.address}".trim()
+                        )
+                    }
+            }
+            val pendingCafeOwnerClaimsDeferred = async {
+                cafeRemoteDataSource.fetchPendingCafeOwnerClaims(userId)
+            }
+            val pendingCafeRegistrationClaimsDeferred = async {
+                cafeRemoteDataSource.fetchPendingCafeRegistrationClaims(userId)
+                    .map { claim ->
+                        CafeManagementData.PendingClaimSummary(
+                            claimId = claim.claimId,
+                            cafeId = "",
+                            cafeName = claim.cafeName,
+                            requestedAt = claim.requestedAt,
+                            status = claim.status,
+                            message = claim.message
+                        )
+                    }
+            }
+            Quadruple(
+                ownedCafesDeferred.await(),
+                searchableCafesDeferred.await(),
+                pendingCafeOwnerClaimsDeferred.await(),
+                pendingCafeRegistrationClaimsDeferred.await()
             )
         }
-        val pendingCafeOwnerClaims = cafeRemoteDataSource.fetchPendingCafeOwnerClaims(userId)
-        val pendingCafeRegistrationClaims = cafeRemoteDataSource.fetchPendingCafeRegistrationClaims(userId)
-            .map { claim ->
-                CafeManagementData.PendingClaimSummary(
-                    claimId = claim.claimId,
-                    cafeId = "",
-                    cafeName = claim.cafeName,
-                    requestedAt = claim.requestedAt,
-                    status = claim.status,
-                    message = claim.message
-                )
-            }
         val pendingClaims = (pendingCafeOwnerClaims + pendingCafeRegistrationClaims)
             .sortedByDescending { it.requestedAt }
         return CafeManagementData(
@@ -98,3 +114,10 @@ class CafeManagementRepositoryImpl(
         }.awaitAll()
     }
 }
+
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
