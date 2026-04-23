@@ -33,19 +33,15 @@ struct MapView: View {
                 showsCheckInButton: false
             )
             .ignoresSafeArea()
-            LinearGradient(
-                colors: [Color.black.opacity(0.34), Color.clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(maxWidth: .infinity, maxHeight: 170, alignment: .top)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .allowsHitTesting(false)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text(String(format: String(localized: String.LocalizationValue("checkin_map_visible_count"), table: "Localizable"), locale: Locale.current, filteredCafes.count))
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.82))
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
                     Spacer()
                     Menu {
                         ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
