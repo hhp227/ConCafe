@@ -10,6 +10,7 @@ import SwiftUI
 import UIKit
 import PhotosUI
 import UniformTypeIdentifiers
+import Shared
 
 enum CompatNavigationBarStyle {
     case opaque
@@ -235,6 +236,40 @@ struct NavigationBarVisibilityConfigurator: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: NavigationBarVisibilityHostingController, context: Context) {
         uiViewController.hideOnDisappear = hideOnDisappear
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func compatMapNavigationBarAppearance() -> some View {
+        if #available(iOS 16.0, *) {
+            self
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+        } else {
+            self.background(
+                NavigationBarAppearanceConfigurator(style: .transparentScrollEdge)
+                    .frame(width: 0, height: 0)
+            )
+        }
+    }
+
+    @ViewBuilder
+    func compatSearchSuggestions(
+        cafes: [CheckInCafeSummary],
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        if #available(iOS 16.0, *) {
+            self.searchSuggestions {
+                ForEach(cafes, id: \.id) { cafe in
+                    Button(cafe.name) {
+                        onSelect(cafe.name)
+                    }
+                }
+            }
+        } else {
+            self
+        }
     }
 }
 

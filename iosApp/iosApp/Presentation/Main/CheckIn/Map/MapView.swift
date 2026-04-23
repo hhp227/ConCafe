@@ -72,8 +72,7 @@ struct MapView: View {
             .padding(.horizontal, 16)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .compatMapNavigationBarAppearance()
         .navigationTitle("컨셉 카페 지도")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(
@@ -84,12 +83,8 @@ struct MapView: View {
             placement: .navigationBarDrawer(displayMode: .always),
             prompt: "카페명 또는 지역 검색"
         )
-        .searchSuggestions {
-            ForEach(filteredCafes.prefix(5), id: \.id) { cafe in
-                Button(cafe.name) {
-                    viewModel.onAction(.searchQueryChanged(query: cafe.name))
-                }
-            }
+        .compatSearchSuggestions(cafes: Array(filteredCafes.prefix(5))) { cafeName in
+            viewModel.onAction(.searchQueryChanged(query: cafeName))
         }
         .onAppear {
             viewModel.initializeRegion(initialRegionKey)
