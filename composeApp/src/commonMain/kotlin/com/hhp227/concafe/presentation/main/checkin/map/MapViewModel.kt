@@ -155,8 +155,6 @@ class MapViewModel(
                     }
                     if (regionKey != null) {
                         loadMapCafesForRegion(regionKey)
-                    } else {
-                        loadMapFeed()
                     }
                 }
                 is MapAction.UpdateSearchQuery -> _uiState.update { it.copy(searchQuery = action.query) }

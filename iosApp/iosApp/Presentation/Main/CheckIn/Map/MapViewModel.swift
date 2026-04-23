@@ -158,8 +158,6 @@ final class MapViewModel: ObservableObject {
             if region == .all {
                 if let userCityKey = uiState.userCityKey {
                     loadMapCafesForRegion(userCityKey)
-                } else {
-                    loadMapFeed()
                 }
             } else {
                 loadMapCafesForRegion(region.rawValue)
