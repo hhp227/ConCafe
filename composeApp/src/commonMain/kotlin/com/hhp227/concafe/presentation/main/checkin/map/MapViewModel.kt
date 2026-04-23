@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationResult
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 
 class MapViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
+    private val getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val checkInLocationProvider: CheckInLocationProvider
 ) : ViewModel() {
@@ -39,12 +41,16 @@ class MapViewModel(
         jobs[TaskKey.LOAD_MAP_FEED] = viewModelScope.launch {
             when (val result = getCheckInGuestFeedUseCase.invoke()) {
                 is AppResult.Success -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoading = false,
                             errorMessage = null,
                             currentLocationLabel = result.data.currentLocationLabel,
-                            mapCafes = result.data.mapCafes
+                            mapCafes = if (state.selectedRegion == ExploreUiState.RegionFilter.ALL && state.userCityKey == null) {
+                                result.data.mapCafes
+                            } else {
+                                state.mapCafes
+                            }
                         )
                     }
                 }
@@ -72,8 +78,25 @@ class MapViewModel(
                         lng = result.location.longitude
                     )
                     _uiState.update { it.copy(userCityKey = cityKey) }
+                    if (cityKey != null && _uiState.value.selectedRegion == ExploreUiState.RegionFilter.ALL) {
+                        loadMapCafesForRegion(cityKey)
+                    }
                 }
                 is CheckInLocationResult.Failure -> Unit
+            }
+        }
+    }
+
+    private fun loadMapCafesForRegion(regionKey: String) {
+        jobs[TaskKey.LOAD_MAP_REGION]?.cancel()
+        jobs[TaskKey.LOAD_MAP_REGION] = viewModelScope.launch {
+            when (val result = getCheckInMapCafePageUseCase.invoke(regionKey)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(mapCafes = result.data, errorMessage = null)
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(errorMessage = result.error.toString())
+                }
             }
         }
     }
@@ -115,6 +138,7 @@ class MapViewModel(
                 state
             }
         }
+        loadMapCafesForRegion(region.key)
     }
 
     fun onAction(action: MapAction) {
@@ -122,7 +146,19 @@ class MapViewModel(
             when (action) {
                 MapAction.ClickBack -> _event.emit(MapEvent.NavigateBack)
                 is MapAction.ClickCafe -> _event.emit(MapEvent.NavigateToCafe(action.id))
-                is MapAction.UpdateRegion -> _uiState.update { it.copy(selectedRegion = action.region) }
+                is MapAction.UpdateRegion -> {
+                    _uiState.update { it.copy(selectedRegion = action.region) }
+                    val regionKey = if (action.region == ExploreUiState.RegionFilter.ALL) {
+                        _uiState.value.userCityKey
+                    } else {
+                        action.region.key
+                    }
+                    if (regionKey != null) {
+                        loadMapCafesForRegion(regionKey)
+                    } else {
+                        loadMapFeed()
+                    }
+                }
                 is MapAction.UpdateSearchQuery -> _uiState.update { it.copy(searchQuery = action.query) }
             }
         }
@@ -142,6 +178,7 @@ class MapViewModel(
 
     private enum class TaskKey {
         LOAD_MAP_FEED,
+        LOAD_MAP_REGION,
         OBSERVE_CAFE_DETAIL_EVENT,
         DETECT_CITY
     }

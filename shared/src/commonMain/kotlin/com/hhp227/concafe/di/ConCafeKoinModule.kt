@@ -96,6 +96,7 @@ val useCaseModule = module {
     factory { GetCafeCastListPageUseCase(get()) }
     factory { GetCafeManagementUseCase(get(), get()) }
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
+    factory { GetCheckInMapCafePageUseCase(get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
     factory { CreateVisitUseCase(get(), get(), get()) }
     factory { CreateReviewUseCase(get(), get(), get(), get()) }

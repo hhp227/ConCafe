@@ -45,8 +45,8 @@ private val composeAppPresentationModule = module {
     factory { MainViewModel(get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { MapViewModel(get(), get(), get()) }
+    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { MapViewModel(get(), get(), get(), get()) }
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }

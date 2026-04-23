@@ -14,6 +14,8 @@ import KMPNativeCoroutinesAsync
 final class MapViewModel: ObservableObject {
     private let getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase
 
+    private let getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let currentLocationProvider = IosCheckInLocationProvider()
@@ -38,7 +40,9 @@ final class MapViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.currentLocationLabel = feed.currentLocationLabel
-                    uiState.mapCafes = feed.mapCafes
+                    if uiState.selectedRegion == .all && uiState.userCityKey == nil {
+                        uiState.mapCafes = feed.mapCafes
+                    }
                 } else if let failure = result as? AppResultFailure {
                     uiState.isLoading = false
                     uiState.errorMessage = "\(failure.error)"
@@ -64,16 +68,44 @@ final class MapViewModel: ObservableObject {
                 )
                 if cityKey != nil {
                     uiState.userCityKey = cityKey
+                    if uiState.selectedRegion == .all,
+                       let cityKey {
+                        loadMapCafesForRegion(cityKey)
+                    }
                     return
                 }
             }
 
             let result = await currentLocationProvider.getCurrentLocation()
             guard result.isSuccess else { return }
-            uiState.userCityKey = Self.cityKeyFromCoordinates(
+            let cityKey = Self.cityKeyFromCoordinates(
                 lat: result.location.latitude,
                 lng: result.location.longitude
             )
+            uiState.userCityKey = cityKey
+            if uiState.selectedRegion == .all,
+               let cityKey {
+                loadMapCafesForRegion(cityKey)
+            }
+        }
+    }
+
+    private func loadMapCafesForRegion(_ regionKey: String) {
+        tasks[.mapRegion]?.cancel()
+        tasks[.mapRegion] = Task {
+            do {
+                let result = try await getCheckInMapCafePageUseCase.invoke(regionKey: regionKey, pageSize: 80)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let cafes = success.data as? [CheckInCafeSummary] {
+                    uiState.mapCafes = cafes
+                    uiState.errorMessage = nil
+                } else if let failure = result as? AppResultFailure {
+                    uiState.errorMessage = "\(failure.error)"
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -110,8 +142,9 @@ final class MapViewModel: ObservableObject {
     func initializeRegion(_ regionKey: String?) {
         guard uiState.selectedRegion == .all,
               let regionKey,
-              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.label == regionKey }) else { return }
+              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.name == regionKey || $0.rawValue == regionKey }) else { return }
         uiState.selectedRegion = region
+        loadMapCafesForRegion(region.rawValue)
     }
 
     func onAction(_ action: MapAction) {
@@ -122,6 +155,15 @@ final class MapViewModel: ObservableObject {
             event.send(.navigateToCafe(id: id))
         case .regionChanged(let region):
             uiState.selectedRegion = region
+            if region == .all {
+                if let userCityKey = uiState.userCityKey {
+                    loadMapCafesForRegion(userCityKey)
+                } else {
+                    loadMapFeed()
+                }
+            } else {
+                loadMapCafesForRegion(region.rawValue)
+            }
         case .searchQueryChanged(let query):
             uiState.searchQuery = query
         }
@@ -129,9 +171,11 @@ final class MapViewModel: ObservableObject {
 
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
+        getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase = KoinInitializerKt.resolveGetCheckInMapCafePageUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
+        self.getCheckInMapCafePageUseCase = getCheckInMapCafePageUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeCafeDetailEvent()
@@ -146,6 +190,7 @@ final class MapViewModel: ObservableObject {
 
     private enum TaskKey {
         case mapFeed
+        case mapRegion
         case cafeDetailEvent
         case detectCity
     }
