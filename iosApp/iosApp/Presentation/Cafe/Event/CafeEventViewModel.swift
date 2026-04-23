@@ -41,7 +41,7 @@ class CafeEventViewModel: ObservableObject {
                         cafeId: cafeId,
                         query: "",
                         cursor: cursor,
-                        pageSize: Self.eventPageSize
+                        pageSize: Int32(Self.eventPageSize)
                     )
                     if let success = result as? AppResultSuccess<AnyObject>,
                        let page = success.data as? PagedResult<CafeEventManagementItem> {
