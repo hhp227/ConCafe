@@ -6,6 +6,8 @@ import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 data class MapUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val isLoggedIn: Boolean = false,
+    val isLoginPromptVisible: Boolean = false,
     val currentLocationLabel: String = "",
     val userCityKey: String? = null,
     val mapCafes: List<CheckInCafeSummary> = emptyList(),

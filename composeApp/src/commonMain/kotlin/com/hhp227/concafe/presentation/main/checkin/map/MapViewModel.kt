@@ -8,6 +8,7 @@ import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationResult
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 class MapViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
     private val getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val checkInLocationProvider: CheckInLocationProvider
 ) : ViewModel() {
@@ -61,6 +63,20 @@ class MapViewModel(
                             errorMessage = result.error.toString()
                         )
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
                 }
             }
         }
@@ -145,7 +161,18 @@ class MapViewModel(
         viewModelScope.launch {
             when (action) {
                 MapAction.ClickBack -> _event.emit(MapEvent.NavigateBack)
-                is MapAction.ClickCafe -> _event.emit(MapEvent.NavigateToCafe(action.id))
+                is MapAction.ClickCafe -> {
+                    if (_uiState.value.isLoggedIn) {
+                        _event.emit(MapEvent.NavigateToCafe(action.id))
+                    } else {
+                        _uiState.update { it.copy(isLoginPromptVisible = true) }
+                    }
+                }
+                MapAction.ClickLoginPromptSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(MapEvent.NavigateToSignIn)
+                }
+                MapAction.DismissLoginPrompt -> _uiState.update { it.copy(isLoginPromptVisible = false) }
                 is MapAction.UpdateRegion -> {
                     _uiState.update { it.copy(selectedRegion = action.region) }
                     val regionKey = if (action.region == ExploreUiState.RegionFilter.ALL) {
@@ -163,6 +190,7 @@ class MapViewModel(
     }
 
     init {
+        observeSession()
         observeCafeDetailEvent()
         detectUserCity()
         loadMapFeed()
@@ -177,6 +205,7 @@ class MapViewModel(
     private enum class TaskKey {
         LOAD_MAP_FEED,
         LOAD_MAP_REGION,
+        OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         DETECT_CITY
     }

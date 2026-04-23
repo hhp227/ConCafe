@@ -11,6 +11,8 @@ import Shared
 struct MapUiState {
     var isLoading: Bool = false
     var errorMessage: String? = nil
+    var isLoggedIn: Bool = false
+    var isLoginPromptVisible: Bool = false
     var currentLocationLabel: String = ""
     var userCityKey: String? = nil
     var mapCafes: [CheckInCafeSummary] = []

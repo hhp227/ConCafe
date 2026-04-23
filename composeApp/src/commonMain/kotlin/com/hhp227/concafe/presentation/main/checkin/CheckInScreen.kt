@@ -47,6 +47,8 @@ import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.checkin_button
 import concafe.composeapp.generated.resources.checkin_count_label
 import concafe.composeapp.generated.resources.checkin_load_more_visits
@@ -154,16 +156,32 @@ fun CheckInScreen(
                 .align(Alignment.BottomCenter)
                 .padding(16.dp)
         )
-        if (uiState.isLoginPromptVisible) {
+        if (uiState.isLoginPromptVisible && uiState.loginPromptType == CheckInUiState.LoginPromptType.CHECK_IN) {
             ModalBottomSheet(
                 onDismissRequest = { viewModel.onAction(CheckInAction.DismissLoginPrompt) },
                 containerColor = MaterialTheme.colorScheme.surface
             ) {
                 LoginRequiredBottomSheet(
-                    onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) },
-                    onSignUp = { viewModel.onAction(CheckInAction.ClickSignUp) }
+                    onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) }
                 )
             }
+        }
+        if (uiState.isLoginPromptVisible && uiState.loginPromptType == CheckInUiState.LoginPromptType.DETAIL) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissLoginPrompt) },
+                title = { Text(stringResource(Res.string.auth_login_required_title)) },
+                text = { Text(stringResource(Res.string.auth_login_required_message)) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.onAction(CheckInAction.ClickSignIn) }) {
+                        Text(stringResource(Res.string.signin_submit))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.onAction(CheckInAction.DismissLoginPrompt) }) {
+                        Text(stringResource(Res.string.common_cancel))
+                    }
+                }
+            )
         }
         if (uiState.isNewVisitSheetVisible) {
             CheckInNewVisitDialog(
@@ -1034,8 +1052,7 @@ private fun LoginPromotionSection(
 
 @Composable
 private fun LoginRequiredBottomSheet(
-    onSignIn: () -> Unit,
-    onSignUp: () -> Unit
+    onSignIn: () -> Unit
 ) {
     Column(
         modifier = Modifier

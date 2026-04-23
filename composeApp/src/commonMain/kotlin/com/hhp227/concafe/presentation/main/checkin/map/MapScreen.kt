@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -53,11 +55,15 @@ import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.checkin_map_full_title
 import concafe.composeapp.generated.resources.checkin_map_nearby_filter
 import concafe.composeapp.generated.resources.checkin_map_search_placeholder
 import concafe.composeapp.generated.resources.checkin_map_visible_count
 import concafe.composeapp.generated.resources.checkin_nearby_label
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.signin_submit
 import org.koin.core.context.GlobalContext
 import org.jetbrains.compose.resources.stringResource
 import com.hhp227.concafe.domain.model.GeoPoint
@@ -83,6 +89,7 @@ fun MapScreen(
             when (event) {
                 MapEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is MapEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
+                MapEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
             }
         }
     }
@@ -301,6 +308,23 @@ fun MapScreen(
                     color = MaterialTheme.colorScheme.error
                 )
             }
+        }
+        if (uiState.isLoginPromptVisible) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onAction(MapAction.DismissLoginPrompt) },
+                title = { Text(stringResource(Res.string.auth_login_required_title)) },
+                text = { Text(stringResource(Res.string.auth_login_required_message)) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.onAction(MapAction.ClickLoginPromptSignIn) }) {
+                        Text(stringResource(Res.string.signin_submit))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.onAction(MapAction.DismissLoginPrompt) }) {
+                        Text(stringResource(Res.string.common_cancel))
+                    }
+                }
+            )
         }
     }
 }

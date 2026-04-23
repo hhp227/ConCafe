@@ -23,6 +23,7 @@ struct CheckInUiState {
     var canLoadMoreRecentVisits: Bool
     var isLoadingMoreRecentVisits: Bool
     var isLoginPromptVisible: Bool
+    var loginPromptType: LoginPromptType
     var isNewVisitSheetVisible: Bool
     var isQrCheckInSheetVisible: Bool
     var preselectCafeId: String?
@@ -44,12 +45,18 @@ struct CheckInUiState {
         canLoadMoreRecentVisits: false,
         isLoadingMoreRecentVisits: false,
         isLoginPromptVisible: false,
+        loginPromptType: .checkIn,
         isNewVisitSheetVisible: false,
         isQrCheckInSheetVisible: false,
         preselectCafeId: nil,
         reviewPrompt: nil,
         selectedMapRegion: .all
     )
+
+    enum LoginPromptType {
+        case detail
+        case checkIn
+    }
 
     struct ReviewPrompt {
         let visitId: String

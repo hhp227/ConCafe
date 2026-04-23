@@ -16,6 +16,8 @@ final class MapViewModel: ObservableObject {
 
     private let getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let currentLocationProvider = IosCheckInLocationProvider()
@@ -53,6 +55,22 @@ final class MapViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
                 uiState.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func observeSession() {
+        tasks[.session]?.cancel()
+        tasks[.session] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.isLoggedIn = user != nil
+                    if user != nil {
+                        uiState.isLoginPromptVisible = false
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
@@ -152,7 +170,16 @@ final class MapViewModel: ObservableObject {
         case .backTapped:
             event.send(.navigateBack)
         case .cafeTapped(let id):
-            event.send(.navigateToCafe(id: id))
+            if uiState.isLoggedIn {
+                event.send(.navigateToCafe(id: id))
+            } else {
+                uiState.isLoginPromptVisible = true
+            }
+        case .loginPromptSignInTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
         case .regionChanged(let region):
             uiState.selectedRegion = region
             if region == .all {
@@ -170,12 +197,15 @@ final class MapViewModel: ObservableObject {
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase = KoinInitializerKt.resolveGetCheckInMapCafePageUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInMapCafePageUseCase = getCheckInMapCafePageUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
+        observeSession()
         observeCafeDetailEvent()
         detectUserCity()
         loadMapFeed()
@@ -187,6 +217,7 @@ final class MapViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case session
         case mapFeed
         case mapRegion
         case cafeDetailEvent

@@ -301,6 +301,7 @@ class CheckInViewModel(
             _uiState.update {
                 it.copy(
                     isLoginPromptVisible = true,
+                    loginPromptType = CheckInUiState.LoginPromptType.CHECK_IN,
                     isNewVisitSheetVisible = false
                 )
             }
@@ -490,6 +491,7 @@ class CheckInViewModel(
             _uiState.update {
                 it.copy(
                     isLoginPromptVisible = true,
+                    loginPromptType = CheckInUiState.LoginPromptType.CHECK_IN,
                     isNewVisitSheetVisible = false,
                     isQrCheckInSheetVisible = false
                 )
@@ -565,6 +567,7 @@ class CheckInViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoginPromptVisible = true,
+                                loginPromptType = CheckInUiState.LoginPromptType.DETAIL,
                                 isNewVisitSheetVisible = false
                             )
                         }
@@ -577,6 +580,7 @@ class CheckInViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoginPromptVisible = true,
+                                loginPromptType = CheckInUiState.LoginPromptType.DETAIL,
                                 isNewVisitSheetVisible = false
                             )
                         }

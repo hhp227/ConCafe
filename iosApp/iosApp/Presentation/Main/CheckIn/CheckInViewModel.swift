@@ -541,6 +541,7 @@ final class CheckInViewModel: ObservableObject {
     private func clickQrCheckIn() {
         if uiState.currentUser == nil {
             uiState.isLoginPromptVisible = true
+            uiState.loginPromptType = .checkIn
             uiState.isNewVisitSheetVisible = false
             uiState.isQrCheckInSheetVisible = false
             return
@@ -608,6 +609,7 @@ final class CheckInViewModel: ObservableObject {
         case .cafeTapped(let id):
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true
+                uiState.loginPromptType = .detail
                 uiState.isNewVisitSheetVisible = false
             } else {
                 event.send(.navigateToCafe(id: id))
@@ -615,6 +617,7 @@ final class CheckInViewModel: ObservableObject {
         case .castTapped(let id):
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true
+                uiState.loginPromptType = .detail
                 uiState.isNewVisitSheetVisible = false
             } else {
                 event.send(.navigateToCast(id: id))
@@ -622,6 +625,7 @@ final class CheckInViewModel: ObservableObject {
         case .checkInTapped:
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true
+                uiState.loginPromptType = .checkIn
                 uiState.isNewVisitSheetVisible = false
             } else {
                 requestCheckInPermissionAndOpenSheet()
@@ -629,6 +633,7 @@ final class CheckInViewModel: ObservableObject {
         case .checkInForCafeTapped(let cafeId):
             if uiState.currentUser == nil {
                 uiState.isLoginPromptVisible = true
+                uiState.loginPromptType = .checkIn
                 uiState.isNewVisitSheetVisible = false
             } else {
                 requestCheckInPermissionAndOpenSheet(preselectCafeId: cafeId)

@@ -40,7 +40,10 @@ struct CheckInView: View {
         }
         .sheet(
             isPresented: Binding(
-                get: { viewModel.uiState.isLoginPromptVisible },
+                get: {
+                    viewModel.uiState.isLoginPromptVisible &&
+                    viewModel.uiState.loginPromptType == .checkIn
+                },
                 set: { presented in
                     if !presented {
                         viewModel.onAction(.dismissLoginPrompt)
@@ -49,6 +52,29 @@ struct CheckInView: View {
             )
         ) {
             CheckInLoginPromptSheet(onAction: viewModel.onAction)
+        }
+        .alert(
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
+            isPresented: Binding(
+                get: {
+                    viewModel.uiState.isLoginPromptVisible &&
+                    viewModel.uiState.loginPromptType == .detail
+                },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissLoginPrompt)
+                    }
+                }
+            )
+        ) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
+                viewModel.onAction(.dismissLoginPrompt)
+            }
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
+                viewModel.onAction(.signInTapped)
+            }
+        } message: {
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
         .sheet(
             isPresented: Binding(

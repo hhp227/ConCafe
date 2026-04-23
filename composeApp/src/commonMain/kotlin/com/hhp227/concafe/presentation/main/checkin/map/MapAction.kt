@@ -7,6 +7,10 @@ sealed interface MapAction {
 
     data class ClickCafe(val id: String) : MapAction
 
+    data object ClickLoginPromptSignIn : MapAction
+
+    data object DismissLoginPrompt : MapAction
+
     data class UpdateRegion(val region: ExploreUiState.RegionFilter) : MapAction
 
     data class UpdateSearchQuery(val query: String) : MapAction

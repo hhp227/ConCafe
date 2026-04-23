@@ -21,12 +21,18 @@ data class CheckInUiState(
     val canLoadMoreRecentVisits: Boolean = false,
     val isLoadingMoreRecentVisits: Boolean = false,
     val isLoginPromptVisible: Boolean = false,
+    val loginPromptType: LoginPromptType = LoginPromptType.CHECK_IN,
     val isNewVisitSheetVisible: Boolean = false,
     val isQrCheckInSheetVisible: Boolean = false,
     val preselectCafeId: String? = null,
     val reviewPrompt: ReviewPrompt? = null,
     val selectedMapRegion: ExploreUiState.RegionFilter = ExploreUiState.RegionFilter.ALL
 ) {
+    enum class LoginPromptType {
+        DETAIL,
+        CHECK_IN
+    }
+
     data class ReviewPrompt(
         val visitId: String,
         val cafeId: String,
