@@ -60,6 +60,7 @@ import concafe.composeapp.generated.resources.checkin_map_visible_count
 import concafe.composeapp.generated.resources.checkin_nearby_label
 import org.koin.core.context.GlobalContext
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.domain.model.GeoPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -347,18 +348,29 @@ private fun rememberFilteredCafes(
 
 private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
     val normalizedLocation = locationLabel.lowercase()
-    return normalizedLocation.contains(region.key) || normalizedLocation.contains(region.label.lowercase())
+    return normalizedLocation.contains(region.key) ||
+        normalizedLocation.contains(region.label.lowercase()) ||
+        geoPoint.matchesRegion(region)
 }
 
 private fun CheckInCafeSummary.matchesNearbyCity(cityKey: String?): Boolean {
-    return matchesRegion(resolveNearbyRegion(cityKey))
+    if (cityKey.isNullOrBlank()) return true
+    val nearbyRegion = ExploreUiState.RegionFilter.entries
+        .firstOrNull { it.key == cityKey.trim().lowercase() }
+        ?: return true
+    return matchesRegion(nearbyRegion)
 }
 
-private fun resolveNearbyRegion(cityKey: String?): ExploreUiState.RegionFilter {
-    val normalizedCityKey = cityKey?.trim()?.lowercase()
-    return ExploreUiState.RegionFilter.entries
-        .firstOrNull { it.key == normalizedCityKey }
-        ?: ExploreUiState.RegionFilter.SEOUL
+private fun GeoPoint.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    return when (region) {
+        ExploreUiState.RegionFilter.ALL -> true
+        ExploreUiState.RegionFilter.SEOUL -> latitude in 37.4..37.7 && longitude in 126.7..127.2
+        ExploreUiState.RegionFilter.BUSAN -> latitude in 35.0..35.4 && longitude in 128.8..129.3
+        ExploreUiState.RegionFilter.DAEGU -> latitude in 35.7..36.0 && longitude in 128.4..128.8
+        ExploreUiState.RegionFilter.YOKOHAMA -> latitude in 35.35..35.60 && longitude in 139.50..139.75
+        ExploreUiState.RegionFilter.TOKYO -> latitude in 35.5..35.9 && longitude in 139.3..139.9
+        ExploreUiState.RegionFilter.OSAKA -> latitude in 34.5..34.9 && longitude in 135.3..135.7
+    }
 }
 
 private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): CheckInMapCameraTarget? {

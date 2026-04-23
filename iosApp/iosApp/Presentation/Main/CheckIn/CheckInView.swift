@@ -534,19 +534,41 @@ struct CheckInMapSection: View {
 private extension CheckInCafeSummary {
     func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
         let normalizedLocation = locationLabel.lowercased()
-        return normalizedLocation.contains(region.rawValue) || normalizedLocation.contains(region.label.lowercased())
+        return normalizedLocation.contains(region.rawValue) ||
+            normalizedLocation.contains(region.label.lowercased()) ||
+            geoPoint.matchesRegion(region)
     }
 
     func matchesNearbyCity(_ cityKey: String?) -> Bool {
-        matchesRegion(Self.nearbyRegion(for: cityKey))
-    }
-
-    private static func nearbyRegion(for cityKey: String?) -> ExploreUiState.RegionFilter {
-        let normalizedCityKey = cityKey?
+        guard let normalizedCityKey = cityKey?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        return ExploreUiState.RegionFilter.allCases
-            .first(where: { $0.rawValue == normalizedCityKey }) ?? .seoul
+            .lowercased(),
+              !normalizedCityKey.isEmpty,
+              let nearbyRegion = ExploreUiState.RegionFilter.allCases.first(where: { $0.rawValue == normalizedCityKey }) else {
+            return true
+        }
+        return matchesRegion(nearbyRegion)
+    }
+}
+
+private extension GeoPoint {
+    func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
+        switch region {
+        case .all:
+            return true
+        case .seoul:
+            return (37.4...37.7).contains(latitude) && (126.7...127.2).contains(longitude)
+        case .busan:
+            return (35.0...35.4).contains(latitude) && (128.8...129.3).contains(longitude)
+        case .daegu:
+            return (35.7...36.0).contains(latitude) && (128.4...128.8).contains(longitude)
+        case .yokohama:
+            return (35.35...35.60).contains(latitude) && (139.50...139.75).contains(longitude)
+        case .tokyo:
+            return (35.5...35.9).contains(latitude) && (139.3...139.9).contains(longitude)
+        case .osaka:
+            return (34.5...34.9).contains(latitude) && (135.3...135.7).contains(longitude)
+        }
     }
 }
 
@@ -687,9 +709,9 @@ private struct CheckInTodayVisitsRow: View {
 
 private struct CheckInVisitCard: View {
     let name: String
-   
+
     let time: String
-   
+
     let image: String
 
     private let cornerRadius: CGFloat = 24
@@ -993,7 +1015,7 @@ private struct CheckInLoginPromptSheet: View {
 
 private struct CheckInReviewPromptSheet: View {
     let cafeName: String
-   
+
     let onAction: (CheckInAction) -> Void
 
     var body: some View {

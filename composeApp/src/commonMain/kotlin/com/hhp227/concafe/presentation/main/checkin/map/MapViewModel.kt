@@ -70,12 +70,10 @@ class MapViewModel(
                     val cityKey = cityKeyFromCoordinates(
                         lat = result.location.latitude,
                         lng = result.location.longitude
-                    ) ?: DEFAULT_NEARBY_CITY_KEY
+                    )
                     _uiState.update { it.copy(userCityKey = cityKey) }
                 }
-                is CheckInLocationResult.Failure -> {
-                    _uiState.update { it.copy(userCityKey = DEFAULT_NEARBY_CITY_KEY) }
-                }
+                is CheckInLocationResult.Failure -> Unit
             }
         }
     }
@@ -146,10 +144,6 @@ class MapViewModel(
         LOAD_MAP_FEED,
         OBSERVE_CAFE_DETAIL_EVENT,
         DETECT_CITY
-    }
-
-    private companion object {
-        private const val DEFAULT_NEARBY_CITY_KEY = "seoul"
     }
 
     private fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
