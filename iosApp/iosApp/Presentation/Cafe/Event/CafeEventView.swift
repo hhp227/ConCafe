@@ -65,7 +65,6 @@ private struct CafeEventDetailContent: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 heroImage
-                    .padding(.horizontal, 16)
                 VStack(alignment: .leading, spacing: 14) {
                     Text(event.statusLabel)
                         .font(.caption.weight(.bold))
@@ -97,23 +96,26 @@ private struct CafeEventDetailContent: View {
     }
 
     private var heroImage: some View {
-        ZStack {
-            if let imageUrl = resolvedImageUrl(event.imageUrl) {
-                CachedAsyncImage(url: imageUrl, placeholder: Color.clear, displaySize: .full)
-                    .frame(maxWidth: .infinity, minHeight: 280, maxHeight: 280)
-                    .clipped()
-            } else {
-                LinearGradient(
-                    colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+        GeometryReader { proxy in
+            ZStack {
+                if let imageUrl = resolvedImageUrl(event.imageUrl) {
+                    CachedAsyncImage(url: imageUrl, placeholder: Color.clear, displaySize: .full)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                } else {
+                    LinearGradient(
+                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
             }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipped()
         }
         .frame(maxWidth: .infinity)
         .frame(height: 280)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func resolvedImageUrl(_ raw: String?) -> URL? {

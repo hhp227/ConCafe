@@ -83,7 +83,6 @@ fun CafeEventScreen(
             }
         }
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -196,8 +195,6 @@ private fun CafeEventHeroImage(event: CafeEventManagementItem) {
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp)
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.surface)
     ) {
         if (event.imageUrl.isNotBlank()) {
