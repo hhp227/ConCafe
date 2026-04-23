@@ -22,6 +22,8 @@ struct CafeNoticeView: View {
     
     let onPagingTriggerDisappear: () -> Void
 
+    let onEventTap: (String) -> Void
+
     @State private var expandedNoticeIds: Set<String> = []
 
     private let contentPadding: CGFloat = 16
@@ -45,6 +47,10 @@ struct CafeNoticeView: View {
                             ForEach(events, id: \.id) { event in
                                 eventCard(event)
                                     .frame(width: 276)
+                                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .onTapGesture {
+                                        onEventTap(event.id)
+                                    }
                             }
                         }
                         .padding(.horizontal, contentPadding)
@@ -177,6 +183,6 @@ struct CafeNoticeView: View {
 
 struct CafeNoticeView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {}, onPagingTriggerDisappear: {})
+        CafeNoticeView(events: [], notices: [], canLoadMore: false, isLoadingMore: false, onLoadMore: {}, onPagingTriggerDisappear: {}, onEventTap: { _ in })
     }
 }

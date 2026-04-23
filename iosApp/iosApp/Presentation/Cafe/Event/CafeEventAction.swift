@@ -8,5 +8,6 @@
 import Foundation
 
 enum CafeEventAction {
-    
+    case backTapped
+    case retry
 }

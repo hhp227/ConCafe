@@ -11,5 +11,6 @@ enum HomeEvent {
     case navigateToExternalLink(title: String, url: String)
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
+    case navigateToCafeEvent(cafeId: String, eventId: String)
     case navigateToSignIn
 }

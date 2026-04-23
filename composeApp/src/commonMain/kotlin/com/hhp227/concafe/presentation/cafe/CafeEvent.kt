@@ -5,6 +5,8 @@ sealed interface CafeEvent {
 
     data class NavigateToCast(val id: String) : CafeEvent
 
+    data class NavigateToCafeEvent(val cafeId: String, val eventId: String) : CafeEvent
+
     data class NavigateToReviewEdit(val cafeId: String, val reviewId: String? = null) : CafeEvent
 
     data class NavigateToPicture(val imageUrl: String) : CafeEvent

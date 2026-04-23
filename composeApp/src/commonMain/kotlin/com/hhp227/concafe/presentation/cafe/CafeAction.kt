@@ -15,6 +15,8 @@ sealed interface CafeAction {
 
     data object LoadMoreNotices : CafeAction
 
+    data class ClickEvent(val eventId: String) : CafeAction
+
     data object LoadMoreReviews : CafeAction
 
     data object Refresh : CafeAction

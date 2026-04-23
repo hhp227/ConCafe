@@ -64,6 +64,9 @@ fun CafeScreen(
             when (event) {
                 CafeEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CafeEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
+                is CafeEvent.NavigateToCafeEvent -> {
+                    onNavigationAction(NavigationAction.NavigateToCafeEvent(event.cafeId, event.eventId))
+                }
                 is CafeEvent.NavigateToReviewEdit -> {
                     onNavigationAction(NavigationAction.NavigateToReviewEdit(event.cafeId, event.reviewId))
                 }
@@ -525,7 +528,8 @@ private fun CafeTabContent(
             events = uiState.events,
             notices = uiState.notices,
             canLoadMore = uiState.canLoadMoreNotices,
-            isLoadingMore = uiState.isLoadingMoreNotices
+            isLoadingMore = uiState.isLoadingMoreNotices,
+            onEventClick = { onAction(CafeAction.ClickEvent(it)) }
         )
     }
 }
