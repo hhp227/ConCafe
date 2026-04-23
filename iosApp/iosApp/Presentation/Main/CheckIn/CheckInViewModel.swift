@@ -602,6 +602,10 @@ final class CheckInViewModel: ObservableObject {
             } else {
                 requestCheckInPermissionAndOpenSheet(preselectCafeId: cafeId)
             }
+        case .mapFullViewTapped:
+            event.send(.navigateToMap)
+        case .mapRegionChanged(let region):
+            uiState.selectedMapRegion = region
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
             event.send(.navigateToSignIn)

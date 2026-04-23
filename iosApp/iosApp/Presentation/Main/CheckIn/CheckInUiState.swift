@@ -27,6 +27,7 @@ struct CheckInUiState {
     var isQrCheckInSheetVisible: Bool
     var preselectCafeId: String?
     var reviewPrompt: ReviewPrompt?
+    var selectedMapRegion: ExploreUiState.RegionFilter
 
     static let empty = CheckInUiState(
         isLoading: false,
@@ -46,7 +47,8 @@ struct CheckInUiState {
         isNewVisitSheetVisible: false,
         isQrCheckInSheetVisible: false,
         preselectCafeId: nil,
-        reviewPrompt: nil
+        reviewPrompt: nil,
+        selectedMapRegion: .all
     )
 
     struct ReviewPrompt {

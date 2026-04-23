@@ -46,6 +46,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.reviewEdit(cafeId: cafeId, reviewId: reviewId)))
         case .navigateToPicture(let imageUrl):
             event.send(.navigateTo(.picture(imageUrl: imageUrl)))
+        case .navigateToCheckInMap(let initialRegionKey):
+            event.send(.navigateTo(.checkInMap(initialRegionKey: initialRegionKey)))
         case .navigateToSignIn:
             event.send(.navigateTo(.signIn))
         case .navigateToSignUp:

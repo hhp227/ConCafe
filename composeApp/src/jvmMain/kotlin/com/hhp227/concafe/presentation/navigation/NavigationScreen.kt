@@ -25,6 +25,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsSc
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
+import com.hhp227.concafe.presentation.main.checkin.map.MapScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.picture.PictureAction
 import com.hhp227.concafe.presentation.picture.PictureScreen
@@ -252,6 +253,12 @@ private fun DetailRoutePane(
                         PictureAction.ClickBack -> onNavigationAction(NavigationAction.NavigateBack)
                     }
                 }
+            )
+        }
+        is Route.CheckInMap -> {
+            MapScreen(
+                initialRegionKey = route.initialRegionKey,
+                onNavigationAction = onNavigationAction
             )
         }
         Route.SignIn -> {

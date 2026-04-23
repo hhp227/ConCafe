@@ -22,6 +22,7 @@ import com.hhp227.concafe.presentation.navigation.Route.Picture
 import com.hhp227.concafe.presentation.navigation.Route.ReviewEdit
 import com.hhp227.concafe.presentation.navigation.Route.CastManagement
 import com.hhp227.concafe.presentation.navigation.Route.Schedule
+import com.hhp227.concafe.presentation.navigation.Route.CheckInMap
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()
@@ -91,6 +92,9 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToPicture -> {
                     _event.emit(NavigateTo(Picture(action.imageUrl)))
+                }
+                is NavigationAction.NavigateToCheckInMap -> {
+                    _event.emit(NavigateTo(CheckInMap(action.initialRegionKey)))
                 }
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))

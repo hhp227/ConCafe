@@ -6,7 +6,16 @@
 //
 
 import Foundation
+import Shared
 
 struct MapUiState {
-    
+    var isLoading: Bool = false
+    var errorMessage: String? = nil
+    var currentLocationLabel: String = ""
+    var userCityKey: String? = nil
+    var mapCafes: [CheckInCafeSummary] = []
+    var selectedRegion: ExploreUiState.RegionFilter = .all
+    var searchQuery: String = ""
+
+    static let empty = MapUiState()
 }

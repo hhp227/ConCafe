@@ -121,6 +121,13 @@ fun CheckInScreen(
                 is CheckInEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is CheckInEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 is CheckInEvent.NavigateToReviewEdit -> onNavigate(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                CheckInEvent.NavigateToMap -> {
+                    onNavigate(
+                        NavigationAction.NavigateToCheckInMap(
+                            initialRegionKey = uiState.selectedMapRegion.name
+                        )
+                    )
+                }
                 CheckInEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
                 CheckInEvent.OpenLocationSettings -> {
                     isLocationSettingsAlertVisible = true
@@ -372,9 +379,12 @@ private fun CheckInGuestScreen(
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
-                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
             )
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 LoginPromotionSection(
@@ -447,9 +457,12 @@ private fun CheckInUserScreen(
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
-                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
             )
         }
         item {
@@ -525,16 +538,23 @@ private fun CheckInUserScreen(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun CafeMapSection(
+fun CafeMapSection(
     modifier: Modifier = Modifier,
     currentLocationLabel: String,
     mapCafes: List<CheckInCafeSummary>,
     userCityKey: String?,
+    selectedRegion: ExploreUiState.RegionFilter,
     onCafeClick: (String) -> Unit,
     onCafeCheckIn: (String) -> Unit,
-    onCheckInClick: () -> Unit
+    onCheckInClick: () -> Unit,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit,
+    onExpandClick: () -> Unit = {},
+    showExpandButton: Boolean = true,
+    showCheckInButton: Boolean = true,
+    mapModifier: Modifier = Modifier
+        .fillMaxWidth()
+        .height(240.dp)
 ) {
-    var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
     val selectedRegionLabel = stringResource(
@@ -549,12 +569,12 @@ private fun CafeMapSection(
     val filteredMapCafes = when {
         selectedRegion != ExploreUiState.RegionFilter.ALL -> {
             mapCafes.filter { cafe ->
-                cafe.locationLabel.lowercase().contains(selectedRegion.key)
+                cafe.matchesRegion(selectedRegion)
             }
         }
         userCityKey != null -> {
             mapCafes.filter { cafe ->
-                cafe.locationLabel.lowercase().contains(userCityKey)
+                cafe.matchesCityKey(userCityKey)
             }
         }
         else -> mapCafes
@@ -610,7 +630,7 @@ private fun CafeMapSection(
                                 isExpanded = isRegionDropdownExpanded,
                                 onExpandedChange = { isRegionDropdownExpanded = it },
                                 onRegionSelected = { region ->
-                                    selectedRegion = region
+                                    onRegionSelected(region)
                                     isRegionDropdownExpanded = false
                                 }
                             )
@@ -619,32 +639,54 @@ private fun CafeMapSection(
                     if (usesInlineRegionFilter) {
                         CheckInRegionChips(
                             selectedRegion = selectedRegion,
-                            onRegionSelected = { selectedRegion = it },
+                            onRegionSelected = onRegionSelected,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
-                OutlinedButton(
-                    onClick = onCheckInClick,
-                    shape = RoundedCornerShape(999.dp)
-                ) {
-                    Text(stringResource(Res.string.checkin_button))
+                if (showCheckInButton) {
+                    OutlinedButton(
+                        onClick = onCheckInClick,
+                        shape = RoundedCornerShape(999.dp)
+                    ) {
+                        Text(stringResource(Res.string.checkin_button))
+                    }
+                }
+                if (showExpandButton && usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-            ) {
+            Box(modifier = mapModifier) {
                 CheckInCafeMap(
                     cafes = filteredMapCafes,
                     onCafeClick = onCafeClick,
                     onCafeCheckIn = onCafeCheckIn,
+                    showCheckInButton = showCheckInButton,
                     cameraTarget = mapCameraTarget,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(24.dp))
                 )
+                if (showExpandButton && !usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
+                    }
+                }
             }
         }
     }
@@ -772,6 +814,25 @@ private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): 
             zoom = 12.0f
         )
     }
+}
+
+private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    val normalizedLocation = locationLabel.lowercase()
+    return normalizedLocation.contains(region.key) || normalizedLocation.contains(region.label.lowercase())
+}
+
+private fun CheckInCafeSummary.matchesCityKey(cityKey: String): Boolean {
+    val normalizedCityKey = cityKey.trim().lowercase()
+    if (normalizedCityKey.isBlank()) return true
+
+    val mappedLabel = ExploreUiState.RegionFilter.entries
+        .firstOrNull { it.key == normalizedCityKey }
+        ?.label
+        ?.lowercase()
+
+    val normalizedLocation = locationLabel.lowercase()
+    return normalizedLocation.contains(normalizedCityKey) ||
+        (mappedLabel != null && normalizedLocation.contains(mappedLabel))
 }
 
 @Composable

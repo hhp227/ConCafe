@@ -8,5 +8,8 @@
 import Foundation
 
 enum MapAction {
-    
+    case backTapped
+    case cafeTapped(id: String)
+    case regionChanged(region: ExploreUiState.RegionFilter)
+    case searchQueryChanged(query: String)
 }

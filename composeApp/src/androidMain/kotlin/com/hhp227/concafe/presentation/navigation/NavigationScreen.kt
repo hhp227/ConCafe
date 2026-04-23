@@ -27,6 +27,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoo
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
+import com.hhp227.concafe.presentation.main.checkin.map.MapScreen
 import com.hhp227.concafe.presentation.notification.NotificationScreen
 import com.hhp227.concafe.presentation.picture.PictureAction
 import com.hhp227.concafe.presentation.picture.PictureScreen
@@ -215,6 +216,13 @@ fun NavigationScreen(
                         PictureAction.ClickBack -> viewModel.onAction(NavigationAction.NavigateBack)
                     }
                 }
+            )
+        }
+        composable<Route.CheckInMap> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.CheckInMap>()
+            MapScreen(
+                initialRegionKey = route.initialRegionKey,
+                onNavigationAction = viewModel::onAction
             )
         }
         composable<Route.SignIn> { backStackEntry ->

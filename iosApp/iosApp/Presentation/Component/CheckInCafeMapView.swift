@@ -21,6 +21,8 @@ struct CheckInCafeMapView: UIViewRepresentable {
 
     let onCheckInForCafeTap: (String) -> Void
 
+    var showsCheckInButton: Bool = true
+
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
         mapView.delegate = context.coordinator
@@ -33,6 +35,7 @@ struct CheckInCafeMapView: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onCafeTap = onCafeTap
         context.coordinator.onCheckInForCafeTap = onCheckInForCafeTap
+        context.coordinator.showsCheckInButton = showsCheckInButton
         context.coordinator.syncAnnotations(on: mapView, pins: pins)
         context.coordinator.applySelection(on: mapView, selectedPinId: selectedPinId)
         context.coordinator.applyCamera(
@@ -56,6 +59,8 @@ struct CheckInCafeMapView: UIViewRepresentable {
         var onCafeTap: (String) -> Void
 
         var onCheckInForCafeTap: (String) -> Void
+
+        var showsCheckInButton: Bool
 
         private var annotationsById: [String: CheckInCafeAnnotation] = [:]
 
@@ -156,13 +161,19 @@ struct CheckInCafeMapView: UIViewRepresentable {
             cafeButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             cafeButton.addTarget(self, action: #selector(handleCafeButtonTap(_:)), for: .touchUpInside)
 
-            let checkInButton = CheckInCalloutButton(type: .system)
-            checkInButton.cafeId = annotation.id
-            checkInButton.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
-            checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
-            checkInButton.addTarget(self, action: #selector(handleCheckInButtonTap(_:)), for: .touchUpInside)
+            let arrangedSubviews: [UIView]
+            if showsCheckInButton {
+                let checkInButton = CheckInCalloutButton(type: .system)
+                checkInButton.cafeId = annotation.id
+                checkInButton.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
+                checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
+                checkInButton.addTarget(self, action: #selector(handleCheckInButtonTap(_:)), for: .touchUpInside)
+                arrangedSubviews = [cafeButton, checkInButton]
+            } else {
+                arrangedSubviews = [cafeButton]
+            }
 
-            let stackView = UIStackView(arrangedSubviews: [cafeButton, checkInButton])
+            let stackView = UIStackView(arrangedSubviews: arrangedSubviews)
             stackView.axis = .horizontal
             stackView.alignment = .center
             stackView.spacing = 6
@@ -187,6 +198,7 @@ struct CheckInCafeMapView: UIViewRepresentable {
             selectedPinIdBinding = selectedPinId
             self.onCafeTap = onCafeTap
             self.onCheckInForCafeTap = onCheckInForCafeTap
+            self.showsCheckInButton = true
         }
     }
 }

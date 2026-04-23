@@ -4,6 +4,7 @@ import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 
 data class CheckInUiState(
     val isLoading: Boolean = false,
@@ -23,7 +24,8 @@ data class CheckInUiState(
     val isNewVisitSheetVisible: Boolean = false,
     val isQrCheckInSheetVisible: Boolean = false,
     val preselectCafeId: String? = null,
-    val reviewPrompt: ReviewPrompt? = null
+    val reviewPrompt: ReviewPrompt? = null,
+    val selectedMapRegion: ExploreUiState.RegionFilter = ExploreUiState.RegionFilter.ALL
 ) {
     data class ReviewPrompt(
         val visitId: String,

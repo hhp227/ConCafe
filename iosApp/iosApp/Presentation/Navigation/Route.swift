@@ -25,6 +25,7 @@ enum Route: Hashable {
     case menuGoodsEdit(cafeId: String, itemId: String?)
     case reviewEdit(cafeId: String, reviewId: String?)
     case picture(imageUrl: String)
+    case checkInMap(initialRegionKey: String?)
     case signIn
     case signUp
     case resetPassword

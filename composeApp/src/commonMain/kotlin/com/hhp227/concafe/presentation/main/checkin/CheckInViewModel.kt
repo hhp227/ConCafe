@@ -566,6 +566,12 @@ class CheckInViewModel(
                 is CheckInAction.ClickCheckInForCafe -> {
                     clickCheckIn(preselectCafeId = action.cafeId)
                 }
+                CheckInAction.ClickMapFullView -> {
+                    _event.emit(CheckInEvent.NavigateToMap)
+                }
+                is CheckInAction.UpdateMapRegion -> {
+                    _uiState.update { it.copy(selectedMapRegion = action.region) }
+                }
                 CheckInAction.ClickSignIn -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
                     _event.emit(CheckInEvent.NavigateToSignIn)
