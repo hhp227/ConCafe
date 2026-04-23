@@ -15,6 +15,7 @@ enum CafeAction {
     case writeReviewTapped
     case loadMoreCasts
     case loadMoreNotices
+    case eventTapped(eventId: String)
     case loadMoreReviews
     case refresh
     case pagingTriggerDisappeared(CafeUiState.TabType)

@@ -6,7 +6,12 @@
 //
 
 import Foundation
+import Shared
 
 struct CafeEventUiState {
-    
+    var isLoading: Bool = false
+    var event: CafeEventManagementItem? = nil
+    var errorMessage: String? = nil
+
+    static let empty = CafeEventUiState()
 }

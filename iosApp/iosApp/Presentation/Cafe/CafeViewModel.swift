@@ -415,6 +415,8 @@ final class CafeViewModel: ObservableObject {
             loadMoreCasts()
         case .loadMoreNotices:
             loadMoreNotices()
+        case .eventTapped(let eventId):
+            event.send(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
         case .loadMoreReviews:
             loadMoreReviews()
         case .refresh:

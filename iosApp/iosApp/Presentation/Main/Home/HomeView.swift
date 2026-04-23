@@ -33,6 +33,8 @@ struct HomeView: View {
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToCafe(let id):
                 onNavigationAction(.navigateToCafe(id: id))
+            case .navigateToCafeEvent(let cafeId, let eventId):
+                onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             }
@@ -245,7 +247,7 @@ private struct HomeContentView: View {
                                 .frame(width: 276)
                                 .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .onTapGesture {
-                                    onAction(.cafeTapped(id: event.cafeId))
+                                    onAction(.cafeEventTapped(cafeId: event.cafeId, eventId: event.id))
                                 }
                         }
                     }

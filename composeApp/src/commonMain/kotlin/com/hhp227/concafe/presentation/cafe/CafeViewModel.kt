@@ -379,6 +379,9 @@ class CafeViewModel(
                 CafeAction.LoadMoreNotices -> {
                     loadMoreNotices()
                 }
+                is CafeAction.ClickEvent -> {
+                    _event.emit(CafeEvent.NavigateToCafeEvent(cafeId, action.eventId))
+                }
                 CafeAction.LoadMoreReviews -> {
                     loadMoreReviews()
                 }

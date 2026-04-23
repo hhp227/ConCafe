@@ -33,6 +33,8 @@ struct AppNavigationView: View {
                 CastView(castId: param, onNavigationAction: viewModel.onAction)
             case .cafe(let param):
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
+            case .cafeEvent(let cafeId, let eventId):
+                CafeEventView(cafeId: cafeId, eventId: eventId, onNavigationAction: viewModel.onAction)
             case .cafeDashboard(let param):
                 CafeDashboardView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .banner(let cafeId):

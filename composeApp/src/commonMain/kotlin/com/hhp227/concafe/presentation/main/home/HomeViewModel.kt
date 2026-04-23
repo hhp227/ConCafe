@@ -358,8 +358,14 @@ class HomeViewModel(
                     )
                 }
             }
+            BannerLinkTargetType.EVENT_DETAIL -> {
+                val cafeId = banner.cafeId
+                val eventId = banner.targetValue.trim()
+                if (!cafeId.isNullOrBlank() && eventId.isNotBlank()) {
+                    _event.emit(HomeEvent.NavigateToCafeEvent(cafeId, eventId))
+                }
+            }
             BannerLinkTargetType.CAFE_DETAIL,
-            BannerLinkTargetType.EVENT_DETAIL,
             BannerLinkTargetType.NOTICE -> {
                 val cafeId = banner.cafeId ?: banner.targetValue.takeIf { banner.targetType == BannerLinkTargetType.CAFE_DETAIL }
                 if (!cafeId.isNullOrBlank()) {
@@ -383,6 +389,9 @@ class HomeViewModel(
                 }
                 is HomeAction.ClickCafe -> requireSignedIn {
                     _event.emit(HomeEvent.NavigateToCafe(action.id))
+                }
+                is HomeAction.ClickCafeEvent -> {
+                    _event.emit(HomeEvent.NavigateToCafeEvent(action.cafeId, action.eventId))
                 }
                 HomeAction.ClickLoginPromptSignIn -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }

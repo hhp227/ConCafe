@@ -92,6 +92,7 @@ fun HomeScreen(
                     )
                 )
                 is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
+                is HomeEvent.NavigateToCafeEvent -> onNavigate(NavigationAction.NavigateToCafeEvent(event.cafeId, event.eventId))
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 HomeEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
             }
@@ -313,7 +314,7 @@ private fun HomeCafeEventSection(
                 HomeCafeEventCard(
                     event = event,
                     modifier = Modifier.width(276.dp),
-                    onClick = { onAction(HomeAction.ClickCafe(event.cafeId)) }
+                    onClick = { onAction(HomeAction.ClickCafeEvent(event.cafeId, event.id)) }
                 )
             }
         }

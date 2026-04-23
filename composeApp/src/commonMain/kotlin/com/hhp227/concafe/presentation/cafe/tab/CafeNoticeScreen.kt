@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -37,7 +38,8 @@ fun CafeNoticeScreen(
     events: List<CafeEventManagementItem>,
     notices: List<CafeNoticeManagementItem>,
     canLoadMore: Boolean,
-    isLoadingMore: Boolean
+    isLoadingMore: Boolean,
+    onEventClick: (String) -> Unit = {}
 ) {
     var expandedNoticeIds by rememberSaveable { mutableStateOf(setOf<String>()) }
 
@@ -67,7 +69,8 @@ fun CafeNoticeScreen(
                         items(events) { event ->
                             CafeEventCard(
                                 event = event,
-                                modifier = Modifier.width(276.dp)
+                                modifier = Modifier.width(276.dp),
+                                onClick = { onEventClick(event.id) }
                             )
                         }
                     }
@@ -127,10 +130,11 @@ fun CafeNoticeScreen(
 @Composable
 private fun CafeEventCard(
     event: CafeEventManagementItem,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(

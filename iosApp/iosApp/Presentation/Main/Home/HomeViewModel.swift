@@ -611,7 +611,14 @@ final class HomeViewModel: ObservableObject {
             if !banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 event.send(.navigateToExternalLink(title: banner.title, url: banner.targetValue))
             }
-        case .cafeDetail, .eventDetail, .notice:
+        case .eventDetail:
+            let eventId = banner.targetValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let cafeId = banner.cafeId,
+               !cafeId.isEmpty,
+               !eventId.isEmpty {
+                event.send(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
+            }
+        case .cafeDetail, .notice:
             let cafeId = banner.cafeId ?? (banner.targetType == .cafeDetail ? banner.targetValue : nil)
             if let cafeId, !cafeId.isEmpty {
                 requireSignedIn { [weak self] in
@@ -639,6 +646,8 @@ final class HomeViewModel: ObservableObject {
             requireSignedIn { [weak self] in
                 self?.event.send(.navigateToCafe(id: id))
             }
+        case .cafeEventTapped(let cafeId, let eventId):
+            event.send(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
         case .loginPromptSignInTapped:
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,

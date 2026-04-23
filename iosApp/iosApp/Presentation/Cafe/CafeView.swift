@@ -60,6 +60,8 @@ struct CafeView: View {
                     onNavigationAction(.navigateBack)
                 case .navigateToCast(let id):
                     onNavigationAction(.navigateToCast(id: id))
+                case .navigateToCafeEvent(let cafeId, let eventId):
+                    onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
                 case .navigateToReviewEdit(let cafeId, let reviewId):
                     onNavigationAction(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
                 case .navigateToPicture(let imageUrl):
@@ -405,7 +407,8 @@ private struct CafeContentView: View {
                 onLoadMore: { onAction(.loadMoreNotices) },
                 onPagingTriggerDisappear: {
                     onAction(.pagingTriggerDisappeared(.notices))
-                }
+                },
+                onEventTap: { onAction(.eventTapped(eventId: $0)) }
             )
         }
     }
