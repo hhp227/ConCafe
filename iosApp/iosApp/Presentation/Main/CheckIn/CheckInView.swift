@@ -128,7 +128,7 @@ struct CheckInView: View {
             case .navigateToReviewEdit(let cafeId):
                 onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
             case .navigateToMap:
-                onNavigationAction(.navigateToCheckInMap(initialRegionKey: viewModel.uiState.selectedMapRegion.name))
+                onNavigationAction(.navigateToCheckInMap(initialRegionKey: viewModel.uiState.selectedMapRegion.label))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .openLocationSettings:
