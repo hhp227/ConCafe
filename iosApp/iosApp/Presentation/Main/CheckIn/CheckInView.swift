@@ -524,12 +524,8 @@ struct CheckInMapSection: View {
             return cafes.filter { cafe in
                 cafe.matchesRegion(selectedRegion)
             }
-        } else if let cityKey = userCityKey {
-            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard !normalizedCityKey.isEmpty else { return cafes }
-            return cafes.filter { $0.matchesCityKey(normalizedCityKey) }
         } else {
-            return cafes
+            return cafes.filter { $0.matchesNearbyCity(userCityKey) }
         }
     }
 
@@ -541,16 +537,16 @@ private extension CheckInCafeSummary {
         return normalizedLocation.contains(region.rawValue) || normalizedLocation.contains(region.label.lowercased())
     }
 
-    func matchesCityKey(_ cityKey: String) -> Bool {
-        let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalizedCityKey.isEmpty else { return true }
-        let mappedLabel = ExploreUiState.RegionFilter.allCases
-            .first(where: { $0.rawValue == normalizedCityKey })?
-            .label
+    func matchesNearbyCity(_ cityKey: String?) -> Bool {
+        matchesRegion(Self.nearbyRegion(for: cityKey))
+    }
+
+    private static func nearbyRegion(for cityKey: String?) -> ExploreUiState.RegionFilter {
+        let normalizedCityKey = cityKey?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
-        let normalizedLocation = locationLabel.lowercased()
-        return normalizedLocation.contains(normalizedCityKey) ||
-            (mappedLabel.map { normalizedLocation.contains($0) } ?? false)
+        return ExploreUiState.RegionFilter.allCases
+            .first(where: { $0.rawValue == normalizedCityKey }) ?? .seoul
     }
 }
 

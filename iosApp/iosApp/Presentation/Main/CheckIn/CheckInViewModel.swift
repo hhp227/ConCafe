@@ -183,17 +183,20 @@ final class CheckInViewModel: ObservableObject {
                     lng: cached.location.longitude
                 )
                 if cityKey != nil {
-                    uiState.userCityKey = cityKey
+                    uiState.userCityKey = cityKey ?? Self.defaultNearbyCityKey
                     return
                 }
             }
             let result = await currentLocationProvider.getCurrentLocation()
-            guard result.isSuccess else { return }
+            guard result.isSuccess else {
+                uiState.userCityKey = Self.defaultNearbyCityKey
+                return
+            }
             let cityKey = Self.cityKeyFromCoordinates(
                 lat: result.location.latitude,
                 lng: result.location.longitude
             )
-            uiState.userCityKey = cityKey
+            uiState.userCityKey = cityKey ?? Self.defaultNearbyCityKey
         }
     }
 
@@ -686,6 +689,7 @@ final class CheckInViewModel: ObservableObject {
 
     private static let recentVisitPageSize: Int32 = 12
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
+    private static let defaultNearbyCityKey = "seoul"
 
     private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
         if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }

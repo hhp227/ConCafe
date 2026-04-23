@@ -186,10 +186,12 @@ class CheckInViewModel(
                     val cityKey = cityKeyFromCoordinates(
                         lat = result.location.latitude,
                         lng = result.location.longitude
-                    )
+                    ) ?: DEFAULT_NEARBY_CITY_KEY
                     _uiState.update { it.copy(userCityKey = cityKey) }
                 }
-                is CheckInLocationResult.Failure -> Unit
+                is CheckInLocationResult.Failure -> {
+                    _uiState.update { it.copy(userCityKey = DEFAULT_NEARBY_CITY_KEY) }
+                }
             }
         }
     }
@@ -639,6 +641,7 @@ class CheckInViewModel(
     private companion object {
         private const val TODAY_VISIT_LIMIT = 4
         private const val PAGINATION_DELAY_MILLIS = 1_000L
+        private const val DEFAULT_NEARBY_CITY_KEY = "seoul"
 
         fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
             return when {

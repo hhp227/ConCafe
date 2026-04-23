@@ -63,17 +63,20 @@ final class MapViewModel: ObservableObject {
                     lng: cached.location.longitude
                 )
                 if cityKey != nil {
-                    uiState.userCityKey = cityKey
+                    uiState.userCityKey = cityKey ?? Self.defaultNearbyCityKey
                     return
                 }
             }
 
             let result = await currentLocationProvider.getCurrentLocation()
-            guard result.isSuccess else { return }
+            guard result.isSuccess else {
+                uiState.userCityKey = Self.defaultNearbyCityKey
+                return
+            }
             uiState.userCityKey = Self.cityKeyFromCoordinates(
                 lat: result.location.latitude,
                 lng: result.location.longitude
-            )
+            ) ?? Self.defaultNearbyCityKey
         }
     }
 
@@ -149,6 +152,8 @@ final class MapViewModel: ObservableObject {
         case cafeDetailEvent
         case detectCity
     }
+
+    private static let defaultNearbyCityKey = "seoul"
 
     private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
         if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }

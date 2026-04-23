@@ -109,13 +109,10 @@ struct MapView: View {
             regionFiltered = viewModel.uiState.mapCafes.filter {
                 $0.matchesRegion(viewModel.uiState.selectedRegion)
             }
-        } else if let userCityKey = viewModel.uiState.userCityKey?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-                  !userCityKey.isEmpty {
-            regionFiltered = viewModel.uiState.mapCafes.filter {
-                $0.matchesCityKey(userCityKey)
-            }
         } else {
-            regionFiltered = viewModel.uiState.mapCafes
+            regionFiltered = viewModel.uiState.mapCafes.filter {
+                $0.matchesNearbyCity(viewModel.uiState.userCityKey)
+            }
         }
 
         let query = viewModel.uiState.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -205,16 +202,16 @@ private extension CheckInCafeSummary {
         return normalizedLocation.contains(region.rawValue) || normalizedLocation.contains(region.label.lowercased())
     }
 
-    func matchesCityKey(_ cityKey: String) -> Bool {
-        let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalizedCityKey.isEmpty else { return true }
-        let mappedLabel = ExploreUiState.RegionFilter.allCases
-            .first(where: { $0.rawValue == normalizedCityKey })?
-            .label
+    func matchesNearbyCity(_ cityKey: String?) -> Bool {
+        matchesRegion(Self.nearbyRegion(for: cityKey))
+    }
+
+    private static func nearbyRegion(for cityKey: String?) -> ExploreUiState.RegionFilter {
+        let normalizedCityKey = cityKey?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
-        let normalizedLocation = locationLabel.lowercased()
-        return normalizedLocation.contains(normalizedCityKey) ||
-            (mappedLabel.map { normalizedLocation.contains($0) } ?? false)
+        return ExploreUiState.RegionFilter.allCases
+            .first(where: { $0.rawValue == normalizedCityKey }) ?? .seoul
     }
 }
 

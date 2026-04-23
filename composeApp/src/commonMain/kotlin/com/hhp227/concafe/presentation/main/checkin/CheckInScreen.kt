@@ -572,12 +572,11 @@ fun CafeMapSection(
                 cafe.matchesRegion(selectedRegion)
             }
         }
-        userCityKey != null -> {
+        else -> {
             mapCafes.filter { cafe ->
-                cafe.matchesCityKey(userCityKey)
+                cafe.matchesNearbyCity(userCityKey)
             }
         }
-        else -> mapCafes
     }
 
     Card(
@@ -821,18 +820,15 @@ private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter
     return normalizedLocation.contains(region.key) || normalizedLocation.contains(region.label.lowercase())
 }
 
-private fun CheckInCafeSummary.matchesCityKey(cityKey: String): Boolean {
-    val normalizedCityKey = cityKey.trim().lowercase()
-    if (normalizedCityKey.isBlank()) return true
+private fun CheckInCafeSummary.matchesNearbyCity(cityKey: String?): Boolean {
+    return matchesRegion(resolveNearbyRegion(cityKey))
+}
 
-    val mappedLabel = ExploreUiState.RegionFilter.entries
+private fun resolveNearbyRegion(cityKey: String?): ExploreUiState.RegionFilter {
+    val normalizedCityKey = cityKey?.trim()?.lowercase()
+    return ExploreUiState.RegionFilter.entries
         .firstOrNull { it.key == normalizedCityKey }
-        ?.label
-        ?.lowercase()
-
-    val normalizedLocation = locationLabel.lowercase()
-    return normalizedLocation.contains(normalizedCityKey) ||
-        (mappedLabel != null && normalizedLocation.contains(mappedLabel))
+        ?: ExploreUiState.RegionFilter.SEOUL
 }
 
 @Composable
