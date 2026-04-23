@@ -127,6 +127,8 @@ struct CheckInView: View {
                 onNavigationAction(.navigateToCast(id: id))
             case .navigateToReviewEdit(let cafeId):
                 onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+            case .navigateToMap:
+                onNavigationAction(.navigateToCheckInMap(initialRegionKey: viewModel.uiState.selectedMapRegion.label))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .openLocationSettings:
@@ -168,9 +170,12 @@ private struct CheckInGuestContentView: View {
                     currentLocationLabel: uiState.currentLocationLabel,
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
+                    selectedRegion: uiState.selectedMapRegion,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
-                    onCheckInTap: { onAction(.checkInTapped) }
+                    onCheckInTap: { onAction(.checkInTapped) },
+                    onRegionChanged: { onAction(.mapRegionChanged(region: $0)) },
+                    onMapFullViewTap: { onAction(.mapFullViewTapped) }
                 )
                 .padding(.top, 16)
                 CheckInLoginPromotionSection(onAction: onAction)
@@ -252,9 +257,12 @@ private struct CheckInUserContentView: View {
                     currentLocationLabel: uiState.currentLocationLabel,
                     cafes: uiState.mapCafes,
                     userCityKey: uiState.userCityKey,
+                    selectedRegion: uiState.selectedMapRegion,
                     onCafeTap: { onAction(.cafeTapped(id: $0)) },
                     onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
-                    onCheckInTap: { onAction(.checkInTapped) }
+                    onCheckInTap: { onAction(.checkInTapped) },
+                    onRegionChanged: { onAction(.mapRegionChanged(region: $0)) },
+                    onMapFullViewTap: { onAction(.mapFullViewTapped) }
                 )
                 .padding(.top, 16)
                 CheckInPrimaryButton(title: String(localized: String.LocalizationValue("checkin_new_visit_cta"), table: "Localizable")) {
@@ -284,12 +292,14 @@ private struct CheckInUserContentView: View {
     }
 }
 
-private struct CheckInMapSection: View {
+struct CheckInMapSection: View {
     let currentLocationLabel: String
 
     let cafes: [CheckInCafeSummary]
 
     let userCityKey: String?
+
+    let selectedRegion: ExploreUiState.RegionFilter
 
     let onCafeTap: (String) -> Void
 
@@ -297,7 +307,15 @@ private struct CheckInMapSection: View {
 
     let onCheckInTap: () -> Void
 
-    @State private var selectedRegion: ExploreUiState.RegionFilter = .all
+    let onRegionChanged: (ExploreUiState.RegionFilter) -> Void
+
+    let onMapFullViewTap: () -> Void
+
+    var showsExpandButton: Bool = true
+
+    var showsCheckInButton: Bool = true
+
+    var mapHeight: CGFloat = 240
 
     @State private var selectedPinId: String? = nil
 
@@ -311,7 +329,7 @@ private struct CheckInMapSection: View {
                     Menu {
                         ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
                             Button(region == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : region.label) {
-                                selectedRegion = region
+                                onRegionChanged(region)
                             }
                         }
                     } label: {
@@ -335,9 +353,11 @@ private struct CheckInMapSection: View {
                     .buttonStyle(.plain)
                 }
                 Spacer()
-                Button(String(localized: String.LocalizationValue("checkin_button"), table: "Localizable"), action: onCheckInTap)
-                    .buttonStyle(.bordered)
-                    .tint(Color(hex: "EF6797"))
+                if showsCheckInButton {
+                    Button(String(localized: String.LocalizationValue("checkin_button"), table: "Localizable"), action: onCheckInTap)
+                        .buttonStyle(.bordered)
+                        .tint(Color(hex: "EF6797"))
+                }
             }
             GeometryReader { _ in
                 CheckInCafeMapView(
@@ -349,7 +369,8 @@ private struct CheckInMapSection: View {
                     cameraToken: cameraToken,
                     selectedPinId: $selectedPinId,
                     onCafeTap: onCafeTap,
-                    onCheckInForCafeTap: onCheckInForCafeTap
+                    onCheckInForCafeTap: onCheckInForCafeTap,
+                    showsCheckInButton: showsCheckInButton
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
@@ -357,8 +378,24 @@ private struct CheckInMapSection: View {
                         self.selectedPinId = nil
                     }
                 }
+                if showsExpandButton {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button(action: onMapFullViewTap) {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .padding(10)
+                                    .background(.ultraThinMaterial, in: Circle())
+                            }
+                            .padding(12)
+                        }
+                        Spacer()
+                    }
+                }
             }
-            .frame(height: 240)
+            .frame(height: mapHeight)
         }
         .padding(12)
         .padding(.vertical, 6)
@@ -484,20 +521,55 @@ private struct CheckInMapSection: View {
         userCityKey: String?
     ) -> [CheckInCafeSummary] {
         if selectedRegion != .all {
-            let label = selectedRegion.label
-            let key = selectedRegion.rawValue
-            return cafes.filter {
-                $0.locationLabel.contains(label) || $0.locationLabel.lowercased().contains(key)
+            return cafes.filter { cafe in
+                cafe.matchesRegion(selectedRegion)
             }
-        } else if let cityKey = userCityKey {
-            let normalizedCityKey = cityKey.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard !normalizedCityKey.isEmpty else { return cafes }
-            return cafes.filter { $0.locationLabel.lowercased().contains(normalizedCityKey) }
         } else {
-            return cafes
+            return cafes.filter { $0.matchesNearbyCity(userCityKey) }
         }
     }
 
+}
+
+private extension CheckInCafeSummary {
+    func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
+        let normalizedLocation = locationLabel.lowercased()
+        return normalizedLocation.contains(region.rawValue) ||
+            normalizedLocation.contains(region.label.lowercased()) ||
+            geoPoint.matchesRegion(region)
+    }
+
+    func matchesNearbyCity(_ cityKey: String?) -> Bool {
+        guard let normalizedCityKey = cityKey?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+              !normalizedCityKey.isEmpty,
+              let nearbyRegion = ExploreUiState.RegionFilter.allCases.first(where: { $0.rawValue == normalizedCityKey }) else {
+            return true
+        }
+        return matchesRegion(nearbyRegion)
+    }
+}
+
+private extension GeoPoint {
+    func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
+        switch region {
+        case .all:
+            return true
+        case .seoul:
+            return (37.4...37.7).contains(latitude) && (126.7...127.2).contains(longitude)
+        case .busan:
+            return (35.0...35.4).contains(latitude) && (128.8...129.3).contains(longitude)
+        case .daegu:
+            return (35.7...36.0).contains(latitude) && (128.4...128.8).contains(longitude)
+        case .yokohama:
+            return (35.35...35.60).contains(latitude) && (139.50...139.75).contains(longitude)
+        case .tokyo:
+            return (35.5...35.9).contains(latitude) && (139.3...139.9).contains(longitude)
+        case .osaka:
+            return (34.5...34.9).contains(latitude) && (135.3...135.7).contains(longitude)
+        }
+    }
 }
 
 private struct CheckInLoginPromotionSection: View {
@@ -637,9 +709,9 @@ private struct CheckInTodayVisitsRow: View {
 
 private struct CheckInVisitCard: View {
     let name: String
-   
+
     let time: String
-   
+
     let image: String
 
     private let cornerRadius: CGFloat = 24
@@ -943,7 +1015,7 @@ private struct CheckInLoginPromptSheet: View {
 
 private struct CheckInReviewPromptSheet: View {
     let cafeName: String
-   
+
     let onAction: (CheckInAction) -> Void
 
     var body: some View {

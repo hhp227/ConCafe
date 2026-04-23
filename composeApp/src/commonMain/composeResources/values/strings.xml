@@ -713,6 +713,10 @@
     <string name="checkin_main_cafe_label">%1$s major concept cafes</string>
     <string name="checkin_nearby_label">Nearby</string>
     <string name="checkin_map_title">Nearby Concept Cafes</string>
+    <string name="checkin_map_full_title">Concept Cafe Map</string>
+    <string name="checkin_map_visible_count">%1$d places shown</string>
+    <string name="checkin_map_search_placeholder">Search by cafe name or area</string>
+    <string name="checkin_map_nearby_filter">Nearby main cafes</string>
     <string name="checkin_button">Check In</string>
     <string name="checkin_count_label">%1$d check-ins</string>
     <string name="checkin_today_visit_count">Today %1$d visits</string>

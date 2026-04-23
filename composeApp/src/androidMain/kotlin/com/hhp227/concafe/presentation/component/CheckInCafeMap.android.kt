@@ -48,6 +48,7 @@ actual fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
     onCafeCheckIn: (String) -> Unit,
+    showCheckInButton: Boolean,
     cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
@@ -116,7 +117,8 @@ actual fun CheckInCafeMap(
                         onCheckIn = {
                             selectedCafe = null
                             onCafeCheckIn(cafe.id)
-                        }
+                        },
+                        showCheckInButton = showCheckInButton
                     )
                 }
             }
@@ -128,7 +130,8 @@ actual fun CheckInCafeMap(
 private fun CafeMapCallout(
     cafeName: String,
     onCafeClick: () -> Unit,
-    onCheckIn: () -> Unit
+    onCheckIn: () -> Unit,
+    showCheckInButton: Boolean
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -147,16 +150,18 @@ private fun CafeMapCallout(
                 color = Color(0xFF2B2330),
                 modifier = Modifier.clickable(onClick = onCafeClick)
             )
-            IconButton(
-                onClick = onCheckIn,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.EventAvailable,
-                    contentDescription = "체크인",
-                    tint = Color(0xFFEF6797),
-                    modifier = Modifier.size(18.dp)
-                )
+            if (showCheckInButton) {
+                IconButton(
+                    onClick = onCheckIn,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.EventAvailable,
+                        contentDescription = "체크인",
+                        tint = Color(0xFFEF6797),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

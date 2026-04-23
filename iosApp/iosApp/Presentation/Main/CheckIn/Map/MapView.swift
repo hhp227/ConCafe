@@ -6,13 +6,230 @@
 //
 
 import SwiftUI
+import MapKit
+import Shared
 
 struct MapView: View {
+    let initialRegionKey: String?
+
+    let onNavigationAction: (NavigationAction) -> Void
+
+    @StateObject private var viewModel = MapViewModel()
+
+    @State private var selectedPinId: String? = nil
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ZStack {
+            CheckInCafeMapView(
+                pins: mapPins,
+                cameraRegion: resolvedMapRegion(
+                    cafes: filteredCafes,
+                    selectedRegion: viewModel.uiState.selectedRegion
+                ),
+                cameraToken: cameraToken,
+                selectedPinId: $selectedPinId,
+                onCafeTap: { viewModel.onAction(.cafeTapped(id: $0)) },
+                onCheckInForCafeTap: { _ in },
+                showsCheckInButton: false
+            )
+            .ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(String(format: String(localized: String.LocalizationValue("checkin_map_visible_count"), table: "Localizable"), locale: Locale.current, filteredCafes.count))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                    Spacer()
+                    Menu {
+                        ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
+                            Button(region == .all ? String(localized: String.LocalizationValue("checkin_map_nearby_filter"), table: "Localizable") : region.label) {
+                                viewModel.onAction(.regionChanged(region: region))
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .foregroundStyle(Color(hex: "EF6797"))
+                            Text(viewModel.uiState.selectedRegion == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : viewModel.uiState.selectedRegion.label)
+                                .font(.caption.weight(.semibold))
+                            Image(systemName: "chevron.down")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                    }
+                }
+            }
+            .padding(.top, 8)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .compatMapNavigationBarAppearance()
+        .navigationTitle(String(localized: String.LocalizationValue("checkin_map_full_title"), table: "Localizable"))
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(
+            text: Binding(
+                get: { viewModel.uiState.searchQuery },
+                set: { viewModel.onAction(.searchQueryChanged(query: $0)) }
+            ),
+            placement: .navigationBarDrawer(displayMode: .automatic),
+            prompt: String(localized: String.LocalizationValue("checkin_map_search_placeholder"), table: "Localizable")
+        )
+        .compatSearchSuggestions(cafes: Array(filteredCafes.prefix(5))) { cafeName in
+            viewModel.onAction(.searchQueryChanged(query: cafeName))
+        }
+        .onAppear {
+            viewModel.initializeRegion(initialRegionKey)
+        }
+        .onReceive(viewModel.event) { event in
+            switch event {
+            case .navigateBack:
+                onNavigationAction(.navigateBack)
+            case .navigateToCafe(let id):
+                onNavigationAction(.navigateToCafe(id: id))
+            }
+        }
+    }
+
+    private var filteredCafes: [CheckInCafeSummary] {
+        let regionFiltered: [CheckInCafeSummary]
+        if viewModel.uiState.selectedRegion != .all {
+            regionFiltered = viewModel.uiState.mapCafes.filter {
+                $0.matchesRegion(viewModel.uiState.selectedRegion)
+            }
+        } else {
+            regionFiltered = viewModel.uiState.mapCafes.filter {
+                $0.matchesNearbyCity(viewModel.uiState.userCityKey)
+            }
+        }
+
+        let query = viewModel.uiState.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !query.isEmpty else { return regionFiltered }
+        return regionFiltered.filter {
+            $0.name.lowercased().contains(query) ||
+            $0.locationLabel.lowercased().contains(query)
+        }
+    }
+
+    private var mapPins: [CheckInMapPin] {
+        filteredCafes.map { cafe in
+            CheckInMapPin(
+                id: cafe.id,
+                name: cafe.name,
+                latitude: cafe.geoPoint.latitude,
+                longitude: cafe.geoPoint.longitude,
+                isSelected: selectedPinId == cafe.id
+            )
+        }
+    }
+
+    private var cameraToken: String {
+        let cityKey = viewModel.uiState.userCityKey ?? "all"
+        let pinsKey = mapPins
+            .map { "\($0.id):\($0.latitude):\($0.longitude)" }
+            .joined(separator: "|")
+        return "\(viewModel.uiState.selectedRegion.rawValue)#\(cityKey)#\(viewModel.uiState.searchQuery)#\(pinsKey)"
+    }
+
+    private func resolvedMapRegion(
+        cafes: [CheckInCafeSummary],
+        selectedRegion: ExploreUiState.RegionFilter
+    ) -> MKCoordinateRegion {
+        if cafes.isEmpty {
+            return regionPreset(for: selectedRegion) ?? MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780),
+                span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+            )
+        } else if cafes.count == 1 {
+            let first = cafes[0]
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: first.geoPoint.latitude, longitude: first.geoPoint.longitude),
+                span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)
+            )
+        } else {
+            let latitudes = cafes.map { $0.geoPoint.latitude }
+            let longitudes = cafes.map { $0.geoPoint.longitude }
+            let minLatitude = latitudes.min() ?? 37.5
+            let maxLatitude = latitudes.max() ?? 37.6
+            let minLongitude = longitudes.min() ?? 126.9
+            let maxLongitude = longitudes.max() ?? 127.1
+            let centerLatitude = (minLatitude + maxLatitude) / 2.0
+            let centerLongitude = (minLongitude + maxLongitude) / 2.0
+            let latitudeDelta = max(0.02, (maxLatitude - minLatitude) * 1.3)
+            let longitudeDelta = max(0.02, (maxLongitude - minLongitude) * 1.3)
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude),
+                span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            )
+        }
+    }
+
+    private func regionPreset(for region: ExploreUiState.RegionFilter) -> MKCoordinateRegion? {
+        switch region {
+        case .all:
+            return nil
+        case .seoul:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780), span: MKCoordinateSpan(latitudeDelta: 0.10, longitudeDelta: 0.10))
+        case .busan:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.1796, longitude: 129.0756), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
+        case .daegu:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.8714, longitude: 128.6014), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
+        case .tokyo:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
+        case .osaka:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 34.6937, longitude: 135.5023), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
+        case .yokohama:
+            return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.4437, longitude: 139.6380), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
+        }
+    }
+}
+
+private extension CheckInCafeSummary {
+    func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
+        let normalizedLocation = locationLabel.lowercased()
+        return normalizedLocation.contains(region.rawValue) ||
+            normalizedLocation.contains(region.label.lowercased()) ||
+            geoPoint.matchesRegion(region)
+    }
+
+    func matchesNearbyCity(_ cityKey: String?) -> Bool {
+        guard let normalizedCityKey = cityKey?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+              !normalizedCityKey.isEmpty,
+              let nearbyRegion = ExploreUiState.RegionFilter.allCases.first(where: { $0.rawValue == normalizedCityKey }) else {
+            return true
+        }
+        return matchesRegion(nearbyRegion)
+    }
+}
+
+private extension GeoPoint {
+    func matchesRegion(_ region: ExploreUiState.RegionFilter) -> Bool {
+        switch region {
+        case .all:
+            return true
+        case .seoul:
+            return (37.4...37.7).contains(latitude) && (126.7...127.2).contains(longitude)
+        case .busan:
+            return (35.0...35.4).contains(latitude) && (128.8...129.3).contains(longitude)
+        case .daegu:
+            return (35.7...36.0).contains(latitude) && (128.4...128.8).contains(longitude)
+        case .yokohama:
+            return (35.35...35.60).contains(latitude) && (139.50...139.75).contains(longitude)
+        case .tokyo:
+            return (35.5...35.9).contains(latitude) && (139.3...139.9).contains(longitude)
+        case .osaka:
+            return (34.5...34.9).contains(latitude) && (135.3...135.7).contains(longitude)
+        }
     }
 }
 
 #Preview {
-    MapView()
+    MapView(initialRegionKey: nil, onNavigationAction: { _ in })
 }

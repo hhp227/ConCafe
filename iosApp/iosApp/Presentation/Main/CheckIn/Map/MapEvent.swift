@@ -8,5 +8,6 @@
 import Foundation
 
 enum MapEvent {
-    
+    case navigateBack
+    case navigateToCafe(id: String)
 }

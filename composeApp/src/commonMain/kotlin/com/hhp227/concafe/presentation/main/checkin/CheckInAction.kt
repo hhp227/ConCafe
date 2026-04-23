@@ -1,5 +1,7 @@
 package com.hhp227.concafe.presentation.main.checkin
 
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
+
 sealed interface CheckInAction {
     data class ClickCafe(val id: String) : CheckInAction
 
@@ -8,6 +10,10 @@ sealed interface CheckInAction {
     data object ClickCheckIn : CheckInAction
 
     data class ClickCheckInForCafe(val cafeId: String) : CheckInAction
+
+    data object ClickMapFullView : CheckInAction
+
+    data class UpdateMapRegion(val region: ExploreUiState.RegionFilter) : CheckInAction
 
     data object ClickSignIn : CheckInAction
 

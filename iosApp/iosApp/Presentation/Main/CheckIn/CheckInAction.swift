@@ -12,6 +12,8 @@ enum CheckInAction {
     case castTapped(id: String)
     case checkInTapped
     case checkInForCafeTapped(cafeId: String)
+    case mapFullViewTapped
+    case mapRegionChanged(region: ExploreUiState.RegionFilter)
     case signInTapped
     case signUpTapped
     case dismissLoginPrompt

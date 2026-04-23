@@ -14,6 +14,8 @@ import KMPNativeCoroutinesAsync
 final class CheckInViewModel: ObservableObject {
     private let getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase
 
+    private let getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase
+
     private let getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase
 
     private let createVisitUseCase: CreateVisitUseCase
@@ -52,7 +54,9 @@ final class CheckInViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.currentLocationLabel = feed.currentLocationLabel
-                    uiState.mapCafes = feed.mapCafes
+                    if uiState.selectedMapRegion == .all && uiState.userCityKey == nil {
+                        uiState.mapCafes = feed.mapCafes
+                    }
                     uiState.popularCafes = feed.popularCafes
                     uiState.popularCasts = feed.popularCasts
                 } else if let failure = result as? AppResultFailure {
@@ -184,6 +188,10 @@ final class CheckInViewModel: ObservableObject {
                 )
                 if cityKey != nil {
                     uiState.userCityKey = cityKey
+                    if uiState.selectedMapRegion == .all,
+                       let cityKey {
+                        loadMapCafesForRegion(cityKey)
+                    }
                     return
                 }
             }
@@ -194,6 +202,29 @@ final class CheckInViewModel: ObservableObject {
                 lng: result.location.longitude
             )
             uiState.userCityKey = cityKey
+            if uiState.selectedMapRegion == .all,
+               let cityKey {
+                loadMapCafesForRegion(cityKey)
+            }
+        }
+    }
+
+    private func loadMapCafesForRegion(_ regionKey: String) {
+        tasks[.mapRegion]?.cancel()
+        tasks[.mapRegion] = Task {
+            do {
+                let result = try await getCheckInMapCafePageUseCase.invoke(regionKey: regionKey, pageSize: 80)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let cafes = success.data as? [CheckInCafeSummary] {
+                    uiState.mapCafes = cafes
+                    uiState.errorMessage = nil
+                } else if let failure = result as? AppResultFailure {
+                    uiState.errorMessage = "\(failure.error)"
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -571,7 +602,7 @@ final class CheckInViewModel: ObservableObject {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .first(where: { knownCafeIds.contains($0) })
     }
-    
+
     func onAction(_ action: CheckInAction) {
         switch action {
         case .cafeTapped(let id):
@@ -601,6 +632,19 @@ final class CheckInViewModel: ObservableObject {
                 uiState.isNewVisitSheetVisible = false
             } else {
                 requestCheckInPermissionAndOpenSheet(preselectCafeId: cafeId)
+            }
+        case .mapFullViewTapped:
+            event.send(.navigateToMap)
+        case .mapRegionChanged(let region):
+            uiState.selectedMapRegion = region
+            if region == .all {
+                if let userCityKey = uiState.userCityKey {
+                    loadMapCafesForRegion(userCityKey)
+                } else {
+                    loadGuestFeed()
+                }
+            } else {
+                loadMapCafesForRegion(region.rawValue)
             }
         case .signInTapped, .signUpTapped:
             uiState.isLoginPromptVisible = false
@@ -633,6 +677,7 @@ final class CheckInViewModel: ObservableObject {
 
     init(
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
+        getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase = KoinInitializerKt.resolveGetCheckInMapCafePageUseCase(),
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
@@ -643,6 +688,7 @@ final class CheckInViewModel: ObservableObject {
         visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
+        self.getCheckInMapCafePageUseCase = getCheckInMapCafePageUseCase
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
@@ -667,6 +713,7 @@ final class CheckInViewModel: ObservableObject {
 
     private enum TaskKey {
         case guestFeed
+        case mapRegion
         case recentVisitPage
         case submitVisit
         case session
@@ -682,7 +729,6 @@ final class CheckInViewModel: ObservableObject {
 
     private static let recentVisitPageSize: Int32 = 12
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
-
     private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
         if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }
         if (35.0...35.4).contains(lat) && (128.8...129.3).contains(lng) { return "busan" }

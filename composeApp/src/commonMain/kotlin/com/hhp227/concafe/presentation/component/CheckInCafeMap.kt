@@ -15,6 +15,7 @@ expect fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
     onCafeCheckIn: (String) -> Unit = {},
+    showCheckInButton: Boolean = true,
     cameraTarget: CheckInMapCameraTarget? = null,
     modifier: Modifier = Modifier
 )

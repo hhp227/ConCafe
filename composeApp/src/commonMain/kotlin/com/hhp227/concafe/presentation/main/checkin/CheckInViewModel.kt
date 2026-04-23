@@ -25,12 +25,15 @@ import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 
 class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
+    private val getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase,
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
     private val createVisitUseCase: CreateVisitUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
@@ -56,12 +59,16 @@ class CheckInViewModel(
         jobs[TaskKey.LOAD_GUEST_FEED] = viewModelScope.launch {
             when (val result = getCheckInGuestFeedUseCase.invoke()) {
                 is AppResult.Success -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             isLoading = false,
                             errorMessage = null,
                             currentLocationLabel = result.data.currentLocationLabel,
-                            mapCafes = result.data.mapCafes,
+                            mapCafes = if (state.selectedMapRegion == ExploreUiState.RegionFilter.ALL && state.userCityKey == null) {
+                                result.data.mapCafes
+                            } else {
+                                state.mapCafes
+                            },
                             popularCafes = result.data.popularCafes,
                             popularCasts = result.data.popularCasts
                         )
@@ -188,8 +195,25 @@ class CheckInViewModel(
                         lng = result.location.longitude
                     )
                     _uiState.update { it.copy(userCityKey = cityKey) }
+                    if (cityKey != null && _uiState.value.selectedMapRegion == ExploreUiState.RegionFilter.ALL) {
+                        loadMapCafesForRegion(cityKey)
+                    }
                 }
                 is CheckInLocationResult.Failure -> Unit
+            }
+        }
+    }
+
+    private fun loadMapCafesForRegion(regionKey: String) {
+        jobs[TaskKey.LOAD_MAP_REGION]?.cancel()
+        jobs[TaskKey.LOAD_MAP_REGION] = viewModelScope.launch {
+            when (val result = getCheckInMapCafePageUseCase.invoke(regionKey)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(mapCafes = result.data, errorMessage = null)
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(errorMessage = result.error.toString())
+                }
             }
         }
     }
@@ -566,6 +590,22 @@ class CheckInViewModel(
                 is CheckInAction.ClickCheckInForCafe -> {
                     clickCheckIn(preselectCafeId = action.cafeId)
                 }
+                CheckInAction.ClickMapFullView -> {
+                    _event.emit(CheckInEvent.NavigateToMap)
+                }
+                is CheckInAction.UpdateMapRegion -> {
+                    _uiState.update { it.copy(selectedMapRegion = action.region) }
+                    val regionKey = if (action.region == ExploreUiState.RegionFilter.ALL) {
+                        _uiState.value.userCityKey
+                    } else {
+                        action.region.key
+                    }
+                    if (regionKey != null) {
+                        loadMapCafesForRegion(regionKey)
+                    } else {
+                        loadGuestFeed()
+                    }
+                }
                 CheckInAction.ClickSignIn -> {
                     _uiState.update { it.copy(isLoginPromptVisible = false) }
                     _event.emit(CheckInEvent.NavigateToSignIn)
@@ -623,6 +663,7 @@ class CheckInViewModel(
         LOAD_USER_VISIT_PAGE,
         SUBMIT_VISIT,
         REQUEST_LOCATION_PERMISSION,
+        LOAD_MAP_REGION,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_VISIT_EVENT,

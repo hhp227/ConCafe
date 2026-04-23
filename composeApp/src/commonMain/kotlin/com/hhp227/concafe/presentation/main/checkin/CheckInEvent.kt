@@ -7,6 +7,8 @@ sealed interface CheckInEvent {
 
     data class NavigateToReviewEdit(val cafeId: String) : CheckInEvent
 
+    data object NavigateToMap : CheckInEvent
+
     data object NavigateToSignIn : CheckInEvent
 
     data object OpenLocationSettings : CheckInEvent

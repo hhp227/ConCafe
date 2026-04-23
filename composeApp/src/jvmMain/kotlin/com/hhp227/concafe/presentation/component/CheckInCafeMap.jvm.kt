@@ -40,6 +40,7 @@ actual fun CheckInCafeMap(
     cafes: List<CheckInCafeSummary>,
     onCafeClick: (String) -> Unit,
     onCafeCheckIn: (String) -> Unit,
+    showCheckInButton: Boolean,
     cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
@@ -53,7 +54,8 @@ actual fun CheckInCafeMap(
                 cafes = cafes,
                 cameraTarget = cameraTarget,
                 onCafeClick = onCafeClick,
-                onCafeCheckIn = onCafeCheckIn
+                onCafeCheckIn = onCafeCheckIn,
+                showCheckInButton = showCheckInButton
             )
         }
     )
@@ -67,6 +69,8 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
     private var onCafeClick: (String) -> Unit = {}
 
     private var onCafeCheckIn: (String) -> Unit = {}
+
+    private var showCheckInButton: Boolean = true
 
     private var centerLatitude: Double = DEFAULT_LATITUDE
 
@@ -139,7 +143,8 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         cafes: List<CheckInCafeSummary>,
         cameraTarget: CheckInMapCameraTarget?,
         onCafeClick: (String) -> Unit,
-        onCafeCheckIn: (String) -> Unit
+        onCafeCheckIn: (String) -> Unit,
+        showCheckInButton: Boolean
     ) {
         val nextNormalizedCafes = cafes.mapNotNull { cafe ->
             val normalizedLatitude = normalizeLatitude(cafe.geoPoint.latitude) ?: return@mapNotNull null
@@ -159,6 +164,7 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         this.normalizedCafes = nextNormalizedCafes
         this.onCafeClick = onCafeClick
         this.onCafeCheckIn = onCafeCheckIn
+        this.showCheckInButton = showCheckInButton
         this.currentCameraTarget = cameraTarget
 
         if (shouldResetCamera) {
@@ -258,7 +264,7 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
         val checkFont = Font(Font.SANS_SERIF, Font.BOLD, 16)
         val metrics = g.getFontMetrics(nameFont)
         val nameWidth = metrics.stringWidth(selectedCafe.name)
-        val popupWidth = max(96, nameWidth + 54)
+        val popupWidth = max(96, nameWidth + if (showCheckInButton) 54 else 24)
         val popupHeight = 38
         val popupX = (point.x - popupWidth / 2).coerceIn(8, max(8, width - popupWidth - 8))
         val popupY = (point.y - popupHeight - 20).coerceIn(8, max(8, height - popupHeight - 8))
@@ -299,18 +305,19 @@ private class JvmCheckInTileMapPanel : JPanel(BorderLayout()) {
 
         val textX = popupX + 12
         val textY = popupY + 24
-        val checkX = popupX + popupWidth - 34
-        val checkY = popupY + 7
-
         g.font = nameFont
         g.color = Color(0xFF2B2330.toInt())
         g.drawString(selectedCafe.name, textX, textY)
-        g.font = checkFont
-        g.color = Color(0xFFEF6797.toInt())
-        g.drawString("✓", checkX + 8, checkY + 19)
 
         popupNameHitArea = PopupHitArea(selectedCafe.id, textX, popupY, nameWidth, popupHeight)
-        popupCheckInHitArea = PopupHitArea(selectedCafe.id, checkX, checkY, 28, 28)
+        if (showCheckInButton) {
+            val checkX = popupX + popupWidth - 34
+            val checkY = popupY + 7
+            g.font = checkFont
+            g.color = Color(0xFFEF6797.toInt())
+            g.drawString("✓", checkX + 8, checkY + 19)
+            popupCheckInHitArea = PopupHitArea(selectedCafe.id, checkX, checkY, 28, 28)
+        }
     }
 
     private fun handleClick(point: Point) {

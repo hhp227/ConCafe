@@ -65,6 +65,9 @@ sealed interface Route {
     data class Picture(val imageUrl: String) : Route
 
     @Serializable
+    data class CheckInMap(val initialRegionKey: String? = null) : Route
+
+    @Serializable
     data object SignIn : Route
 
     @Serializable

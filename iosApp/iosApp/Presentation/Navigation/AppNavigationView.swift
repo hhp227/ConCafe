@@ -67,6 +67,8 @@ struct AppNavigationView: View {
                 ReviewEditView(cafeId: cafeId, reviewId: reviewId, onNavigationAction: viewModel.onAction)
             case .picture(let imageUrl):
                 PictureView(imageUrl: imageUrl, onNavigationAction: viewModel.onAction)
+            case .checkInMap(let initialRegionKey):
+                MapView(initialRegionKey: initialRegionKey, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:

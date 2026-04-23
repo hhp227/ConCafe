@@ -36,6 +36,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
+import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CheckInCafeMap
 import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
@@ -121,6 +122,13 @@ fun CheckInScreen(
                 is CheckInEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is CheckInEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 is CheckInEvent.NavigateToReviewEdit -> onNavigate(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                CheckInEvent.NavigateToMap -> {
+                    onNavigate(
+                        NavigationAction.NavigateToCheckInMap(
+                            initialRegionKey = uiState.selectedMapRegion.name
+                        )
+                    )
+                }
                 CheckInEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
                 CheckInEvent.OpenLocationSettings -> {
                     isLocationSettingsAlertVisible = true
@@ -372,9 +380,12 @@ private fun CheckInGuestScreen(
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
-                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
             )
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 LoginPromotionSection(
@@ -447,9 +458,12 @@ private fun CheckInUserScreen(
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
-                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
             )
         }
         item {
@@ -525,16 +539,23 @@ private fun CheckInUserScreen(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun CafeMapSection(
+fun CafeMapSection(
     modifier: Modifier = Modifier,
     currentLocationLabel: String,
     mapCafes: List<CheckInCafeSummary>,
     userCityKey: String?,
+    selectedRegion: ExploreUiState.RegionFilter,
     onCafeClick: (String) -> Unit,
     onCafeCheckIn: (String) -> Unit,
-    onCheckInClick: () -> Unit
+    onCheckInClick: () -> Unit,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit,
+    onExpandClick: () -> Unit = {},
+    showExpandButton: Boolean = true,
+    showCheckInButton: Boolean = true,
+    mapModifier: Modifier = Modifier
+        .fillMaxWidth()
+        .height(240.dp)
 ) {
-    var selectedRegion by remember { mutableStateOf(ExploreUiState.RegionFilter.ALL) }
     var isRegionDropdownExpanded by remember { mutableStateOf(false) }
     val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
     val selectedRegionLabel = stringResource(
@@ -549,15 +570,14 @@ private fun CafeMapSection(
     val filteredMapCafes = when {
         selectedRegion != ExploreUiState.RegionFilter.ALL -> {
             mapCafes.filter { cafe ->
-                cafe.locationLabel.lowercase().contains(selectedRegion.key)
+                cafe.matchesRegion(selectedRegion)
             }
         }
-        userCityKey != null -> {
+        else -> {
             mapCafes.filter { cafe ->
-                cafe.locationLabel.lowercase().contains(userCityKey)
+                cafe.matchesNearbyCity(userCityKey)
             }
         }
-        else -> mapCafes
     }
 
     Card(
@@ -610,7 +630,7 @@ private fun CafeMapSection(
                                 isExpanded = isRegionDropdownExpanded,
                                 onExpandedChange = { isRegionDropdownExpanded = it },
                                 onRegionSelected = { region ->
-                                    selectedRegion = region
+                                    onRegionSelected(region)
                                     isRegionDropdownExpanded = false
                                 }
                             )
@@ -619,32 +639,54 @@ private fun CafeMapSection(
                     if (usesInlineRegionFilter) {
                         CheckInRegionChips(
                             selectedRegion = selectedRegion,
-                            onRegionSelected = { selectedRegion = it },
+                            onRegionSelected = onRegionSelected,
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
-                OutlinedButton(
-                    onClick = onCheckInClick,
-                    shape = RoundedCornerShape(999.dp)
-                ) {
-                    Text(stringResource(Res.string.checkin_button))
+                if (showCheckInButton) {
+                    OutlinedButton(
+                        onClick = onCheckInClick,
+                        shape = RoundedCornerShape(999.dp)
+                    ) {
+                        Text(stringResource(Res.string.checkin_button))
+                    }
+                }
+                if (showExpandButton && usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-            ) {
+            Box(modifier = mapModifier) {
                 CheckInCafeMap(
                     cafes = filteredMapCafes,
                     onCafeClick = onCafeClick,
                     onCafeCheckIn = onCafeCheckIn,
+                    showCheckInButton = showCheckInButton,
                     cameraTarget = mapCameraTarget,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(24.dp))
                 )
+                if (showExpandButton && !usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
+                    }
+                }
             }
         }
     }
@@ -771,6 +813,33 @@ private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): 
             longitude = 139.6380,
             zoom = 12.0f
         )
+    }
+}
+
+private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    val normalizedLocation = locationLabel.lowercase()
+    return normalizedLocation.contains(region.key) ||
+        normalizedLocation.contains(region.label.lowercase()) ||
+        geoPoint.matchesRegion(region)
+}
+
+private fun CheckInCafeSummary.matchesNearbyCity(cityKey: String?): Boolean {
+    if (cityKey.isNullOrBlank()) return true
+    val nearbyRegion = ExploreUiState.RegionFilter.entries
+        .firstOrNull { it.key == cityKey.trim().lowercase() }
+        ?: return true
+    return matchesRegion(nearbyRegion)
+}
+
+private fun GeoPoint.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    return when (region) {
+        ExploreUiState.RegionFilter.ALL -> true
+        ExploreUiState.RegionFilter.SEOUL -> latitude in 37.4..37.7 && longitude in 126.7..127.2
+        ExploreUiState.RegionFilter.BUSAN -> latitude in 35.0..35.4 && longitude in 128.8..129.3
+        ExploreUiState.RegionFilter.DAEGU -> latitude in 35.7..36.0 && longitude in 128.4..128.8
+        ExploreUiState.RegionFilter.YOKOHAMA -> latitude in 35.35..35.60 && longitude in 139.50..139.75
+        ExploreUiState.RegionFilter.TOKYO -> latitude in 35.5..35.9 && longitude in 139.3..139.9
+        ExploreUiState.RegionFilter.OSAKA -> latitude in 34.5..34.9 && longitude in 135.3..135.7
     }
 }
 

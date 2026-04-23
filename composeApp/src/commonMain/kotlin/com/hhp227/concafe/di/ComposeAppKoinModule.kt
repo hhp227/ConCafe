@@ -21,6 +21,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoo
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleViewModel
 import com.hhp227.concafe.presentation.main.checkin.CheckInViewModel
+import com.hhp227.concafe.presentation.main.checkin.map.MapViewModel
 import com.hhp227.concafe.presentation.main.home.HomeViewModel
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoViewModel
 import com.hhp227.concafe.presentation.main.explore.ExploreViewModel
@@ -44,7 +45,8 @@ private val composeAppPresentationModule = module {
     factory { MainViewModel(get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { MapViewModel(get(), get(), get(), get()) }
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }

@@ -42,6 +42,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
@@ -211,6 +212,13 @@ fun resolveGetCafeCastListPageUseCase(): GetCafeCastListPageUseCase {
 }
 
 fun resolveGetCheckInGuestFeedUseCase(): GetCheckInGuestFeedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCheckInMapCafePageUseCase(): GetCheckInMapCafePageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
