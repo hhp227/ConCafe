@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import Shared
 
 struct MapView: View {
     let initialRegionKey: String?
