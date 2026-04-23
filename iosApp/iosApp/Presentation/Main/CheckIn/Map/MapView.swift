@@ -38,17 +38,18 @@ struct MapView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(maxHeight: 170, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: 170, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .allowsHitTesting(false)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("\(filteredCafes.count)곳 표시 중")
+                    Text(String(format: String(localized: String.LocalizationValue("checkin_map_visible_count"), table: "Localizable"), locale: Locale.current, filteredCafes.count))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.82))
                     Spacer()
                     Menu {
                         ForEach(ExploreUiState.RegionFilter.allCases, id: \.self) { region in
-                            Button(region == .all ? "근처 주요 카페" : region.label) {
+                            Button(region == .all ? String(localized: String.LocalizationValue("checkin_map_nearby_filter"), table: "Localizable") : region.label) {
                                 viewModel.onAction(.regionChanged(region: region))
                             }
                         }
@@ -56,7 +57,7 @@ struct MapView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "mappin.and.ellipse")
                                 .foregroundStyle(Color(hex: "EF6797"))
-                            Text(viewModel.uiState.selectedRegion == .all ? "근처" : viewModel.uiState.selectedRegion.label)
+                            Text(viewModel.uiState.selectedRegion == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : viewModel.uiState.selectedRegion.label)
                                 .font(.caption.weight(.semibold))
                             Image(systemName: "chevron.down")
                                 .font(.caption2.weight(.semibold))
@@ -70,18 +71,18 @@ struct MapView: View {
             }
             .padding(.top, 8)
             .padding(.horizontal, 16)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .compatMapNavigationBarAppearance()
-        .navigationTitle("컨셉 카페 지도")
+        .navigationTitle(String(localized: String.LocalizationValue("checkin_map_full_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .searchable(
             text: Binding(
                 get: { viewModel.uiState.searchQuery },
                 set: { viewModel.onAction(.searchQueryChanged(query: $0)) }
             ),
-            placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "카페명 또는 지역 검색"
+            placement: .navigationBarDrawer(displayMode: .automatic),
+            prompt: String(localized: String.LocalizationValue("checkin_map_search_placeholder"), table: "Localizable")
         )
         .compatSearchSuggestions(cafes: Array(filteredCafes.prefix(5))) { cafeName in
             viewModel.onAction(.searchQueryChanged(query: cafeName))

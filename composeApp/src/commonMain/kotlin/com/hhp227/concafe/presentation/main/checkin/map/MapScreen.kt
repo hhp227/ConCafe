@@ -52,7 +52,14 @@ import com.hhp227.concafe.presentation.component.CheckInCafeMap
 import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.checkin_map_full_title
+import concafe.composeapp.generated.resources.checkin_map_nearby_filter
+import concafe.composeapp.generated.resources.checkin_map_search_placeholder
+import concafe.composeapp.generated.resources.checkin_map_visible_count
+import concafe.composeapp.generated.resources.checkin_nearby_label
 import org.koin.core.context.GlobalContext
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +137,7 @@ fun MapScreen(
                             value = uiState.searchQuery,
                             onValueChange = { viewModel.onAction(MapAction.UpdateSearchQuery(it)) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("카페명 또는 지역 검색") },
+                            placeholder = { Text(stringResource(Res.string.checkin_map_search_placeholder)) },
                             leadingIcon = {
                                 IconButton(onClick = { isSearchActive.value = false }) {
                                     Icon(
@@ -166,13 +173,13 @@ fun MapScreen(
                         title = {
                             Column {
                                 Text(
-                                    text = "컨셉 카페 지도",
+                                    text = stringResource(Res.string.checkin_map_full_title),
                                     color = Color.White,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "${filteredCafes.size}곳 표시 중",
+                                    text = stringResource(Res.string.checkin_map_visible_count, filteredCafes.size),
                                     color = Color.White.copy(alpha = 0.84f),
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -210,7 +217,7 @@ fun MapScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${filteredCafes.size}곳 표시 중",
+                        text = stringResource(Res.string.checkin_map_visible_count, filteredCafes.size),
                         color = Color.White.copy(alpha = 0.84f),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -232,7 +239,11 @@ fun MapScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = if (uiState.selectedRegion == ExploreUiState.RegionFilter.ALL) "근처" else uiState.selectedRegion.label,
+                                    text = if (uiState.selectedRegion == ExploreUiState.RegionFilter.ALL) {
+                                        stringResource(Res.string.checkin_nearby_label)
+                                    } else {
+                                        uiState.selectedRegion.label
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.weight(1f, fill = false)
                                 )
@@ -254,7 +265,13 @@ fun MapScreen(
                             ExploreUiState.RegionFilter.entries.forEach { region ->
                                 DropdownMenuItem(
                                     text = {
-                                        Text(if (region == ExploreUiState.RegionFilter.ALL) "근처 주요 카페" else region.label)
+                                        Text(
+                                            if (region == ExploreUiState.RegionFilter.ALL) {
+                                                stringResource(Res.string.checkin_map_nearby_filter)
+                                            } else {
+                                                region.label
+                                            }
+                                        )
                                     },
                                     onClick = {
                                         viewModel.onAction(MapAction.UpdateRegion(region))
