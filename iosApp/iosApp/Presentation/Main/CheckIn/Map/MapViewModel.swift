@@ -142,7 +142,7 @@ final class MapViewModel: ObservableObject {
     func initializeRegion(_ regionKey: String?) {
         guard uiState.selectedRegion == .all,
               let regionKey,
-              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.name == regionKey || $0.rawValue == regionKey }) else { return }
+              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.label == regionKey || $0.rawValue == regionKey }) else { return }
         uiState.selectedRegion = region
         loadMapCafesForRegion(region.rawValue)
     }
