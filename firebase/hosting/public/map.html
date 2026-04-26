@@ -50,6 +50,10 @@
       box-shadow: 18px 0 36px rgba(74, 54, 69, 0.08);
     }
 
+    .sidebar-drag-handle {
+      display: none;
+    }
+
     .map-canvas {
       position: relative;
       min-width: 0;
@@ -657,19 +661,63 @@
       }
 
       .map-stage {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(300px, 52dvh) minmax(320px, 1fr);
+        display: block;
+        height: 100%;
       }
 
       .map-sidebar {
-        order: 2;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 6;
+        max-height: min(46dvh, 420px);
+        grid-template-rows: auto auto minmax(0, 1fr);
         border-right: 0;
         border-top: 1px solid rgba(243, 217, 228, 0.86);
-        box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.08);
+        box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.12);
+        border-radius: 24px 24px 0 0;
+        background: rgba(255, 251, 252, 0.96);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+        transform: translateY(var(--mobile-sheet-offset, 0px));
+        transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease;
       }
 
       .map-canvas {
-        order: 1;
+        position: absolute;
+        inset: 0;
+      }
+
+      .sidebar-drag-handle {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding-top: 6px;
+        border: 0;
+        background: rgba(255, 251, 252, 0.96);
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .sidebar-drag-handle::before {
+        content: "";
+        width: 52px;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(160, 122, 143, 0.45);
+      }
+
+      .map-sidebar.is-dragging {
+        transition: none;
+      }
+
+      .map-sidebar.is-collapsed {
+        overflow: hidden;
       }
 
       .toolbar-head {
@@ -686,7 +734,11 @@
       }
 
       .search-actions {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
+      }
+
+      #resetButton {
+        display: none;
       }
 
       .filter-row {
@@ -696,6 +748,7 @@
 
       .results-panel {
         min-height: 0;
+        overflow: hidden;
       }
 
       .results-head {
@@ -731,7 +784,7 @@
         width: 100%;
         right: 0;
         left: 0;
-        top: 12px;
+        top: max(env(safe-area-inset-top, 0px) + 8px, 8px);
         bottom: 0;
         height: auto;
         transform: translateY(100%);
@@ -743,6 +796,13 @@
 
       .map-detail-panel.is-open {
         transform: translateY(0);
+      }
+
+      .map-stage.is-detail-open .map-sidebar {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(100%);
       }
 
       .detail-close-btn {
@@ -757,7 +817,11 @@
 
     @media (max-width: 640px) {
       .toolbar-card {
-        padding: 16px 14px 14px;
+        padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 22px);
+      }
+
+      .map-sidebar {
+        max-height: min(50dvh, 420px);
       }
 
       .results-head {
@@ -766,10 +830,6 @@
 
       .results-list {
         padding: 10px 12px 14px;
-      }
-
-      .search-actions {
-        grid-template-columns: 1fr;
       }
 
       .map-style-control {
@@ -815,6 +875,7 @@
   <main class="map-page">
     <section class="map-stage" aria-label="메이드 카페 전체 지도">
       <aside class="map-sidebar" aria-label="지도 검색 및 결과 패널">
+        <button class="sidebar-drag-handle" id="sidebarDragHandle" type="button" aria-label="검색 시트 접기 또는 펼치기"></button>
         <section class="toolbar-card" aria-label="지도 검색">
           <div class="toolbar-head">
             <div class="toolbar-title">
@@ -998,6 +1059,9 @@
     const storage = app.storage();
 
     const el = {
+      mapStage: document.querySelector(".map-stage"),
+      mapSidebar: document.querySelector(".map-sidebar"),
+      sidebarDragHandle: document.getElementById("sidebarDragHandle"),
       mapEmpty: document.getElementById("mapEmpty"),
       mapEmptyTitle: document.getElementById("mapEmptyTitle"),
       mapEmptyMessage: document.getElementById("mapEmptyMessage"),
@@ -1059,6 +1123,15 @@
     let reviewRating = 0;
     let reviewImageFile = null;
     let currentDetailCafeId = "";
+    const mobileSheetMediaQuery = window.matchMedia("(max-width: 920px)");
+    const mobileSheetState = {
+      collapsed: false,
+      dragging: false,
+      dragMoved: false,
+      pointerId: null,
+      startY: 0,
+      startOffset: 0,
+    };
 
     function escapeHtml(value) {
       return String(value == null ? "" : value)
@@ -1088,7 +1161,115 @@
         return parts.join(" ");
       }
 
-      return normalizeText(region.address);
+      return normalizeText(region.label || region.name);
+    }
+
+    function isMobileSheetMode() {
+      return mobileSheetMediaQuery.matches;
+    }
+
+    function getCollapsedSidebarOffset() {
+      if (!el.mapSidebar) {
+        return 0;
+      }
+      return Math.max(el.mapSidebar.offsetHeight - 34, 0);
+    }
+
+    function applySidebarOffset(offset) {
+      if (!el.mapSidebar) {
+        return;
+      }
+      var nextOffset = Math.max(0, Math.min(offset || 0, getCollapsedSidebarOffset()));
+      el.mapSidebar.style.setProperty("--mobile-sheet-offset", nextOffset + "px");
+    }
+
+    function syncMobileSidebarState() {
+      if (!el.mapSidebar) {
+        return;
+      }
+      if (!isMobileSheetMode()) {
+        mobileSheetState.collapsed = false;
+        mobileSheetState.dragging = false;
+        el.mapSidebar.classList.remove("is-collapsed", "is-dragging");
+        el.mapSidebar.style.setProperty("--mobile-sheet-offset", "0px");
+        return;
+      }
+      el.mapSidebar.classList.toggle("is-collapsed", mobileSheetState.collapsed);
+      applySidebarOffset(mobileSheetState.collapsed ? getCollapsedSidebarOffset() : 0);
+    }
+
+    function setMobileSidebarCollapsed(collapsed) {
+      mobileSheetState.collapsed = !!collapsed;
+      mobileSheetState.dragging = false;
+      if (el.mapSidebar) {
+        el.mapSidebar.classList.remove("is-dragging");
+      }
+      syncMobileSidebarState();
+    }
+
+    function bindMobileSidebarDrag() {
+      if (!el.sidebarDragHandle || !el.mapSidebar) {
+        return;
+      }
+
+      el.sidebarDragHandle.addEventListener("click", function () {
+        if (!isMobileSheetMode()) {
+          return;
+        }
+        if (mobileSheetState.dragMoved) {
+          mobileSheetState.dragMoved = false;
+          return;
+        }
+        setMobileSidebarCollapsed(!mobileSheetState.collapsed);
+      });
+
+      el.sidebarDragHandle.addEventListener("pointerdown", function (event) {
+        if (!isMobileSheetMode()) {
+          return;
+        }
+        mobileSheetState.dragging = true;
+        mobileSheetState.dragMoved = false;
+        mobileSheetState.pointerId = event.pointerId;
+        mobileSheetState.startY = event.clientY;
+        mobileSheetState.startOffset = mobileSheetState.collapsed ? getCollapsedSidebarOffset() : 0;
+        el.mapSidebar.classList.add("is-dragging");
+        el.sidebarDragHandle.setPointerCapture(event.pointerId);
+      });
+
+      el.sidebarDragHandle.addEventListener("pointermove", function (event) {
+        if (!mobileSheetState.dragging || mobileSheetState.pointerId !== event.pointerId) {
+          return;
+        }
+        var deltaY = event.clientY - mobileSheetState.startY;
+        if (Math.abs(deltaY) > 6) {
+          mobileSheetState.dragMoved = true;
+        }
+        applySidebarOffset(mobileSheetState.startOffset + deltaY);
+      });
+
+      function endSidebarDrag(event) {
+        if (!mobileSheetState.dragging || mobileSheetState.pointerId !== event.pointerId) {
+          return;
+        }
+        var deltaY = event.clientY - mobileSheetState.startY;
+        var collapsedOffset = getCollapsedSidebarOffset();
+        var nextCollapsed = mobileSheetState.startOffset + deltaY > collapsedOffset * 0.45;
+        if (el.sidebarDragHandle.hasPointerCapture(event.pointerId)) {
+          el.sidebarDragHandle.releasePointerCapture(event.pointerId);
+        }
+        mobileSheetState.pointerId = null;
+        setMobileSidebarCollapsed(nextCollapsed);
+      }
+
+      el.sidebarDragHandle.addEventListener("pointerup", endSidebarDrag);
+      el.sidebarDragHandle.addEventListener("pointercancel", endSidebarDrag);
+      window.addEventListener("resize", syncMobileSidebarState);
+      if (typeof mobileSheetMediaQuery.addEventListener === "function") {
+        mobileSheetMediaQuery.addEventListener("change", syncMobileSidebarState);
+      } else if (typeof mobileSheetMediaQuery.addListener === "function") {
+        mobileSheetMediaQuery.addListener(syncMobileSidebarState);
+      }
+      syncMobileSidebarState();
     }
 
     function pickRegionFilter(region) {
@@ -1472,6 +1653,7 @@
     }
 
     function bindUI() {
+      bindMobileSidebarDrag();
       el.searchButton.addEventListener("click", applySearch);
       el.searchInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
@@ -1724,6 +1906,7 @@
       }
 
       el.mapDetailPanel.classList.add("is-open");
+      el.mapStage.classList.add("is-detail-open");
       el.detailReviews.style.display = "";
       loadCafeReviews(cafe.id);
       updateReviewFormState();
@@ -1731,6 +1914,7 @@
 
     function closeDetailPanel() {
       el.mapDetailPanel.classList.remove("is-open");
+      el.mapStage.classList.remove("is-detail-open");
       currentDetailCafeId = "";
       if (el.reviewStatus) {
         el.reviewStatus.style.display = "none";
