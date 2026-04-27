@@ -87,7 +87,6 @@ class GetMyInfoUseCase(
                                 pageSize = 100
                             ).items
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase getVisits failed: ${error.message}")
                             emptyList()
                         }
                             .map { it.cafeId }
@@ -101,7 +100,6 @@ class GetMyInfoUseCase(
                                 limit = MY_INFO_FAVORITES_PREVIEW_LIMIT
                             )
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase getFavoriteCafeIds failed: ${error.message}")
                             emptyList()
                         }
                     }
@@ -109,7 +107,6 @@ class GetMyInfoUseCase(
                         runCatching {
                             castRepository.getFollowedCastIds(currentUser.id)
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase getFollowedCastIds failed: ${error.message}")
                             emptyList()
                         }
                     }
@@ -149,7 +146,6 @@ class GetMyInfoUseCase(
                         runCatching {
                             fetchCafesByIdsInOrder(recentVisitCafeIdsDeferred.await())
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase recentVisits resolve failed: ${error.message}")
                             emptyList()
                         }
                     }
@@ -158,7 +154,6 @@ class GetMyInfoUseCase(
                             cafeRepository.getCafesByIds(favoriteCafeIdsDeferred.await())
                                 .sortedByDescending { it.ratingAvg }
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase favorites resolve failed: ${error.message}")
                             emptyList()
                         }
                     }
@@ -167,7 +162,6 @@ class GetMyInfoUseCase(
                             castRepository.getFollowedCasts(currentUser.id)
                                 .sortedByDescending { it.followerCount }
                         }.getOrElse { error ->
-                            println("TEST, GetMyInfoUseCase followedCasts resolve failed: ${error.message}")
                             emptyList()
                         }
                     }
