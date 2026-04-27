@@ -53,7 +53,7 @@ class FirestoreCafeRemoteDataSource(
             val queryCursor = nextCursorToken
             val documents = runCatching {
                 runCafeCollectionQuery(sort, queryCursor, queryBatchSize + 1, normalizedCountry, normalizedCity, useServerApprovedFilter, idToken)
-            }.recoverCatching {
+            }.recoverCatching { firstError ->
                 runCafeCollectionQuery(sort, queryCursor, queryBatchSize + 1, normalizedCountry, normalizedCity, useServerApprovedFilter, null)
             }.getOrElse { throwable ->
                 throw IllegalStateException("Failed to search cafes: ${throwable.message}", throwable)
@@ -80,6 +80,7 @@ class FirestoreCafeRemoteDataSource(
             }
             exhausted = !hasMoreBatch && !hasMoreInBatch
         }
+        println("--ConCafe--, searchCafesRemote aggregated $aggregated")
         return PagedResult(items = aggregated, nextCursor = if (exhausted) null else nextCursorToken, hasNext = !exhausted)
     }
 

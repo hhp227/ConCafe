@@ -451,6 +451,7 @@ class MyInfoViewModel(
     }
 
     init {
+        loadMyInfo()
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()

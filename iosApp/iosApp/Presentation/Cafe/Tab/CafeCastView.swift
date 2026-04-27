@@ -21,13 +21,15 @@ struct CafeCastView: View {
 
     @State private var contentWidth: CGFloat = 0
 
+    @State private var lastPagingTriggerCount: Int = 0
+
     var body: some View {
         if maids.isEmpty {
             emptyCard(String(localized: String.LocalizationValue("cafe_cast_empty"), table: "Localizable"))
         } else {
             VStack(spacing: 12) {
                 LazyVGrid(columns: cafeCastGridColumns(for: contentWidth), spacing: 12) {
-                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { _, maid in
+                    ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
                         let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: maid.todaySchedule)
 
                         ConCafeCastCard(
@@ -40,28 +42,12 @@ struct CafeCastView: View {
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
                         .id(maid.cast.id)
-                    }
-                }
-                if canLoadMore || isLoadingMore {
-                    VStack(spacing: 0) {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear {
-                                guard canLoadMore, !isLoadingMore else { return }
-                                onAction(.loadMoreCasts)
-                            }
-                        if isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
+                        .onAppear {
+                            loadMoreIfNeeded(appearedIndex: index)
                         }
-                        Color.clear
-                            .frame(height: 1)
-                            .onDisappear {
-                                onPagingTriggerDisappear()
-                            }
                     }
-                    .padding(.top, 12)
                 }
+                pagingFooter
             }
             .background(
                 GeometryReader { proxy in
@@ -75,6 +61,33 @@ struct CafeCastView: View {
                 }
             )
         }
+    }
+
+    @ViewBuilder
+    private var pagingFooter: some View {
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else if canLoadMore {
+                    Color.clear
+                        .frame(height: 40)
+                }
+            }
+            .padding(.top, 12)
+            .onDisappear {
+                onPagingTriggerDisappear()
+            }
+        }
+    }
+
+    private func loadMoreIfNeeded(appearedIndex: Int) {
+        guard canLoadMore, !isLoadingMore else { return }
+        guard appearedIndex >= maids.count - 1 else { return }
+        guard lastPagingTriggerCount != maids.count else { return }
+        lastPagingTriggerCount = maids.count
+        onAction(.loadMoreCasts)
     }
 
     private func emptyCard(_ text: String) -> some View {

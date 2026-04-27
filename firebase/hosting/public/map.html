@@ -1351,20 +1351,54 @@
       };
     }
 
-    function createMarkerIcon(isActive) {
+    function createMarkerIcon(isActive, cafeName) {
       var color = isActive ? "#c73d73" : "#ef6797";
-      var w = isActive ? 34 : 28;
-      var h = isActive ? 48 : 40;
+      var scale = isActive ? 1 : (28 / 34);
+      var pinW = 34, pinH = 48;
+
+      var maxLen = 7;
+      var label = typeof cafeName === "string" && cafeName.length > 0
+        ? (cafeName.length > maxLen ? cafeName.slice(0, maxLen) + "…" : cafeName)
+        : "";
+
+      // Estimate rendered text width: CJK chars ≈ fontSize wide, ASCII ≈ 0.65×
+      var fontSize = 10;
+      var estimatedTextW = label.split("").reduce(function (acc, ch) {
+        return acc + (ch.charCodeAt(0) > 127 ? fontSize : fontSize * 0.65);
+      }, 0);
+
+      var svgW = Math.max(pinW, Math.ceil(estimatedTextW + 12));
+      var pinOffsetX = (svgW - pinW) / 2;
+      var labelH = label ? 16 : 0;
+      var svgH = pinH + labelH;
+
+      var labelPart = label
+        ? '<text x="' + (svgW / 2) + '" y="' + (pinH + 12) + '"' +
+          ' font-family="sans-serif" font-size="' + fontSize + '" font-weight="800"' +
+          ' text-anchor="middle" paint-order="stroke"' +
+          ' stroke="white" stroke-width="3" fill="#23161c">' +
+          escapeHtml(label) + "</text>"
+        : "";
+
       var svg =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 34 48">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '">' +
+        '<g transform="translate(' + pinOffsetX + ',0)">' +
         '<path d="M17 0C7.611 0 0 7.611 0 17c0 12.426 17 31 17 31S34 29.426 34 17C34 7.611 26.389 0 17 0z"' +
         ' fill="' + color + '" stroke="white" stroke-width="2.5"/>' +
         '<circle cx="17" cy="17" r="7" fill="white" fill-opacity="0.92"/>' +
-        '</svg>';
+        "</g>" +
+        labelPart +
+        "</svg>";
+
+      var rendW = Math.round(svgW * scale);
+      var rendH = Math.round(svgH * scale);
+      var anchorX = Math.round((pinOffsetX + 17) * scale);
+      var anchorY = Math.round(pinH * scale);
+
       return {
         url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
-        scaledSize: new window.google.maps.Size(w, h),
-        anchor: new window.google.maps.Point(w / 2, h),
+        scaledSize: new window.google.maps.Size(rendW, rendH),
+        anchor: new window.google.maps.Point(anchorX, anchorY),
       };
     }
 
@@ -1601,7 +1635,8 @@
         });
         marker.setVisible(visible);
         if (window.google && window.google.maps) {
-          marker.setIcon(createMarkerIcon(cafeId === state.activeCafeId));
+          var cafeForIcon = getCafeById(cafeId);
+          marker.setIcon(createMarkerIcon(cafeId === state.activeCafeId, cafeForIcon ? cafeForIcon.name : ""));
         }
       });
 
@@ -1866,7 +1901,7 @@
           map: map,
           position: { lat: cafe.lat, lng: cafe.lng },
           title: cafe.name,
-          icon: createMarkerIcon(false),
+          icon: createMarkerIcon(false, cafe.name),
         });
 
         marker.addListener("click", function () {

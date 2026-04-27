@@ -36,7 +36,9 @@ class GetMyInfoUseCase(
             val currentUser = authRepository.getCurrentUser()
 
             if (currentUser == null) {
-                val popularCafes = fetchPopularCafes(limit = 3)
+                val popularCafes = runCatching { fetchPopularCafes(limit = 3) }.getOrElse { e ->
+                    emptyList()
+                }
                 AppResult.Success(
                     MyInfoFeed(
                         isLoggedIn = false,
