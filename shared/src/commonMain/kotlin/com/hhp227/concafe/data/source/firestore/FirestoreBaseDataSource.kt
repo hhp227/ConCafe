@@ -165,8 +165,12 @@ abstract class FirestoreBaseDataSource(
         }
     }
 
-    protected fun JsonObject.toCafeCastQueryCursor(): String? =
-        this["name"]?.jsonPrimitive?.contentOrNull
+    protected fun JsonObject.toCafeCastQueryCursor(): String? {
+        val fields = this["fields"]?.jsonObject ?: return null
+        val castName = fields.getFirestoreString("name") ?: return null
+        val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        return "$castName|$documentName"
+    }
 
     protected fun JsonObject.toReviewQueryCursor(): String? {
         val fields = this["fields"]?.jsonObject ?: return null
@@ -315,10 +319,15 @@ abstract class FirestoreBaseDataSource(
     protected fun String?.toCafeCastStartAfterSection(): String {
         val cursorValue = this
         if (cursorValue.isNullOrBlank()) return ""
-        val escapedDocumentName = escapeFirestoreQueryString(cursorValue)
+        val castName = cursorValue.substringBefore("|")
+        val documentName = cursorValue.substringAfter("|", missingDelimiterValue = "")
+        if (castName.isBlank() || documentName.isBlank()) return ""
+        val escapedCastName = escapeFirestoreQueryString(castName)
+        val escapedDocumentName = escapeFirestoreQueryString(documentName)
         return """,
                 "startAt": {
                   "values": [
+                    { "stringValue": "$escapedCastName" },
                     { "referenceValue": "$escapedDocumentName" }
                   ],
                   "before": false
