@@ -26,6 +26,8 @@ struct CafeNoticeView: View {
 
     @State private var expandedNoticeIds: Set<String> = []
 
+    @State private var lastPagingTriggerCount: Int = 0
+
     private let contentPadding: CGFloat = 16
 
     var body: some View {
@@ -66,7 +68,7 @@ struct CafeNoticeView: View {
                     .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
-                ForEach(notices, id: \.id) { notice in
+                ForEach(Array(notices.enumerated()), id: \.element.id) { index, notice in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
                             Text(notice.title)
@@ -97,33 +99,46 @@ struct CafeNoticeView: View {
                         }
                     }
                     .id(notice.id)
+                    .onAppear {
+                        loadMoreIfNeeded(appearedIndex: index)
+                    }
                 }
                 if notices.isEmpty {
                     emptyCard(String(localized: String.LocalizationValue("cafe_notice_empty"), table: "Localizable"))
                         .padding(.horizontal, contentPadding)
-                } else if canLoadMore || isLoadingMore {
-                    VStack(spacing: 0) {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear {
-                                guard canLoadMore, !isLoadingMore else { return }
-                                onLoadMore()
-                            }
-                        if isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                        }
-                        Color.clear
-                            .frame(height: 1)
-                            .onDisappear {
-                                onPagingTriggerDisappear()
-                            }
-                    }
+                } else {
+                    pagingFooter
                 }
             }
             .padding(.horizontal, -contentPadding)
         }
+    }
+
+    @ViewBuilder
+    private var pagingFooter: some View {
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                } else if canLoadMore {
+                    Color.clear
+                        .frame(height: 32)
+                }
+            }
+            .onDisappear {
+                onPagingTriggerDisappear()
+            }
+        }
+    }
+
+    private func loadMoreIfNeeded(appearedIndex: Int) {
+        guard canLoadMore, !isLoadingMore else { return }
+        guard appearedIndex >= notices.count - 1 else { return }
+        guard lastPagingTriggerCount != notices.count else { return }
+        lastPagingTriggerCount = notices.count
+        onLoadMore()
     }
 
     private func eventCard(_ event: CafeEventManagementItem) -> some View {

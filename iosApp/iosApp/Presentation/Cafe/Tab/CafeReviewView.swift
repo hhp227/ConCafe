@@ -25,6 +25,8 @@ struct CafeReviewView: View {
 
     let onAction: (CafeAction) -> Void
 
+    @State private var lastPagingTriggerCount: Int = 0
+
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -53,7 +55,7 @@ struct CafeReviewView: View {
                 emptyCard(String(localized: String.LocalizationValue("cafe_review_empty"), table: "Localizable"))
             } else {
                 LazyVStack(spacing: 12) {
-                    ForEach(Array(reviews.enumerated()), id: \.element.id) { _, review in
+                    ForEach(Array(reviews.enumerated()), id: \.element.id) { index, review in
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 HStack(spacing: 8) {
@@ -147,36 +149,44 @@ struct CafeReviewView: View {
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .id(review.id)
-                    }
-                    if canLoadMore || isLoadingMore {
-                        VStack(spacing: 0) {
-                            Color.clear
-                                .frame(height: 1)
-                                .onAppear {
-                                    guard canLoadMore, !isLoadingMore else { return }
-                                    onLoadMore()
-                                }
-                            if isLoadingMore {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                            } else if canLoadMore {
-                                Text(String(localized: String.LocalizationValue("cafe_review_load_more_hint"), table: "Localizable"))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 6)
-                            }
-                            Color.clear
-                                .frame(height: 1)
-                                .onDisappear {
-                                    onPagingTriggerDisappear()
-                                }
+                        .onAppear {
+                            loadMoreIfNeeded(appearedIndex: index)
                         }
                     }
+                    pagingFooter
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var pagingFooter: some View {
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                } else if canLoadMore {
+                    Text(String(localized: String.LocalizationValue("cafe_review_load_more_hint"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+            }
+            .onDisappear {
+                onPagingTriggerDisappear()
+            }
+        }
+    }
+
+    private func loadMoreIfNeeded(appearedIndex: Int) {
+        guard canLoadMore, !isLoadingMore else { return }
+        guard appearedIndex >= reviews.count - 1 else { return }
+        guard lastPagingTriggerCount != reviews.count else { return }
+        lastPagingTriggerCount = reviews.count
+        onLoadMore()
     }
 
     private func emptyCard(_ text: String) -> some View {
