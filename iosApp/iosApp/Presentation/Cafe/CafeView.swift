@@ -27,7 +27,7 @@ struct CafeView: View {
                     switch action {
                     case .loadMoreCasts:
                         let count = viewModel.uiState.casts.count
-                        countBeforeLoad.casts = count
+                        countBeforeLoad.casts = (countBeforeLoad.casts == 0) ? -count : count
                     case .loadMoreNotices:
                         let count = viewModel.uiState.notices.count
                         countBeforeLoad.notices = count
