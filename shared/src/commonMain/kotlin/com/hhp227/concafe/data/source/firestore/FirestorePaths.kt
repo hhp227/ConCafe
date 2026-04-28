@@ -26,5 +26,6 @@ object FirestorePaths {
     const val USER_NOTIFICATION_SETTINGS = "notificationSettings"
     const val USER_DEVICE_TOKENS = "deviceTokens"
     const val FAN_ANNOUNCEMENT_REQUESTS = "fanAnnouncementRequests"
+    const val COMMUNITY_POSTS = "communityPosts"
 }
 

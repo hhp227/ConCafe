@@ -96,4 +96,10 @@ sealed interface Route {
 
     @Serializable
     data object ChangePassword : Route
+
+    @Serializable
+    data object Community : Route
+
+    @Serializable
+    data object PostEdit : Route
 }

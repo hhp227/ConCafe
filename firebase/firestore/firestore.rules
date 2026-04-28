@@ -461,6 +461,50 @@ service cloud.firestore {
         ]);
     }
 
+    function isValidCommunityPostCreate() {
+      return request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userNickname is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.imageUrls is list
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount == 0
+        && request.resource.data.commentCount is int
+        && request.resource.data.commentCount == 0
+        && request.resource.data.createdAt is string;
+    }
+
+    function isCommunityPostOwnerUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount == resource.data.likeCount
+        && request.resource.data.commentCount == resource.data.commentCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "title",
+          "content",
+          "imageUrls",
+          "updatedAt"
+        ]);
+    }
+
+    function isCommunityPostLikeOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.content == resource.data.content
+        && request.resource.data.imageUrls == resource.data.imageUrls
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount is int
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "likeCount"
+        ]);
+    }
+
     function isNotificationReadOnlyUpdate() {
       return request.resource.data.userId == resource.data.userId
         && request.resource.data.type == resource.data.type
@@ -864,6 +908,16 @@ service cloud.firestore {
     match /castDirectory/{castId} {
       allow read: if true;
       allow write: if false;
+    }
+
+    match /communityPosts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidCommunityPostCreate();
+      allow update: if isSignedIn()
+        && (isAdmin() || isCommunityPostOwnerUpdate() || isCommunityPostLikeOnlyUpdate());
+      allow delete: if isSignedIn()
+        && (isAdmin() || request.auth.uid == resource.data.userId);
     }
 
     match /{document=**} {

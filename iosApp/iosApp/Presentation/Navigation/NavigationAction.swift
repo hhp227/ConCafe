@@ -35,6 +35,8 @@ enum NavigationAction {
     case navigateToAccountSettings
     case navigateToInquiry
     case navigateToChangePassword
+    case navigateToCommunity
+    case navigateToPostEdit
     case navigateBack
     case refreshUnreadNotificationCount
 }

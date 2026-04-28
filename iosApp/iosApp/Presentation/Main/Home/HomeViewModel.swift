@@ -18,6 +18,8 @@ final class HomeViewModel: ObservableObject {
 
     private let getPopularCastPageUseCase: GetPopularCastPageUseCase
 
+    private let getCommunityPostPageUseCase: GetCommunityPostPageUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
@@ -61,18 +63,102 @@ final class HomeViewModel: ObservableObject {
                             isLoadingMoreNearbyCafes: false,
                             birthdayCasts: feed.birthdayCasts,
                             notices: feed.notices,
-                            cafeEvents: Array(feed.cafeEvents.filter { isOngoingCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents))
+                            cafeEvents: Array(feed.cafeEvents.filter { isOngoingCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents)),
+                            communityPosts: uiState.communityPosts
                         )
                     } else {
-                        uiState = .empty
+                        uiState = HomeUiState(
+                            isLoggedIn: uiState.isLoggedIn,
+                            isLoginPromptVisible: uiState.isLoginPromptVisible,
+                            banners: [],
+                            popularCasts: [],
+                            popularCastCafeNames: [:],
+                            popularCastCursor: nil,
+                            canLoadMorePopularCasts: false,
+                            isLoadingMorePopularCasts: false,
+                            nearbyCafes: [],
+                            nearbyCafeCursor: nil,
+                            canLoadMoreNearbyCafes: false,
+                            isLoadingMoreNearbyCafes: false,
+                            birthdayCasts: [],
+                            notices: [],
+                            cafeEvents: [],
+                            communityPosts: uiState.communityPosts
+                        )
                     }
-                } else if result is AppResultFailure {
-                    uiState = .empty
                 } else {
-                    uiState = .empty
+                    uiState = HomeUiState(
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: [],
+                        popularCasts: [],
+                        popularCastCafeNames: [:],
+                        popularCastCursor: nil,
+                        canLoadMorePopularCasts: false,
+                        isLoadingMorePopularCasts: false,
+                        nearbyCafes: [],
+                        nearbyCafeCursor: nil,
+                        canLoadMoreNearbyCafes: false,
+                        isLoadingMoreNearbyCafes: false,
+                        birthdayCasts: [],
+                        notices: [],
+                        cafeEvents: [],
+                        communityPosts: uiState.communityPosts
+                    )
                 }
             } catch {
-                uiState = .empty
+                uiState = HomeUiState(
+                    isLoggedIn: uiState.isLoggedIn,
+                    isLoginPromptVisible: uiState.isLoginPromptVisible,
+                    banners: [],
+                    popularCasts: [],
+                    popularCastCafeNames: [:],
+                    popularCastCursor: nil,
+                    canLoadMorePopularCasts: false,
+                    isLoadingMorePopularCasts: false,
+                    nearbyCafes: [],
+                    nearbyCafeCursor: nil,
+                    canLoadMoreNearbyCafes: false,
+                    isLoadingMoreNearbyCafes: false,
+                    birthdayCasts: [],
+                    notices: [],
+                    cafeEvents: [],
+                    communityPosts: uiState.communityPosts
+                )
+            }
+        }
+    }
+
+    private func loadCommunityPosts() {
+        tasks[.communityPosts]?.cancel()
+        tasks[.communityPosts] = Task {
+            do {
+                let result = try await getCommunityPostPageUseCase.invoke(cursor: nil, pageSize: maxHomeCommunityPosts)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? Shared.PagedResult<Shared.CommunityPost> {
+                    uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices,
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: page.items as? [CommunityPost] ?? []
+                    )
+                }
+            } catch {
+                // silently ignore - community posts section hidden when empty
             }
         }
     }
@@ -95,7 +181,8 @@ final class HomeViewModel: ObservableObject {
                 isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                 birthdayCasts: uiState.birthdayCasts,
                 notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                cafeEvents: uiState.cafeEvents,
+                communityPosts: uiState.communityPosts
             )
 
             do {
@@ -124,7 +211,8 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                        cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
                     )
                 } else {
                     uiState = HomeUiState(
@@ -142,7 +230,8 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                        cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
                     )
                 }
             } catch {
@@ -162,7 +251,8 @@ final class HomeViewModel: ObservableObject {
                     isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                     birthdayCasts: uiState.birthdayCasts,
                     notices: uiState.notices,
-                    cafeEvents: uiState.cafeEvents
+                    cafeEvents: uiState.cafeEvents,
+                    communityPosts: uiState.communityPosts
                 )
             }
         }
@@ -193,7 +283,8 @@ final class HomeViewModel: ObservableObject {
                 isLoadingMoreNearbyCafes: append,
                 birthdayCasts: uiState.birthdayCasts,
                 notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                cafeEvents: uiState.cafeEvents,
+                communityPosts: uiState.communityPosts
             )
 
             do {
@@ -220,7 +311,8 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: false,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                        cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
                     )
                 } else {
                     uiState = HomeUiState(
@@ -238,7 +330,8 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: false,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                        cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
                     )
                 }
             } catch {
@@ -258,7 +351,8 @@ final class HomeViewModel: ObservableObject {
                     isLoadingMoreNearbyCafes: false,
                     birthdayCasts: uiState.birthdayCasts,
                     notices: uiState.notices,
-                    cafeEvents: uiState.cafeEvents
+                    cafeEvents: uiState.cafeEvents,
+                    communityPosts: uiState.communityPosts
                 )
             }
         }
@@ -292,7 +386,8 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                         birthdayCasts: uiState.birthdayCasts,
                         notices: uiState.notices,
-                        cafeEvents: uiState.cafeEvents
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
                     )
                 }
             } catch {
@@ -421,7 +516,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -441,7 +537,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -463,7 +560,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -483,7 +581,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.map { $0.id == cast.id ? cast : $0 },
             notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -503,7 +602,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts.filter { $0.id != castId },
             notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents
+            cafeEvents: uiState.cafeEvents,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -531,7 +631,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-            cafeEvents: limited
+            cafeEvents: limited,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -553,7 +654,8 @@ final class HomeViewModel: ObservableObject {
             isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
             birthdayCasts: uiState.birthdayCasts,
             notices: uiState.notices,
-            cafeEvents: filtered
+            cafeEvents: filtered,
+            communityPosts: uiState.communityPosts
         )
     }
 
@@ -600,7 +702,8 @@ final class HomeViewModel: ObservableObject {
                 isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                 birthdayCasts: uiState.birthdayCasts,
                 notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                cafeEvents: uiState.cafeEvents,
+                communityPosts: uiState.communityPosts
             )
         }
     }
@@ -664,7 +767,8 @@ final class HomeViewModel: ObservableObject {
                 isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                 birthdayCasts: uiState.birthdayCasts,
                 notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                cafeEvents: uiState.cafeEvents,
+                communityPosts: uiState.communityPosts
             )
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
@@ -683,12 +787,17 @@ final class HomeViewModel: ObservableObject {
                 isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
                 birthdayCasts: uiState.birthdayCasts,
                 notices: uiState.notices,
-                cafeEvents: uiState.cafeEvents
+                cafeEvents: uiState.cafeEvents,
+                communityPosts: uiState.communityPosts
             )
         case .loadMorePopularCasts:
             loadMorePopularCasts()
         case .loadMoreNearbyCafes:
             loadMoreNearbyCafes()
+        case .communityTapped:
+            event.send(.navigateToCommunity)
+        case .communityPostTapped:
+            event.send(.navigateToCommunity)
         }
     }
 
@@ -696,6 +805,7 @@ final class HomeViewModel: ObservableObject {
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
         getNearbyCafePageUseCase: GetNearbyCafePageUseCase = KoinInitializerKt.resolveGetNearbyCafePageUseCase(),
         getPopularCastPageUseCase: GetPopularCastPageUseCase = KoinInitializerKt.resolveGetPopularCastPageUseCase(),
+        getCommunityPostPageUseCase: GetCommunityPostPageUseCase = KoinInitializerKt.resolveGetCommunityPostPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeEventEventPublisher: CafeEventEventPublisher = KoinInitializerKt.resolveCafeEventEventPublisher(),
@@ -706,6 +816,7 @@ final class HomeViewModel: ObservableObject {
         self.getHomeFeedUseCase = getHomeFeedUseCase
         self.getNearbyCafePageUseCase = getNearbyCafePageUseCase
         self.getPopularCastPageUseCase = getPopularCastPageUseCase
+        self.getCommunityPostPageUseCase = getCommunityPostPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeEventEventPublisher = cafeEventEventPublisher
@@ -720,6 +831,7 @@ final class HomeViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastEvent()
         loadHomeFeed()
+        loadCommunityPosts()
     }
 
     deinit {
@@ -728,6 +840,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private let maxHomeCafeEvents = 8
+    private let maxHomeCommunityPosts: Int32 = 8
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
     private static func dictionary(from source: [AnyHashable: Any]) -> [String: String] {
@@ -746,5 +859,6 @@ final class HomeViewModel: ObservableObject {
         case castEvent
         case popularCastPage
         case nearbyCafePage
+        case communityPosts
     }
 }

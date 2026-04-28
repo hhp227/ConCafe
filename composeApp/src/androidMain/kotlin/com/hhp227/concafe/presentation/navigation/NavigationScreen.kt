@@ -265,5 +265,15 @@ fun NavigationScreen(
         composable<Route.ChangePassword> {
             ChangePasswordScreen(onNavigationAction = viewModel::onAction)
         }
+        composable<Route.Community> {
+            com.hhp227.concafe.presentation.community.CommunityScreen(
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.PostEdit> {
+            com.hhp227.concafe.presentation.community.edit.PostEditScreen(
+                onNavigationAction = viewModel::onAction
+            )
+        }
     }
 }

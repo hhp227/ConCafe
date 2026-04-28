@@ -107,6 +107,9 @@ import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
+import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -874,6 +877,27 @@ fun resolveGetAdminInquiryPageUseCase(): GetAdminInquiryPageUseCase {
 }
 
 fun resolveGetCafeScheduleCalendarUseCase(): GetCafeScheduleCalendarUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityPostPageUseCase(): GetCommunityPostPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateCommunityPostUseCase(): CreateCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCommunityPostEventPublisher(): CommunityPostEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

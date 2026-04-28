@@ -8,5 +8,6 @@
 import Foundation
 
 enum CommunityEvent {
-    
+    case navigateToPostEdit
+    case navigateToPost(postId: String)
 }

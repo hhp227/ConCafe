@@ -17,6 +17,9 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -46,6 +50,8 @@ import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
 import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.community_post_comment_count
+import concafe.composeapp.generated.resources.community_post_like_count
 import concafe.composeapp.generated.resources.home_banner_placeholder_desc
 import concafe.composeapp.generated.resources.home_banner_placeholder_title
 import concafe.composeapp.generated.resources.home_cast_followers
@@ -59,6 +65,8 @@ import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.home_popular_cast_empty_title
+import concafe.composeapp.generated.resources.community_title
+import concafe.composeapp.generated.resources.home_community_see_all
 import concafe.composeapp.generated.resources.home_section_birthday_cast
 import concafe.composeapp.generated.resources.home_section_nearby_cafe
 import concafe.composeapp.generated.resources.home_section_ongoing_cafe_event
@@ -95,6 +103,7 @@ fun HomeScreen(
                 is HomeEvent.NavigateToCafeEvent -> onNavigate(NavigationAction.NavigateToCafeEvent(event.cafeId, event.eventId))
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 HomeEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
+                HomeEvent.NavigateToCommunity -> onNavigate(NavigationAction.NavigateToCommunity)
             }
         }
     }
@@ -237,6 +246,14 @@ fun HomeContentScreen(
                             }
                         }
                     }
+                }
+            }
+            if (uiState.communityPosts.isNotEmpty()) {
+                item {
+                    HomeCommunitySection(
+                        posts = uiState.communityPosts,
+                        onAction = onAction
+                    )
                 }
             }
             if (uiState.birthdayCasts.isNotEmpty()) {
@@ -613,7 +630,6 @@ private fun SectionTitle(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
-    val actionSlotWidth = 44.dp
     val actionSlotHeight = 24.dp
 
     Row(
@@ -628,24 +644,22 @@ private fun SectionTitle(
             text = text,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = colorFromHex("2B2330")
+            color = colorFromHex("2B2330"),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.weight(1f))
-        Box(
-            modifier = Modifier
-                .width(actionSlotWidth)
-                .height(actionSlotHeight),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            if (actionLabel != null && onAction != null) {
-                Text(
-                    text = actionLabel,
-                    color = colorFromHex("EF6797"),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable(onClick = onAction)
-                )
-            }
+        if (actionLabel != null && onAction != null) {
+            Text(
+                text = actionLabel,
+                color = colorFromHex("EF6797"),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.End)
+                    .clickable(onClick = onAction)
+            )
         }
     }
 }
@@ -702,6 +716,140 @@ private fun NearByCafeItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
+    }
+}
+
+@Composable
+private fun HomeCommunitySection(
+    posts: List<CommunityPost>,
+    onAction: (HomeAction) -> Unit
+) {
+    SectionTitle(
+        text = stringResource(Res.string.community_title),
+        actionLabel = stringResource(Res.string.home_community_see_all),
+        onAction = { onAction(HomeAction.ClickCommunity) }
+    )
+    Spacer(Modifier.height(10.dp))
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
+        items(posts, key = { it.id }) { post ->
+            HomeCommunityPostCard(
+                post = post,
+                modifier = Modifier.width(276.dp),
+                onClick = { onAction(HomeAction.ClickCommunityPost(post.id)) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeCommunityPostCard(
+    post: CommunityPost,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = post.userNickname.firstOrNull()?.toString() ?: "?",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = colorFromHex("EF6797")
+                    )
+                }
+                Text(
+                    text = post.userNickname.ifBlank { "익명" },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorFromHex("665A63"),
+                    maxLines = 1
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = post.displayDate,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colorFromHex("B1A3AC")
+                )
+            }
+            Text(
+                text = post.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colorFromHex("2B2330"),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (post.content.isNotBlank()) {
+                Text(
+                    text = post.content,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorFromHex("665A63"),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Divider(color = colorFromHex("FFD1DC").copy(alpha = 0.3f))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = colorFromHex("B1A3AC"),
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = stringResource(Res.string.community_post_like_count, post.likeCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorFromHex("8C7E87")
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ChatBubbleOutline,
+                        contentDescription = null,
+                        tint = colorFromHex("B1A3AC"),
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = stringResource(Res.string.community_post_comment_count, post.commentCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorFromHex("8C7E87")
+                    )
+                }
+            }
         }
     }
 }

@@ -1724,3 +1724,71 @@ class FirestoreMyInfoRemoteDataSource(
             }
     }
 }
+
+// ── Community Post ────────────────────────────────────────────────────────────
+
+class FirestoreCommunityPostRemoteDataSource(
+    config: FirestoreConfig,
+    restApi: FirestoreRestApi,
+    tokenProvider: FirestoreAuthTokenProvider
+) : FirestoreBaseDataSource(config, restApi, tokenProvider), CommunityPostRemoteDataSource {
+
+    override suspend fun fetchCommunityPostPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CommunityPost> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val documents = runCatching { runCommunityPostPageQuery(cursor, safePageSize + 1, idToken) }
+            .recoverCatching { runCommunityPostPageQuery(cursor, safePageSize + 1, null) }
+            .getOrElse { throwable ->
+                throw IllegalStateException("Failed to load community post page: ${throwable.message}", throwable)
+            }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) pageDocuments.lastOrNull()?.toCommunityPostQueryCursor() else null
+        val pageItems = pageDocuments.mapNotNull { parseCommunityPostDocument(it) }
+        return PagedResult(items = pageItems, nextCursor = nextCursorToken, hasNext = hasNext)
+    }
+
+    override suspend fun createCommunityPost(
+        userId: String,
+        title: String,
+        content: String,
+        imageUrls: List<String>
+    ): CommunityPost {
+        val idToken = tokenProvider.getIdToken()
+        val userNickname = runCatching { parseUserDocument(loadUserDocument(userId, idToken))?.nickname.orEmpty() }
+            .recoverCatching { parseUserDocument(loadUserDocument(userId, null))?.nickname.orEmpty() }
+            .getOrDefault("")
+        val postId = nextFirestoreEntityId("post")
+        val createdAt = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "userId" to firestoreString(userId),
+                "userNickname" to firestoreString(userNickname),
+                "title" to firestoreString(title),
+                "content" to firestoreString(content),
+                "imageUrls" to firestoreStringArray(imageUrls),
+                "likeCount" to firestoreLong(0L),
+                "commentCount" to firestoreLong(0L),
+                "createdAt" to firestoreString(createdAt),
+                "updatedAt" to firestoreString(createdAt)
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        restApi.patch(path, body, idToken)
+        return CommunityPost(
+            id = postId,
+            userId = userId,
+            userNickname = userNickname,
+            title = title,
+            content = content,
+            imageUrls = imageUrls,
+            likeCount = 0,
+            commentCount = 0,
+            createdAt = createdAt,
+            displayDate = createdAt.take(10).replace("-", ".")
+        )
+    }
+}

@@ -935,4 +935,26 @@
     <string name="day_fri">Fri</string>
     <string name="day_sat">Sat</string>
     <string name="day_sun">Sun</string>
+
+    <!-- Community -->
+    <string name="community_title">커뮤니티</string>
+    <string name="home_community_shortcut_desc">게시글을 확인하고 이웃과 소통해보세요</string>
+    <string name="home_community_see_all">전체 보기</string>
+    <string name="community_write_post">게시글 작성</string>
+    <string name="community_empty">아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!</string>
+    <string name="community_load_more">더 보기</string>
+    <string name="community_post_like_count">좋아요 %1$s</string>
+    <string name="community_post_comment_count">댓글 %1$s</string>
+
+    <!-- PostEdit -->
+    <string name="post_edit_title_placeholder">제목을 입력하세요</string>
+    <string name="post_edit_content_placeholder">내용을 입력하세요</string>
+    <string name="post_edit_add_image">사진 추가</string>
+    <string name="post_edit_image_limit">%1$s / %2$s</string>
+    <string name="post_edit_submit">등록하기</string>
+    <string name="post_edit_screen_title">게시글 작성</string>
+    <string name="post_edit_title_label">제목</string>
+    <string name="post_edit_content_label">내용</string>
+    <string name="post_edit_image_label">사진 첨부</string>
+    <string name="post_edit_image_guide">사진은 최대 %1$s장까지 첨부할 수 있습니다.</string>
 </resources>

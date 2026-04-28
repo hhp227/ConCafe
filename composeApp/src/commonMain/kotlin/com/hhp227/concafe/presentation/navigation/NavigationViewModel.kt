@@ -127,6 +127,12 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToChangePassword -> {
                     _event.emit(NavigateTo(Route.ChangePassword))
                 }
+                NavigationAction.NavigateToCommunity -> {
+                    _event.emit(NavigateTo(Route.Community))
+                }
+                NavigationAction.NavigateToPostEdit -> {
+                    _event.emit(NavigateTo(Route.PostEdit))
+                }
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)
                 }

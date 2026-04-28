@@ -89,6 +89,10 @@ struct AppNavigationView: View {
                 InquiryView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
+            case .community:
+                CommunityView(onNavigationAction: viewModel.onAction)
+            case .postEdit:
+                PostEditView(onNavigationAction: viewModel.onAction)
             case .main(let initialTab):
                 MainView(
                     initialTab: initialTab,
