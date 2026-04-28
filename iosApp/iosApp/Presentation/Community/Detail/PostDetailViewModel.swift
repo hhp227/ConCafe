@@ -13,17 +13,24 @@ import KMPNativeCoroutinesAsync
 @MainActor
 final class PostDetailViewModel: ObservableObject {
     private let postId: String
+
     private let getCommunityPostUseCase: GetCommunityPostUseCase
+
     private let checkCommunityPostLikedUseCase: CheckCommunityPostLikedUseCase
+
     private let deleteCommunityPostUseCase: DeleteCommunityPostUseCase
+
     private let toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase
+
     private let getCommunityCommentsUseCase: GetCommunityCommentsUseCase
+
     private let addCommunityCommentUseCase: AddCommunityCommentUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     @Published private(set) var uiState = PostDetailUiState()
 
-    let event = PassthroughSubject<PostDetailEvent, Never>()
+    let event = PassthroughSubject<PostDetailViewEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
