@@ -483,11 +483,11 @@ final class HomeViewModel: ObservableObject {
         tasks[.communityPostEvent] = Task {
             do {
                 for try await event in asyncSequence(for: communityPostEventPublisher.events) {
-                    if event is CommunityPostEventCreated {
+                    if event is CommunityPostEvent.Created {
                         self.loadCommunityPosts()
-                    } else if let deletedEvent = event as? CommunityPostEventDeleted {
+                    } else if let deletedEvent = event as? CommunityPostEvent.Deleted {
                         self.uiState.communityPosts = self.uiState.communityPosts.filter { $0.id != deletedEvent.postId }
-                    } else if let updatedEvent = event as? CommunityPostEventUpdated {
+                    } else if let updatedEvent = event as? CommunityPostEvent.Updated {
                         self.uiState.communityPosts = self.uiState.communityPosts.map {
                             $0.id == updatedEvent.post.id ? updatedEvent.post : $0
                         }

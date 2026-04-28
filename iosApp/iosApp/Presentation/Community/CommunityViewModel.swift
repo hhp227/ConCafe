@@ -78,9 +78,9 @@ final class CommunityViewModel: ObservableObject {
         Task {
             do {
                 for try await event in asyncSequence(for: communityPostEventPublisher.events) {
-                    if let deletedEvent = event as? CommunityPostEventDeleted {
+                    if let deletedEvent = event as? CommunityPostEvent.Deleted {
                         uiState.posts = uiState.posts.filter { $0.id != deletedEvent.postId }
-                    } else if let updatedEvent = event as? CommunityPostEventUpdated {
+                    } else if let updatedEvent = event as? CommunityPostEvent.Updated {
                         uiState.posts = uiState.posts.map { $0.id == updatedEvent.post.id ? updatedEvent.post : $0 }
                     } else {
                         refresh()

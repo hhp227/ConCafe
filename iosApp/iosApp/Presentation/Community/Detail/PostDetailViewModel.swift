@@ -160,7 +160,7 @@ final class PostDetailViewModel: ObservableObject {
             do {
                 let result = try await deleteCommunityPostUseCase.invoke(postId: postId)
                 if result is AppResultSuccess<AnyObject> {
-                    communityPostEventPublisher.publish(event: CommunityPostEventDeleted(postId: postId))
+                    communityPostEventPublisher.publish(event: CommunityPostEvent.Deleted(postId: postId))
                     eventSubject.send(.navigateBack)
                 } else {
                     uiState.isDeleting = false
@@ -218,7 +218,7 @@ final class PostDetailViewModel: ObservableObject {
         tasks[.observeCommunityEvent] = Task {
             do {
                 for try await event in asyncSequence(for: communityPostEventPublisher.events) {
-                    if let updatedEvent = event as? CommunityPostEventUpdated,
+                    if let updatedEvent = event as? CommunityPostEvent.Updated,
                        updatedEvent.post.id == postId {
                         uiState.post = updatedEvent.post
                     }
