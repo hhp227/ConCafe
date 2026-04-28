@@ -17,6 +17,8 @@ import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cafe.event.CafeEventScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.community.CommunityScreen
+import com.hhp227.concafe.presentation.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -266,14 +268,10 @@ fun NavigationScreen(
             ChangePasswordScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.Community> {
-            com.hhp227.concafe.presentation.community.CommunityScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            CommunityScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.PostEdit> {
-            com.hhp227.concafe.presentation.community.edit.PostEditScreen(
-                onNavigationAction = viewModel::onAction
-            )
+            PostEditScreen(onNavigationAction = viewModel::onAction)
         }
     }
 }
