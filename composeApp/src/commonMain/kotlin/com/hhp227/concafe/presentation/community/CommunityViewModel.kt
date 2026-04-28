@@ -23,20 +23,6 @@ class CommunityViewModel(
     private val _event = MutableSharedFlow<CommunityEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    fun onAction(action: CommunityAction) {
-        when (action) {
-            CommunityAction.Refresh -> refresh()
-            CommunityAction.LoadMore -> loadMore()
-            CommunityAction.ClickWritePost -> viewModelScope.launch {
-                _event.emit(CommunityEvent.NavigateToPostEdit)
-            }
-            is CommunityAction.ClickPost -> viewModelScope.launch {
-                _event.emit(CommunityEvent.NavigateToPost(action.postId))
-            }
-            CommunityAction.DismissError -> _uiState.update { it.copy(errorMessage = null) }
-        }
-    }
-
     private fun refresh() {
         _uiState.update { it.copy(isLoading = true, posts = emptyList(), nextCursor = null, hasNext = false, errorMessage = null) }
         viewModelScope.launch {
@@ -82,6 +68,20 @@ class CommunityViewModel(
                     is CommunityPostEvent.Created -> refresh()
                 }
             }
+        }
+    }
+
+    fun onAction(action: CommunityAction) {
+        when (action) {
+            CommunityAction.Refresh -> refresh()
+            CommunityAction.LoadMore -> loadMore()
+            CommunityAction.ClickWritePost -> viewModelScope.launch {
+                _event.emit(CommunityEvent.NavigateToPostEdit)
+            }
+            is CommunityAction.ClickPost -> viewModelScope.launch {
+                _event.emit(CommunityEvent.NavigateToPost(action.postId))
+            }
+            CommunityAction.DismissError -> _uiState.update { it.copy(errorMessage = null) }
         }
     }
 

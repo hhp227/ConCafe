@@ -8,33 +8,19 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class CommunityViewModel: ObservableObject {
-    @Published private(set) var uiState = CommunityUiState()
-
-    let event = PassthroughSubject<CommunityEvent, Never>()
-
     private let getCommunityPostPageUseCase: GetCommunityPostPageUseCase
 
     private let communityPostEventPublisher: CommunityPostEventPublisher
 
-    private var cancellables = Set<AnyCancellable>()
+    @Published private(set) var uiState = CommunityUiState()
 
-    func onAction(_ action: CommunityAction) {
-        switch action {
-        case .refresh:
-            refresh()
-        case .loadMore:
-            loadMore()
-        case .clickWritePost:
-            event.send(.navigateToPostEdit)
-        case .clickPost(let postId):
-            event.send(.navigateToPost(postId: postId))
-        case .dismissError:
-            uiState.errorMessage = nil
-        }
-    }
+    let event = PassthroughSubject<CommunityEvent, Never>()
+
+    private var cancellables = Set<AnyCancellable>()
 
     private func refresh() {
         uiState.isLoading = true
@@ -90,9 +76,28 @@ final class CommunityViewModel: ObservableObject {
 
     private func observeCommunityPostEvents() {
         Task {
-            for await domainEvent in communityPostEventPublisher.events {
-                refresh()
+            do {
+                for try await _ in asyncSequence(for: communityPostEventPublisher.events) {
+                    refresh()
+                }
+            } catch {
+                print("Error: \(error)")
             }
+        }
+    }
+
+    func onAction(_ action: CommunityAction) {
+        switch action {
+        case .refresh:
+            refresh()
+        case .loadMore:
+            loadMore()
+        case .clickWritePost:
+            event.send(.navigateToPostEdit)
+        case .clickPost(let postId):
+            event.send(.navigateToPost(postId: postId))
+        case .dismissError:
+            uiState.errorMessage = nil
         }
     }
 
