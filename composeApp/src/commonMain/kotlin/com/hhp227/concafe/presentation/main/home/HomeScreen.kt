@@ -739,7 +739,7 @@ private fun HomeCommunitySection(
         items(posts, key = { it.id }) { post ->
             HomeCommunityPostCard(
                 post = post,
-                modifier = Modifier.width(276.dp).height(212.dp),
+                modifier = Modifier.width(276.dp).height(200.dp),
                 onClick = { onAction(HomeAction.ClickCommunityPost(post.id)) }
             )
         }
@@ -800,7 +800,6 @@ private fun HomeCommunityPostCard(
             }
             Text(
                 text = post.title,
-                modifier = Modifier.height(42.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colorFromHex("2B2330"),

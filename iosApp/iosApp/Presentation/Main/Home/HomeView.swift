@@ -128,7 +128,7 @@ private struct HomeContentView: View {
                 HStack(spacing: 12) {
                     ForEach(uiState.communityPosts, id: \.id) { post in
                         HomeCommunityPostCard(post: post)
-                            .frame(width: 276, height: 212)
+                            .frame(width: 276, height: 200)
                             .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .onTapGesture {
                                 onAction(.communityPostTapped(postId: post.id))
@@ -502,13 +502,12 @@ private struct HomeCommunityPostCard: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "2B2330"))
                 .lineLimit(2)
-                .frame(height: 42, alignment: .topLeading)
             let trimmedContent = post.content.trimmingCharacters(in: .whitespacesAndNewlines)
             Text(trimmedContent)
                 .font(.caption)
                 .foregroundStyle(Color(hex: "665A63"))
                 .lineLimit(4)
-                .frame(height: 56, alignment: .topLeading)
+                .frame(height: 60, alignment: .topLeading)
             Divider()
                 .overlay(Color(hex: "FFD1DC").opacity(0.3))
             HStack(spacing: 10) {
