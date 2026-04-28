@@ -56,6 +56,7 @@ fun PostDetailScreen(
             when (event) {
                 PostDetailEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is PostDetailEvent.NavigateToPicture -> onNavigationAction(NavigationAction.NavigateToPicture(event.imageUrl))
+                is PostDetailEvent.NavigateToPostEdit -> onNavigationAction(NavigationAction.NavigateToPostEdit(event.postId))
             }
         }
     }
@@ -149,6 +150,7 @@ private fun PostDetailContentScreen(
                     top = innerPadding.calculateTopPadding(),
                     end = innerPadding.calculateEndPadding(layoutDirection)
                 )
+                .navigationBarsPadding()
                 .imePadding()
         ) {
             Box(modifier = Modifier.weight(1f)) {

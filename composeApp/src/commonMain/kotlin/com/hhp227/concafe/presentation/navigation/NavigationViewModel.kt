@@ -130,8 +130,8 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToCommunity -> {
                     _event.emit(NavigateTo(Route.Community))
                 }
-                NavigationAction.NavigateToPostEdit -> {
-                    _event.emit(NavigateTo(Route.PostEdit))
+                is NavigationAction.NavigateToPostEdit -> {
+                    _event.emit(NavigateTo(Route.PostEdit(action.postId)))
                 }
                 is NavigationAction.NavigateToPostDetail -> {
                     _event.emit(NavigateTo(Route.PostDetail(action.postId)))

@@ -115,6 +115,7 @@ import com.hhp227.concafe.domain.usecase.CheckCommunityPostLikedUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityCommentsUseCase
 import com.hhp227.concafe.domain.usecase.AddCommunityCommentUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -946,6 +947,13 @@ fun resolveGetCommunityCommentsUseCase(): GetCommunityCommentsUseCase {
 }
 
 fun resolveAddCommunityCommentUseCase(): AddCommunityCommentUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCommunityPostUseCase(): UpdateCommunityPostUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

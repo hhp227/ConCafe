@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,10 +16,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class PostEditViewModel(
+    private val editPostId: String? = null,
     private val createCommunityPostUseCase: CreateCommunityPostUseCase,
+    private val updateCommunityPostUseCase: UpdateCommunityPostUseCase,
+    private val getCommunityPostUseCase: GetCommunityPostUseCase,
     private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(PostEditUiState())
+    private val _uiState = MutableStateFlow(PostEditUiState(isEditMode = editPostId != null))
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<PostEditEvent>(replay = 0)
@@ -44,6 +49,21 @@ class PostEditViewModel(
         }
     }
 
+    private fun loadPost(postId: String) {
+        viewModelScope.launch {
+            when (val result = getCommunityPostUseCase(postId)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(
+                        title = result.data.title,
+                        content = result.data.content,
+                        imageUrls = result.data.imageUrls
+                    )
+                }
+                is AppResult.Failure -> _uiState.update { it.copy(infoMessage = "게시글을 불러오지 못했습니다.") }
+            }
+        }
+    }
+
     private fun submit() {
         val state = _uiState.value
 
@@ -63,7 +83,12 @@ class PostEditViewModel(
                 _uiState.update { it.copy(isSubmitting = false, infoMessage = "이미지를 업로드하지 못했습니다.") }
                 return@launch
             }
-            when (val result = createCommunityPostUseCase(state.title, state.content, uploadedImageUrls)) {
+            val result = if (editPostId != null) {
+                updateCommunityPostUseCase(editPostId, state.title, state.content, uploadedImageUrls)
+            } else {
+                createCommunityPostUseCase(state.title, state.content, uploadedImageUrls)
+            }
+            when (result) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isSubmitting = false) }
                     _event.emit(PostEditEvent.NavigateBack)
@@ -75,7 +100,7 @@ class PostEditViewModel(
                             infoMessage = when (result.error) {
                                 is AppError.Unauthorized -> "게시글 작성은 로그인 후 가능해요."
                                 is AppError.ValidationFailed -> (result.error as AppError.ValidationFailed).reason.toPostValidationMessage()
-                                else -> "게시글을 등록하지 못했습니다."
+                                else -> if (editPostId != null) "게시글을 수정하지 못했습니다." else "게시글을 등록하지 못했습니다."
                             }
                         )
                     }
@@ -108,6 +133,10 @@ class PostEditViewModel(
             PostEditAction.ClickSubmit -> submit()
             PostEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
+    }
+
+    init {
+        editPostId?.let { loadPost(it) }
     }
 }
 

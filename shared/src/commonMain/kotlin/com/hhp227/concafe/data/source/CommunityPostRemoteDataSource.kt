@@ -13,6 +13,12 @@ interface CommunityPostRemoteDataSource {
         content: String,
         imageUrls: List<String>
     ): CommunityPost
+    suspend fun updateCommunityPost(
+        postId: String,
+        title: String,
+        content: String,
+        imageUrls: List<String>
+    ): CommunityPost
     suspend fun deleteCommunityPost(postId: String)
     suspend fun isLikedByUser(postId: String, userId: String): Boolean
     suspend fun toggleLike(postId: String, userId: String): Boolean

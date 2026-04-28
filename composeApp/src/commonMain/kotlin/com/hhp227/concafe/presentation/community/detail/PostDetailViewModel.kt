@@ -3,6 +3,8 @@ package com.hhp227.concafe.presentation.community.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.CommunityPostEvent
+import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.usecase.AddCommunityCommentUseCase
 import com.hhp227.concafe.domain.usecase.CheckCommunityPostLikedUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCommunityPostUseCase
@@ -27,7 +29,8 @@ class PostDetailViewModel(
     private val toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase,
     private val getCommunityCommentsUseCase: GetCommunityCommentsUseCase,
     private val addCommunityCommentUseCase: AddCommunityCommentUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val communityPostEventPublisher: CommunityPostEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(PostDetailUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
@@ -119,7 +122,10 @@ class PostDetailViewModel(
         jobs[JobKey.DELETE_POST]?.cancel()
         jobs[JobKey.DELETE_POST] = viewModelScope.launch {
             when (deleteCommunityPostUseCase(postId)) {
-                is AppResult.Success -> _event.emit(PostDetailEvent.NavigateBack)
+                is AppResult.Success -> {
+                    communityPostEventPublisher.publish(CommunityPostEvent.Deleted(postId))
+                    _event.emit(PostDetailEvent.NavigateBack)
+                }
                 is AppResult.Failure -> _uiState.update {
                     it.copy(isDeleting = false, errorMessage = "게시글을 삭제하지 못했습니다.")
                 }
@@ -162,7 +168,13 @@ class PostDetailViewModel(
             PostDetailAction.ClickLike -> toggleLike()
             PostDetailAction.ClickMoreMenu -> _uiState.update { it.copy(isMenuVisible = true) }
             PostDetailAction.DismissMoreMenu -> _uiState.update { it.copy(isMenuVisible = false) }
-            PostDetailAction.ClickEdit -> _uiState.update { it.copy(isMenuVisible = false) }
+            PostDetailAction.ClickEdit -> {
+                _uiState.update { it.copy(isMenuVisible = false) }
+                jobs[JobKey.EMIT_EVENT]?.cancel()
+                jobs[JobKey.EMIT_EVENT] = viewModelScope.launch {
+                    _event.emit(PostDetailEvent.NavigateToPostEdit(postId))
+                }
+            }
             PostDetailAction.ClickDelete -> _uiState.update { it.copy(isMenuVisible = false, isDeleteConfirmVisible = true) }
             PostDetailAction.ConfirmDelete -> deletePost()
             PostDetailAction.DismissDeleteConfirm -> _uiState.update { it.copy(isDeleteConfirmVisible = false) }

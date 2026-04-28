@@ -25,6 +25,7 @@ import com.hhp227.concafe.domain.repository.CommunityPostRepository
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
 import org.koin.dsl.module
 
@@ -192,6 +193,7 @@ val useCaseModule = module {
     factory { ClearNativeAdUseCase(get()) }
     factory { GetCommunityPostPageUseCase(get()) }
     factory { CreateCommunityPostUseCase(get(), get(), get()) }
+    factory { UpdateCommunityPostUseCase(get(), get(), get()) }
     factory { GetCommunityPostUseCase(get()) }
     factory { DeleteCommunityPostUseCase(get(), get()) }
     factory { CheckCommunityPostLikedUseCase(get(), get()) }

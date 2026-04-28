@@ -66,6 +66,12 @@ class CommunityViewModel(
             communityPostEventPublisher.events.collect { event ->
                 when (event) {
                     is CommunityPostEvent.Created -> refresh()
+                    is CommunityPostEvent.Deleted -> _uiState.update { state ->
+                        state.copy(posts = state.posts.filter { it.id != event.postId })
+                    }
+                    is CommunityPostEvent.Updated -> _uiState.update { state ->
+                        state.copy(posts = state.posts.map { if (it.id == event.post.id) event.post else it })
+                    }
                 }
             }
         }

@@ -33,13 +33,16 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun PostEditScreen(
+    editPostId: String? = null,
     onNavigationAction: (NavigationAction) -> Unit = {},
     viewModel: PostEditViewModel = viewModel(
+        key = "post-edit-$editPostId",
         factory = viewModelFactory {
-            initializer { GlobalContext.get().get<PostEditViewModel>() }
+            initializer { GlobalContext.get().get<PostEditViewModel> { parametersOf(editPostId) } }
         }
     )
 ) {
@@ -83,7 +86,7 @@ private fun PostEditContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(Res.string.post_edit_screen_title),
+                        text = if (uiState.isEditMode) "게시글 수정" else stringResource(Res.string.post_edit_screen_title),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = textColor
@@ -111,7 +114,7 @@ private fun PostEditContentScreen(
                             )
                         } else {
                             Text(
-                                text = stringResource(Res.string.post_edit_submit),
+                                text = if (uiState.isEditMode) "저장" else stringResource(Res.string.post_edit_submit),
                                 color = if (uiState.canSubmit) pink else colorFromHex("B1A3AC"),
                                 fontWeight = FontWeight.Bold
                             )

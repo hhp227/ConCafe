@@ -30,6 +30,15 @@ class CommunityPostRepositoryImpl(
         communityPostRemoteDataSource.deleteCommunityPost(postId)
     }
 
+    override suspend fun updateCommunityPost(
+        postId: String,
+        title: String,
+        content: String,
+        imageUrls: List<String>
+    ): CommunityPost {
+        return communityPostRemoteDataSource.updateCommunityPost(postId, title, content, imageUrls)
+    }
+
     override suspend fun isLikedByUser(postId: String, userId: String): Boolean {
         return communityPostRemoteDataSource.isLikedByUser(postId, userId)
     }

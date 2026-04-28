@@ -101,7 +101,7 @@ sealed interface Route {
     data object Community : Route
 
     @Serializable
-    data object PostEdit : Route
+    data class PostEdit(val postId: String? = null) : Route
 
     @Serializable
     data class PostDetail(val postId: String) : Route

@@ -81,7 +81,15 @@ private val composeAppPresentationModule = module {
     factory { InquiryLinkViewModel(get()) }
     factory { NotificationSettingsViewModel(get(), get(), get()) }
     factory { CommunityViewModel(get(), get()) }
-    factory { PostEditViewModel(get(), get()) }
+    factory { (postId: String?) ->
+        PostEditViewModel(
+            editPostId = postId,
+            createCommunityPostUseCase = get(),
+            updateCommunityPostUseCase = get(),
+            getCommunityPostUseCase = get(),
+            uploadImageUseCase = get()
+        )
+    }
     factory { (postId: String) ->
         PostDetailViewModel(
             postId = postId,
@@ -91,7 +99,8 @@ private val composeAppPresentationModule = module {
             toggleCommunityPostLikeUseCase = get(),
             getCommunityCommentsUseCase = get(),
             addCommunityCommentUseCase = get(),
-            observeCurrentUserUseCase = get()
+            observeCurrentUserUseCase = get(),
+            communityPostEventPublisher = get()
         )
     }
 }

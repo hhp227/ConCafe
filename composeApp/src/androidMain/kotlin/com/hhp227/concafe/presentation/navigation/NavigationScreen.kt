@@ -237,6 +237,7 @@ fun NavigationScreen(
         }
         composable<Route.CheckInMap> { backStackEntry ->
             val route = backStackEntry.toRoute<Route.CheckInMap>()
+
             MapScreen(
                 initialRegionKey = route.initialRegionKey,
                 onNavigationAction = viewModel::onAction
@@ -275,8 +276,13 @@ fun NavigationScreen(
         composable<Route.Community> {
             CommunityScreen(onNavigationAction = viewModel::onAction)
         }
-        composable<Route.PostEdit> {
-            PostEditScreen(onNavigationAction = viewModel::onAction)
+        composable<Route.PostEdit> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.PostEdit>()
+
+            PostEditScreen(
+                editPostId = route.postId,
+                onNavigationAction = viewModel::onAction
+            )
         }
         composable<Route.PostDetail> { backStackEntry ->
             val route = backStackEntry.toRoute<Route.PostDetail>()

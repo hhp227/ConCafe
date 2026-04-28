@@ -1809,6 +1809,30 @@ class FirestoreCommunityPostRemoteDataSource(
         restApi.delete(path, idToken)
     }
 
+    override suspend fun updateCommunityPost(
+        postId: String,
+        title: String,
+        content: String,
+        imageUrls: List<String>
+    ): CommunityPost {
+        val idToken = tokenProvider.getIdToken()
+        val updatedAt = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "title" to firestoreString(title),
+                "content" to firestoreString(content),
+                "imageUrls" to firestoreStringArray(imageUrls),
+                "updatedAt" to firestoreString(updatedAt)
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        restApi.patch(path, body, idToken, listOf("title", "content", "imageUrls", "updatedAt"))
+        val response = restApi.get(path, idToken)
+        val document = Json.parseToJsonElement(response).jsonObject
+        return parseCommunityPostDocument(document)
+            ?: throw IllegalStateException("Failed to parse updated post")
+    }
+
     override suspend fun isLikedByUser(postId: String, userId: String): Boolean {
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_LIKES}/$userId"
@@ -1845,19 +1869,11 @@ class FirestoreCommunityPostRemoteDataSource(
 
     override suspend fun fetchComments(postId: String): List<Comment> {
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
-        val path = "${config.documentBasePath()}:runQuery"
-        val collectionPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_COMMENTS}"
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId:runQuery"
         val body = """
             {
               "structuredQuery": {
                 "from": [{"collectionId": "${FirestorePaths.POST_COMMENTS}", "allDescendants": false}],
-                "where": {
-                  "fieldFilter": {
-                    "field": {"fieldPath": "__name__"},
-                    "op": "GREATER_THAN_OR_EQUAL",
-                    "value": {"referenceValue": "$collectionPath/"}
-                  }
-                },
                 "orderBy": [{"field": {"fieldPath": "createdAt"}, "direction": "ASCENDING"}]
               }
             }

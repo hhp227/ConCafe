@@ -48,7 +48,7 @@ fun CommunityScreen(
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                CommunityEvent.NavigateToPostEdit -> onNavigationAction(NavigationAction.NavigateToPostEdit)
+                CommunityEvent.NavigateToPostEdit -> onNavigationAction(NavigationAction.NavigateToPostEdit())
                 is CommunityEvent.NavigateToPost -> onNavigationAction(NavigationAction.NavigateToPostDetail(event.postId))
             }
         }
