@@ -24,7 +24,7 @@ struct PostDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !viewModel.uiState.isLoading && viewModel.uiState.post != nil {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         if viewModel.uiState.isOwner {
                             Button("수정") {
@@ -175,13 +175,12 @@ private struct PostDetailContentView: View {
             Divider()
                 .overlay(Color(hex: "FFD1DC").opacity(0.2))
             HStack(spacing: 8) {
-                TextField("댓글을 입력하세요", text: Binding(
+                CompatVerticalTextField(placeholder: "댓글을 입력하세요", text: Binding(
                     get: { uiState.commentText },
                     set: { onAction(.changeCommentText($0)) }
-                ), axis: .vertical)
+                ))
                 .focused($isCommentFocused)
                 .font(.system(size: 14))
-                .lineLimit(1...3)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(Color(hex: "F8F5F6"))
@@ -213,7 +212,7 @@ private struct PostDetailContentView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color.white)
-            .safeAreaPadding(.bottom)
+            .compatSafeAreaBottomPadding()
         }
     }
 }
