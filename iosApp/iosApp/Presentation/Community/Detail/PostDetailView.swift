@@ -26,30 +26,8 @@ struct PostDetailView: View {
         .navigationTitle("게시글")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !viewModel.uiState.isLoading && viewModel.uiState.post != nil {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        if viewModel.uiState.isOwner {
-                            Button("수정") {
-                                viewModel.onAction(.clickEdit)
-                            }
-                            Button(role: .destructive) {
-                                viewModel.onAction(.clickDelete)
-                            } label: {
-                                Label("삭제", systemImage: "trash")
-                            }
-                        } else {
-                            Button {
-                                viewModel.onAction(.clickReport)
-                            } label: {
-                                Label("신고하기", systemImage: "exclamationmark.bubble")
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .foregroundStyle(Color(hex: "2B2330"))
-                    }
-                }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                postMenuButton
             }
         }
         .alert("게시글 삭제", isPresented: Binding(
@@ -79,6 +57,34 @@ struct PostDetailView: View {
         case .navigateToPicture(let imageUrl):
             onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
         }
+    }
+
+    private var postMenuButton: some View {
+        let isVisible = !viewModel.uiState.isLoading && viewModel.uiState.post != nil
+
+        return Menu {
+            if viewModel.uiState.isOwner {
+                Button("수정") {
+                    viewModel.onAction(.clickEdit)
+                }
+                Button(role: .destructive) {
+                    viewModel.onAction(.clickDelete)
+                } label: {
+                    Label("삭제", systemImage: "trash")
+                }
+            } else {
+                Button {
+                    viewModel.onAction(.clickReport)
+                } label: {
+                    Label("신고하기", systemImage: "exclamationmark.bubble")
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .foregroundStyle(Color(hex: "2B2330"))
+        }
+        .disabled(!isVisible)
+        .opacity(isVisible ? 1 : 0)
     }
 
     init(postId: String, onNavigationAction: @escaping (NavigationAction) -> Void) {
