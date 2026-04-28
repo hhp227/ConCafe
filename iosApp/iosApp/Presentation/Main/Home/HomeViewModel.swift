@@ -796,8 +796,8 @@ final class HomeViewModel: ObservableObject {
             loadMoreNearbyCafes()
         case .communityTapped:
             event.send(.navigateToCommunity)
-        case .communityPostTapped:
-            event.send(.navigateToCommunity)
+        case .communityPostTapped(let postId):
+            event.send(.navigateToPostDetail(postId: postId))
         }
     }
 

@@ -22,8 +22,8 @@ struct CommunityView: View {
             switch event {
             case .navigateToPostEdit:
                 onNavigationAction(.navigateToPostEdit)
-            case .navigateToPost:
-                break
+            case .navigateToPost(let postId):
+                onNavigationAction(.navigateToPostDetail(postId: postId))
             }
         }
     }

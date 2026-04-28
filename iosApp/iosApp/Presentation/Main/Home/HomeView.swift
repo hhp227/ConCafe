@@ -39,6 +39,8 @@ struct HomeView: View {
                 onNavigationAction(.navigateToSignIn)
             case .navigateToCommunity:
                 onNavigationAction(.navigateToCommunity)
+            case .navigateToPostDetail(let postId):
+                onNavigationAction(.navigateToPostDetail(postId: postId))
             }
         }
         .alert(
