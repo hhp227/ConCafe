@@ -115,6 +115,7 @@ private struct PostDetailContentView: View {
                 mainContent
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(hex: "F8F5F6"))
     }
 
@@ -132,9 +133,12 @@ private struct PostDetailContentView: View {
                     }
                     commentSection
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             commentInputBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottom) {
             if let message = uiState.errorMessage {
                 VStack {
@@ -187,6 +191,7 @@ private struct PostDetailContentView: View {
             }
             Spacer().frame(height: 16)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
     private var commentInputBar: some View {
@@ -233,6 +238,7 @@ private struct PostDetailContentView: View {
             .background(Color.white)
             .compatSafeAreaBottomPadding()
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -330,6 +336,7 @@ private struct PostBodyView: View {
             .padding(.top, 16)
             .padding(.bottom, 16)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(Color.white)
     }
 }
