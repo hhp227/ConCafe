@@ -818,9 +818,13 @@ final class HomeViewModel: ObservableObject {
         case .loadMoreNearbyCafes:
             loadMoreNearbyCafes()
         case .communityTapped:
-            event.send(.navigateToCommunity)
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCommunity)
+            }
         case .communityPostTapped(let postId):
-            event.send(.navigateToPostDetail(postId: postId))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToPostDetail(postId: postId))
+            }
         }
     }
 

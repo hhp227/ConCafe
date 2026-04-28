@@ -434,8 +434,12 @@ class HomeViewModel(
                 }
                 HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
-                HomeAction.ClickCommunity -> _event.emit(HomeEvent.NavigateToCommunity)
-                is HomeAction.ClickCommunityPost -> _event.emit(HomeEvent.NavigateToPostDetail(action.postId))
+                HomeAction.ClickCommunity -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCommunity)
+                }
+                is HomeAction.ClickCommunityPost -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToPostDetail(action.postId))
+                }
             }
         }
     }

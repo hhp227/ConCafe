@@ -74,8 +74,6 @@ private struct CommunityContentView: View {
                             }
                             Spacer().frame(height: 80)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 12)
                     }
                 }
             }
@@ -202,7 +200,6 @@ private struct CommunityPostCard: View {
             }
             .padding(16)
             .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
     }

@@ -116,7 +116,7 @@ private struct HomeContentView: View {
             }
         }
     }
-    
+
     private var communitySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
@@ -128,8 +128,8 @@ private struct HomeContentView: View {
                 HStack(spacing: 12) {
                     ForEach(uiState.communityPosts, id: \.id) { post in
                         HomeCommunityPostCard(post: post)
-                            .frame(width: 276)
-                            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .frame(width: 276, height: 212)
+                            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .onTapGesture {
                                 onAction(.communityPostTapped(postId: post.id))
                             }
@@ -502,13 +502,13 @@ private struct HomeCommunityPostCard: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(hex: "2B2330"))
                 .lineLimit(2)
+                .frame(height: 42, alignment: .topLeading)
             let trimmedContent = post.content.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmedContent.isEmpty {
-                Text(trimmedContent)
-                    .font(.caption)
-                    .foregroundStyle(Color(hex: "665A63"))
-                    .lineLimit(2)
-            }
+            Text(trimmedContent)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "665A63"))
+                .lineLimit(4)
+                .frame(height: 56, alignment: .topLeading)
             Divider()
                 .overlay(Color(hex: "FFD1DC").opacity(0.3))
             HStack(spacing: 10) {
@@ -521,9 +521,9 @@ private struct HomeCommunityPostCard: View {
             }
         }
         .padding(14)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: UITraitCollection.current.userInterfaceStyle == .dark ? .black.opacity(0.20) : .black.opacity(0.03), radius: 8, y: 3)
     }
 }
 

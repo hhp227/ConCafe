@@ -739,7 +739,7 @@ private fun HomeCommunitySection(
         items(posts, key = { it.id }) { post ->
             HomeCommunityPostCard(
                 post = post,
-                modifier = Modifier.width(276.dp),
+                modifier = Modifier.width(276.dp).height(212.dp),
                 onClick = { onAction(HomeAction.ClickCommunityPost(post.id)) }
             )
         }
@@ -756,9 +756,8 @@ private fun HomeCommunityPostCard(
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -801,21 +800,21 @@ private fun HomeCommunityPostCard(
             }
             Text(
                 text = post.title,
+                modifier = Modifier.height(42.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colorFromHex("2B2330"),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            if (post.content.isNotBlank()) {
-                Text(
-                    text = post.content,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("665A63"),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Text(
+                text = post.content,
+                modifier = Modifier.height(64.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = colorFromHex("665A63"),
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis
+            )
             Divider(color = colorFromHex("FFD1DC").copy(alpha = 0.3f))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
