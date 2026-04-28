@@ -9,9 +9,11 @@ import SwiftUI
 import UIKit
 
 struct PostEditView: View {
+    let editPostId: String?
+
     let onNavigationAction: (NavigationAction) -> Void
 
-    @StateObject private var viewModel = PostEditViewModel()
+    @StateObject private var viewModel: PostEditViewModel
 
     @State private var showImagePicker = false
 
@@ -21,10 +23,10 @@ struct PostEditView: View {
             onAction: viewModel.onAction,
             onPickImage: { showImagePicker = true }
         )
-        .navigationTitle("게시글 작성")
+        .navigationTitle(viewModel.uiState.isEditMode ? "게시글 수정" : "게시글 작성")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     viewModel.onAction(.clickSubmit)
                 } label: {
@@ -32,7 +34,7 @@ struct PostEditView: View {
                         ProgressView()
                             .tint(Color(hex: "EF6797"))
                     } else {
-                        Text("등록")
+                        Text(viewModel.uiState.isEditMode ? "저장" : "등록")
                             .fontWeight(.bold)
                             .foregroundStyle(
                                 viewModel.uiState.canSubmit
@@ -62,6 +64,12 @@ struct PostEditView: View {
                 onDismiss: { showImagePicker = false }
             )
         }
+    }
+
+    init(editPostId: String? = nil, onNavigationAction: @escaping (NavigationAction) -> Void) {
+        self.editPostId = editPostId
+        self.onNavigationAction = onNavigationAction
+        _viewModel = StateObject(wrappedValue: PostEditViewModel(editPostId: editPostId))
     }
 }
 
@@ -214,7 +222,7 @@ private struct PostEditContentView: View {
 struct PostEditView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            PostEditView(onNavigationAction: { _ in })
+            PostEditView(editPostId: nil, onNavigationAction: { _ in })
         }
     }
 }
