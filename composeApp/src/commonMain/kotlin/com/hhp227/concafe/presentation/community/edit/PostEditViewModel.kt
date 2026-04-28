@@ -23,21 +23,9 @@ class PostEditViewModel(
     private val _event = MutableSharedFlow<PostEditEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
-    fun onAction(action: PostEditAction) {
-        when (action) {
-            PostEditAction.ClickBack -> viewModelScope.launch { _event.emit(PostEditEvent.NavigateBack) }
-            is PostEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value, infoMessage = null) }
-            is PostEditAction.ChangeContent -> _uiState.update { it.copy(content = action.value, infoMessage = null) }
-            PostEditAction.ClickAddImage -> _uiState.update { it.copy(infoMessage = null) }
-            is PostEditAction.AddImage -> addImage(action.imageUrl)
-            is PostEditAction.RemoveImage -> removeImage(action.index)
-            PostEditAction.ClickSubmit -> submit()
-            PostEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
-        }
-    }
-
     private fun addImage(imageUrl: String) {
         val state = _uiState.value
+
         if (state.imageUrls.size >= state.imageMaxCount) {
             _uiState.update { it.copy(infoMessage = "사진은 최대 ${state.imageMaxCount}장까지 첨부할 수 있습니다.") }
             return
@@ -58,6 +46,7 @@ class PostEditViewModel(
 
     private fun submit() {
         val state = _uiState.value
+
         if (state.title.isBlank()) {
             _uiState.update { it.copy(infoMessage = "제목을 입력해주세요.") }
             return
@@ -69,6 +58,7 @@ class PostEditViewModel(
         _uiState.update { it.copy(isSubmitting = true, infoMessage = null) }
         viewModelScope.launch {
             val uploadedImageUrls = uploadImages(state.imageUrls)
+
             if (uploadedImageUrls == null) {
                 _uiState.update { it.copy(isSubmitting = false, infoMessage = "이미지를 업로드하지 못했습니다.") }
                 return@launch
@@ -96,6 +86,7 @@ class PostEditViewModel(
 
     private suspend fun uploadImages(localPaths: List<String>): List<String>? {
         val uploaded = mutableListOf<String>()
+
         for (path in localPaths) {
             if (path.isBlank()) continue
             when (val result = uploadImageUseCase.invoke(path, "community")) {
@@ -104,6 +95,19 @@ class PostEditViewModel(
             }
         }
         return uploaded
+    }
+
+    fun onAction(action: PostEditAction) {
+        when (action) {
+            PostEditAction.ClickBack -> viewModelScope.launch { _event.emit(PostEditEvent.NavigateBack) }
+            is PostEditAction.ChangeTitle -> _uiState.update { it.copy(title = action.value, infoMessage = null) }
+            is PostEditAction.ChangeContent -> _uiState.update { it.copy(content = action.value, infoMessage = null) }
+            PostEditAction.ClickAddImage -> _uiState.update { it.copy(infoMessage = null) }
+            is PostEditAction.AddImage -> addImage(action.imageUrl)
+            is PostEditAction.RemoveImage -> removeImage(action.index)
+            PostEditAction.ClickSubmit -> submit()
+            PostEditAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
+        }
     }
 }
 

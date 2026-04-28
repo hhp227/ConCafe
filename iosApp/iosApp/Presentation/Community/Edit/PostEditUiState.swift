@@ -8,5 +8,15 @@
 import Foundation
 
 struct PostEditUiState {
-    
+    var title: String = ""
+    var content: String = ""
+    var imageUrls: [String] = []
+    var imageMaxCount: Int = 5
+    var isSubmitting: Bool = false
+    var infoMessage: String? = nil
+
+    var canSubmit: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
