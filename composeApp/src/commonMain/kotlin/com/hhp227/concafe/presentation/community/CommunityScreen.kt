@@ -49,7 +49,7 @@ fun CommunityScreen(
         viewModel.event.collect { event ->
             when (event) {
                 CommunityEvent.NavigateToPostEdit -> onNavigationAction(NavigationAction.NavigateToPostEdit)
-                is CommunityEvent.NavigateToPost -> { /* TODO: Navigate to post detail */ }
+                is CommunityEvent.NavigateToPost -> onNavigationAction(NavigationAction.NavigateToPostDetail(event.postId))
             }
         }
     }

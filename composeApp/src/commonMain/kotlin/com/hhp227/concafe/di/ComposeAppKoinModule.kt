@@ -31,6 +31,7 @@ import com.hhp227.concafe.presentation.main.ranking.RankingViewModel
 import com.hhp227.concafe.presentation.notification.NotificationViewModel
 import com.hhp227.concafe.presentation.review.ReviewEditViewModel
 import com.hhp227.concafe.presentation.community.CommunityViewModel
+import com.hhp227.concafe.presentation.community.detail.PostDetailViewModel
 import com.hhp227.concafe.presentation.community.edit.PostEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
@@ -81,6 +82,7 @@ private val composeAppPresentationModule = module {
     factory { NotificationSettingsViewModel(get(), get(), get()) }
     factory { CommunityViewModel(get(), get()) }
     factory { PostEditViewModel(get(), get()) }
+    factory { (postId: String) -> PostDetailViewModel(postId, get(), get(), get(), get(), get(), get(), get()) }
 }
 
 private val composeAppModules = listOf(

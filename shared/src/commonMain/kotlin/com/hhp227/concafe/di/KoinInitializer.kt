@@ -109,6 +109,12 @@ import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.CheckCommunityPostLikedUseCase
+import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityCommentsUseCase
+import com.hhp227.concafe.domain.usecase.AddCommunityCommentUseCase
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -898,6 +904,48 @@ fun resolveCreateCommunityPostUseCase(): CreateCommunityPostUseCase {
 }
 
 fun resolveCommunityPostEventPublisher(): CommunityPostEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCheckCommunityPostLikedUseCase(): CheckCommunityPostLikedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityPostUseCase(): GetCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteCommunityPostUseCase(): DeleteCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveToggleCommunityPostLikeUseCase(): ToggleCommunityPostLikeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityCommentsUseCase(): GetCommunityCommentsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveAddCommunityCommentUseCase(): AddCommunityCommentUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

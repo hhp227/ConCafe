@@ -133,6 +133,9 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToPostEdit -> {
                     _event.emit(NavigateTo(Route.PostEdit))
                 }
+                is NavigationAction.NavigateToPostDetail -> {
+                    _event.emit(NavigateTo(Route.PostDetail(action.postId)))
+                }
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)
                 }

@@ -102,4 +102,7 @@ sealed interface Route {
 
     @Serializable
     data object PostEdit : Route
+
+    @Serializable
+    data class PostDetail(val postId: String) : Route
 }

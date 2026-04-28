@@ -192,6 +192,12 @@ val useCaseModule = module {
     factory { ClearNativeAdUseCase(get()) }
     factory { GetCommunityPostPageUseCase(get()) }
     factory { CreateCommunityPostUseCase(get(), get(), get()) }
+    factory { GetCommunityPostUseCase(get()) }
+    factory { DeleteCommunityPostUseCase(get(), get()) }
+    factory { CheckCommunityPostLikedUseCase(get(), get()) }
+    factory { ToggleCommunityPostLikeUseCase(get(), get()) }
+    factory { GetCommunityCommentsUseCase(get()) }
+    factory { AddCommunityCommentUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

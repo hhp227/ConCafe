@@ -16,6 +16,9 @@ import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cafe.event.CafeEventScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.community.CommunityScreen
+import com.hhp227.concafe.presentation.community.detail.PostDetailScreen
+import com.hhp227.concafe.presentation.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -305,6 +308,18 @@ private fun DetailRoutePane(
         }
         Route.ChangePassword -> {
             ChangePasswordScreen(
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.Community -> {
+            CommunityScreen(onNavigationAction = onNavigationAction)
+        }
+        is Route.PostEdit -> {
+            PostEditScreen(onNavigationAction = onNavigationAction)
+        }
+        is Route.PostDetail -> {
+            PostDetailScreen(
+                postId = route.postId,
                 onNavigationAction = onNavigationAction
             )
         }

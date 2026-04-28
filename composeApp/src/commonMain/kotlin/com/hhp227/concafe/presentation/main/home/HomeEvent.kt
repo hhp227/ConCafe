@@ -7,4 +7,5 @@ sealed interface HomeEvent {
     data class NavigateToCafeEvent(val cafeId: String, val eventId: String) : HomeEvent
     data object NavigateToSignIn : HomeEvent
     data object NavigateToCommunity : HomeEvent
+    data class NavigateToPostDetail(val postId: String) : HomeEvent
 }

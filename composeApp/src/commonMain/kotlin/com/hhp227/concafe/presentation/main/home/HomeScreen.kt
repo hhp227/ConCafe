@@ -104,6 +104,7 @@ fun HomeScreen(
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 HomeEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
                 HomeEvent.NavigateToCommunity -> onNavigate(NavigationAction.NavigateToCommunity)
+                is HomeEvent.NavigateToPostDetail -> onNavigate(NavigationAction.NavigateToPostDetail(event.postId))
             }
         }
     }

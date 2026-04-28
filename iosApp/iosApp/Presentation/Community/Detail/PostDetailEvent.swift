@@ -8,5 +8,6 @@
 import Foundation
 
 enum PostDetailEvent {
-    
+    case navigateBack
+    case navigateToPicture(imageUrl: String)
 }

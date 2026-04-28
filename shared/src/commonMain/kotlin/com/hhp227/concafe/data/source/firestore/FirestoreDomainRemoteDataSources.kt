@@ -1791,4 +1791,136 @@ class FirestoreCommunityPostRemoteDataSource(
             displayDate = createdAt.take(10).replace("-", ".")
         )
     }
+
+    override suspend fun fetchCommunityPost(postId: String): CommunityPost {
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        val response = runCatching { restApi.get(path, idToken) }
+            .recoverCatching { restApi.get(path, null) }
+            .getOrElse { throw IllegalStateException("Failed to load post: ${it.message}", it) }
+        val document = Json.parseToJsonElement(response).jsonObject
+        return parseCommunityPostDocument(document)
+            ?: throw IllegalStateException("Failed to parse post document")
+    }
+
+    override suspend fun deleteCommunityPost(postId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        restApi.delete(path, idToken)
+    }
+
+    override suspend fun isLikedByUser(postId: String, userId: String): Boolean {
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_LIKES}/$userId"
+        return try {
+            restApi.get(path, idToken)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun toggleLike(postId: String, userId: String): Boolean {
+        val idToken = tokenProvider.getIdToken()
+        val likePath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_LIKES}/$userId"
+        val postPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        val isCurrentlyLiked = try { restApi.get(likePath, idToken); true } catch (e: Exception) { false }
+        return if (isCurrentlyLiked) {
+            restApi.delete(likePath, idToken)
+            val postDoc = runCatching { Json.parseToJsonElement(restApi.get(postPath, idToken)).jsonObject }.getOrNull()
+            val currentCount = postDoc?.get("fields")?.jsonObject?.getFirestoreInt("likeCount") ?: 1
+            val newCount = maxOf(0, currentCount - 1)
+            restApi.patch(postPath, firestoreDocumentBody(mapOf("likeCount" to firestoreLong(newCount.toLong()))), idToken, listOf("likeCount"))
+            false
+        } else {
+            val body = firestoreDocumentBody(mapOf("userId" to firestoreString(userId), "createdAt" to firestoreString(Clock.System.now().toString())))
+            restApi.patch(likePath, body, idToken)
+            val postDoc = runCatching { Json.parseToJsonElement(restApi.get(postPath, idToken)).jsonObject }.getOrNull()
+            val currentCount = postDoc?.get("fields")?.jsonObject?.getFirestoreInt("likeCount") ?: 0
+            val newCount = currentCount + 1
+            restApi.patch(postPath, firestoreDocumentBody(mapOf("likeCount" to firestoreLong(newCount.toLong()))), idToken, listOf("likeCount"))
+            true
+        }
+    }
+
+    override suspend fun fetchComments(postId: String): List<Comment> {
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val path = "${config.documentBasePath()}:runQuery"
+        val collectionPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_COMMENTS}"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.POST_COMMENTS}", "allDescendants": false}],
+                "where": {
+                  "fieldFilter": {
+                    "field": {"fieldPath": "__name__"},
+                    "op": "GREATER_THAN_OR_EQUAL",
+                    "value": {"referenceValue": "$collectionPath/"}
+                  }
+                },
+                "orderBy": [{"field": {"fieldPath": "createdAt"}, "direction": "ASCENDING"}]
+              }
+            }
+        """.trimIndent()
+        val response = runCatching { restApi.post(path, body, idToken) }
+            .recoverCatching { restApi.post(path, body, null) }
+            .getOrElse { return emptyList() }
+        val parsed = runCatching { Json.parseToJsonElement(response).jsonArray }.getOrElse { return emptyList() }
+        return parsed.mapNotNull { element ->
+            val document = element.jsonObject["document"]?.jsonObject ?: return@mapNotNull null
+            parseCommentDocument(document, postId)
+        }
+    }
+
+    override suspend fun addComment(postId: String, userId: String, content: String): Comment {
+        val idToken = tokenProvider.getIdToken()
+        val userNickname = runCatching { parseUserDocument(loadUserDocument(userId, idToken))?.nickname.orEmpty() }
+            .getOrDefault("")
+        val commentId = nextFirestoreEntityId("comment")
+        val createdAt = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "postId" to firestoreString(postId),
+                "userId" to firestoreString(userId),
+                "userNickname" to firestoreString(userNickname),
+                "content" to firestoreString(content),
+                "createdAt" to firestoreString(createdAt)
+            )
+        )
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_COMMENTS}/$commentId"
+        restApi.patch(path, body, idToken)
+        val postPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        val postDoc = runCatching { Json.parseToJsonElement(restApi.get(postPath, idToken)).jsonObject }.getOrNull()
+        val currentCount = postDoc?.get("fields")?.jsonObject?.getFirestoreInt("commentCount") ?: 0
+        restApi.patch(postPath, firestoreDocumentBody(mapOf("commentCount" to firestoreLong((currentCount + 1).toLong()))), idToken, listOf("commentCount"))
+        return Comment(
+            id = commentId,
+            postId = postId,
+            userId = userId,
+            userNickname = userNickname,
+            content = content,
+            createdAt = createdAt,
+            displayDate = createdAt.take(10).replace("-", ".")
+        )
+    }
+
+    private fun parseCommentDocument(document: JsonObject, postId: String): Comment? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val documentName = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val commentId = documentName.substringAfterLast("/").takeIf { it.isNotBlank() } ?: return null
+        val userId = fields.getFirestoreString("userId") ?: return null
+        val content = fields.getFirestoreString("content") ?: return null
+        val userNickname = fields.getFirestoreString("userNickname").orEmpty()
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        val displayDate = createdAt.take(10).replace("-", ".")
+        return Comment(
+            id = commentId,
+            postId = postId,
+            userId = userId,
+            userNickname = userNickname,
+            content = content,
+            createdAt = createdAt,
+            displayDate = displayDate
+        )
+    }
 }
