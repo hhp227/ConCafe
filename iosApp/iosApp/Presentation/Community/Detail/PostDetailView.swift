@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 import Shared
 
 struct PostDetailView: View {
@@ -58,7 +59,7 @@ struct PostDetailView: View {
         } message: {
             Text("이 게시글을 삭제하시겠습니까?")
         }
-        .onReceive(viewModel.event) { event in
+        .onReceive(viewModel.eventPublisher) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
