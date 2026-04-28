@@ -10,4 +10,5 @@ import Foundation
 enum PostDetailViewEvent {
     case navigateBack
     case navigateToPicture(imageUrl: String)
+    case navigateToPostEdit(postId: String)
 }

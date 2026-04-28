@@ -77,8 +77,14 @@ final class CommunityViewModel: ObservableObject {
     private func observeCommunityPostEvents() {
         Task {
             do {
-                for try await _ in asyncSequence(for: communityPostEventPublisher.events) {
-                    refresh()
+                for try await event in asyncSequence(for: communityPostEventPublisher.events) {
+                    if let deletedEvent = event as? CommunityPostEventDeleted {
+                        uiState.posts = uiState.posts.filter { $0.id != deletedEvent.postId }
+                    } else if let updatedEvent = event as? CommunityPostEventUpdated {
+                        uiState.posts = uiState.posts.map { $0.id == updatedEvent.post.id ? updatedEvent.post : $0 }
+                    } else {
+                        refresh()
+                    }
                 }
             } catch {
                 print("Error: \(error)")

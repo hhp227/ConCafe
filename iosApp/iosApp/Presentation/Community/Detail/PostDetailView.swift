@@ -56,6 +56,8 @@ struct PostDetailView: View {
             onNavigationAction(.navigateBack)
         case .navigateToPicture(let imageUrl):
             onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
+        case .navigateToPostEdit(let postId):
+            onNavigationAction(.navigateToPostEdit(postId: postId))
         }
     }
 

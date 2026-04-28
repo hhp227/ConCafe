@@ -32,6 +32,8 @@ final class HomeViewModel: ObservableObject {
 
     private let castEventPublisher: CastEventPublisher
 
+    private let communityPostEventPublisher: CommunityPostEventPublisher
+
     @Published private(set) var uiState = HomeUiState.empty
 
     let event = PassthroughSubject<HomeEvent, Never>()
@@ -476,6 +478,27 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func observeCommunityPostEvents() {
+        tasks[.communityPostEvent]?.cancel()
+        tasks[.communityPostEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: communityPostEventPublisher.events) {
+                    if event is CommunityPostEventCreated {
+                        self.loadCommunityPosts()
+                    } else if let deletedEvent = event as? CommunityPostEventDeleted {
+                        self.uiState.communityPosts = self.uiState.communityPosts.filter { $0.id != deletedEvent.postId }
+                    } else if let updatedEvent = event as? CommunityPostEventUpdated {
+                        self.uiState.communityPosts = self.uiState.communityPosts.map {
+                            $0.id == updatedEvent.post.id ? updatedEvent.post : $0
+                        }
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func observeCafeEventEvent() {
         tasks[.cafeEventEvent]?.cancel()
         tasks[.cafeEventEvent] = Task {
@@ -811,7 +834,8 @@ final class HomeViewModel: ObservableObject {
         cafeEventEventPublisher: CafeEventEventPublisher = KoinInitializerKt.resolveCafeEventEventPublisher(),
         cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
         self.getNearbyCafePageUseCase = getNearbyCafePageUseCase
@@ -823,6 +847,7 @@ final class HomeViewModel: ObservableObject {
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.communityPostEventPublisher = communityPostEventPublisher
 
         observeSession()
         observeBannerEvent()
@@ -830,6 +855,7 @@ final class HomeViewModel: ObservableObject {
         observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeCommunityPostEvents()
         loadHomeFeed()
         loadCommunityPosts()
     }
@@ -857,6 +883,7 @@ final class HomeViewModel: ObservableObject {
         case cafeRegistrationClaimEvent
         case cafeDetailEvent
         case castEvent
+        case communityPostEvent
         case popularCastPage
         case nearbyCafePage
         case communityPosts

@@ -28,6 +28,8 @@ final class PostDetailViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let communityPostEventPublisher: CommunityPostEventPublisher
+
     @Published private(set) var uiState = PostDetailUiState()
 
     private let eventSubject = PassthroughSubject<PostDetailViewEvent, Never>()
@@ -158,6 +160,7 @@ final class PostDetailViewModel: ObservableObject {
             do {
                 let result = try await deleteCommunityPostUseCase.invoke(postId: postId)
                 if result is AppResultSuccess<AnyObject> {
+                    communityPostEventPublisher.publish(event: CommunityPostEventDeleted(postId: postId))
                     eventSubject.send(.navigateBack)
                 } else {
                     uiState.isDeleting = false
@@ -210,6 +213,20 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
+    private func observeCommunityPostEvents() {
+        tasks[.observeCommunityEvent]?.cancel()
+        tasks[.observeCommunityEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: communityPostEventPublisher.events) {
+                    if let updatedEvent = event as? CommunityPostEventUpdated,
+                       updatedEvent.post.id == postId {
+                        uiState.post = updatedEvent.post
+                    }
+                }
+            } catch { }
+        }
+    }
+
     func onAction(_ action: PostDetailAction) {
         switch action {
         case .clickBack:
@@ -222,6 +239,7 @@ final class PostDetailViewModel: ObservableObject {
             uiState.isMenuVisible = false
         case .clickEdit:
             uiState.isMenuVisible = false
+            eventSubject.send(.navigateToPostEdit(postId: postId))
         case .clickDelete:
             uiState.isMenuVisible = false
             uiState.isDeleteConfirmVisible = true
@@ -250,7 +268,8 @@ final class PostDetailViewModel: ObservableObject {
         toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase = KoinInitializerKt.resolveToggleCommunityPostLikeUseCase(),
         getCommunityCommentsUseCase: GetCommunityCommentsUseCase = KoinInitializerKt.resolveGetCommunityCommentsUseCase(),
         addCommunityCommentUseCase: AddCommunityCommentUseCase = KoinInitializerKt.resolveAddCommunityCommentUseCase(),
-        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
         self.postId = postId
         self.getCommunityPostUseCase = getCommunityPostUseCase
@@ -260,9 +279,11 @@ final class PostDetailViewModel: ObservableObject {
         self.getCommunityCommentsUseCase = getCommunityCommentsUseCase
         self.addCommunityCommentUseCase = addCommunityCommentUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.communityPostEventPublisher = communityPostEventPublisher
 
         loadPost()
         loadComments()
+        observeCommunityPostEvents()
     }
 
     deinit {
@@ -278,5 +299,6 @@ final class PostDetailViewModel: ObservableObject {
         case toggleLike
         case deletePost
         case sendComment
+        case observeCommunityEvent
     }
 }

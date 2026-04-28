@@ -27,6 +27,8 @@ import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.CommunityPostEvent
+import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
@@ -46,7 +48,8 @@ class HomeViewModel(
     private val cafeEventEventPublisher: CafeEventEventPublisher,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val communityPostEventPublisher: CommunityPostEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -243,6 +246,23 @@ class HomeViewModel(
         }
     }
 
+    private fun observeCommunityPostEvents() {
+        jobs[TaskKey.COMMUNITY_POST_EVENT]?.cancel()
+        jobs[TaskKey.COMMUNITY_POST_EVENT] = viewModelScope.launch {
+            communityPostEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is CommunityPostEvent.Created -> loadCommunityPosts()
+                    is CommunityPostEvent.Deleted -> _uiState.update { state ->
+                        state.copy(communityPosts = state.communityPosts.filterNot { it.id == event.postId })
+                    }
+                    is CommunityPostEvent.Updated -> _uiState.update { state ->
+                        state.copy(communityPosts = state.communityPosts.map { if (it.id == event.post.id) event.post else it })
+                    }
+                }
+            }
+        }
+    }
+
     private fun observeCafeEventEvent() {
         jobs[TaskKey.OBSERVE_CAFE_EVENT_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_EVENT_EVENT] = viewModelScope.launch {
@@ -433,6 +453,7 @@ class HomeViewModel(
         observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeCommunityPostEvents()
         loadHomeFeed()
         loadCommunityPosts()
     }
@@ -444,6 +465,7 @@ class HomeViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,
+        COMMUNITY_POST_EVENT,
         POPULAR_CAST_PAGE,
         NEARBY_CAFE_PAGE,
         COMMUNITY_POSTS

@@ -157,6 +157,17 @@ class PostDetailViewModel(
         }
     }
 
+    private fun observeCommunityPostEvents() {
+        jobs[JobKey.OBSERVE_COMMUNITY_EVENT]?.cancel()
+        jobs[JobKey.OBSERVE_COMMUNITY_EVENT] = viewModelScope.launch {
+            communityPostEventPublisher.events.collect { event ->
+                if (event is CommunityPostEvent.Updated && event.post.id == postId) {
+                    _uiState.update { it.copy(post = event.post) }
+                }
+            }
+        }
+    }
+
     fun onAction(action: PostDetailAction) {
         when (action) {
             PostDetailAction.ClickBack -> {
@@ -200,6 +211,7 @@ class PostDetailViewModel(
     init {
         loadPost()
         loadComments()
+        observeCommunityPostEvents()
     }
 
     private enum class JobKey {
@@ -210,6 +222,7 @@ class PostDetailViewModel(
         TOGGLE_LIKE,
         DELETE_POST,
         SEND_COMMENT,
-        EMIT_EVENT
+        EMIT_EVENT,
+        OBSERVE_COMMUNITY_EVENT
     }
 }

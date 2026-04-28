@@ -21,7 +21,7 @@ struct CommunityView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToPostEdit:
-                onNavigationAction(.navigateToPostEdit)
+                onNavigationAction(.navigateToPostEdit(postId: nil))
             case .navigateToPost(let postId):
                 onNavigationAction(.navigateToPostDetail(postId: postId))
             }
@@ -31,6 +31,7 @@ struct CommunityView: View {
 
 private struct CommunityContentView: View {
     let uiState: CommunityUiState
+
     let onAction: (CommunityAction) -> Void
 
     var body: some View {
@@ -78,7 +79,6 @@ private struct CommunityContentView: View {
                     }
                 }
             }
-
             Button {
                 onAction(.clickWritePost)
             } label: {
@@ -103,6 +103,7 @@ private struct CommunityContentView: View {
 
 private struct CommunityPostCard: View {
     let post: CommunityPost
+
     let onTap: () -> Void
 
     var body: some View {
@@ -131,14 +132,12 @@ private struct CommunityPostCard: View {
                         .foregroundStyle(Color(hex: "B1A3AC"))
                 }
                 .padding(.bottom, 10)
-
                 Text(post.title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color(hex: "2B2330"))
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
-
                 if !post.content.isEmpty {
                     Text(post.content)
                         .font(.caption)
@@ -148,8 +147,8 @@ private struct CommunityPostCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 4)
                 }
-
                 let imageUrls = post.imageUrls as? [String] ?? []
+
                 if !imageUrls.isEmpty {
                     HStack(spacing: 6) {
                         ForEach(Array(imageUrls.prefix(3).enumerated()), id: \.offset) { index, imageUrl in
@@ -179,11 +178,9 @@ private struct CommunityPostCard: View {
                     }
                     .padding(.top, 10)
                 }
-
                 Divider()
                     .overlay(Color(hex: "FFD1DC").opacity(0.3))
                     .padding(.vertical, 10)
-
                 HStack(spacing: 14) {
                     HStack(spacing: 4) {
                         Image(systemName: "heart")

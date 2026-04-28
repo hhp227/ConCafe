@@ -25,7 +25,7 @@ struct HomeUiState {
     let birthdayCasts: [Cast]
     let notices: [Notice]
     let cafeEvents: [HomeCafeEvent]
-    let communityPosts: [CommunityPost]
+    var communityPosts: [CommunityPost]
 
     static let empty = HomeUiState(
         isLoading: false,
