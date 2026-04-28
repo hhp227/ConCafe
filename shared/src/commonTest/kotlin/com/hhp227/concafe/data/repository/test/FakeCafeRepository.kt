@@ -5,6 +5,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
@@ -47,6 +48,10 @@ class FakeCafeRepository(
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
         return dataSource.cafeDetail(cafeId)
             ?: throw NoSuchElementException("cafe detail not found")
+    }
+
+    override suspend fun getCafeMenuGoods(cafeId: String): CafeMenuGoodsSection {
+        TODO("Not yet implemented")
     }
 
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
@@ -112,5 +117,19 @@ class FakeCafeRepository(
                     checkInCount = dataSource.cafeCheckInCountById[cafe.id] ?: 0
                 )
             }
+    }
+
+    override suspend fun updateCafeSocialMedia(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?) {
+        TODO("Not yet implemented")
     }
 }

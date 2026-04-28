@@ -16,6 +16,10 @@ class FakeNotificationRepository(
         return dataSource.toPaged(items, cursor, pageSize)
     }
 
+    override suspend fun getUnreadNotificationCount(userId: String): Int {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun markAsRead(userId: String, notificationId: String) {
         val index = dataSource.notifications.indexOfFirst { it.userId == userId && it.id == notificationId }
         if (index == -1) {
