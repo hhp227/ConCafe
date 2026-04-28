@@ -30,7 +30,11 @@ final class PostDetailViewModel: ObservableObject {
 
     @Published private(set) var uiState = PostDetailUiState()
 
-    let eventPublisher = PassthroughSubject<PostDetailViewEvent, Never>()
+    private let eventSubject = PassthroughSubject<PostDetailViewEvent, Never>()
+
+    var eventPublisher: AnyPublisher<PostDetailViewEvent, Never> {
+        eventSubject.eraseToAnyPublisher()
+    }
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
@@ -154,7 +158,7 @@ final class PostDetailViewModel: ObservableObject {
             do {
                 let result = try await deleteCommunityPostUseCase.invoke(postId: postId)
                 if result is AppResultSuccess<AnyObject> {
-                    eventPublisher.send(.navigateBack)
+                    eventSubject.send(.navigateBack)
                 } else {
                     uiState.isDeleting = false
                     uiState.errorMessage = "게시글을 삭제하지 못했습니다."
@@ -209,7 +213,7 @@ final class PostDetailViewModel: ObservableObject {
     func onAction(_ action: PostDetailAction) {
         switch action {
         case .clickBack:
-            eventPublisher.send(.navigateBack)
+            eventSubject.send(.navigateBack)
         case .clickLike:
             toggleLike()
         case .clickMoreMenu:
@@ -234,7 +238,7 @@ final class PostDetailViewModel: ObservableObject {
         case .dismissError:
             uiState.errorMessage = nil
         case .clickImage(let imageUrl):
-            eventPublisher.send(.navigateToPicture(imageUrl: imageUrl))
+            eventSubject.send(.navigateToPicture(imageUrl: imageUrl))
         }
     }
 

@@ -16,6 +16,8 @@ struct PostDetailView: View {
 
     @StateObject private var viewModel: PostDetailViewModel
 
+    @State private var eventCancellable: AnyCancellable?
+
     var body: some View {
         PostDetailContentView(
             uiState: viewModel.uiState,
@@ -59,13 +61,23 @@ struct PostDetailView: View {
         } message: {
             Text("이 게시글을 삭제하시겠습니까?")
         }
-        .onReceive(viewModel.eventPublisher) { event in
-            switch event {
-            case .navigateBack:
-                onNavigationAction(.navigateBack)
-            case .navigateToPicture(let imageUrl):
-                onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
+        .onAppear {
+            eventCancellable = viewModel.eventPublisher.sink { event in
+                handleEvent(event)
             }
+        }
+        .onDisappear {
+            eventCancellable?.cancel()
+            eventCancellable = nil
+        }
+    }
+
+    private func handleEvent(_ event: PostDetailViewEvent) {
+        switch event {
+        case .navigateBack:
+            onNavigationAction(.navigateBack)
+        case .navigateToPicture(let imageUrl):
+            onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
         }
     }
 
