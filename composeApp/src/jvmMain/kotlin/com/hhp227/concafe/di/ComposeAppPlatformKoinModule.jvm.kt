@@ -13,7 +13,7 @@ import com.hhp227.concafe.presentation.main.checkin.JvmCheckInLocationProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual fun platformModules(): List<Module> {
+internal fun jvmPlatformModules(): List<Module> {
     return listOf(
         module {
             single<GoogleIdTokenProvider> { JvmGoogleIdTokenProvider() }

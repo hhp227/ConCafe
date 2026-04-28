@@ -82,7 +82,18 @@ private val composeAppPresentationModule = module {
     factory { NotificationSettingsViewModel(get(), get(), get()) }
     factory { CommunityViewModel(get(), get()) }
     factory { PostEditViewModel(get(), get()) }
-    factory { (postId: String) -> PostDetailViewModel(postId, get(), get(), get(), get(), get(), get(), get()) }
+    factory { (postId: String) ->
+        PostDetailViewModel(
+            postId = postId,
+            getCommunityPostUseCase = get(),
+            checkCommunityPostLikedUseCase = get(),
+            deleteCommunityPostUseCase = get(),
+            toggleCommunityPostLikeUseCase = get(),
+            getCommunityCommentsUseCase = get(),
+            addCommunityCommentUseCase = get(),
+            observeCurrentUserUseCase = get()
+        )
+    }
 }
 
 private val composeAppModules = listOf(
@@ -94,7 +105,5 @@ fun doInitConCafeAppKoin() {
 }
 
 fun doInitConCafeAppKoin(extraPlatformModules: List<Module>) {
-    doInitKoin(composeAppModules + platformModules() + extraPlatformModules)
+    doInitKoin(composeAppModules + extraPlatformModules)
 }
-
-expect fun platformModules(): List<Module>
