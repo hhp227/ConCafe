@@ -3,20 +3,25 @@ package com.hhp227.concafe.presentation.main.home
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,6 +82,7 @@ import concafe.composeapp.generated.resources.home_section_popular_cast
 import concafe.composeapp.generated.resources.home_show_more
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
@@ -189,13 +196,16 @@ fun HomeContentScreen(
                     onAction = { onAction(HomeAction.LoadMorePopularCasts) }
                 )
                 Spacer(Modifier.height(10.dp))
-                LazyRow(
-                    state = popularCastListState,
-                    flingBehavior = rememberSnapFlingBehavior(lazyListState = popularCastListState),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
-                    if (uiState.popularCasts.isNotEmpty()) {
+                if (uiState.popularCasts.isNotEmpty()) {
+                    LazyRow(
+                        state = popularCastListState,
+                        flingBehavior = rememberStartSnapFlingBehavior(popularCastListState),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
                         items(uiState.popularCasts) { maid ->
                             ConCafeCastCard(
                                 name = maid.name,
@@ -206,18 +216,21 @@ fun HomeContentScreen(
                                 onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
                             )
                         }
-                    } else {
-                        item {
-                            HomeSectionPlaceholderCard(
-                                title = stringResource(Res.string.home_popular_cast_empty_title),
-                                description = stringResource(Res.string.home_popular_cast_empty_desc),
-                                modifier = Modifier.fillParentMaxWidth()
-                            )
-                        }
                     }
+                } else {
+                    HomeSectionPlaceholderCard(
+                        title = stringResource(Res.string.home_popular_cast_empty_title),
+                        description = stringResource(Res.string.home_popular_cast_empty_desc),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
                 }
             }
             item {
+                val nearbyGridState = rememberLazyGridState()
+
+                SnapLazyHorizontalGridToStartEffect(nearbyGridState)
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                     val contentWidth = maxWidth
                     val itemWidth = nearbyCafeItemWidth(contentWidth)
@@ -231,6 +244,7 @@ fun HomeContentScreen(
                         Spacer(Modifier.height(10.dp))
                         LazyHorizontalGrid(
                             rows = GridCells.Fixed(3),
+                            state = nearbyGridState,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(300.dp),
@@ -271,9 +285,16 @@ fun HomeContentScreen(
             }
             if (uiState.birthdayCasts.isNotEmpty()) {
                 item {
+                    val birthdayCastListState = rememberLazyListState()
+
                     SectionTitle(stringResource(Res.string.home_section_birthday_cast))
                     Spacer(Modifier.height(10.dp))
                     LazyRow(
+                        state = birthdayCastListState,
+                        flingBehavior = rememberStartSnapFlingBehavior(birthdayCastListState),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(104.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
@@ -328,15 +349,23 @@ fun HomeContentScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeCafeEventSection(
     events: List<HomeCafeEvent>,
     onAction: (HomeAction) -> Unit
 ) {
+    val cafeEventListState = rememberLazyListState()
+
     SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
     Spacer(Modifier.height(10.dp))
     if (events.isNotEmpty()) {
         LazyRow(
+            state = cafeEventListState,
+            flingBehavior = rememberStartSnapFlingBehavior(cafeEventListState),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(236.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
@@ -354,6 +383,38 @@ private fun HomeCafeEventSection(
             description = stringResource(Res.string.home_ongoing_cafe_event_empty_desc),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun rememberStartSnapFlingBehavior(listState: LazyListState) =
+    rememberSnapFlingBehavior(
+        SnapLayoutInfoProvider(
+            lazyListState = listState,
+            snapPosition = SnapPosition.Start
+        )
+    )
+
+@Composable
+private fun SnapLazyHorizontalGridToStartEffect(gridState: LazyGridState, rowCount: Int = 3) {
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.isScrollInProgress }
+            .filter { !it }
+            .collect {
+                val firstVisibleItem = gridState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@collect
+                if (gridState.firstVisibleItemScrollOffset == 0) return@collect
+
+                val currentColumn = firstVisibleItem.index / rowCount
+                val targetColumn = if (gridState.firstVisibleItemScrollOffset > firstVisibleItem.size.width / 2) {
+                    currentColumn + 1
+                } else {
+                    currentColumn
+                }
+                val targetIndex = (targetColumn * rowCount).coerceAtMost(gridState.layoutInfo.totalItemsCount - 1)
+
+                gridState.animateScrollToItem(targetIndex)
+            }
     }
 }
 
@@ -749,14 +810,19 @@ private fun HomeCommunitySection(
     Spacer(Modifier.height(10.dp))
     LazyRow(
         state = communityPostListState,
-        flingBehavior = rememberSnapFlingBehavior(lazyListState = communityPostListState),
+        flingBehavior = rememberStartSnapFlingBehavior(communityPostListState),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(posts, key = { it.id }) { post ->
+        items(posts) { post ->
             HomeCommunityPostCard(
                 post = post,
-                modifier = Modifier.width(276.dp).height(200.dp),
+                modifier = Modifier
+                    .width(276.dp)
+                    .fillParentMaxHeight(),
                 onClick = { onAction(HomeAction.ClickCommunityPost(post.id)) }
             )
         }
