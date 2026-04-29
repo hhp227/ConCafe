@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,49 +91,68 @@ private fun CastManagementContentScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorFromHex("FFFBFD"))
                 .padding(innerPadding)
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = colorFromHex("EF6797")
-                )
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ViewModeSelector(
-                        viewMode = uiState.viewMode,
-                        onSelect = { onAction(CastManagementAction.ChangeViewMode(it)) }
-                    )
-                    if (uiState.periodStart.isNotEmpty()) {
-                        val periodLabel = formatPeriodLabel(uiState.viewMode, uiState.periodStart, uiState.periodEnd)
+            ViewModeSelector(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                viewMode = uiState.viewMode,
+                onSelect = { onAction(CastManagementAction.ChangeViewMode(it)) }
+            )
+            if (uiState.periodStart.isNotEmpty()) {
+                val periodLabel = formatPeriodLabel(uiState.viewMode, uiState.periodStart, uiState.periodEnd)
 
-                        Text(
-                            text = stringResource(Res.string.cast_management_period_schedule, periodLabel, uiState.cafeName),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                Text(
+                    text = stringResource(Res.string.cast_management_period_schedule, periodLabel, uiState.cafeName),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = colorFromHex("EF6797")
                         )
                     }
-                    if (uiState.errorMessage != null) {
+                    uiState.errorMessage != null -> {
                         Text(
                             text = stringResource(Res.string.cast_management_error_load_failed),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(horizontal = 32.dp),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                    } else {
+                    }
+                    else -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 4.dp, bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
                         when (uiState.viewMode) {
                             CastScheduleViewMode.WEEK -> WeekScheduleView(uiState.weekColumns)
                             CastScheduleViewMode.MONTH -> MonthScheduleView(uiState.monthOffset, uiState.monthCells)
+                        }
                         }
                     }
                 }
@@ -159,23 +179,26 @@ private fun formatPeriodLabel(mode: CastScheduleViewMode, periodStart: String, p
 
 @Composable
 private fun ViewModeSelector(
+    modifier: Modifier = Modifier,
     viewMode: CastScheduleViewMode,
     onSelect: (CastScheduleViewMode) -> Unit
 ) {
     Surface(
+        modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = Color.Transparent,
+        border = androidx.compose.foundation.BorderStroke(1.dp, colorFromHex("FFD1DC").copy(alpha = 0.5f))
     ) {
         Row(
-            modifier = Modifier.padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             CastScheduleViewMode.entries.forEach { mode ->
                 val selected = viewMode == mode
                 Surface(
-                    modifier = Modifier,
+                    modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = if (selected) colorFromHex("FFD1DC") else Color.Transparent,
+                    color = if (selected) colorFromHex("FFD1DC").copy(alpha = 0.3f) else Color.Transparent,
                     onClick = { onSelect(mode) }
                 ) {
                     Text(
@@ -183,10 +206,13 @@ private fun ViewModeSelector(
                             CastScheduleViewMode.WEEK -> stringResource(Res.string.cast_management_view_week)
                             CastScheduleViewMode.MONTH -> stringResource(Res.string.cast_management_view_month)
                         },
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
+                        color = if (selected) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
