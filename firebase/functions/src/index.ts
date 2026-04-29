@@ -5801,7 +5801,6 @@ async function syncTableCountUpdateNotifications(
     return;
   }
   const cafeName = asNonBlankString(afterData.name) ?? "즐겨찾기 카페";
-  const afterTotal = asNonNegativeInt((asPlainObject(afterData.tableCounts) ?? {})["total"]) ?? 0;
   const favorites = await db()
     .collection("cafeFavorites")
     .where("cafeId", "==", cafeId)
@@ -5835,7 +5834,7 @@ async function syncTableCountUpdateNotifications(
       `cafe_table_count_${cafeId}_${createdAt}_${userId}`,
       "CAFE_TABLE_COUNT_UPDATE",
       `${cafeName} 테이블 현황 업데이트`,
-      `현재 이용 가능한 테이블: ${current}/${afterTotal}`,
+      `현재 이용 가능한 테이블: ${current}`,
       cafeId,
       createdAt,
       settings
