@@ -68,6 +68,12 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.inquiry))
         case .navigateToChangePassword:
             event.send(.navigateTo(.changePassword))
+        case .navigateToCommunity:
+            event.send(.navigateTo(.community))
+        case .navigateToPostEdit(let postId):
+            event.send(.navigateTo(.postEdit(postId: postId)))
+        case .navigateToPostDetail(let postId):
+            event.send(.navigateTo(.postDetail(postId: postId)))
         case .navigateBack:
             event.send(.navigateBack)
         case .refreshUnreadNotificationCount:

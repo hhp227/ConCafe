@@ -37,6 +37,10 @@ struct HomeView: View {
                 onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
+            case .navigateToCommunity:
+                onNavigationAction(.navigateToCommunity)
+            case .navigateToPostDetail(let postId):
+                onNavigationAction(.navigateToPostDetail(postId: postId))
             }
         }
         .alert(
@@ -92,6 +96,9 @@ private struct HomeContentView: View {
                     cafeEventSection
                     popularCastSection
                     nearbyCafeSection
+                    if !uiState.communityPosts.isEmpty {
+                        communitySection
+                    }
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
@@ -109,7 +116,30 @@ private struct HomeContentView: View {
             }
         }
     }
-    
+
+    private var communitySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(
+                title: String(localized: String.LocalizationValue("community_title"), table: "Localizable"),
+                actionTitle: String(localized: String.LocalizationValue("home_community_see_all"), table: "Localizable"),
+                onAction: { onAction(.communityTapped) }
+            )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(uiState.communityPosts, id: \.id) { post in
+                        HomeCommunityPostCard(post: post)
+                            .frame(width: 276, height: 200)
+                            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .onTapGesture {
+                                onAction(.communityPostTapped(postId: post.id))
+                            }
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
     private var popularCastSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
@@ -439,6 +469,63 @@ private struct HomeBannerItem: View {
     }
 }
 
+private struct HomeCommunityPostCard: View {
+    let post: Shared.CommunityPost
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                    if let initial = post.userNickname.first {
+                        Text(String(initial))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color(hex: "EF6797"))
+                    }
+                }
+                .frame(width: 24, height: 24)
+                Text(post.userNickname.isEmpty ? "익명" : post.userNickname)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color(hex: "665A63"))
+                    .lineLimit(1)
+                Spacer()
+                Text(post.displayDate)
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "B1A3AC"))
+            }
+            Text(post.title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(hex: "2B2330"))
+                .lineLimit(2)
+            let trimmedContent = post.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            Text(trimmedContent)
+                .font(.caption)
+                .foregroundStyle(Color(hex: "665A63"))
+                .lineLimit(4)
+                .frame(height: 60, alignment: .topLeading)
+            Divider()
+                .overlay(Color(hex: "FFD1DC").opacity(0.3))
+            HStack(spacing: 10) {
+                Label("\(post.likeCount)", systemImage: "heart")
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "8C7E87"))
+                Label("\(post.commentCount)", systemImage: "bubble.left")
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "8C7E87"))
+            }
+        }
+        .padding(14)
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: UITraitCollection.current.userInterfaceStyle == .dark ? .black.opacity(0.20) : .black.opacity(0.03), radius: 8, y: 3)
+    }
+}
+
 private struct HomeBannerPlaceholderCard: View {
     let height: CGFloat
 
@@ -494,8 +581,6 @@ private struct SectionTitle: View {
 
     var onAction: (() -> Void)? = nil
 
-    private let actionSlotWidth: CGFloat = 44
-
     private let actionSlotHeight: CGFloat = 24
 
     var body: some View {
@@ -503,17 +588,17 @@ private struct SectionTitle: View {
             Text(title)
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color(hex: "2B2330"))
-            Spacer()
-            Group {
-                if let actionTitle, let onAction {
-                    Button(actionTitle, action: onAction)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
-                } else {
-                    Color.clear
-                }
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: 6)
+            if let actionTitle, let onAction {
+                Button(actionTitle, action: onAction)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "EF6797"))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .buttonStyle(.plain)
             }
-            .frame(width: actionSlotWidth, height: actionSlotHeight, alignment: .trailing)
         }
         .frame(minHeight: actionSlotHeight)
         .padding(.horizontal, 16)

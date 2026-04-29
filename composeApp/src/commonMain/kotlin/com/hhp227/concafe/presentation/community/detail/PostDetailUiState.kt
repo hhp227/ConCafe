@@ -1,0 +1,24 @@
+package com.hhp227.concafe.presentation.community.detail
+
+import com.hhp227.concafe.domain.model.Comment
+import com.hhp227.concafe.domain.model.CommunityPost
+
+data class PostDetailUiState(
+    val post: CommunityPost? = null,
+    val isLoading: Boolean = false,
+    val isLiked: Boolean = false,
+    val isOwner: Boolean = false,
+    val currentUserId: String? = null,
+    val isMenuVisible: Boolean = false,
+    val isDeleteConfirmVisible: Boolean = false,
+    val isDeleting: Boolean = false,
+    val comments: List<Comment> = emptyList(),
+    val isLoadingComments: Boolean = false,
+    val commentText: String = "",
+    val isSendingComment: Boolean = false,
+    val errorMessage: String? = null
+) {
+    val likeCount: Int get() = post?.likeCount ?: 0
+    val commentCount: Int get() = post?.commentCount ?: 0
+    val canSendComment: Boolean get() = commentText.isNotBlank() && !isSendingComment
+}

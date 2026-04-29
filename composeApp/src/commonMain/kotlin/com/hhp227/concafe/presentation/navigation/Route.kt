@@ -96,4 +96,13 @@ sealed interface Route {
 
     @Serializable
     data object ChangePassword : Route
+
+    @Serializable
+    data object Community : Route
+
+    @Serializable
+    data class PostEdit(val postId: String? = null) : Route
+
+    @Serializable
+    data class PostDetail(val postId: String) : Route
 }

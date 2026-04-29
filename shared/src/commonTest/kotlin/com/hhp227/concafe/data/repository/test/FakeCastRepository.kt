@@ -45,6 +45,7 @@ class FakeCastRepository(
             CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
             CastSort.LATEST -> filtered.sortedByDescending { it.id }
             CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
+            CastSort.HOME_LINKED_FIRST -> TODO()
         }
 
         return dataSource.toPaged(filtered, cursor, pageSize)

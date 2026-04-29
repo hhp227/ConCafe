@@ -30,6 +30,9 @@ import com.hhp227.concafe.presentation.main.fanmanagement.FanManagementViewModel
 import com.hhp227.concafe.presentation.main.ranking.RankingViewModel
 import com.hhp227.concafe.presentation.notification.NotificationViewModel
 import com.hhp227.concafe.presentation.review.ReviewEditViewModel
+import com.hhp227.concafe.presentation.community.CommunityViewModel
+import com.hhp227.concafe.presentation.community.detail.PostDetailViewModel
+import com.hhp227.concafe.presentation.community.edit.PostEditViewModel
 import com.hhp227.concafe.presentation.settings.SettingsViewModel
 import com.hhp227.concafe.presentation.settings.account.AccountSettingsViewModel
 import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordViewModel
@@ -44,7 +47,7 @@ private val composeAppPresentationModule = module {
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MainViewModel(get(), get(), get()) }
-    factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MapViewModel(get(), get(), get(), get(), get()) }
@@ -77,6 +80,29 @@ private val composeAppPresentationModule = module {
     factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
     factory { NotificationSettingsViewModel(get(), get(), get()) }
+    factory { CommunityViewModel(get(), get()) }
+    factory { (postId: String?) ->
+        PostEditViewModel(
+            editPostId = postId,
+            createCommunityPostUseCase = get(),
+            updateCommunityPostUseCase = get(),
+            getCommunityPostUseCase = get(),
+            uploadImageUseCase = get()
+        )
+    }
+    factory { (postId: String) ->
+        PostDetailViewModel(
+            postId = postId,
+            getCommunityPostUseCase = get(),
+            checkCommunityPostLikedUseCase = get(),
+            deleteCommunityPostUseCase = get(),
+            toggleCommunityPostLikeUseCase = get(),
+            getCommunityCommentsUseCase = get(),
+            addCommunityCommentUseCase = get(),
+            observeCurrentUserUseCase = get(),
+            communityPostEventPublisher = get()
+        )
+    }
 }
 
 private val composeAppModules = listOf(
@@ -88,7 +114,5 @@ fun doInitConCafeAppKoin() {
 }
 
 fun doInitConCafeAppKoin(extraPlatformModules: List<Module>) {
-    doInitKoin(composeAppModules + platformModules() + extraPlatformModules)
+    doInitKoin(composeAppModules + extraPlatformModules)
 }
-
-expect fun platformModules(): List<Module>

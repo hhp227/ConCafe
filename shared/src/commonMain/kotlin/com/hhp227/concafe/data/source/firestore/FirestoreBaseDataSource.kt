@@ -2193,9 +2193,89 @@ abstract class FirestoreBaseDataSource(
         return CastDetail(cast = cast, cafe = cafe, images = images, schedule = schedules, visitCertificationCount = cast.visitCertificationCount)
     }
 
-    // ── Companion ─────────────────────────────────────────────────────────────
+    // ── Community post helpers ────────────────────────────────────────────────
+
+    protected fun JsonObject.toCommunityPostQueryCursor(): String? {
+        val fields = this["fields"]?.jsonObject ?: return null
+        val createdAt = fields.getFirestoreString("createdAt") ?: return null
+        val documentName = this["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        return "$createdAt$COMMUNITY_POST_CURSOR_SEPARATOR$documentName"
+    }
+
+    protected fun String?.toCommunityPostStartAfterSection(): String {
+        val cursorValue = this
+        if (cursorValue.isNullOrBlank()) return ""
+        val separatorIndex = cursorValue.indexOf(COMMUNITY_POST_CURSOR_SEPARATOR)
+        val createdAt = if (separatorIndex >= 0) cursorValue.substring(0, separatorIndex) else return ""
+        val documentName = if (separatorIndex >= 0) cursorValue.substring(separatorIndex + 1) else return ""
+        if (createdAt.isBlank() || documentName.isBlank()) return ""
+        val escapedCreatedAt = escapeFirestoreQueryString(createdAt)
+        val escapedDocumentName = escapeFirestoreQueryString(documentName)
+        return """,
+                "startAt": {
+                  "values": [
+                    { "stringValue": "$escapedCreatedAt" },
+                    { "referenceValue": "$escapedDocumentName" }
+                  ],
+                  "before": false
+                }"""
+    }
+
+    protected suspend fun runCommunityPostPageQuery(
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toCommunityPostStartAfterSection()
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.COMMUNITY_POSTS}"}],
+                "orderBy": [
+                  {"field": {"fieldPath": "createdAt"},"direction": "DESCENDING"},
+                  {"field": {"fieldPath": "__name__"},"direction": "DESCENDING"}
+                ]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
+    }
+
+    protected fun parseCommunityPostDocument(document: JsonObject): com.hhp227.concafe.domain.model.CommunityPost? {
+        val documentName = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val fields = document["fields"]?.jsonObject ?: return null
+        val postId = documentName.substringAfterLast("/").takeIf { it.isNotBlank() } ?: return null
+        val userId = fields.getFirestoreString("userId") ?: return null
+        val title = fields.getFirestoreString("title") ?: return null
+        val content = fields.getFirestoreString("content") ?: return null
+        val userNickname = fields.getFirestoreString("userNickname").orEmpty()
+        val imageUrls = fields.getFirestoreStringList("imageUrls")
+        val likeCount = fields.getFirestoreInt("likeCount") ?: 0
+        val commentCount = fields.getFirestoreInt("commentCount") ?: 0
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        val displayDate = createdAt.take(10).replace("-", ".")
+        return com.hhp227.concafe.domain.model.CommunityPost(
+            id = postId,
+            userId = userId,
+            userNickname = userNickname,
+            title = title,
+            content = content,
+            imageUrls = imageUrls,
+            likeCount = likeCount,
+            commentCount = commentCount,
+            createdAt = createdAt,
+            displayDate = displayDate
+        )
+    }
 
     companion object {
+        val FOLLOWED_CAST_ID_FIELD_CANDIDATES = listOf("followedCastIds", "followingCastIds", "followCastIds")
+        val RECENT_VISIT_CAFE_ID_FIELD_CANDIDATES = listOf("recentVisitCafeIds", "recentVisitedCafeIds", "visitedCafeIds")
         const val DEFAULT_OWNER_CLAIM_STATUS = "승인 대기 중"
         const val DEFAULT_REGISTRATION_CLAIM_STATUS = "승인 대기 중"
         const val RECENT_FOLLOWER_FETCH_LIMIT = 30
@@ -2203,9 +2283,8 @@ abstract class FirestoreBaseDataSource(
         const val MAX_FIRESTORE_IN_FILTER_VALUES = 10
         const val REGION_FILTER_CAFE_CACHE_LIMIT = 200
         const val CAST_CURSOR_NULL_MARKER = "__NULL__"
+        const val COMMUNITY_POST_CURSOR_SEPARATOR = "|"
         val FAVORITE_CAFE_ID_FIELD_CANDIDATES = listOf("favoriteCafeIds", "favorites", "favoriteCafes")
-        val FOLLOWED_CAST_ID_FIELD_CANDIDATES = listOf("followedCastIds", "followingCastIds", "followCastIds")
-        val RECENT_VISIT_CAFE_ID_FIELD_CANDIDATES = listOf("recentVisitCafeIds", "recentVisitedCafeIds", "visitedCafeIds")
     }
 }
 

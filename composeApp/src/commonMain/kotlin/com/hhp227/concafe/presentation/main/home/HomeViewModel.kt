@@ -27,8 +27,11 @@ import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.CommunityPostEvent
+import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
+import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
@@ -39,12 +42,14 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val getNearbyCafePageUseCase: GetNearbyCafePageUseCase,
     private val getPopularCastPageUseCase: GetPopularCastPageUseCase,
+    private val getCommunityPostPageUseCase: GetCommunityPostPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeEventEventPublisher: CafeEventEventPublisher,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val communityPostEventPublisher: CommunityPostEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(empty())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -61,25 +66,25 @@ class HomeViewModel(
             val result = getHomeFeedUseCase.invoke()
 
             if (result is AppResult.Success) {
-                _uiState.value = HomeUiState(
-                    isLoading = false,
-                    isLoggedIn = _uiState.value.isLoggedIn,
-                    isLoginPromptVisible = _uiState.value.isLoginPromptVisible,
-                    errorMessage = null,
-                    banners = result.data.banners,
-                    popularCasts = result.data.popularCasts,
-                    popularCastCafeNames = result.data.popularCastCafeNames,
-                    popularCastCursor = result.data.popularCastsNextCursor,
-                    canLoadMorePopularCasts = result.data.hasMorePopularCasts,
-                    nearbyCafes = result.data.nearbyCafes,
-                    nearbyCafeCursor = result.data.nearbyCafesNextCursor,
-                    canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
-                    birthdayCasts = result.data.birthdayCasts,
-                    notices = result.data.notices,
-                    cafeEvents = result.data.cafeEvents
-                        .filter { isOngoingCafeEvent(it.statusLabel) }
-                        .take(MAX_HOME_CAFE_EVENTS)
-                )
+                _uiState.update { prev ->
+                    prev.copy(
+                        isLoading = false,
+                        errorMessage = null,
+                        banners = result.data.banners,
+                        popularCasts = result.data.popularCasts,
+                        popularCastCafeNames = result.data.popularCastCafeNames,
+                        popularCastCursor = result.data.popularCastsNextCursor,
+                        canLoadMorePopularCasts = result.data.hasMorePopularCasts,
+                        nearbyCafes = result.data.nearbyCafes,
+                        nearbyCafeCursor = result.data.nearbyCafesNextCursor,
+                        canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
+                        birthdayCasts = result.data.birthdayCasts,
+                        notices = result.data.notices,
+                        cafeEvents = result.data.cafeEvents
+                            .filter { isOngoingCafeEvent(it.statusLabel) }
+                            .take(MAX_HOME_CAFE_EVENTS)
+                    )
+                }
             } else if (result is AppResult.Failure) {
                 _uiState.update { state ->
                     state.copy(
@@ -94,6 +99,16 @@ class HomeViewModel(
                         errorMessage = "unknown"
                     )
                 }
+            }
+        }
+    }
+
+    private fun loadCommunityPosts() {
+        jobs[TaskKey.COMMUNITY_POSTS]?.cancel()
+        jobs[TaskKey.COMMUNITY_POSTS] = viewModelScope.launch {
+            when (val result = getCommunityPostPageUseCase.invoke(cursor = null, pageSize = MAX_HOME_COMMUNITY_POSTS)) {
+                is AppResult.Success -> _uiState.update { it.copy(communityPosts = result.data.items) }
+                else -> Unit
             }
         }
     }
@@ -226,6 +241,23 @@ class HomeViewModel(
                     is CastEvent.Created -> loadPopularCastPage(cursor = null, append = false)
                     is CastEvent.Updated -> patchCast(event.cast)
                     is CastEvent.Deleted -> removeCast(event.castId)
+                }
+            }
+        }
+    }
+
+    private fun observeCommunityPostEvents() {
+        jobs[TaskKey.COMMUNITY_POST_EVENT]?.cancel()
+        jobs[TaskKey.COMMUNITY_POST_EVENT] = viewModelScope.launch {
+            communityPostEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is CommunityPostEvent.Created -> loadCommunityPosts()
+                    is CommunityPostEvent.Deleted -> _uiState.update { state ->
+                        state.copy(communityPosts = state.communityPosts.filterNot { it.id == event.postId })
+                    }
+                    is CommunityPostEvent.Updated -> _uiState.update { state ->
+                        state.copy(communityPosts = state.communityPosts.map { if (it.id == event.post.id) event.post else it })
+                    }
                 }
             }
         }
@@ -402,6 +434,12 @@ class HomeViewModel(
                 }
                 HomeAction.LoadMorePopularCasts -> loadMorePopularCasts()
                 HomeAction.LoadMoreNearbyCafes -> loadMoreNearbyCafes()
+                HomeAction.ClickCommunity -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToCommunity)
+                }
+                is HomeAction.ClickCommunityPost -> requireSignedIn {
+                    _event.emit(HomeEvent.NavigateToPostDetail(action.postId))
+                }
             }
         }
     }
@@ -419,7 +457,9 @@ class HomeViewModel(
         observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeCommunityPostEvents()
         loadHomeFeed()
+        loadCommunityPosts()
     }
 
     private enum class TaskKey {
@@ -429,12 +469,15 @@ class HomeViewModel(
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,
+        COMMUNITY_POST_EVENT,
         POPULAR_CAST_PAGE,
-        NEARBY_CAFE_PAGE
+        NEARBY_CAFE_PAGE,
+        COMMUNITY_POSTS
     }
 
     private companion object {
         private const val MAX_HOME_CAFE_EVENTS = 8
+        private const val MAX_HOME_COMMUNITY_POSTS = 8
         private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

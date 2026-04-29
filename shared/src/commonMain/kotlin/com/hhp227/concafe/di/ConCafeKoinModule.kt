@@ -1,6 +1,7 @@
 package com.hhp227.concafe.di
 
 import com.hhp227.concafe.data.repository.*
+import com.hhp227.concafe.data.source.CommunityPostRemoteDataSource
 import com.hhp227.concafe.data.source.*
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreBannerRemoteDataSource
@@ -8,6 +9,7 @@ import com.hhp227.concafe.data.source.firestore.FirestoreCafeRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreCastClaimRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreCastRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreConfig
+import com.hhp227.concafe.data.source.firestore.FirestoreCommunityPostRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreInquiryRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreMyInfoRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreNoticeRemoteDataSource
@@ -19,8 +21,12 @@ import com.hhp227.concafe.data.source.firestore.FirestoreSyncRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreVisitRemoteDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
+import com.hhp227.concafe.domain.repository.CommunityPostRepository
 import com.hhp227.concafe.domain.repository.*
 import com.hhp227.concafe.domain.usecase.*
+import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
 import org.koin.dsl.module
 
 private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
@@ -41,6 +47,7 @@ val dataSourceModule = module {
     single<NotificationDataSource> { FirestoreNotificationDataSource(get(), get(), get()) }
     single<FirestoreSyncDataSource> { FirestoreSyncRemoteDataSource(get(), get(), get()) }
     single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
+    single<CommunityPostRemoteDataSource> { FirestoreCommunityPostRemoteDataSource(get(), get(), get()) }
 }
 
 val repositoryModule = module {
@@ -65,6 +72,7 @@ val repositoryModule = module {
     single<ImageCompressionRepository> { PlatformImageCompressionRepository() }
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
     single<NativeAdRepository> { NativeAdRepositoryImpl(get()) }
+    single<CommunityPostRepository> { CommunityPostRepositoryImpl(get()) }
 }
 
 val eventModule = module {
@@ -80,6 +88,7 @@ val eventModule = module {
     single<ScheduleManagementEventPublisher> { ScheduleManagementEventPublisher() }
     single<VisitEventPublisher> { VisitEventPublisher() }
     single<UserEventPublisher> { UserEventPublisher() }
+    single<CommunityPostEventPublisher> { CommunityPostEventPublisher() }
 }
 
 val useCaseModule = module {
@@ -182,6 +191,15 @@ val useCaseModule = module {
     factory { DeleteImageUseCase(get()) }
     factory { LoadNativeAdUseCase(get()) }
     factory { ClearNativeAdUseCase(get()) }
+    factory { GetCommunityPostPageUseCase(get()) }
+    factory { CreateCommunityPostUseCase(get(), get(), get()) }
+    factory { UpdateCommunityPostUseCase(get(), get(), get()) }
+    factory { GetCommunityPostUseCase(get()) }
+    factory { DeleteCommunityPostUseCase(get(), get(), get()) }
+    factory { CheckCommunityPostLikedUseCase(get(), get()) }
+    factory { ToggleCommunityPostLikeUseCase(get(), get()) }
+    factory { GetCommunityCommentsUseCase(get()) }
+    factory { AddCommunityCommentUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

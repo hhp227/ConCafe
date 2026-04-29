@@ -130,6 +130,37 @@ struct CompatFractionSheetDetentModifier: ViewModifier {
     }
 }
 
+struct CompatSafeAreaBottomPaddingModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.padding(.bottom, Self.bottomSafeAreaInset)
+    }
+
+    private static var bottomSafeAreaInset: CGFloat {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }
+        return keyWindow?.safeAreaInsets.bottom ?? 0
+    }
+}
+
+struct CompatVerticalTextField: View {
+    let placeholder: String
+
+    @Binding var text: String
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            TextField(placeholder, text: $text, axis: .vertical)
+                .lineLimit(1...3)
+        } else {
+            TextField(placeholder, text: $text)
+                .lineLimit(1)
+        }
+    }
+}
+
 final class NavigationBarAppearanceHostingController: UIViewController {
     var style: CompatNavigationBarStyle = .opaque
 
@@ -284,6 +315,10 @@ extension View {
 
     func compatFractionSheetDetent(_ fraction: CGFloat) -> some View {
         modifier(CompatFractionSheetDetentModifier(fraction: fraction))
+    }
+
+    func compatSafeAreaBottomPadding() -> some View {
+        modifier(CompatSafeAreaBottomPaddingModifier())
     }
 
     func compatNavigationBarStyle(_ style: CompatNavigationBarStyle) -> some View {

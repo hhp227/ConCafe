@@ -7,6 +7,13 @@
 
 import Foundation
 
-enum PostEditAction {
-    
+enum PostEditAction: Equatable {
+    case clickBack
+    case changeTitle(String)
+    case changeContent(String)
+    case clickAddImage
+    case addImage(String)
+    case removeImage(Int)
+    case clickSubmit
+    case dismissInfoMessage
 }

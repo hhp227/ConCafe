@@ -17,10 +17,6 @@ import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual fun platformModules(): List<Module> {
-    return emptyList()
-}
-
 internal fun androidPlatformModules(application: Application): List<Module> {
     return listOf(
         module {

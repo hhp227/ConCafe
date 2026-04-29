@@ -8,5 +8,9 @@
 import Foundation
 
 enum CommunityAction {
-    
+    case refresh
+    case loadMore
+    case clickWritePost
+    case clickPost(postId: String)
+    case dismissError
 }

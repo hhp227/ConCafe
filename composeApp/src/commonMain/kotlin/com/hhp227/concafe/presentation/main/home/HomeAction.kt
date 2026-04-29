@@ -12,4 +12,6 @@ sealed interface HomeAction {
     data object DismissLoginPrompt : HomeAction
     data object LoadMorePopularCasts : HomeAction
     data object LoadMoreNearbyCafes : HomeAction
+    data object ClickCommunity : HomeAction
+    data class ClickCommunityPost(val postId: String) : HomeAction
 }

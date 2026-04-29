@@ -18,4 +18,6 @@ enum HomeAction {
     case dismissLoginPrompt
     case loadMorePopularCasts
     case loadMoreNearbyCafes
+    case communityTapped
+    case communityPostTapped(postId: String)
 }

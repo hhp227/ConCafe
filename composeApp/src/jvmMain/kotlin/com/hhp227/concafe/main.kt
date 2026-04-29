@@ -5,6 +5,7 @@ import androidx.compose.ui.window.application
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.desktop_icon
 import com.hhp227.concafe.di.doInitConCafeAppKoin
+import com.hhp227.concafe.di.jvmPlatformModules
 import com.hhp227.concafe.presentation.App
 import java.io.File
 import org.jetbrains.compose.resources.painterResource
@@ -21,7 +22,7 @@ fun main() {
         ) {
             App()
         }
-        doInitConCafeAppKoin()
+        doInitConCafeAppKoin(jvmPlatformModules())
     }
 }
 

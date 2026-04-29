@@ -13,4 +13,6 @@ enum HomeEvent {
     case navigateToCafe(id: String)
     case navigateToCafeEvent(cafeId: String, eventId: String)
     case navigateToSignIn
+    case navigateToCommunity
+    case navigateToPostDetail(postId: String)
 }

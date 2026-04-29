@@ -1,8 +1,12 @@
 package com.hhp227.concafe.presentation.navigation
 
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,6 +21,9 @@ import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cafe.event.CafeEventScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
+import com.hhp227.concafe.presentation.community.CommunityScreen
+import com.hhp227.concafe.presentation.community.detail.PostDetailScreen
+import com.hhp227.concafe.presentation.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -230,6 +237,7 @@ fun NavigationScreen(
         }
         composable<Route.CheckInMap> { backStackEntry ->
             val route = backStackEntry.toRoute<Route.CheckInMap>()
+
             MapScreen(
                 initialRegionKey = route.initialRegionKey,
                 onNavigationAction = viewModel::onAction
@@ -264,6 +272,28 @@ fun NavigationScreen(
         }
         composable<Route.ChangePassword> {
             ChangePasswordScreen(onNavigationAction = viewModel::onAction)
+        }
+        composable<Route.Community> {
+            CommunityScreen(onNavigationAction = viewModel::onAction)
+        }
+        composable<Route.PostEdit> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.PostEdit>()
+
+            PostEditScreen(
+                editPostId = route.postId,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.PostDetail> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.PostDetail>()
+            val activity = LocalContext.current as? Activity
+
+            DisposableEffect(Unit) {
+                val prev = activity?.window?.attributes?.softInputMode
+                activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+                onDispose { prev?.let { activity.window?.setSoftInputMode(it) } }
+            }
+            PostDetailScreen(postId = route.postId, onNavigationAction = viewModel::onAction)
         }
     }
 }
