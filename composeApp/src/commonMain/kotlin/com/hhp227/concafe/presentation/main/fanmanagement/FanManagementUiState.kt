@@ -57,6 +57,9 @@ data class FanManagementUiState(
             announcementBody.trim().isNotEmpty() &&
             !isSendingAnnouncement
 
+    val hasPrimaryContent: Boolean
+        get() = fanManagementData != null || castClaimStatus != null
+
     companion object {
         fun empty(): FanManagementUiState = FanManagementUiState()
     }

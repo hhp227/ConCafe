@@ -21,9 +21,6 @@ struct FanManagementView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .onAppear {
-            viewModel.onAction(.refresh)
-        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .showMessage(let message):
