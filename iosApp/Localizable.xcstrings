@@ -15391,6 +15391,28 @@
         }
       }
     },
+    "cafeevent_go_to_cafe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to event cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント開催カフェへ移動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 진행 카페로 이동"
+          }
+        }
+      }
+    },
     "noticeevent_tab_notice" : {
       "localizations" : {
         "en" : {

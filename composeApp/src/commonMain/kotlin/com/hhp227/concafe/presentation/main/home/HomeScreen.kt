@@ -100,7 +100,13 @@ fun HomeScreen(
                     )
                 )
                 is HomeEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
-                is HomeEvent.NavigateToCafeEvent -> onNavigate(NavigationAction.NavigateToCafeEvent(event.cafeId, event.eventId))
+                is HomeEvent.NavigateToCafeEvent -> onNavigate(
+                    NavigationAction.NavigateToCafeEvent(
+                        cafeId = event.cafeId,
+                        eventId = event.eventId,
+                        showCafeButton = true
+                    )
+                )
                 is HomeEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 HomeEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
                 HomeEvent.NavigateToCommunity -> onNavigate(NavigationAction.NavigateToCommunity)

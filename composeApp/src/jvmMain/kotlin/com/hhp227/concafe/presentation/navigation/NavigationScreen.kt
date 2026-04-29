@@ -72,6 +72,12 @@ fun NavigationScreen(
                         detailStack.removeLast()
                     }
                 }
+                is NavigationEvent.ReplaceCurrent -> {
+                    if (detailStack.isNotEmpty()) {
+                        detailStack.removeLast()
+                    }
+                    detailStack.add(nextDetailEntryId++ to event.route)
+                }
                 NavigationEvent.RefreshUnreadNotificationCount -> {
                     onRefreshUnreadNotificationCount()
                 }
@@ -181,6 +187,7 @@ private fun DetailRoutePane(
             CafeEventScreen(
                 cafeId = route.cafeId,
                 eventId = route.eventId,
+                showCafeButton = route.showCafeButton,
                 onNavigationAction = onNavigationAction
             )
         }

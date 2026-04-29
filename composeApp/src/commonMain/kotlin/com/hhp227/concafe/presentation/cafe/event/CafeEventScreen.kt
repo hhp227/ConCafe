@@ -18,7 +18,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +52,7 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_error_retry_prompt
+import concafe.composeapp.generated.resources.cafeevent_go_to_cafe
 import concafe.composeapp.generated.resources.noticeevent_info_event_load_failed
 import concafe.composeapp.generated.resources.noticeevent_tab_event
 import concafe.composeapp.generated.resources.noticeevent_validation_event_required
@@ -62,6 +65,7 @@ import org.koin.core.parameter.parametersOf
 fun CafeEventScreen(
     cafeId: String,
     eventId: String,
+    showCafeButton: Boolean = false,
     viewModel: CafeEventViewModel = viewModel(
         key = "$cafeId:$eventId",
         factory = viewModelFactory {
@@ -114,6 +118,10 @@ fun CafeEventScreen(
                 )
                 uiState.event != null -> CafeEventDetailContent(
                     event = requireNotNull(uiState.event),
+                    showCafeButton = showCafeButton,
+                    onCafeClick = {
+                        onNavigationAction(NavigationAction.ReplaceWithCafe(cafeId))
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
                 else -> CafeEventErrorContent(
@@ -132,6 +140,8 @@ fun CafeEventScreen(
 @Composable
 private fun CafeEventDetailContent(
     event: CafeEventManagementItem,
+    showCafeButton: Boolean,
+    onCafeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -178,6 +188,28 @@ private fun CafeEventDetailContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+            if (showCafeButton) {
+                Button(
+                    onClick = onCafeClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorFromHex("EF6797"),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Storefront,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(Res.string.cafeevent_go_to_cafe),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(

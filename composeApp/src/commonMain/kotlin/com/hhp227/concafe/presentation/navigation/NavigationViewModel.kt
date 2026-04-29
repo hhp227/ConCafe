@@ -42,7 +42,10 @@ class NavigationViewModel : ViewModel() {
                     _event.emit(NavigateTo(Cafe(action.id)))
                 }
                 is NavigationAction.NavigateToCafeEvent -> {
-                    _event.emit(NavigateTo(CafeEvent(action.cafeId, action.eventId)))
+                    _event.emit(NavigateTo(CafeEvent(action.cafeId, action.eventId, action.showCafeButton)))
+                }
+                is NavigationAction.ReplaceWithCafe -> {
+                    _event.emit(NavigationEvent.ReplaceCurrent(Cafe(action.id)))
                 }
                 is NavigationAction.NavigateToCafeDashboard -> {
                     _event.emit(NavigateTo(CafeDashboard(action.id)))

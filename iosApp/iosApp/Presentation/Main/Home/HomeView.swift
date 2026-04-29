@@ -34,7 +34,7 @@ struct HomeView: View {
             case .navigateToCafe(let id):
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToCafeEvent(let cafeId, let eventId):
-                onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
+                onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId, showCafeButton: true))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .navigateToCommunity:

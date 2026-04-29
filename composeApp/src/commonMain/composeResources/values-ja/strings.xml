@@ -362,6 +362,7 @@
     <string name="noticeevent_empty_event">登録されたイベントがありません。</string>
     <string name="noticeevent_tab_notice">お知らせ</string>
     <string name="noticeevent_tab_event">イベント</string>
+    <string name="cafeevent_go_to_cafe">イベント開催カフェへ移動</string>
     <string name="noticeevent_form_sheet_title_notice_edit">お知らせ修正</string>
     <string name="noticeevent_form_sheet_title_notice_create">お知らせ登録</string>
     <string name="noticeevent_form_sheet_title_event_edit">イベント修正</string>

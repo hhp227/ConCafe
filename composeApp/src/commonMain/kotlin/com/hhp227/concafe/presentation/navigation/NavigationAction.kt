@@ -4,7 +4,12 @@ sealed interface NavigationAction {
     data class NavigateToMain(val initialTab: String? = null) : NavigationAction
     data class NavigateToCast(val id: String) : NavigationAction
     data class NavigateToCafe(val id: String) : NavigationAction
-    data class NavigateToCafeEvent(val cafeId: String, val eventId: String) : NavigationAction
+    data class NavigateToCafeEvent(
+        val cafeId: String,
+        val eventId: String,
+        val showCafeButton: Boolean = false
+    ) : NavigationAction
+    data class ReplaceWithCafe(val id: String) : NavigationAction
     data class NavigateToCafeDashboard(val id: String) : NavigationAction
     data class NavigateToBanner(val cafeId: String? = null) : NavigationAction
     data class NavigateToBannerEdit(

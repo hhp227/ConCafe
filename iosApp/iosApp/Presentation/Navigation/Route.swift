@@ -12,7 +12,7 @@ enum Route: Hashable {
     case main(initialTab: String?)
     case cast(param: String)
     case cafe(param: String)
-    case cafeEvent(cafeId: String, eventId: String)
+    case cafeEvent(cafeId: String, eventId: String, showCafeButton: Bool)
     case cafeDashboard(param: String)
     case banner(cafeId: String?)
     case bannerEdit(cafeId: String?, bannerId: String?)
