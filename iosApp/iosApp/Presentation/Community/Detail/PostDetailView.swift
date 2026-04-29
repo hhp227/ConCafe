@@ -188,7 +188,13 @@ private struct PostDetailContentView: View {
                     .padding(.vertical, 16)
             } else {
                 ForEach(uiState.comments, id: \.id) { comment in
-                    CommentItemView(comment: comment)
+                    CommentItemView(
+                        comment: comment,
+                        isMine: comment.userId == uiState.currentUserId,
+                        onEdit: { onAction(.clickEditComment(commentId: comment.id)) },
+                        onDelete: { onAction(.clickDeleteComment(commentId: comment.id)) },
+                        onReport: { onAction(.clickReportComment(commentId: comment.id)) }
+                    )
                 }
             }
             Spacer().frame(height: 16)
@@ -346,6 +352,14 @@ private struct PostBodyView: View {
 private struct CommentItemView: View {
     let comment: Comment
 
+    let isMine: Bool
+
+    let onEdit: () -> Void
+
+    let onDelete: () -> Void
+
+    let onReport: () -> Void
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
@@ -367,6 +381,24 @@ private struct CommentItemView: View {
                 Text(comment.displayDate)
                     .font(.caption)
                     .foregroundStyle(Color(hex: "B1A3AC"))
+                Menu {
+                    if isMine {
+                        Button("수정", action: onEdit)
+                        Button(role: .destructive, action: onDelete) {
+                            Label("삭제", systemImage: "trash")
+                        }
+                    } else {
+                        Button(action: onReport) {
+                            Label("신고하기", systemImage: "exclamationmark.bubble")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
             }
             Text(comment.content)
                 .font(.system(size: 14))

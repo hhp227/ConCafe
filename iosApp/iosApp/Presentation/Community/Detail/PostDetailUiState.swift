@@ -13,6 +13,7 @@ struct PostDetailUiState {
     var isLoading: Bool = true
     var isLiked: Bool = false
     var isOwner: Bool = false
+    var currentUserId: String? = nil
     var isMenuVisible: Bool = false
     var isDeleteConfirmVisible: Bool = false
     var isDeleting: Bool = false

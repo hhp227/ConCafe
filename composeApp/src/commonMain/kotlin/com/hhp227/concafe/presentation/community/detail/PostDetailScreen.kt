@@ -220,7 +220,13 @@ private fun PostDetailContentScreen(
                                 }
                             } else {
                                 items(uiState.comments, key = { it.id }) { comment ->
-                                    CommentItem(comment = comment)
+                                    CommentItem(
+                                        comment = comment,
+                                        isMine = comment.userId == uiState.currentUserId,
+                                        onEdit = { onAction(PostDetailAction.ClickEditComment(comment.id)) },
+                                        onDelete = { onAction(PostDetailAction.ClickDeleteComment(comment.id)) },
+                                        onReport = { onAction(PostDetailAction.ClickReportComment(comment.id)) }
+                                    )
                                 }
                             }
                             item { Spacer(Modifier.height(8.dp)) }
@@ -349,7 +355,15 @@ private fun PostBody(
 }
 
 @Composable
-private fun CommentItem(comment: Comment) {
+private fun CommentItem(
+    comment: Comment,
+    isMine: Boolean,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onReport: () -> Unit
+) {
+    var isMenuVisible by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,6 +394,48 @@ private fun CommentItem(comment: Comment) {
             )
             Spacer(Modifier.weight(1f))
             Text(text = comment.displayDate, fontSize = 11.sp, color = colorFromHex("B1A3AC"))
+            Box {
+                IconButton(
+                    onClick = { isMenuVisible = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = colorFromHex("B1A3AC"),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuVisible,
+                    onDismissRequest = { isMenuVisible = false }
+                ) {
+                    if (isMine) {
+                        DropdownMenuItem(
+                            text = { Text("수정") },
+                            onClick = {
+                                isMenuVisible = false
+                                onEdit()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("삭제", color = colorFromHex("E53935")) },
+                            onClick = {
+                                isMenuVisible = false
+                                onDelete()
+                            }
+                        )
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text("신고하기") },
+                            onClick = {
+                                isMenuVisible = false
+                                onReport()
+                            }
+                        )
+                    }
+                }
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(

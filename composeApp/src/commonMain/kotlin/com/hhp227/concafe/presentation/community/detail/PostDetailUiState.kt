@@ -8,6 +8,7 @@ data class PostDetailUiState(
     val isLoading: Boolean = false,
     val isLiked: Boolean = false,
     val isOwner: Boolean = false,
+    val currentUserId: String? = null,
     val isMenuVisible: Boolean = false,
     val isDeleteConfirmVisible: Boolean = false,
     val isDeleting: Boolean = false,

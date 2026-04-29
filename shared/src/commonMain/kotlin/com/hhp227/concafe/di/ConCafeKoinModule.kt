@@ -195,7 +195,7 @@ val useCaseModule = module {
     factory { CreateCommunityPostUseCase(get(), get(), get()) }
     factory { UpdateCommunityPostUseCase(get(), get(), get()) }
     factory { GetCommunityPostUseCase(get()) }
-    factory { DeleteCommunityPostUseCase(get(), get()) }
+    factory { DeleteCommunityPostUseCase(get(), get(), get()) }
     factory { CheckCommunityPostLikedUseCase(get(), get()) }
     factory { ToggleCommunityPostLikeUseCase(get(), get()) }
     factory { GetCommunityCommentsUseCase(get()) }

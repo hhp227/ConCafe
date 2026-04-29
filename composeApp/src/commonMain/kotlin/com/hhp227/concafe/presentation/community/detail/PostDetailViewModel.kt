@@ -67,7 +67,12 @@ class PostDetailViewModel(
         jobs[JobKey.CHECK_OWNER]?.cancel()
         jobs[JobKey.CHECK_OWNER] = viewModelScope.launch {
             val currentUser = observeCurrentUserUseCase.invoke().first()
-            _uiState.update { it.copy(isOwner = currentUser?.id == postUserId) }
+            _uiState.update {
+                it.copy(
+                    currentUserId = currentUser?.id,
+                    isOwner = currentUser?.id == postUserId
+                )
+            }
         }
     }
 
@@ -123,7 +128,6 @@ class PostDetailViewModel(
         jobs[JobKey.DELETE_POST] = viewModelScope.launch {
             when (deleteCommunityPostUseCase(postId)) {
                 is AppResult.Success -> {
-                    communityPostEventPublisher.publish(CommunityPostEvent.Deleted(postId))
                     _event.emit(PostDetailEvent.NavigateBack)
                 }
                 is AppResult.Failure -> _uiState.update {
@@ -190,6 +194,15 @@ class PostDetailViewModel(
             PostDetailAction.ConfirmDelete -> deletePost()
             PostDetailAction.DismissDeleteConfirm -> _uiState.update { it.copy(isDeleteConfirmVisible = false) }
             PostDetailAction.ClickReport -> _uiState.update { it.copy(isMenuVisible = false) }
+            is PostDetailAction.ClickEditComment -> _uiState.update {
+                it.copy(errorMessage = "댓글 수정 기능은 준비 중입니다.")
+            }
+            is PostDetailAction.ClickDeleteComment -> _uiState.update {
+                it.copy(errorMessage = "댓글 삭제 기능은 준비 중입니다.")
+            }
+            is PostDetailAction.ClickReportComment -> _uiState.update {
+                it.copy(errorMessage = "신고가 접수되었습니다.")
+            }
             is PostDetailAction.ChangeCommentText -> _uiState.update { it.copy(commentText = action.text) }
             PostDetailAction.ClickSendComment -> sendComment()
             PostDetailAction.DismissError -> _uiState.update { it.copy(errorMessage = null) }

@@ -70,6 +70,7 @@ final class PostDetailViewModel: ObservableObject {
         tasks[.checkOwner] = Task {
             do {
                 for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.currentUserId = user?.id
                     uiState.isOwner = user?.id == post.userId
                     break
                 }
@@ -160,7 +161,6 @@ final class PostDetailViewModel: ObservableObject {
             do {
                 let result = try await deleteCommunityPostUseCase.invoke(postId: postId)
                 if result is AppResultSuccess<AnyObject> {
-                    communityPostEventPublisher.publish(event: CommunityPostEvent.Deleted(postId: postId))
                     eventSubject.send(.navigateBack)
                 } else {
                     uiState.isDeleting = false
@@ -249,6 +249,12 @@ final class PostDetailViewModel: ObservableObject {
             uiState.isDeleteConfirmVisible = false
         case .clickReport:
             uiState.isMenuVisible = false
+        case .clickEditComment(commentId: _):
+            uiState.errorMessage = "댓글 수정 기능은 준비 중입니다."
+        case .clickDeleteComment(commentId: _):
+            uiState.errorMessage = "댓글 삭제 기능은 준비 중입니다."
+        case .clickReportComment(commentId: _):
+            uiState.errorMessage = "신고가 접수되었습니다."
         case .changeCommentText(let text):
             uiState.commentText = text
         case .clickSendComment:
