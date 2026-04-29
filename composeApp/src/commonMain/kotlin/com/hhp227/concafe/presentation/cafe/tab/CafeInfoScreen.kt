@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.TableRestaurant
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,12 +30,14 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.cafe_info_action_reserve
 import concafe.composeapp.generated.resources.cafe_info_label_address
+import concafe.composeapp.generated.resources.cafe_info_label_available_tables
 import concafe.composeapp.generated.resources.cafe_info_label_business_hours
 import concafe.composeapp.generated.resources.cafe_info_label_phone
 import concafe.composeapp.generated.resources.cafe_info_placeholder_business_hours
 import concafe.composeapp.generated.resources.cafe_info_placeholder_phone
 import concafe.composeapp.generated.resources.cafe_info_section_description
 import concafe.composeapp.generated.resources.cafe_info_section_social_media
+import concafe.composeapp.generated.resources.cafe_info_table_count_format
 import concafe.composeapp.generated.resources.social_instagram_icon
 import concafe.composeapp.generated.resources.social_tiktok_icon
 import concafe.composeapp.generated.resources.social_x_icon
@@ -78,6 +81,16 @@ private fun InfoCard(detail: CafeDetail) {
                 title = stringResource(Res.string.cafe_info_label_business_hours),
                 value = detail.businessHours.ifBlank { stringResource(Res.string.cafe_info_placeholder_business_hours) }
             )
+            if (detail.cafe.tableCounts.total > 0) {
+                InfoRow(
+                    icon = Icons.Default.TableRestaurant,
+                    title = stringResource(Res.string.cafe_info_label_available_tables),
+                    value = stringResource(
+                        Res.string.cafe_info_table_count_format,
+                        detail.cafe.tableCounts.current
+                    )
+                )
+            }
             InfoRow(
                 icon = Icons.Default.Phone,
                 title = stringResource(Res.string.cafe_info_label_phone),

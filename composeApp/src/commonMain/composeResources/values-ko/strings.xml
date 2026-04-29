@@ -747,6 +747,8 @@
     <string name="cafe_error_retry_prompt">다시 시도해 주세요.</string>
     <string name="cafe_info_label_address">주소</string>
     <string name="cafe_info_label_business_hours">영업시간</string>
+    <string name="cafe_info_label_available_tables">현재 이용 가능 테이블 수</string>
+    <string name="cafe_info_table_count_format">%1$d개 이용 가능</string>
     <string name="cafe_info_label_phone">전화번호</string>
     <string name="cafe_info_placeholder_business_hours">운영시간 정보 준비중</string>
     <string name="cafe_info_placeholder_phone">연락처 정보 준비중</string>

@@ -735,6 +735,8 @@
     <string name="cafe_error_retry_prompt">もう一度お試しください。</string>
     <string name="cafe_info_label_address">住所</string>
     <string name="cafe_info_label_business_hours">営業時間</string>
+    <string name="cafe_info_label_available_tables">現在利用可能なテーブル数</string>
+    <string name="cafe_info_table_count_format">%1$d テーブル利用可能</string>
     <string name="cafe_info_label_phone">電話番号</string>
     <string name="cafe_info_placeholder_business_hours">営業時間情報を準備中です</string>
     <string name="cafe_info_placeholder_phone">連絡先情報を準備中です</string>

@@ -4022,6 +4022,50 @@
         }
       }
     },
+    "cafe_info_label_available_tables" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available Tables"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在利用可能なテーブル数"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 이용 가능 테이블 수"
+          }
+        }
+      }
+    },
+    "cafe_info_table_count_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d tables available"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d テーブル利用可能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d개 이용 가능"
+          }
+        }
+      }
+    },
     "cafe_info_label_phone" : {
       "localizations" : {
         "en" : {

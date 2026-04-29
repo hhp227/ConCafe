@@ -747,6 +747,8 @@
     <string name="cafe_error_retry_prompt">Please try again.</string>
     <string name="cafe_info_label_address">Address</string>
     <string name="cafe_info_label_business_hours">Business Hours</string>
+    <string name="cafe_info_label_available_tables">Available Tables</string>
+    <string name="cafe_info_table_count_format">%1$d tables available</string>
     <string name="cafe_info_label_phone">Phone Number</string>
     <string name="cafe_info_placeholder_business_hours">Business hours are being prepared.</string>
     <string name="cafe_info_placeholder_phone">Contact information is being prepared.</string>
