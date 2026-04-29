@@ -7,6 +7,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -179,6 +181,8 @@ fun HomeContentScreen(
                 )
             }
             item {
+                val popularCastListState = rememberLazyListState()
+
                 SectionTitle(
                     text = stringResource(Res.string.home_section_popular_cast),
                     actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
@@ -186,6 +190,8 @@ fun HomeContentScreen(
                 )
                 Spacer(Modifier.height(10.dp))
                 LazyRow(
+                    state = popularCastListState,
+                    flingBehavior = rememberSnapFlingBehavior(lazyListState = popularCastListState),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
@@ -727,11 +733,14 @@ private fun NearByCafeItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeCommunitySection(
     posts: List<CommunityPost>,
     onAction: (HomeAction) -> Unit
 ) {
+    val communityPostListState = rememberLazyListState()
+
     SectionTitle(
         text = stringResource(Res.string.community_title),
         actionLabel = stringResource(Res.string.home_community_see_all),
@@ -739,6 +748,8 @@ private fun HomeCommunitySection(
     )
     Spacer(Modifier.height(10.dp))
     LazyRow(
+        state = communityPostListState,
+        flingBehavior = rememberSnapFlingBehavior(lazyListState = communityPostListState),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {

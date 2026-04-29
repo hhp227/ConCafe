@@ -136,7 +136,9 @@ private struct HomeContentView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .compatScrollTargetLayout()
             }
+            .compatViewAlignedScrollSnap()
         }
     }
 
@@ -168,7 +170,9 @@ private struct HomeContentView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .compatScrollTargetLayout()
             }
+            .compatViewAlignedScrollSnap()
         }
     }
 
