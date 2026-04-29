@@ -87,7 +87,7 @@ class NotificationViewModel(
                     if (targetId != null) {
                         when (type) {
                             "CAST_SHIFT", "BIRTHDAY" -> _event.emit(NotificationEvent.NavigateToCast(targetId))
-                            "CAFE_NOTICE", "CAFE_EVENT" -> _event.emit(NotificationEvent.NavigateToCafe(targetId))
+                            "CAFE_NOTICE", "CAFE_EVENT", "CAFE_TABLE_COUNT_UPDATE" -> _event.emit(NotificationEvent.NavigateToCafe(targetId))
                         }
                     }
                 }

@@ -55,7 +55,8 @@ class CafeDashboardRepositoryImpl(
             castPreviews = castPreviews,
             homeBannerPreview = homeBannerPreview,
             socialMedia = cafe.socialMedia,
-            reservationUrl = cafe.reservationUrl
+            reservationUrl = cafe.reservationUrl,
+            tableCounts = cafe.tableCounts
         )
     }
 }

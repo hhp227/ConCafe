@@ -43,7 +43,7 @@ class FanManagementViewModel(
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
                 unbindCastEvent()
-                loadFanManagement()
+                loadFanManagement(presentation = LoadPresentation.BLOCKING)
             }
         }
     }
@@ -270,14 +270,20 @@ class FanManagementViewModel(
         }
     }
 
-    private fun loadFanManagement() {
+    private fun loadFanManagement(presentation: LoadPresentation? = null) {
         jobs[TaskKey.LOAD_FAN_MANAGEMENT]?.cancel()
         jobs[TaskKey.LOAD_FAN_MANAGEMENT] = viewModelScope.launch {
+            val resolvedPresentation = presentation ?: if (_uiState.value.hasPrimaryContent) {
+                LoadPresentation.BACKGROUND
+            } else {
+                LoadPresentation.BLOCKING
+            }
+            val isBlockingLoad = resolvedPresentation == LoadPresentation.BLOCKING
             _uiState.update {
                 it.copy(
-                    isLoading = true,
+                    isLoading = isBlockingLoad,
                     errorMessage = null,
-                    infoMessage = null
+                    infoMessage = if (isBlockingLoad) null else it.infoMessage
                 )
             }
             val claimUiState = resolveClaimUi(
@@ -300,15 +306,24 @@ class FanManagementViewModel(
                     )
                 }
                 is AppResult.Failure -> {
-                    unbindCastEvent()
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = if (claimUiState.statusCard == null) "팬관리 데이터를 불러오지 못했습니다." else null,
-                            castClaimStatus = claimUiState.statusCard,
-                            fanManagementData = null,
-                            castClaimSheet = claimUiState.claimSheet
-                        )
+                        if (isBlockingLoad) {
+                            unbindCastEvent()
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = if (claimUiState.statusCard == null) "팬관리 데이터를 불러오지 못했습니다." else null,
+                                castClaimStatus = claimUiState.statusCard,
+                                fanManagementData = null,
+                                castClaimSheet = claimUiState.claimSheet
+                            )
+                        } else {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null,
+                                castClaimStatus = claimUiState.statusCard ?: it.castClaimStatus,
+                                castClaimSheet = claimUiState.claimSheet ?: it.castClaimSheet
+                            )
+                        }
                     }
                 }
             }
@@ -508,7 +523,6 @@ class FanManagementViewModel(
 
     fun onAction(action: FanManagementAction) {
         when (action) {
-            FanManagementAction.Refresh -> loadFanManagement()
             FanManagementAction.ClickClaimProfile -> clickClaimProfile()
             FanManagementAction.LoadMoreClaimCandidates -> loadMoreClaimCandidates()
             is FanManagementAction.SelectClaimCandidate -> selectClaimCandidate(action.castId)
@@ -577,6 +591,11 @@ private data class ClaimUiState(
     val statusCard: FanManagementUiState.CastClaimStatusCard?,
     val claimSheet: FanManagementUiState.CastClaimSheet?
 )
+
+private enum class LoadPresentation {
+    BLOCKING,
+    BACKGROUND
+}
 
 private const val CLAIM_STATUS_POLLING_INTERVAL_MILLIS = 30_000L
 private const val PAGINATION_DELAY_MILLIS = 1_000L

@@ -84,6 +84,19 @@ struct CafeDashboardView: View {
                 onAction: viewModel.onAction
             )
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isTableCountSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissTableCountSheet)
+                }
+            }
+        )) {
+            TableCountInputSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
         .sheet(isPresented: $isQrSheetPresented) {
             DashboardQrSheetView(
                 payload: buildCafeCheckInQrPayload(cafeId: viewModel.uiState.cafe?.id ?? cafeId)
@@ -162,7 +175,8 @@ private struct CafeDashboardContentView: View {
                                          "dashboard_info_cast_claim_approved",
                                          "dashboard_info_cast_claim_rejected",
                                          "dashboard_info_social_media_saved",
-                                    "dashboard_info_reservation_saved":
+                                         "dashboard_info_reservation_saved",
+                                    "dashboard_info_table_counts_saved":
                                         return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
                                     default:
                                         return infoMessage
@@ -261,7 +275,12 @@ private struct CafeDashboardContentView: View {
             HStack(spacing: 12) {
                 dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_checkin"), table: "Localizable"), value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
                 dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_review"), table: "Localizable"), value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
-                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_rating"), table: "Localizable"), value: formatRating(cafe.rating), accent: Color(hex: "F59E0B"))
+                dashboardMetricCard(
+                    title: String(localized: String.LocalizationValue("dashboard_metric_table_count"), table: "Localizable"),
+                    value: "\(cafe.tableCounts.current)/\(cafe.tableCounts.total)",
+                    accent: Color(hex: "7C3AED"),
+                    onTap: { onAction(.clickTableCountMetric) }
+                )
             }
         }
     }
@@ -317,8 +336,8 @@ private struct CafeDashboardContentView: View {
         }
     }
 
-    private func dashboardMetricCard(title: String, value: String, accent: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func dashboardMetricCard(title: String, value: String, accent: Color, onTap: (() -> Void)? = nil) -> some View {
+        let content = VStack(alignment: .leading, spacing: 8) {
             Circle()
                 .fill(accent)
                 .frame(width: 10, height: 10)
@@ -337,6 +356,14 @@ private struct CafeDashboardContentView: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
         )
+        return Group {
+            if let onTap {
+                Button(action: onTap) { content }
+                    .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
     }
 
     private var shortcutGrid: some View {
@@ -1089,6 +1116,70 @@ private struct ReservationInputSheet: View {
                 .disabled(uiState.isSavingReservation)
                 Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                     onAction(.dismissReservationSheet)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+    }
+}
+
+private struct TableCountInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: String.LocalizationValue("dashboard_table_count_title"), table: "Localizable"))
+                    .font(.headline.weight(.bold))
+                Text(String(localized: String.LocalizationValue("dashboard_table_count_guide"), table: "Localizable"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ConCafeFormField(
+                    label: String(localized: String.LocalizationValue("dashboard_table_count_label_total"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.totalTableCountInput },
+                        set: { onAction(.changeTotalTableCount($0)) }
+                    ),
+                    placeholder: "0",
+                    keyboardType: .numberPad
+                )
+                ConCafeFormField(
+                    label: String(localized: String.LocalizationValue("dashboard_table_count_label_current"), table: "Localizable"),
+                    text: Binding(
+                        get: { uiState.currentTableCountInput },
+                        set: { onAction(.changeCurrentTableCount($0)) }
+                    ),
+                    placeholder: "0",
+                    keyboardType: .numberPad
+                )
+                Button {
+                    onAction(.submitTableCounts)
+                } label: {
+                    Group {
+                        if uiState.isSavingTableCounts {
+                            ProgressView()
+                                .tint(.secondary)
+                        } else {
+                            Text(String(localized: String.LocalizationValue("dashboard_table_count_save"), table: "Localizable"))
+                                .font(.headline.weight(.bold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(!uiState.isTableCountSubmitEnabled || uiState.isSavingTableCounts ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .foregroundStyle(.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(!uiState.isTableCountSubmitEnabled || uiState.isSavingTableCounts)
+                Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
+                    onAction(.dismissTableCountSheet)
                 }
                 .font(.subheadline.weight(.semibold))
                 .frame(maxWidth: .infinity)

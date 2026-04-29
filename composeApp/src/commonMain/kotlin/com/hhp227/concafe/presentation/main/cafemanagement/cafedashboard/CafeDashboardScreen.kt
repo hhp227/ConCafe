@@ -1,28 +1,17 @@
 package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +57,7 @@ fun CafeDashboardScreen(
     val externalLinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val socialMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val reservationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val tableCountSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val qrSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isQrSheetVisible by rememberSaveable { mutableStateOf(false) }
 
@@ -161,6 +151,18 @@ fun CafeDashboardScreen(
             )
         }
     }
+    if (uiState.isTableCountSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissTableCountSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = tableCountSheetState
+        ) {
+            TableCountSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
     if (isQrSheetVisible) {
         ModalBottomSheet(
             onDismissRequest = { isQrSheetVisible = false },
@@ -246,6 +248,7 @@ private fun CafeDashboardContentScreen(
                                     "dashboard_info_cast_claim_rejected" -> stringResource(Res.string.dashboard_info_cast_claim_rejected)
                                     "dashboard_info_social_media_saved" -> stringResource(Res.string.dashboard_info_social_media_saved)
                                     "dashboard_info_reservation_saved" -> stringResource(Res.string.dashboard_info_reservation_saved)
+                                    "dashboard_info_table_counts_saved" -> stringResource(Res.string.dashboard_info_table_counts_saved)
                                     else -> message
                                 },
                                 onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
@@ -254,7 +257,10 @@ private fun CafeDashboardContentScreen(
                     }
                     if (cafe != null) {
                         item {
-                            DashboardMetricGrid(cafe = cafe)
+                            DashboardMetricGrid(
+                                cafe = cafe,
+                                onTableCountClick = { onAction(CafeDashboardAction.ClickTableCountMetric) }
+                            )
                         }
                         if (uiState.pendingCastClaims.isNotEmpty()) {
                             item {
@@ -526,6 +532,74 @@ private fun ReservationSheetContent(
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissReservationSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun TableCountSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .keyboardBottomInsets(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_table_count_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_table_count_guide),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_table_count_label_total),
+            value = uiState.totalTableCountInput,
+            onValueChange = { onAction(CafeDashboardAction.ChangeTotalTableCount(it)) },
+            placeholder = "0",
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_table_count_label_current),
+            value = uiState.currentTableCountInput,
+            onValueChange = { onAction(CafeDashboardAction.ChangeCurrentTableCount(it)) },
+            placeholder = "0",
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitTableCounts) },
+            enabled = uiState.isTableCountSubmitEnabled && !uiState.isSavingTableCounts,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorFromHex("FFD1DC"),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isSavingTableCounts) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_table_count_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissTableCountSheet) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(Res.string.common_close))
@@ -810,7 +884,8 @@ private fun InfoBanner(
 
 @Composable
 private fun DashboardMetricGrid(
-    cafe: CafeDashboardData
+    cafe: CafeDashboardData,
+    onTableCountClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
@@ -835,9 +910,10 @@ private fun DashboardMetricGrid(
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = stringResource(Res.string.dashboard_metric_rating),
-                value = formatRating(cafe.rating),
-                accent = colorFromHex("F59E0B")
+                title = stringResource(Res.string.dashboard_metric_table_count),
+                value = "${cafe.tableCounts.current}/${cafe.tableCounts.total}",
+                accent = colorFromHex("7C3AED"),
+                onClick = onTableCountClick
             )
         }
     }
@@ -848,10 +924,13 @@ private fun DashboardMetricCard(
     modifier: Modifier = Modifier,
     title: String,
     value: String,
-    accent: Color
+    accent: Color,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
@@ -1271,8 +1350,8 @@ private fun CastPreviewItem(
                 )
             }
             Box(
-                    modifier = Modifier
-                        .matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
             ) {
                 Box(
                     modifier = Modifier
@@ -1573,3 +1652,4 @@ private fun formatRating(rating: Double): String {
         RatingUtils.formatOneDecimalTruncated(rating)
     }
 }
+

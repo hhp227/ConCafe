@@ -338,6 +338,7 @@ private fun notificationVisual(type: String): NotificationVisual {
         "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, colorFromHex("FFE6F1"), colorFromHex("EB5F97"))
         "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, colorFromHex("E8F0FF"), colorFromHex("4A79E8"))
         "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, colorFromHex("FFF4E2"), colorFromHex("E29B35"))
+        "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, colorFromHex("ECFFF5"), colorFromHex("1F8B5F"))
         "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, colorFromHex("F1E8FF"), colorFromHex("8A52E2"))
         else -> NotificationVisual(Icons.Filled.Notifications, colorFromHex("F2F2F2"), colorFromHex("666666"))
     }

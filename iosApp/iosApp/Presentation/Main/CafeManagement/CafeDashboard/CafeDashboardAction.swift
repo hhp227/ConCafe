@@ -35,4 +35,9 @@ enum CafeDashboardAction {
     case dismissReservationSheet
     case changeReservationUrl(String)
     case submitReservation
+    case clickTableCountMetric
+    case dismissTableCountSheet
+    case changeCurrentTableCount(String)
+    case changeTotalTableCount(String)
+    case submitTableCounts
 }

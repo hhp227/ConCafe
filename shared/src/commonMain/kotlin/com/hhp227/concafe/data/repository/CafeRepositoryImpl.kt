@@ -117,6 +117,10 @@ class CafeRepositoryImpl(
         cafeRemoteDataSource.updateCafeReservationUrlRemote(cafeId, reservationUrl)
     }
 
+    override suspend fun updateCafeTableCounts(cafeId: String, current: Int, total: Int) {
+        cafeRemoteDataSource.updateCafeTableCountsRemote(cafeId, current, total)
+    }
+
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
         val safeLimit = if (limit > 0) limit else 1
         val sourceCafes = cafeRemoteDataSource.searchCafesRemote(

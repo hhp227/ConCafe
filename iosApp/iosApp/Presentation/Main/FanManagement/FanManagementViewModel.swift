@@ -42,7 +42,7 @@ final class FanManagementViewModel: ObservableObject {
             do {
                 for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
                     self.unbindCastEvent()
-                    self.loadFanManagement()
+                    self.loadFanManagement(presentation: .blocking)
                 }
             } catch {
                 print("Error: \(error)")
@@ -316,12 +316,17 @@ final class FanManagementViewModel: ObservableObject {
         }
     }
 
-    private func loadFanManagement() {
+    private func loadFanManagement(presentation: LoadPresentation? = nil) {
         tasks[.loadFanManagement]?.cancel()
         tasks[.loadFanManagement] = Task {
-            uiState.isLoading = true
+            let resolvedPresentation = presentation ?? (uiState.hasPrimaryContent ? .background : .blocking)
+            let isBlockingLoad = resolvedPresentation == .blocking
+
+            uiState.isLoading = isBlockingLoad
             uiState.errorMessage = nil
-            uiState.infoMessage = nil
+            if isBlockingLoad {
+                uiState.infoMessage = nil
+            }
 
             var claimStatus: FanManagementUiState.CastClaimStatusCard?
             var claimSheet: FanManagementUiState.CastClaimSheet?
@@ -458,21 +463,35 @@ final class FanManagementViewModel: ObservableObject {
                         infoMessage: nil
                     )
                 } else {
+                    if isBlockingLoad {
+                        unbindCastEvent()
+                        uiState = .empty
+                        uiState.isLoading = false
+                        uiState.errorMessage = claimStatus == nil ? "팬관리 데이터를 불러오지 못했습니다." : nil
+                        uiState.castClaimStatus = claimStatus
+                        uiState.castClaimSheet = claimSheet
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = nil
+                        uiState.castClaimStatus = claimStatus ?? uiState.castClaimStatus
+                        uiState.castClaimSheet = claimSheet ?? uiState.castClaimSheet
+                    }
+                }
+            } catch {
+                if Task.isCancelled { return }
+                if isBlockingLoad {
                     unbindCastEvent()
                     uiState = .empty
                     uiState.isLoading = false
                     uiState.errorMessage = claimStatus == nil ? "팬관리 데이터를 불러오지 못했습니다." : nil
                     uiState.castClaimStatus = claimStatus
                     uiState.castClaimSheet = claimSheet
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = nil
+                    uiState.castClaimStatus = claimStatus ?? uiState.castClaimStatus
+                    uiState.castClaimSheet = claimSheet ?? uiState.castClaimSheet
                 }
-            } catch {
-                if Task.isCancelled { return }
-                unbindCastEvent()
-                uiState = .empty
-                uiState.isLoading = false
-                uiState.errorMessage = claimStatus == nil ? "팬관리 데이터를 불러오지 못했습니다." : nil
-                uiState.castClaimStatus = claimStatus
-                uiState.castClaimSheet = claimSheet
             }
         }
     }
@@ -714,8 +733,6 @@ final class FanManagementViewModel: ObservableObject {
 
     func onAction(_ action: FanManagementAction) {
         switch action {
-        case .refresh:
-            loadFanManagement()
         case .clickClaimProfile:
             clickClaimProfile()
         case .loadMoreClaimCandidates:
@@ -791,6 +808,11 @@ final class FanManagementViewModel: ObservableObject {
         case castEvent
         case scheduleEvent
         case claimPolling
+    }
+
+    private enum LoadPresentation {
+        case blocking
+        case background
     }
 
     private struct ClaimUiData {

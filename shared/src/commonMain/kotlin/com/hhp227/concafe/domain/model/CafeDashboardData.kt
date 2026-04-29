@@ -10,7 +10,8 @@ data class CafeDashboardData(
     val castPreviews: List<CastPreview>,
     val homeBannerPreview: HomeBannerPreview,
     val socialMedia: Map<String, String> = emptyMap(),
-    val reservationUrl: String? = null
+    val reservationUrl: String? = null,
+    val tableCounts: TableCounts = TableCounts()
 ) {
     data class CastPreview(
         val id: String,

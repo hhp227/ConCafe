@@ -78,6 +78,10 @@ struct FanManagementUiState {
             && !isSendingAnnouncement
     }
 
+    var hasPrimaryContent: Bool {
+        fanManagementData != nil || castClaimStatus != nil
+    }
+
     static let empty = FanManagementUiState(
         isLoading: true,
         errorMessage: nil,

@@ -117,6 +117,11 @@ class GetNotificationFeedUseCase(
                 types = setOf("CAFE_CHECK_IN")
             ),
             SectionSpec(
+                id = "table_count",
+                title = "테이블 알림",
+                types = setOf("CAFE_TABLE_COUNT_UPDATE")
+            ),
+            SectionSpec(
                 id = "follow",
                 title = "팔로우 업데이트",
                 types = setOf("FOLLOW_UPDATE")

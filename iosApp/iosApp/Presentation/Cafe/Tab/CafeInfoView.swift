@@ -37,6 +37,16 @@ struct CafeInfoView: View {
                     ? String(localized: String.LocalizationValue("cafe_info_placeholder_business_hours"), table: "Localizable")
                     : detail.businessHours
             )
+            if detail.cafe.tableCounts.total > 0 {
+                infoRow(
+                    icon: "tablecells.fill",
+                    title: String(localized: String.LocalizationValue("cafe_info_label_available_tables"), table: "Localizable"),
+                    value: String(
+                        format: String(localized: String.LocalizationValue("cafe_info_table_count_format"), table: "Localizable"),
+                        detail.cafe.tableCounts.current
+                    )
+                )
+            }
             infoRow(
                 icon: "phone.fill",
                 title: String(localized: String.LocalizationValue("cafe_info_label_phone"), table: "Localizable"),

@@ -74,4 +74,6 @@ interface CafeRemoteDataSource {
     )
 
     suspend fun updateCafeReservationUrlRemote(cafeId: String, reservationUrl: String?)
+
+    suspend fun updateCafeTableCountsRemote(cafeId: String, current: Int, total: Int)
 }

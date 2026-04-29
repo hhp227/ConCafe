@@ -698,6 +698,12 @@
     <string name="dashboard_reservation_guide">카페 예약 링크를 입력해주세요.</string>
     <string name="dashboard_reservation_label_url">예약 URL</string>
     <string name="dashboard_reservation_save">예약 URL 저장</string>
+    <string name="dashboard_info_table_counts_saved">테이블 수가 업데이트되었습니다.</string>
+    <string name="dashboard_table_count_title">테이블 수</string>
+    <string name="dashboard_table_count_guide">카페의 현재 테이블 수와 전체 테이블 수를 입력해주세요.</string>
+    <string name="dashboard_table_count_label_total">전체 테이블 수</string>
+    <string name="dashboard_table_count_label_current">현재 이용 가능 테이블 수</string>
+    <string name="dashboard_table_count_save">테이블 수 저장</string>
     <string name="checkin_section_popular_cafe_title">인기 컨셉 카페</string>
     <string name="checkin_popular_cafe_empty_title">아직 인기 카페가 없어요</string>
     <string name="checkin_popular_cafe_empty_desc">체크인이 쌓이면 인기 카페가 표시됩니다.</string>
@@ -741,6 +747,8 @@
     <string name="cafe_error_retry_prompt">다시 시도해 주세요.</string>
     <string name="cafe_info_label_address">주소</string>
     <string name="cafe_info_label_business_hours">영업시간</string>
+    <string name="cafe_info_label_available_tables">현재 이용 가능 테이블 수</string>
+    <string name="cafe_info_table_count_format">%1$d개 이용 가능</string>
     <string name="cafe_info_label_phone">전화번호</string>
     <string name="cafe_info_placeholder_business_hours">운영시간 정보 준비중</string>
     <string name="cafe_info_placeholder_phone">연락처 정보 준비중</string>
@@ -875,6 +883,7 @@
     <string name="dashboard_metric_today_checkin">오늘 체크인</string>
     <string name="dashboard_metric_today_review">오늘 리뷰</string>
     <string name="dashboard_metric_rating">평점</string>
+    <string name="dashboard_metric_table_count">테이블 수</string>
     <string name="dashboard_metric_checkin_qr">체크인 QR</string>
     <string name="dashboard_metric_checkin_qr_hint">매장 노출용 QR 열기</string>
     <string name="dashboard_pending_claim_title">프로필 연결 요청</string>

@@ -672,6 +672,12 @@
     <string name="dashboard_info_cast_deleted">キャストプロフィールを削除しました。</string>
     <string name="dashboard_info_cast_claim_approved">キャストプロフィール連携リクエストを承認しました。</string>
     <string name="dashboard_info_cast_claim_rejected">キャストプロフィール連携リクエストを却下しました。</string>
+    <string name="dashboard_info_table_counts_saved">テーブル数を更新しました。</string>
+    <string name="dashboard_table_count_title">テーブル数</string>
+    <string name="dashboard_table_count_guide">カフェの現在のテーブル数と総テーブル数を入力してください。</string>
+    <string name="dashboard_table_count_label_total">総テーブル数</string>
+    <string name="dashboard_table_count_label_current">現在利用可能なテーブル数</string>
+    <string name="dashboard_table_count_save">テーブル数を保存</string>
     <string name="dashboard_banner_status_active">表示中</string>
     <string name="dashboard_banner_status_scheduled">予約中</string>
     <string name="dashboard_banner_status_hidden">非表示</string>
@@ -729,6 +735,8 @@
     <string name="cafe_error_retry_prompt">もう一度お試しください。</string>
     <string name="cafe_info_label_address">住所</string>
     <string name="cafe_info_label_business_hours">営業時間</string>
+    <string name="cafe_info_label_available_tables">現在利用可能なテーブル数</string>
+    <string name="cafe_info_table_count_format">%1$d テーブル利用可能</string>
     <string name="cafe_info_label_phone">電話番号</string>
     <string name="cafe_info_placeholder_business_hours">営業時間情報を準備中です</string>
     <string name="cafe_info_placeholder_phone">連絡先情報を準備中です</string>
@@ -860,6 +868,7 @@
     <string name="dashboard_metric_today_checkin">本日のチェックイン</string>
     <string name="dashboard_metric_today_review">本日のレビュー</string>
     <string name="dashboard_metric_rating">評価</string>
+    <string name="dashboard_metric_table_count">テーブル数</string>
     <string name="dashboard_metric_checkin_qr">チェックインQR</string>
     <string name="dashboard_metric_checkin_qr_hint">店舗表示用QRを開く</string>
     <string name="dashboard_pending_claim_title">プロフィール連携リクエスト</string>

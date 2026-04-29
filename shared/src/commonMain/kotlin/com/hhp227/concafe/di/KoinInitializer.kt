@@ -117,6 +117,7 @@ import com.hhp227.concafe.domain.usecase.GetCommunityCommentsUseCase
 import com.hhp227.concafe.domain.usecase.AddCommunityCommentUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
+import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -635,6 +636,13 @@ fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
 }
 
 fun resolveUpdateCafeSocialMediaUseCase(): UpdateCafeSocialMediaUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeTableCountsUseCase(): UpdateCafeTableCountsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

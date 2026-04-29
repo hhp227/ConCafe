@@ -31,12 +31,21 @@ struct CafeDashboardUiState {
     var reservationUrl = ""
     var isReservationSheetVisible = false
     var isSavingReservation = false
+    var isTableCountSheetVisible = false
+    var currentTableCountInput = ""
+    var totalTableCountInput = ""
+    var isSavingTableCounts = false
     var isLoading = true
     var infoMessage: String?
 
     var isExternalLinkSubmitEnabled: Bool {
         !externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var isTableCountSubmitEnabled: Bool {
+        guard let current = Int(currentTableCountInput), let total = Int(totalTableCountInput) else { return false }
+        return total >= 0 && current >= 0 && current <= total
     }
 }
 

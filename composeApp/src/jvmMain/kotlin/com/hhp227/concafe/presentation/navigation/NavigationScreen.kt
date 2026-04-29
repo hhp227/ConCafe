@@ -315,7 +315,7 @@ private fun DetailRoutePane(
             CommunityScreen(onNavigationAction = onNavigationAction)
         }
         is Route.PostEdit -> {
-            PostEditScreen(editPostId = currentRoute.postId, onNavigationAction = onNavigationAction)
+            PostEditScreen(editPostId = route.postId, onNavigationAction = onNavigationAction)
         }
         is Route.PostDetail -> {
             PostDetailScreen(

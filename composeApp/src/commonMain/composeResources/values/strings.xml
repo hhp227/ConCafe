@@ -698,6 +698,12 @@
     <string name="dashboard_reservation_guide">Enter the reservation link for your cafe.</string>
     <string name="dashboard_reservation_label_url">Reservation URL</string>
     <string name="dashboard_reservation_save">Save Reservation URL</string>
+    <string name="dashboard_info_table_counts_saved">Table count has been updated.</string>
+    <string name="dashboard_table_count_title">Table Count</string>
+    <string name="dashboard_table_count_guide">Update the current and total table count for your cafe.</string>
+    <string name="dashboard_table_count_label_total">Total Tables</string>
+    <string name="dashboard_table_count_label_current">Current Available Tables</string>
+    <string name="dashboard_table_count_save">Save Table Count</string>
     <string name="checkin_section_popular_cafe_title">Popular Cafes</string>
     <string name="checkin_popular_cafe_empty_title">No popular cafes yet</string>
     <string name="checkin_popular_cafe_empty_desc">Popular cafes will appear when check-ins accumulate.</string>
@@ -741,6 +747,8 @@
     <string name="cafe_error_retry_prompt">Please try again.</string>
     <string name="cafe_info_label_address">Address</string>
     <string name="cafe_info_label_business_hours">Business Hours</string>
+    <string name="cafe_info_label_available_tables">Available Tables</string>
+    <string name="cafe_info_table_count_format">%1$d tables available</string>
     <string name="cafe_info_label_phone">Phone Number</string>
     <string name="cafe_info_placeholder_business_hours">Business hours are being prepared.</string>
     <string name="cafe_info_placeholder_phone">Contact information is being prepared.</string>
@@ -875,6 +883,7 @@
     <string name="dashboard_metric_today_checkin">Today&#39;s Check-ins</string>
     <string name="dashboard_metric_today_review">Today&#39;s Reviews</string>
     <string name="dashboard_metric_rating">Rating</string>
+    <string name="dashboard_metric_table_count">Tables</string>
     <string name="dashboard_metric_checkin_qr">Check-In QR</string>
     <string name="dashboard_metric_checkin_qr_hint">Open and display in-store</string>
     <string name="dashboard_pending_claim_title">Profile Link Requests</string>
