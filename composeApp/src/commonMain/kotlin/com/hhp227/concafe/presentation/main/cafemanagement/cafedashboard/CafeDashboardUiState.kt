@@ -27,11 +27,22 @@ data class CafeDashboardUiState(
     val reservationUrl: String = "",
     val isReservationSheetVisible: Boolean = false,
     val isSavingReservation: Boolean = false,
+    val isTableCountSheetVisible: Boolean = false,
+    val currentTableCountInput: String = "",
+    val totalTableCountInput: String = "",
+    val isSavingTableCounts: Boolean = false,
     val isLoading: Boolean = true,
     val infoMessage: String? = null
 ) {
     val isExternalLinkSubmitEnabled: Boolean
         get() = externalLinkTitle.isNotBlank() && externalLinkUrl.isNotBlank()
+
+    val isTableCountSubmitEnabled: Boolean
+        get() {
+            val current = currentTableCountInput.toIntOrNull() ?: return false
+            val total = totalTableCountInput.toIntOrNull() ?: return false
+            return total >= 0 && current >= 0 && current <= total
+        }
 }
 
 data class CafeDashboardExternalLink(

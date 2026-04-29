@@ -441,6 +441,19 @@ class FirestoreCafeRemoteDataSource(
         val body = firestoreDocumentBody(mapOf("reservationUrl" to firestoreNullableString(reservationUrl)))
         restApi.patch(path, body, idToken)
     }
+
+    override suspend fun updateCafeTableCountsRemote(cafeId: String, current: Int, total: Int) {
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId?updateMask.fieldPaths=tableCounts"
+        val tableCountsValue = firestoreMap(
+            mapOf(
+                "current" to firestoreLong(current.toLong()),
+                "total" to firestoreLong(total.toLong())
+            )
+        )
+        val body = firestoreDocumentBody(mapOf("tableCounts" to tableCountsValue))
+        restApi.patch(path, body, idToken)
+    }
 }
 
 // ── Cast ─────────────────────────────────────────────────────────────────────

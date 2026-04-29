@@ -42,4 +42,6 @@ interface CafeRepository {
     )
 
     suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?)
+
+    suspend fun updateCafeTableCounts(cafeId: String, current: Int, total: Int)
 }

@@ -28,4 +28,9 @@ sealed interface CafeDashboardAction {
     data object DismissReservationSheet : CafeDashboardAction
     data class ChangeReservationUrl(val value: String) : CafeDashboardAction
     data object SubmitReservation : CafeDashboardAction
+    data object ClickTableCountMetric : CafeDashboardAction
+    data object DismissTableCountSheet : CafeDashboardAction
+    data class ChangeCurrentTableCount(val value: String) : CafeDashboardAction
+    data class ChangeTotalTableCount(val value: String) : CafeDashboardAction
+    data object SubmitTableCounts : CafeDashboardAction
 }

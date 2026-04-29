@@ -1698,7 +1698,14 @@ abstract class FirestoreBaseDataSource(
                     mapFields.getFirestoreString("youtube")?.let { put("youtube", it) }
                 }
             },
-            reservationUrl = fields.getFirestoreString("reservationUrl")
+            reservationUrl = fields.getFirestoreString("reservationUrl"),
+            tableCounts = run {
+                val tableFields = fields.getFirestoreMap("tableCounts")
+                TableCounts(
+                    current = tableFields?.getFirestoreInt("current") ?: 0,
+                    total = tableFields?.getFirestoreInt("total") ?: 0
+                )
+            }
         )
     }
 

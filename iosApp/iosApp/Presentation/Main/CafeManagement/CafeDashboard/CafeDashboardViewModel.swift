@@ -30,6 +30,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase
 
+    private let updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase
+
     private let deleteCastUseCase: DeleteCastUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
@@ -65,6 +67,8 @@ final class CafeDashboardViewModel: ObservableObject {
                     uiState.tiktokId = socialMedia["tiktok"] ?? ""
                     uiState.youtubeId = socialMedia["youtube"] ?? ""
                     uiState.reservationUrl = data.reservationUrl ?? ""
+                    uiState.currentTableCountInput = String(data.tableCounts.current)
+                    uiState.totalTableCountInput = String(data.tableCounts.total)
                     uiState.isLoading = false
                     refreshCastPreviews(resetMessage: false)
                     refreshClaimData(resetMessage: false)
@@ -322,6 +326,71 @@ final class CafeDashboardViewModel: ObservableObject {
         uiState.reservationUrl = uiState.cafe?.reservationUrl ?? ""
     }
 
+    private func clickTableCountMetric() {
+        uiState.isTableCountSheetVisible = true
+        uiState.infoMessage = nil
+    }
+
+    private func dismissTableCountSheet() {
+        uiState.isTableCountSheetVisible = false
+        let tableCounts = uiState.cafe?.tableCounts
+        uiState.currentTableCountInput = String(tableCounts?.current ?? 0)
+        uiState.totalTableCountInput = String(tableCounts?.total ?? 0)
+    }
+
+    private func changeCurrentTableCount(_ value: String) {
+        uiState.currentTableCountInput = value
+    }
+
+    private func changeTotalTableCount(_ value: String) {
+        uiState.totalTableCountInput = value
+        if let newTotal = Int32(value), let current = Int32(uiState.currentTableCountInput), current > newTotal {
+            uiState.currentTableCountInput = value
+        }
+    }
+
+    private func submitTableCounts() {
+        guard uiState.isTableCountSubmitEnabled else { return }
+        guard let current = Int32(uiState.currentTableCountInput),
+              let total = Int32(uiState.totalTableCountInput) else { return }
+        uiState.isSavingTableCounts = true
+        Task {
+            do {
+                let result = try await updateCafeTableCountsUseCase.invoke(
+                    cafeId: cafeId,
+                    current: current,
+                    total: total
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingTableCounts = false
+                    uiState.isTableCountSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_table_counts_saved"
+                    if let cafeCurrent = uiState.cafe {
+                        uiState.cafe = CafeDashboardData(
+                            id: cafeCurrent.id,
+                            name: cafeCurrent.name,
+                            city: cafeCurrent.city,
+                            todayCheckIns: cafeCurrent.todayCheckIns,
+                            todayReviews: cafeCurrent.todayReviews,
+                            rating: cafeCurrent.rating,
+                            castPreviews: cafeCurrent.castPreviews,
+                            homeBannerPreview: cafeCurrent.homeBannerPreview,
+                            socialMedia: cafeCurrent.socialMedia,
+                            reservationUrl: cafeCurrent.reservationUrl,
+                            tableCounts: TableCounts(current: current, total: total)
+                        )
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingTableCounts = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingTableCounts = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
     private func changeReservationUrl(_ value: String) {
         uiState.reservationUrl = value
     }
@@ -350,7 +419,8 @@ final class CafeDashboardViewModel: ObservableObject {
                             castPreviews: current.castPreviews,
                             homeBannerPreview: current.homeBannerPreview,
                             socialMedia: current.socialMedia,
-                            reservationUrl: url.isEmpty ? nil : url
+                            reservationUrl: url.isEmpty ? nil : url,
+                            tableCounts: current.tableCounts
                         )
                     }
                 } else if let failure = result as? AppResultFailure {
@@ -539,7 +609,8 @@ final class CafeDashboardViewModel: ObservableObject {
                     imageUrl: updatedBanner.imageUrl
                 ),
                 socialMedia: current.socialMedia,
-                reservationUrl: current.reservationUrl
+                reservationUrl: current.reservationUrl,
+                tableCounts: current.tableCounts
             )
         }
     }
@@ -556,7 +627,8 @@ final class CafeDashboardViewModel: ObservableObject {
             castPreviews: current.castPreviews,
             homeBannerPreview: current.homeBannerPreview,
             socialMedia: current.socialMedia,
-            reservationUrl: current.reservationUrl
+            reservationUrl: current.reservationUrl,
+            tableCounts: current.tableCounts
         )
     }
 
@@ -618,7 +690,8 @@ final class CafeDashboardViewModel: ObservableObject {
                                 castPreviews: current.castPreviews,
                                 homeBannerPreview: current.homeBannerPreview,
                                 socialMedia: current.socialMedia,
-                                reservationUrl: current.reservationUrl
+                                reservationUrl: current.reservationUrl,
+                                tableCounts: current.tableCounts
                             )
                         }
                     }
@@ -729,6 +802,16 @@ final class CafeDashboardViewModel: ObservableObject {
             changeReservationUrl(value)
         case .submitReservation:
             submitReservation()
+        case .clickTableCountMetric:
+            clickTableCountMetric()
+        case .dismissTableCountSheet:
+            dismissTableCountSheet()
+        case .changeCurrentTableCount(let value):
+            changeCurrentTableCount(value)
+        case .changeTotalTableCount(let value):
+            changeTotalTableCount(value)
+        case .submitTableCounts:
+            submitTableCounts()
         }
     }
 
@@ -742,6 +825,7 @@ final class CafeDashboardViewModel: ObservableObject {
         cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase = KoinInitializerKt.resolveCafeExternalLinkLocalUseCase(),
         updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase = KoinInitializerKt.resolveUpdateCafeSocialMediaUseCase(),
         updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase = KoinInitializerKt.resolveUpdateCafeReservationUrlUseCase(),
+        updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase = KoinInitializerKt.resolveUpdateCafeTableCountsUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
@@ -758,6 +842,7 @@ final class CafeDashboardViewModel: ObservableObject {
         self.cafeExternalLinkLocalUseCase = cafeExternalLinkLocalUseCase
         self.updateCafeSocialMediaUseCase = updateCafeSocialMediaUseCase
         self.updateCafeReservationUrlUseCase = updateCafeReservationUrlUseCase
+        self.updateCafeTableCountsUseCase = updateCafeTableCountsUseCase
         self.deleteCastUseCase = deleteCastUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher

@@ -34,6 +34,7 @@ import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
@@ -45,6 +46,7 @@ class CafeDashboardViewModel(
     private val cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase,
     private val updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase,
     private val updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase,
+    private val updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
@@ -420,6 +422,65 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun clickTableCountMetric() {
+        val tableCounts = _uiState.value.cafe?.tableCounts
+        _uiState.update {
+            it.copy(
+                isTableCountSheetVisible = true,
+                currentTableCountInput = (tableCounts?.current ?: 0).toString(),
+                totalTableCountInput = (tableCounts?.total ?: 0).toString(),
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun dismissTableCountSheet() {
+        _uiState.update { it.copy(isTableCountSheetVisible = false) }
+    }
+
+    private fun changeCurrentTableCount(value: String) {
+        _uiState.update { it.copy(currentTableCountInput = value) }
+    }
+
+    private fun changeTotalTableCount(value: String) {
+        _uiState.update { state ->
+            val newTotal = value.toIntOrNull()
+            val currentInput = state.currentTableCountInput.toIntOrNull() ?: 0
+            val clampedCurrent = if (newTotal != null && currentInput > newTotal) newTotal.toString() else state.currentTableCountInput
+            state.copy(totalTableCountInput = value, currentTableCountInput = clampedCurrent)
+        }
+    }
+
+    private fun submitTableCounts() {
+        val currentState = _uiState.value
+        if (!currentState.isTableCountSubmitEnabled) return
+        val current = currentState.currentTableCountInput.toInt()
+        val total = currentState.totalTableCountInput.toInt()
+        _uiState.update { it.copy(isSavingTableCounts = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeTableCountsUseCase.invoke(cafeId, current, total)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(tableCounts = com.hhp227.concafe.domain.model.TableCounts(current, total)),
+                            isSavingTableCounts = false,
+                            isTableCountSheetVisible = false,
+                            infoMessage = "dashboard_info_table_counts_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSavingTableCounts = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun dismissInfoMessage() {
         _uiState.update { it.copy(infoMessage = null) }
     }
@@ -719,6 +780,11 @@ class CafeDashboardViewModel(
             CafeDashboardAction.DismissReservationSheet -> dismissReservationSheet()
             is CafeDashboardAction.ChangeReservationUrl -> changeReservationUrl(action.value)
             CafeDashboardAction.SubmitReservation -> submitReservation()
+            CafeDashboardAction.ClickTableCountMetric -> clickTableCountMetric()
+            CafeDashboardAction.DismissTableCountSheet -> dismissTableCountSheet()
+            is CafeDashboardAction.ChangeCurrentTableCount -> changeCurrentTableCount(action.value)
+            is CafeDashboardAction.ChangeTotalTableCount -> changeTotalTableCount(action.value)
+            CafeDashboardAction.SubmitTableCounts -> submitTableCounts()
         }
     }
 

@@ -738,7 +738,8 @@ async function createUserNotification(
     | "CAFE_REJECTED"
     | "CAFE_OWNER_REJECTED"
     | "CAST_CLAIM_REJECTED"
-    | "CAFE_CHECK_IN",
+    | "CAFE_CHECK_IN"
+    | "CAFE_TABLE_COUNT_UPDATE",
   title: string,
   body: string,
   targetId: string,
@@ -5782,5 +5783,87 @@ export const onScheduleDeleteExpiredClaims = onSchedule(
     }
 
     logger.info("onScheduleDeleteExpiredClaims completed.", {totalDeleted});
+  }
+);
+
+async function syncTableCountUpdateNotifications(
+  cafeId: string,
+  beforeData: Record<string, unknown> | undefined,
+  afterData: Record<string, unknown> | undefined
+): Promise<void> {
+  if (afterData == null || beforeData == null) {
+    return;
+  }
+  const beforeCurrent = asNonNegativeInt((asPlainObject(beforeData.tableCounts) ?? {})["current"]);
+  const afterCurrent = asNonNegativeInt((asPlainObject(afterData.tableCounts) ?? {})["current"]);
+
+  if (beforeCurrent === afterCurrent) {
+    return;
+  }
+  const cafeName = asNonBlankString(afterData.name) ?? "즐겨찾기 카페";
+  const afterTotal = asNonNegativeInt((asPlainObject(afterData.tableCounts) ?? {})["total"]) ?? 0;
+  const favorites = await db()
+    .collection("cafeFavorites")
+    .where("cafeId", "==", cafeId)
+    .select("userId")
+    .get();
+
+  if (favorites.empty) {
+    return;
+  }
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    favorites.docs.map((favoriteDoc) => asNonBlankString(favoriteDoc.get("userId")))
+  );
+
+  if (recipientUserIds.length == 0) {
+    return;
+  }
+  const createdAt = new Date().toISOString();
+  const current = afterCurrent ?? 0;
+  let sentCount = 0;
+  let skippedBySettingsCount = 0;
+
+  await processInBatches(recipientUserIds, async (userId) => {
+    const settings = await loadUserNotificationSettings(userId);
+
+    if (!settings.isPushNotificationsEnabled || !settings.isNoticeNotificationsEnabled) {
+      skippedBySettingsCount += 1;
+      return;
+    }
+    await createUserNotification(
+      userId,
+      `cafe_table_count_${cafeId}_${createdAt}_${userId}`,
+      "CAFE_TABLE_COUNT_UPDATE",
+      `${cafeName} 테이블 현황 업데이트`,
+      `현재 이용 가능한 테이블: ${current}/${afterTotal}`,
+      cafeId,
+      createdAt,
+      settings
+    );
+    sentCount += 1;
+  });
+  logger.info("Processed cafe table count update notification fanout.", {
+    cafeId: cafeId,
+    beforeCurrent: beforeCurrent,
+    afterCurrent: afterCurrent,
+    targetCount: recipientUserIds.length,
+    sentCount: sentCount,
+    skippedBySettingsCount: skippedBySettingsCount,
+    droppedByCap: droppedByCap,
+  });
+}
+
+export const onCafeWrittenSyncTableCountNotifications = onDocumentWritten(
+  "cafes/{cafeId}",
+  async (event) => {
+    const cafeId = asNonBlankString(event.params.cafeId);
+
+    if (cafeId == null) {
+      return;
+    }
+    const beforeData = event.data?.before.data() as Record<string, unknown> | undefined;
+    const afterData = event.data?.after.data() as Record<string, unknown> | undefined;
+
+    await syncTableCountUpdateNotifications(cafeId, beforeData, afterData);
   }
 );

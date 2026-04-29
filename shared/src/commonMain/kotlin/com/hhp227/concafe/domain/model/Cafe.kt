@@ -12,5 +12,11 @@ data class Cafe(
     val conceptType: String,
     val ownerIds: List<String> = emptyList(),
     val socialMedia: Map<String, String> = emptyMap(),
-    val reservationUrl: String? = null
+    val reservationUrl: String? = null,
+    val tableCounts: TableCounts = TableCounts()
+)
+
+data class TableCounts(
+    val current: Int = 0,
+    val total: Int = 0
 )
