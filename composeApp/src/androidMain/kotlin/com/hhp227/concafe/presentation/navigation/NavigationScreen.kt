@@ -67,6 +67,10 @@ fun NavigationScreen(
                 is NavigationEvent.NavigateBack -> {
                     navController.popBackStack()
                 }
+                is NavigationEvent.ReplaceCurrent -> {
+                    navController.popBackStack()
+                    navController.navigate(event.route)
+                }
                 NavigationEvent.RefreshUnreadNotificationCount -> {
                     onRefreshUnreadNotificationCount()
                 }
@@ -117,6 +121,7 @@ fun NavigationScreen(
             CafeEventScreen(
                 cafeId = route.cafeId,
                 eventId = route.eventId,
+                showCafeButton = route.showCafeButton,
                 onNavigationAction = viewModel::onAction
             )
         }

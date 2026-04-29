@@ -34,7 +34,7 @@ struct HomeView: View {
             case .navigateToCafe(let id):
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToCafeEvent(let cafeId, let eventId):
-                onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
+                onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId, showCafeButton: true))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .navigateToCommunity:
@@ -136,7 +136,9 @@ private struct HomeContentView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .compatScrollTargetLayout()
             }
+            .compatViewAlignedScrollSnap()
         }
     }
 
@@ -168,7 +170,9 @@ private struct HomeContentView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .compatScrollTargetLayout()
             }
+            .compatViewAlignedScrollSnap()
         }
     }
 
@@ -200,6 +204,7 @@ private struct HomeContentView: View {
                                         }
                                 }
                             }
+                            .compatScrollTargetLayout()
                         } else {
                             HomeSectionPlaceholderCard(
                                 title: String(localized: String.LocalizationValue("home_nearby_cafe_empty_title"), table: "Localizable"),
@@ -210,6 +215,7 @@ private struct HomeContentView: View {
                     }
                     .padding(.horizontal, 16)
                 }
+                .compatViewAlignedScrollSnap()
                 .frame(height: 300)
             }
         }
@@ -262,7 +268,9 @@ private struct HomeContentView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .compatScrollTargetLayout()
             }
+            .compatViewAlignedScrollSnap()
         }
     }
 
@@ -282,7 +290,9 @@ private struct HomeContentView: View {
                         }
                     }
                     .padding(.horizontal, 16)
+                    .compatScrollTargetLayout()
                 }
+                .compatViewAlignedScrollSnap()
             } else {
                 HomeSectionPlaceholderCard(
                     title: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_title"), table: "Localizable"),

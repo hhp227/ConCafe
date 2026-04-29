@@ -14,6 +14,8 @@ struct CafeEventView: View {
 
     let eventId: String
 
+    let showCafeButton: Bool
+
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: CafeEventViewModel
@@ -25,7 +27,13 @@ struct CafeEventView: View {
                     .tint(Color(hex: "EF6797"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.uiState.event {
-                CafeEventDetailContent(event: event)
+                CafeEventDetailContent(
+                    event: event,
+                    showCafeButton: showCafeButton,
+                    onCafeClick: {
+                        onNavigationAction(.replaceWithCafe(id: cafeId))
+                    }
+                )
             } else {
                 CafeEventErrorContent(
                     message: viewModel.uiState.errorMessage == "Event not found."
@@ -49,10 +57,12 @@ struct CafeEventView: View {
     init(
         cafeId: String,
         eventId: String,
+        showCafeButton: Bool = false,
         onNavigationAction: @escaping (NavigationAction) -> Void
     ) {
         self.cafeId = cafeId
         self.eventId = eventId
+        self.showCafeButton = showCafeButton
         self.onNavigationAction = onNavigationAction
         _viewModel = StateObject(wrappedValue: CafeEventViewModel(cafeId: cafeId, eventId: eventId))
     }
@@ -60,6 +70,10 @@ struct CafeEventView: View {
 
 private struct CafeEventDetailContent: View {
     let event: CafeEventManagementItem
+
+    let showCafeButton: Bool
+
+    let onCafeClick: () -> Void
 
     var body: some View {
         ScrollView {
@@ -82,6 +96,24 @@ private struct CafeEventDetailContent: View {
                         Text(event.periodText)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                    }
+                    if showCafeButton {
+                        Button {
+                            onCafeClick()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "storefront.fill")
+                                Text(String(localized: String.LocalizationValue("cafeevent_go_to_cafe"), table: "Localizable"))
+                                    .fontWeight(.bold)
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(hex: "EF6797"))
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
                     }
                     Text(event.content)
                         .font(.body)

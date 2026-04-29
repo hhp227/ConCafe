@@ -39,6 +39,7 @@ actual fun CompatImagePicker(
 ) {
     val launchPicker = {
         chooseImageFile()?.let(onImageSelected)
+        Unit
     }
 
     content(launchPicker)

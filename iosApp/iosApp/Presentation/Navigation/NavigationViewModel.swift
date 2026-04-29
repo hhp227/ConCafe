@@ -20,8 +20,10 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.cast(param: id)))
         case .navigateToCafe(let id):
             event.send(.navigateTo(.cafe(param: id)))
-        case .navigateToCafeEvent(let cafeId, let eventId):
-            event.send(.navigateTo(.cafeEvent(cafeId: cafeId, eventId: eventId)))
+        case .navigateToCafeEvent(let cafeId, let eventId, let showCafeButton):
+            event.send(.navigateTo(.cafeEvent(cafeId: cafeId, eventId: eventId, showCafeButton: showCafeButton)))
+        case .replaceWithCafe(let id):
+            event.send(.replaceCurrent(.cafe(param: id)))
         case .navigateToCafeDashboard(let id):
             event.send(.navigateTo(.cafeDashboard(param: id)))
         case .navigateToBanner(let cafeId):

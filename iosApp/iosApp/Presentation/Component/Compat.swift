@@ -58,6 +58,26 @@ struct ScrollViewKeyboardDismissConfigurator: UIViewRepresentable {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func compatScrollTargetLayout() -> some View {
+        if #available(iOS 17.0, *) {
+            self.scrollTargetLayout()
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func compatViewAlignedScrollSnap() -> some View {
+        if #available(iOS 17.0, *) {
+            self.scrollTargetBehavior(.viewAligned)
+        } else {
+            self
+        }
+    }
+}
+
 struct CompatNavigationContainer<Content: View>: View {
     private let title: String?
 
