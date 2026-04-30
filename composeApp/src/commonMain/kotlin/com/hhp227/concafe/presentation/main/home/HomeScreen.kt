@@ -332,6 +332,7 @@ fun HomeContentScreen(
                                 Text(
                                     maid.name,
                                     modifier = Modifier.padding(top = 8.dp),
+                                    color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
