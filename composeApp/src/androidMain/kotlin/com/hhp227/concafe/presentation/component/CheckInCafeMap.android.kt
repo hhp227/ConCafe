@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EventAvailable
@@ -29,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,6 +92,24 @@ actual fun CheckInCafeMap(
                 )
             }
         }
+        cafes.forEach { cafe ->
+            val projection = cameraState.projection
+
+            if (projection != null) {
+                val screenPoint = projection.toScreenLocation(
+                    LatLng(cafe.geoPoint.latitude, cafe.geoPoint.longitude)
+                )
+                val labelWidthPx = with(density) { MARKER_LABEL_WIDTH_DP.dp.toPx() }.roundToInt()
+                val labelTopMarginPx = with(density) { 2.dp.toPx() }.roundToInt()
+                val labelX = screenPoint.x - labelWidthPx / 2
+                val labelY = screenPoint.y + labelTopMarginPx
+
+                CafeMarkerLabel(
+                    cafeName = cafe.name,
+                    modifier = Modifier.absoluteOffset { IntOffset(labelX, labelY) }
+                )
+            }
+        }
         selectedCafe?.let { cafe ->
             val projection = cameraState.projection
 
@@ -124,6 +145,31 @@ actual fun CheckInCafeMap(
             }
         }
     }
+}
+
+@Composable
+private fun CafeMarkerLabel(
+    cafeName: String,
+    modifier: Modifier = Modifier
+) {
+    val label = cafeName.trim().let { name ->
+        if (name.length > MARKER_LABEL_MAX_LENGTH) {
+            name.take(MARKER_LABEL_MAX_LENGTH) + "..."
+        } else {
+            name
+        }
+    }
+
+    Text(
+        text = label,
+        color = Color(0xFF23161C),
+        fontWeight = FontWeight.Bold,
+        fontSize = 10.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.Center,
+        modifier = modifier.width(MARKER_LABEL_WIDTH_DP.dp)
+    )
 }
 
 @Composable
@@ -203,3 +249,5 @@ private fun resolveCheckInMapCameraPosition(
 }
 
 private const val CHECK_IN_MAP_ZOOM_IN_STEP = 1.0f
+private const val MARKER_LABEL_MAX_LENGTH = 7
+private const val MARKER_LABEL_WIDTH_DP = 80
