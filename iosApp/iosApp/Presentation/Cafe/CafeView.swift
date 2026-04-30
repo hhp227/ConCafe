@@ -304,8 +304,7 @@ private struct CafeContentView: View {
 
     private func summarySection(detail: CafeDetail) -> some View {
         let conceptLabel = localizedCafeConceptType(detail.cafe.conceptType)
-
-        VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Text(detail.cafe.name)
                     .font(.title2.bold())
