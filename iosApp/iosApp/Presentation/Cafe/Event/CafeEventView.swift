@@ -160,7 +160,6 @@ private struct CafeEventHeroSection: View {
         let baseHeight = cafeEventHeroHeight + topSafeArea
         let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
         let dynamicHeight = baseHeight + pullDownOffset
-        let parallaxOffset = scrollOffset < 0 ? scrollOffset * 0.35 : 0
 
         ZStack {
             if let imageUrl = resolvedImageUrl(event.imageUrl) {
@@ -168,7 +167,6 @@ private struct CafeEventHeroSection: View {
                     CachedAsyncImage(url: imageUrl, placeholder: heroPlaceholder, displaySize: .full)
                         .frame(width: geo.size.width, height: geo.size.height)
                         .clipped()
-                        .offset(y: parallaxOffset)
                 }
             } else {
                 heroPlaceholder
