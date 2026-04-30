@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -116,6 +115,9 @@ actual fun CheckInCafeMap(
                 )
             }
         }
+        val cameraPosition = cameraState.position
+        val isCameraMoving = cameraState.isMoving
+
         cafes.forEach { cafe ->
             val projection = cameraState.projection
 
@@ -129,8 +131,12 @@ actual fun CheckInCafeMap(
                 val labelY = screenPoint.y + labelTopMarginPx
 
                 CafeMarkerLabel(
-                    cafeName = cafe.name,
-                    modifier = Modifier.absoluteOffset { IntOffset(labelX, labelY) }
+                    cafeName = cafe.name.toMarkerLabel(),
+                    modifier = Modifier.absoluteOffset {
+                        cameraPosition
+                        isCameraMoving
+                        IntOffset(labelX, labelY)
+                    }
                 )
             }
         }
@@ -218,10 +224,18 @@ private fun CafeMarkerLabel(
         fontWeight = FontWeight.Bold,
         fontSize = 9.sp,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
         modifier = modifier.width(MARKER_LABEL_WIDTH_DP.dp)
     )
+}
+
+private fun String.toMarkerLabel(): String {
+    val trimmed = trim()
+    return if (trimmed.length >= MARKER_LABEL_ELLIPSIS_THRESHOLD) {
+        trimmed.take(MARKER_LABEL_VISIBLE_CHARS) + MARKER_LABEL_ELLIPSIS
+    } else {
+        trimmed
+    }
 }
 
 @Composable
@@ -283,7 +297,6 @@ private fun resolveCheckInMapCameraPosition(
 
     if (cafes.size == 1) {
         val first = cafes.first()
-
         return CameraPosition.fromLatLngZoom(
             LatLng(first.geoPoint.latitude, first.geoPoint.longitude),
             14.5f + CHECK_IN_MAP_ZOOM_IN_STEP
@@ -302,3 +315,6 @@ private fun resolveCheckInMapCameraPosition(
 
 private const val CHECK_IN_MAP_ZOOM_IN_STEP = 1.0f
 private const val MARKER_LABEL_WIDTH_DP = 80
+private const val MARKER_LABEL_ELLIPSIS_THRESHOLD = 7
+private const val MARKER_LABEL_VISIBLE_CHARS = 6
+private const val MARKER_LABEL_ELLIPSIS = "…"
