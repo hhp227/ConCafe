@@ -172,8 +172,8 @@ private struct PostDetailContentView: View {
             }
         }
         .padding(20)
-        .presentationDetents([.medium])
-        .presentationDragIndicator(.visible)
+        .compatMediumSheetDetent()
+        .compatPresentationDragIndicator()
     }
 
     private var mainContent: some View {
