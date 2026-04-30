@@ -521,6 +521,7 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
         "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
         "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
         "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "COSPLAY" -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
         "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
         else -> normalized
     }

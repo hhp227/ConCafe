@@ -153,6 +153,7 @@
     <string name="home_nearby_cafe_type_idol">아이돌</string>
     <string name="home_nearby_cafe_type_devil">악마</string>
     <string name="home_nearby_cafe_type_doll">인형</string>
+    <string name="home_nearby_cafe_type_cosplay">코스프레</string>
     <string name="home_nearby_cafe_type_other">기타</string>
     <string name="home_notice_empty_title">최근 공지가 없어요</string>
     <string name="home_notice_empty_desc">새 공지가 등록되면 이 영역에 표시됩니다.</string>

@@ -11256,6 +11256,29 @@
         }
       }
     },
+    "home_nearby_cafe_type_cosplay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosplay"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コスプレ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코스프레"
+          }
+        }
+      }
+    },
     "home_nearby_cafe_type_other" : {
       "extractionState" : "manual",
       "localizations" : {

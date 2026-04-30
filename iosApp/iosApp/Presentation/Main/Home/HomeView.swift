@@ -690,6 +690,8 @@ private struct NearByCafeItem: View {
             key = "home_nearby_cafe_type_devil"
         } else if lower == "doll" || lower == "home_nearby_cafe_type_doll" || lower.contains("doll") {
             key = "home_nearby_cafe_type_doll"
+        } else if lower == "cosplay" || lower == "home_nearby_cafe_type_cosplay" || lower.contains("cosplay") {
+            key = "home_nearby_cafe_type_cosplay"
         } else if lower == "other" || lower == "home_nearby_cafe_type_other" || lower.contains("other") {
             key = "home_nearby_cafe_type_other"
         } else {

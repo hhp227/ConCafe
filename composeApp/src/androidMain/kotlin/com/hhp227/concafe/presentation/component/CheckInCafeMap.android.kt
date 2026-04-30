@@ -86,9 +86,8 @@ actual fun CheckInCafeMap(
                     cafe.geoPoint.longitude
                 )
                 val isSelected = selectedCafe?.id == cafe.id
-                val markerIcon = remember(cafe.name, isSelected, density.density) {
+                val markerIcon = remember(isSelected, density.density) {
                     createCafeMarkerIcon(
-                        cafeName = cafe.name,
                         isActive = isSelected,
                         density = density.density
                     )
@@ -97,7 +96,7 @@ actual fun CheckInCafeMap(
                 Marker(
                     state = MarkerState(position = markerPosition),
                     icon = markerIcon,
-                    anchor = Offset(0.5f, if (isSelected) 0.75f else 0.72f),
+                    anchor = Offset(0.5f, 1f),
                     onClick = {
                         selectedCafe = cafe
                         true
@@ -143,43 +142,17 @@ actual fun CheckInCafeMap(
 }
 
 private fun createCafeMarkerIcon(
-    cafeName: String,
     isActive: Boolean,
     density: Float
 ): BitmapDescriptor {
     val scale = if (isActive) 1f else 28f / 34f
     val pinWidth = (34f * scale * density).roundToInt().coerceAtLeast(1)
     val pinHeight = (48f * scale * density).roundToInt().coerceAtLeast(1)
-    val label = cafeName.trim().let { name ->
-        if (name.length > MARKER_LABEL_MAX_LENGTH) {
-            name.take(MARKER_LABEL_MAX_LENGTH) + "…"
-        } else {
-            name
-        }
-    }
-    var textSize = 10f * density
-    val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.rgb(35, 22, 28)
-        textAlign = Paint.Align.CENTER
-        textSize = textSize
-        typeface = android.graphics.Typeface.create(android.graphics.Typeface.SANS_SERIF, android.graphics.Typeface.BOLD)
-    }
-    val strokeTextPaint = Paint(labelPaint).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 3f * density
-        color = AndroidColor.WHITE
-    }
-    val labelWidth = if (label.isNotEmpty()) {
-        labelPaint.measureText(label).roundToInt() + (12f * density).roundToInt()
-    } else {
-        0
-    }
-    val bitmapWidth = maxOf(pinWidth, labelWidth).coerceAtLeast(1)
-    val labelHeight = if (label.isNotEmpty()) (16f * density).roundToInt() else 0
-    val bitmapHeight = pinHeight + labelHeight
+    val bitmapWidth = pinWidth
+    val bitmapHeight = pinHeight
     val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
-    val pinLeft = (bitmapWidth - pinWidth) / 2f
+    val pinLeft = 0f
     val pinPath = Path().apply {
         val w = pinWidth.toFloat()
         val h = pinHeight.toFloat()
@@ -209,11 +182,6 @@ private fun createCafeMarkerIcon(
             color = AndroidColor.argb(235, 255, 255, 255)
         }
     )
-    if (label.isNotEmpty()) {
-        val textY = pinHeight + 12f * density
-        canvas.drawText(label, bitmapWidth / 2f, textY, strokeTextPaint)
-        canvas.drawText(label, bitmapWidth / 2f, textY, labelPaint)
-    }
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
 
@@ -294,4 +262,3 @@ private fun resolveCheckInMapCameraPosition(
 }
 
 private const val CHECK_IN_MAP_ZOOM_IN_STEP = 1.0f
-private const val MARKER_LABEL_MAX_LENGTH = 7
