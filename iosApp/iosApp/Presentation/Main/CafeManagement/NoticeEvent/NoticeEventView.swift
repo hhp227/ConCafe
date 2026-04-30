@@ -500,6 +500,9 @@ private struct NoticeEventFormSheet: View {
                         if uiState.showsImageSection {
                             representativeImageSection
                         }
+                        if uiState.selectedTab == .event {
+                            eventOptionsSection
+                        }
                         if uiState.showsPinnedSection {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -682,6 +685,79 @@ private struct NoticeEventFormSheet: View {
         }
     }
 
+    private var eventOptionsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("noticeevent_form_live_performance_title"), table: "Localizable"))
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.primary)
+                    Text(String(localized: String.LocalizationValue("noticeevent_form_live_performance_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "8F848F"))
+                }
+                Spacer()
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { uiState.formHasLivePerformance },
+                        set: { onAction(.changeFormHasLivePerformance($0)) }
+                    )
+                )
+                .labelsHidden()
+                .tint(Color(hex: "FFD1DC"))
+            }
+            .padding(16)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(localized: String.LocalizationValue("noticeevent_form_participant_cast_label"), table: "Localizable"))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+                if uiState.cafeCasts.isEmpty {
+                    Text(String(localized: String.LocalizationValue("noticeevent_form_participant_cast_empty"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: "8F848F"))
+                        .padding(.leading, 4)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(Array(uiState.cafeCasts.chunked(into: 2).enumerated()), id: \.offset) { _, rowItems in
+                            HStack(spacing: 8) {
+                                ForEach(rowItems, id: \.id) { cast in
+                                    participantCastChip(cast)
+                                }
+                                if rowItems.count == 1 {
+                                    Spacer()
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func participantCastChip(_ cast: CafeCastPreview) -> some View {
+        let isSelected = uiState.formParticipantCastIds.contains(cast.id)
+        return Button {
+            onAction(.toggleFormParticipantCast(cast.id))
+        } label: {
+            Text(cast.name)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6F6670"))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemGroupedBackground))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
     private var representativeImageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: String.LocalizationValue("noticeevent_form_image_label"), table: "Localizable"))
@@ -809,6 +885,15 @@ private struct NoticeEventFormImageView: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+    }
+}
+
+private extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        guard size > 0 else { return [] }
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
     }
 }
 

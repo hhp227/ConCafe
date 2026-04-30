@@ -10,4 +10,7 @@ import Foundation
 enum CafeEventAction {
     case backTapped
     case retry
+    case toggleLike
+    case goToCafe
+    case castTapped(id: String)
 }

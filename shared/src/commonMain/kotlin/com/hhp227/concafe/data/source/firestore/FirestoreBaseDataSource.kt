@@ -1078,6 +1078,34 @@ abstract class FirestoreBaseDataSource(
         return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
     }
 
+    protected suspend fun runArrayContainsStringQuery(
+        collectionId: String,
+        fieldPath: String,
+        fieldValue: String,
+        idToken: String?,
+        limit: Int? = null
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val limitSection = if (limit != null && limit > 0) ""","limit": $limit""" else ""
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{ "collectionId": "${escapeFirestoreQueryString(collectionId)}" }],
+                "where": {
+                    "fieldFilter": {
+                      "field": { "fieldPath": "${escapeFirestoreQueryString(fieldPath)}" },
+                      "op": "ARRAY_CONTAINS",
+                      "value": { "stringValue": "${escapeFirestoreQueryString(fieldValue)}" }
+                    }
+                  }$limitSection
+                }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
+    }
+
     protected suspend fun runCafeCollectionQuery(
         sort: CafeSort,
         cursor: String?,
@@ -1925,7 +1953,10 @@ abstract class FirestoreBaseDataSource(
             startDate = startDate,
             endDate = endDate,
             statusLabel = fields.getFirestoreString("statusLabel") ?: "진행 예정",
-            isDimmed = fields.getFirestoreBoolean("isDimmed") ?: false
+            isDimmed = fields.getFirestoreBoolean("isDimmed") ?: false,
+            participantCastIds = fields.getFirestoreStringList("participantCastIds"),
+            hasLivePerformance = fields.getFirestoreBoolean("hasLivePerformance") ?: false,
+            likeCount = fields.getFirestoreInt("likeCount") ?: 0
         )
     }
 

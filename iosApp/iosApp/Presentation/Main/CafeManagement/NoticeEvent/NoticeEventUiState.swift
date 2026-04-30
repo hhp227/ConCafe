@@ -13,6 +13,8 @@ struct NoticeEventUiState {
     var query: String = ""
     var notices: [CafeNoticeManagementItem] = []
     var events: [CafeEventManagementItem] = []
+    var cafeCasts: [CafeCastPreview] = []
+    var isLoadingCafeCasts: Bool = false
     var isLoadingNotices: Bool = false
     var isLoadingMoreNotices: Bool = false
     var noticeNextCursor: String? = nil
@@ -30,6 +32,8 @@ struct NoticeEventUiState {
     var formImageUrl: String = ""
     var formPinned: Bool = false
     var formReservedAt: String = ""
+    var formParticipantCastIds: [String] = []
+    var formHasLivePerformance: Bool = false
 
     var formSheetTitle: String {
         if selectedTab == .notice {
@@ -98,6 +102,10 @@ struct NoticeEventUiState {
         !formTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !formContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         (!showsImageSection || hasAttachedImage)
+    }
+
+    var selectedParticipantCasts: [CafeCastPreview] {
+        cafeCasts.filter { formParticipantCastIds.contains($0.id) }
     }
 }
 

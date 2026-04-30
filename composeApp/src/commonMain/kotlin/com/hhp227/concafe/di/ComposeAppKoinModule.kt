@@ -56,7 +56,7 @@ private val composeAppPresentationModule = module {
     factory { NotificationViewModel(get(), get(), get()) }
     factory { SettingsViewModel(get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { (cafeId: String, eventId: String) -> CafeEventViewModel(cafeId, eventId, get(), get()) }
+    factory { (cafeId: String, eventId: String) -> CafeEventViewModel(cafeId, eventId, get(), get(), get(), get(), get()) }
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -71,7 +71,7 @@ private val composeAppPresentationModule = module {
     factory { (title: String, url: String) -> ExternalLinkViewModel(title, url) }
     factory { (cafeId: String) -> MenuGoodsViewModel(cafeId, get(), get(), get(), get()) }
     factory { (cafeId: String, itemId: String) -> MenuGoodsEditViewModel(cafeId, itemId, get(), get(), get()) }
-    factory { (cafeId: String) -> NoticeEventViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { (cafeId: String) -> NoticeEventViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> ScheduleViewModel(castId, get(), get(), get(), get(), get()) }
     factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }

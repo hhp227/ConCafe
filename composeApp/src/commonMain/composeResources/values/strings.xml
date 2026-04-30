@@ -363,6 +363,9 @@
     <string name="noticeevent_tab_notice">Notice</string>
     <string name="noticeevent_tab_event">Event</string>
     <string name="cafeevent_go_to_cafe">Go to event cafe</string>
+    <string name="cafeevent_section_participating_cast">참여 캐스트</string>
+    <string name="cafeevent_live_performance_badge">라이브 공연</string>
+    <string name="cafeevent_like_count">좋아요 %1$s</string>
     <string name="noticeevent_form_sheet_title_notice_edit">Edit Notice</string>
     <string name="noticeevent_form_sheet_title_notice_create">Register Notice</string>
     <string name="noticeevent_form_sheet_title_event_edit">Edit Event</string>
@@ -385,6 +388,10 @@
     <string name="noticeevent_form_image_title_attached">Main image attached</string>
     <string name="noticeevent_form_image_title_empty">Attach main image</string>
     <string name="noticeevent_form_image_description">Main image shown on event cards. Only one image can be attached.</string>
+    <string name="noticeevent_form_live_performance_title">Live performance</string>
+    <string name="noticeevent_form_live_performance_desc">Mark this event as including a live performance.</string>
+    <string name="noticeevent_form_participant_cast_label">Participant casts</string>
+    <string name="noticeevent_form_participant_cast_empty">No casts registered for this cafe.</string>
     <string name="noticeevent_pinned_title">Important Notice (Pinned)</string>
     <string name="noticeevent_pinned_desc">Pinned at the top of the list.</string>
     <string name="noticeevent_remove">Remove</string>

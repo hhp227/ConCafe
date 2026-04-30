@@ -101,6 +101,7 @@ val useCaseModule = module {
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }
+    factory { GetCafeEventParticipantCastsUseCase(get()) }
     factory { GetCafeCastPageUseCase(get(), get()) }
     factory { GetCafeCastListPageUseCase(get()) }
     factory { GetCafeManagementUseCase(get(), get()) }
@@ -204,6 +205,8 @@ val useCaseModule = module {
     factory { GetCommunityCommentPageUseCase(get()) }
     factory { UpdateCommunityCommentUseCase(get(), get()) }
     factory { DeleteCommunityCommentUseCase(get(), get()) }
+    factory { GetCafeEventLikeStatusUseCase(get(), get()) }
+    factory { ToggleCafeEventLikeUseCase(get(), get()) }
 }
 
 val concafeModules = listOf(

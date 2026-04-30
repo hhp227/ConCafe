@@ -14354,6 +14354,94 @@
         }
       }
     },
+    "noticeevent_form_live_performance_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark this event as including a live performance."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このイベントにライブ公演が含まれる場合は選択してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 이벤트에 라이브공연이 포함되어 있으면 선택하세요."
+          }
+        }
+      }
+    },
+    "noticeevent_form_live_performance_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live performance"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブ公演"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브공연"
+          }
+        }
+      }
+    },
+    "noticeevent_form_participant_cast_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No casts registered for this cafe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このカフェに登録されたキャストがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 카페에 등록된 캐스트가 없습니다."
+          }
+        }
+      }
+    },
+    "noticeevent_form_participant_cast_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participant casts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参加キャスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "참여 캐스트"
+          }
+        }
+      }
+    },
     "noticeevent_form_image_title_attached" : {
       "localizations" : {
         "en" : {
@@ -15409,6 +15497,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이벤트"
+          }
+        }
+      }
+    },
+    "cafeevent_section_participating_cast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participating Casts"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "참여 캐스트"
+          }
+        }
+      }
+    },
+    "cafeevent_live_performance_badge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Performance"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브 공연"
+          }
+        }
+      }
+    },
+    "cafeevent_like_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좋아요 %lld"
           }
         }
       }

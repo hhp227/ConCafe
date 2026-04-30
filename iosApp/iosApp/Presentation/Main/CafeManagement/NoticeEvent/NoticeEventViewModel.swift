@@ -30,9 +30,11 @@ final class NoticeEventViewModel: ObservableObject {
 
     private let deleteCafeEventUseCase: DeleteCafeEventUseCase
 
-    private let noticeManagementEventPublisher: NoticeManagementEventPublisher
+    private let getCafeCastPageUseCase: GetCafeCastPageUseCase
 
     private let uploadImageUseCase: UploadImageUseCase
+
+    private let noticeManagementEventPublisher: NoticeManagementEventPublisher
 
     @Published private(set) var uiState = NoticeEventUiState()
 
@@ -49,6 +51,8 @@ final class NoticeEventViewModel: ObservableObject {
         uiState.formImageUrl = ""
         uiState.formPinned = false
         uiState.formReservedAt = ""
+        uiState.formParticipantCastIds = []
+        uiState.formHasLivePerformance = false
         uiState.infoMessage = nil
     }
     
@@ -67,6 +71,8 @@ final class NoticeEventViewModel: ObservableObject {
         uiState.formImageUrl = ""
         uiState.formPinned = target.isPinned
         uiState.formReservedAt = target.statusAccent == .draft ? target.displayDate : ""
+        uiState.formParticipantCastIds = []
+        uiState.formHasLivePerformance = false
         uiState.infoMessage = nil
     }
 
@@ -85,7 +91,37 @@ final class NoticeEventViewModel: ObservableObject {
         uiState.formImageUrl = target.imageUrl
         uiState.formPinned = false
         uiState.formReservedAt = target.periodText
+        uiState.formParticipantCastIds = target.participantCastIds as? [String] ?? []
+        uiState.formHasLivePerformance = target.hasLivePerformance
         uiState.infoMessage = nil
+    }
+
+    private func loadCafeCasts() {
+        tasks[.castPage]?.cancel()
+        uiState.isLoadingCafeCasts = true
+        tasks[.castPage] = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                let result = try await getCafeCastPageUseCase.invoke(
+                    cafeId: cafeId,
+                    cursor: nil,
+                    pageSize: Self.castPickerPageSize
+                )
+                if Task.isCancelled { return }
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeCastPreview> {
+                    uiState.cafeCasts = page.items as? [CafeCastPreview] ?? []
+                } else {
+                    uiState.cafeCasts = []
+                }
+                uiState.isLoadingCafeCasts = false
+            } catch {
+                if Task.isCancelled { return }
+                uiState.cafeCasts = []
+                uiState.isLoadingCafeCasts = false
+            }
+        }
     }
     
     private func loadNoticePage(cursor: String?, append: Bool) {
@@ -253,7 +289,9 @@ final class NoticeEventViewModel: ObservableObject {
                                 title: uiState.formTitle,
                                 content: uiState.formContent,
                                 imageUrl: uploadedImageUrl,
-                                periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt
+                                periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt,
+                                participantCastIds: uiState.formParticipantCastIds,
+                                hasLivePerformance: uiState.formHasLivePerformance
                             )
                         )
                     } else {
@@ -263,7 +301,9 @@ final class NoticeEventViewModel: ObservableObject {
                                 title: uiState.formTitle,
                                 content: uiState.formContent,
                                 imageUrl: uploadedImageUrl,
-                                periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt
+                                periodText: uiState.formReservedAt.isEmpty ? nil : uiState.formReservedAt,
+                                participantCastIds: uiState.formParticipantCastIds,
+                                hasLivePerformance: uiState.formHasLivePerformance
                             )
                         )
                     }
@@ -306,6 +346,8 @@ final class NoticeEventViewModel: ObservableObject {
                 uiState.formImageUrl = ""
                 uiState.formPinned = false
                 uiState.formReservedAt = ""
+                uiState.formParticipantCastIds = []
+                uiState.formHasLivePerformance = false
                 if selectedTab == .notice {
                     uiState.infoMessage = isEditing ? MessageKey.noticeUpdated : MessageKey.noticeCreated
                 } else {
@@ -459,6 +501,16 @@ final class NoticeEventViewModel: ObservableObject {
         case .changeFormReservedAt(let value):
             uiState.formReservedAt = value
             uiState.infoMessage = nil
+        case .toggleFormParticipantCast(let castId):
+            if uiState.formParticipantCastIds.contains(castId) {
+                uiState.formParticipantCastIds.removeAll { $0 == castId }
+            } else {
+                uiState.formParticipantCastIds.append(castId)
+            }
+            uiState.infoMessage = nil
+        case .changeFormHasLivePerformance(let value):
+            uiState.formHasLivePerformance = value
+            uiState.infoMessage = nil
         case .clickReserveSchedule:
             uiState.infoMessage = MessageKey.reserveScheduleNextStep
         case .clickSubmitForm:
@@ -478,8 +530,9 @@ final class NoticeEventViewModel: ObservableObject {
         updateCafeEventUseCase: UpdateCafeEventUseCase = KoinInitializerKt.resolveUpdateCafeEventUseCase(),
         deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase = KoinInitializerKt.resolveDeleteCafeNoticeUseCase(),
         deleteCafeEventUseCase: DeleteCafeEventUseCase = KoinInitializerKt.resolveDeleteCafeEventUseCase(),
-        noticeManagementEventPublisher: NoticeManagementEventPublisher = KoinInitializerKt.resolveNoticeManagementEventPublisher(),
-        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
+        getCafeCastPageUseCase: GetCafeCastPageUseCase = KoinInitializerKt.resolveGetCafeCastPageUseCase(),
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase(),
+        noticeManagementEventPublisher: NoticeManagementEventPublisher = KoinInitializerKt.resolveNoticeManagementEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
@@ -490,10 +543,12 @@ final class NoticeEventViewModel: ObservableObject {
         self.updateCafeEventUseCase = updateCafeEventUseCase
         self.deleteCafeNoticeUseCase = deleteCafeNoticeUseCase
         self.deleteCafeEventUseCase = deleteCafeEventUseCase
-        self.noticeManagementEventPublisher = noticeManagementEventPublisher
+        self.getCafeCastPageUseCase = getCafeCastPageUseCase
         self.uploadImageUseCase = uploadImageUseCase
+        self.noticeManagementEventPublisher = noticeManagementEventPublisher
 
         observeNoticeManagementEvent()
+        loadCafeCasts()
         loadNoticePage(cursor: nil, append: false)
     }
 
@@ -520,6 +575,7 @@ final class NoticeEventViewModel: ObservableObject {
     private enum TaskKey {
         case noticePage
         case eventPage
+        case castPage
         case submit
         case delete
         case noticeManagementEvent
@@ -549,4 +605,5 @@ final class NoticeEventViewModel: ObservableObject {
     }
 
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
+    private static let castPickerPageSize: Int32 = 100
 }

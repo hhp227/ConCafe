@@ -385,6 +385,10 @@
     <string name="noticeevent_form_image_title_attached">代表画像1枚添付済み</string>
     <string name="noticeevent_form_image_title_empty">代表画像を添付</string>
     <string name="noticeevent_form_image_description">イベントカードに表示される代表画像です。1枚のみ添付できます。</string>
+    <string name="noticeevent_form_live_performance_title">ライブ公演</string>
+    <string name="noticeevent_form_live_performance_desc">このイベントにライブ公演が含まれる場合は選択してください。</string>
+    <string name="noticeevent_form_participant_cast_label">参加キャスト</string>
+    <string name="noticeevent_form_participant_cast_empty">このカフェに登録されたキャストがありません。</string>
     <string name="noticeevent_pinned_title">重要なお知らせ (Pinned)</string>
     <string name="noticeevent_pinned_desc">一覧の上部に固定されます。</string>
     <string name="noticeevent_remove">削除</string>

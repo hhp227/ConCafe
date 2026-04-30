@@ -12,6 +12,10 @@ struct CafeEventUiState {
     var isLoading: Bool = false
     var event: CafeEventManagementItem? = nil
     var errorMessage: String? = nil
+    var participantCasts: [Cast] = []
+    var isLikedByMe: Bool = false
+    var likeCount: Int = 0
+    var isTogglingLike: Bool = false
 
     static let empty = CafeEventUiState()
 }

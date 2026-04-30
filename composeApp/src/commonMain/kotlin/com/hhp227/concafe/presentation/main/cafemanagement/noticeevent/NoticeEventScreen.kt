@@ -49,6 +49,10 @@ import concafe.composeapp.generated.resources.noticeevent_form_image_label
 import concafe.composeapp.generated.resources.noticeevent_form_image_title_attached
 import concafe.composeapp.generated.resources.noticeevent_form_image_title_empty
 import concafe.composeapp.generated.resources.noticeevent_form_label_content
+import concafe.composeapp.generated.resources.noticeevent_form_live_performance_desc
+import concafe.composeapp.generated.resources.noticeevent_form_live_performance_title
+import concafe.composeapp.generated.resources.noticeevent_form_participant_cast_empty
+import concafe.composeapp.generated.resources.noticeevent_form_participant_cast_label
 import concafe.composeapp.generated.resources.noticeevent_form_label_title
 import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_event
 import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_notice
@@ -545,6 +549,14 @@ private fun NoticeEventFormSheetContent(
                     )
                 }
             }
+            if (uiState.selectedTab == NoticeEventTab.EVENT) {
+                item {
+                    NoticeEventEventOptionsSection(
+                        uiState = uiState,
+                        onAction = onAction
+                    )
+                }
+            }
             if (uiState.showsPinnedSection) {
                 item {
                     Card(
@@ -745,6 +757,79 @@ private fun NoticeEventFormSheetContent(
                         ),
                         fontWeight = FontWeight.Bold
                     )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NoticeEventEventOptionsSection(
+    uiState: NoticeEventUiState,
+    onAction: (NoticeEventAction) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Card(
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(Res.string.noticeevent_form_live_performance_title),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        stringResource(Res.string.noticeevent_form_live_performance_desc),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorFromHex("8F848F")
+                    )
+                }
+                Switch(
+                    checked = uiState.formHasLivePerformance,
+                    onCheckedChange = { onAction(NoticeEventAction.ChangeFormHasLivePerformance(it)) }
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(Res.string.noticeevent_form_participant_cast_label),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            if (uiState.cafeCasts.isEmpty()) {
+                Text(
+                    stringResource(Res.string.noticeevent_form_participant_cast_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorFromHex("8F848F"),
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    uiState.cafeCasts.chunked(2).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            rowItems.forEach { cast ->
+                                FilterChip(
+                                    selected = cast.id in uiState.formParticipantCastIds,
+                                    onClick = { onAction(NoticeEventAction.ToggleFormParticipantCast(cast.id)) },
+                                    label = {
+                                        Text(cast.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
             }
         }
