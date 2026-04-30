@@ -96,9 +96,9 @@ private struct HomeContentView: View {
                     cafeEventSection
                     popularCastSection
                     nearbyCafeSection
-                    if !uiState.communityPosts.isEmpty {
+                    /*if !uiState.communityPosts.isEmpty {
                         communitySection
-                    }
+                    }*/
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
@@ -331,7 +331,6 @@ private struct HomeCafeEventCard: View {
             }
             .frame(height: 172)
             .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
-
             VStack(alignment: .leading, spacing: 4) {
                 Text(event.cafeName)
                     .font(.caption.weight(.semibold))
