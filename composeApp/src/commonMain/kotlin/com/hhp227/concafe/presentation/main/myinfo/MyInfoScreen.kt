@@ -62,9 +62,12 @@ import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.home_show_more
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_cosplay
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_doll
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_other
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_desc
 import concafe.composeapp.generated.resources.myinfo_guest_feature_badge_title
 import concafe.composeapp.generated.resources.myinfo_guest_feature_bookmark_desc
@@ -817,6 +820,9 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
         "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
         "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
         "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "COSPLAY" -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
         else -> normalized
     }
 }

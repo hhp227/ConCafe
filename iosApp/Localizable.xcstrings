@@ -4000,28 +4000,6 @@
         }
       }
     },
-    "cafe_info_label_business_hours" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Business Hours"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "営業時間"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "영업시간"
-          }
-        }
-      }
-    },
     "cafe_info_label_available_tables" : {
       "localizations" : {
         "en" : {
@@ -4044,24 +4022,24 @@
         }
       }
     },
-    "cafe_info_table_count_format" : {
+    "cafe_info_label_business_hours" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d tables available"
+            "value" : "Business Hours"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d テーブル利用可能"
+            "value" : "営業時間"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d개 이용 가능"
+            "value" : "영업시간"
           }
         }
       }
@@ -4166,6 +4144,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소셜 미디어"
+          }
+        }
+      }
+    },
+    "cafe_info_table_count_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d tables available"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d テーブル利用可能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d개 이용 가능"
           }
         }
       }
@@ -4540,6 +4540,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "리뷰"
+          }
+        }
+      }
+    },
+    "cafeevent_go_to_cafe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to event cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント開催カフェへ移動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 진행 카페로 이동"
+          }
+        }
+      }
+    },
+    "cafeevent_like_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좋아요 %lld"
+          }
+        }
+      }
+    },
+    "cafeevent_live_performance_badge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Performance"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브 공연"
+          }
+        }
+      }
+    },
+    "cafeevent_section_participating_cast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participating Casts"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "참여 캐스트"
           }
         }
       }
@@ -9001,6 +9071,7 @@
       }
     },
     "community_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9802,6 +9873,29 @@
         }
       }
     },
+    "dashboard_info_table_counts_saved" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table count has been updated."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーブル数を更新しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테이블 수가 업데이트되었습니다."
+          }
+        }
+      }
+    },
     "dashboard_metric_checkin_qr" : {
       "localizations" : {
         "en" : {
@@ -9847,6 +9941,7 @@
       }
     },
     "dashboard_metric_rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9864,6 +9959,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "평점"
+          }
+        }
+      }
+    },
+    "dashboard_metric_table_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tables"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーブル数"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테이블 수"
           }
         }
       }
@@ -10146,160 +10263,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "예약하기"
-          }
-        }
-      }
-    },
-    "dashboard_table_count_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Table Count"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テーブル数"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테이블 수"
-          }
-        }
-      }
-    },
-    "dashboard_table_count_guide" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update the current and total table count for your cafe."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カフェの現在のテーブル数と総テーブル数を入力してください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카페의 현재 테이블 수와 전체 테이블 수를 입력해주세요."
-          }
-        }
-      }
-    },
-    "dashboard_table_count_label_total" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total Tables"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "総テーブル数"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "전체 테이블 수"
-          }
-        }
-      }
-    },
-    "dashboard_table_count_label_current" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Current Available Tables"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在利用可能なテーブル数"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 이용 가능 테이블 수"
-          }
-        }
-      }
-    },
-    "dashboard_table_count_save" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save Table Count"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テーブル数を保存"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테이블 수 저장"
-          }
-        }
-      }
-    },
-    "dashboard_info_table_counts_saved" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Table count has been updated."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テーブル数を更新しました。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테이블 수가 업데이트되었습니다."
-          }
-        }
-      }
-    },
-    "dashboard_metric_table_count" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tables"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テーブル数"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테이블 수"
           }
         }
       }
@@ -10690,6 +10653,116 @@
         }
       }
     },
+    "dashboard_table_count_guide" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update the current and total table count for your cafe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェの現在のテーブル数と総テーブル数を入力してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페의 현재 테이블 수와 전체 테이블 수를 입력해주세요."
+          }
+        }
+      }
+    },
+    "dashboard_table_count_label_current" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Available Tables"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在利用可能なテーブル数"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 이용 가능 테이블 수"
+          }
+        }
+      }
+    },
+    "dashboard_table_count_label_total" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Tables"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "総テーブル数"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전체 테이블 수"
+          }
+        }
+      }
+    },
+    "dashboard_table_count_save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Table Count"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーブル数を保存"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테이블 수 저장"
+          }
+        }
+      }
+    },
+    "dashboard_table_count_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table Count"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーブル数"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테이블 수"
+          }
+        }
+      }
+    },
     "dashboard_title" : {
       "localizations" : {
         "en" : {
@@ -10957,28 +11030,6 @@
         }
       }
     },
-    "home_community_see_all" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "See all"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全て見る"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "전체 보기"
-          }
-        }
-      }
-    },
     "home_community_latest_title" : {
       "localizations" : {
         "en" : {
@@ -10997,6 +11048,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "지금 뜨는 최신글"
+          }
+        }
+      }
+    },
+    "home_community_see_all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See all"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全て見る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전체 보기"
           }
         }
       }
@@ -11103,13 +11176,36 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "デビル"
+            "value" : "悪魔"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "데빌"
+            "value" : "악마"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_doll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doll"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人形"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인형"
           }
         }
       }
@@ -11156,6 +11252,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "메이드"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_cosplay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosplay"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コスプレ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코스프레"
+          }
+        }
+      }
+    },
+    "home_nearby_cafe_type_other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기타"
           }
         }
       }
@@ -14354,94 +14496,6 @@
         }
       }
     },
-    "noticeevent_form_live_performance_desc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mark this event as including a live performance."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このイベントにライブ公演が含まれる場合は選択してください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 이벤트에 라이브공연이 포함되어 있으면 선택하세요."
-          }
-        }
-      }
-    },
-    "noticeevent_form_live_performance_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live performance"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ライブ公演"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "라이브공연"
-          }
-        }
-      }
-    },
-    "noticeevent_form_participant_cast_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No casts registered for this cafe."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このカフェに登録されたキャストがありません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 카페에 등록된 캐스트가 없습니다."
-          }
-        }
-      }
-    },
-    "noticeevent_form_participant_cast_label" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Participant casts"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "参加キャスト"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "참여 캐스트"
-          }
-        }
-      }
-    },
     "noticeevent_form_image_title_attached" : {
       "localizations" : {
         "en" : {
@@ -14526,6 +14580,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "제목"
+          }
+        }
+      }
+    },
+    "noticeevent_form_live_performance_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark this event as including a live performance."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このイベントにライブ公演が含まれる場合は選択してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 이벤트에 라이브공연이 포함되어 있으면 선택하세요."
+          }
+        }
+      }
+    },
+    "noticeevent_form_live_performance_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live performance"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブ公演"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브공연"
+          }
+        }
+      }
+    },
+    "noticeevent_form_participant_cast_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No casts registered for this cafe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このカフェに登録されたキャストがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 카페에 등록된 캐스트가 없습니다."
+          }
+        }
+      }
+    },
+    "noticeevent_form_participant_cast_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participant casts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参加キャスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "참여 캐스트"
           }
         }
       }
@@ -15497,76 +15639,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이벤트"
-          }
-        }
-      }
-    },
-    "cafeevent_section_participating_cast" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Participating Casts"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "참여 캐스트"
-          }
-        }
-      }
-    },
-    "cafeevent_live_performance_badge" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live Performance"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "라이브 공연"
-          }
-        }
-      }
-    },
-    "cafeevent_like_count" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Like %lld"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "좋아요 %lld"
-          }
-        }
-      }
-    },
-    "cafeevent_go_to_cafe" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Go to event cafe"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "イベント開催カフェへ移動"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이벤트 진행 카페로 이동"
           }
         }
       }
@@ -20003,6 +20075,9 @@
     "댓글 %lld" : {
 
     },
+    "댓글 수정" : {
+
+    },
     "등록" : {
 
     },
@@ -20052,6 +20127,9 @@
 
     },
     "이번 주 스케줄" : {
+
+    },
+    "이전 댓글 더보기" : {
 
     },
     "저장" : {

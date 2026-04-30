@@ -152,6 +152,9 @@
     <string name="home_nearby_cafe_type_butler">Butler</string>
     <string name="home_nearby_cafe_type_idol">Idol</string>
     <string name="home_nearby_cafe_type_devil">Devil</string>
+    <string name="home_nearby_cafe_type_doll">Doll</string>
+    <string name="home_nearby_cafe_type_cosplay">Cosplay</string>
+    <string name="home_nearby_cafe_type_other">Other</string>
     <string name="home_notice_empty_title">No recent notices</string>
     <string name="home_notice_empty_desc">This area will display once a new notice is posted.</string>
     <string name="home_section_ongoing_cafe_event">Ongoing Cafe Events</string>

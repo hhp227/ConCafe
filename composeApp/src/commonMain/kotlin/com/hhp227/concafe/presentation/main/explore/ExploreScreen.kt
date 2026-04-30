@@ -56,9 +56,12 @@ import concafe.composeapp.generated.resources.explore_error_load_failed
 import concafe.composeapp.generated.resources.explore_search_placeholder
 import concafe.composeapp.generated.resources.explore_cast_followers
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_cosplay
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_doll
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_other
 import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -391,6 +394,9 @@ private fun localizedCafeConceptType(rawConceptType: String): String {
         "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
         "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
         "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "COSPLAY" -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
         else -> normalized
     }
 }
