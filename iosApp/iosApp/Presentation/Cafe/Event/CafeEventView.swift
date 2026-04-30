@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 import Shared
 
-private let cafeEventHeroHeight: CGFloat = 320
+private let cafeEventHeroHeight: CGFloat = 260
 private let cafeEventHeroTriggerOffset: CGFloat = 20
 
 struct CafeEventView: View {
@@ -280,6 +280,7 @@ private struct CafeEventInfoSection: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
     }

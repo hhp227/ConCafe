@@ -75,7 +75,7 @@ import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
 private val HeroTitleTriggerOffset = 20.dp
-private val HeroHeight = 320.dp
+private val HeroHeight = 260.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
