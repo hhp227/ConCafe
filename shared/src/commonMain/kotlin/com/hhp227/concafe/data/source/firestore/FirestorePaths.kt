@@ -29,5 +29,6 @@ object FirestorePaths {
     const val COMMUNITY_POSTS = "communityPosts"
     const val POST_COMMENTS = "comments"
     const val POST_LIKES = "likes"
+    const val CAFE_EVENT_LIKES = "likes"
 }
 

@@ -23,4 +23,6 @@ interface NoticeRepository {
     suspend fun updateCafeEvent(input: CafeEventUpdate): CafeEventManagementItem
     suspend fun deleteCafeNotice(cafeId: String, noticeId: String): String
     suspend fun deleteCafeEvent(cafeId: String, eventId: String): String
+    suspend fun isCafeEventLikedByUser(cafeId: String, eventId: String, userId: String): Boolean
+    suspend fun toggleCafeEventLike(cafeId: String, eventId: String, userId: String): Boolean
 }

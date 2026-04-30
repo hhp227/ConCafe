@@ -90,4 +90,12 @@ class NoticeRepositoryImpl(
         if (eventId.isBlank()) throw IllegalArgumentException("eventId is required")
         return noticeRemoteDataSource.deleteCafeEvent(cafeId = cafeId, eventId = eventId)
     }
+
+    override suspend fun isCafeEventLikedByUser(cafeId: String, eventId: String, userId: String): Boolean {
+        return noticeRemoteDataSource.isCafeEventLikedByUser(cafeId, eventId, userId)
+    }
+
+    override suspend fun toggleCafeEventLike(cafeId: String, eventId: String, userId: String): Boolean {
+        return noticeRemoteDataSource.toggleCafeEventLike(cafeId, eventId, userId)
+    }
 }

@@ -1955,7 +1955,8 @@ abstract class FirestoreBaseDataSource(
             statusLabel = fields.getFirestoreString("statusLabel") ?: "진행 예정",
             isDimmed = fields.getFirestoreBoolean("isDimmed") ?: false,
             participantCastIds = fields.getFirestoreStringList("participantCastIds"),
-            hasLivePerformance = fields.getFirestoreBoolean("hasLivePerformance") ?: false
+            hasLivePerformance = fields.getFirestoreBoolean("hasLivePerformance") ?: false,
+            likeCount = fields.getFirestoreInt("likeCount") ?: 0
         )
     }
 

@@ -9,4 +9,7 @@ import Foundation
 
 enum CafeEventEvent {
     case navigateBack
+    case navigateToCafe
+    case navigateToCast(id: String)
+    case navigateToSignIn
 }

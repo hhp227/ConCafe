@@ -120,6 +120,9 @@ import com.hhp227.concafe.domain.usecase.GetCommunityCommentPageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCommunityCommentUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCommunityCommentUseCase
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
+import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
+import com.hhp227.concafe.domain.usecase.ToggleCafeEventLikeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -205,6 +208,13 @@ fun resolveGetCafeDashboardUseCase(): GetCafeDashboardUseCase {
 }
 
 fun resolveGetCafeEventPageUseCase(): GetCafeEventPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCafeEventParticipantCastsUseCase(): GetCafeEventParticipantCastsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -982,6 +992,16 @@ fun resolveUpdateCommunityCommentUseCase(): UpdateCommunityCommentUseCase {
 }
 
 fun resolveDeleteCommunityCommentUseCase(): DeleteCommunityCommentUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveGetCafeEventLikeStatusUseCase(): GetCafeEventLikeStatusUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveToggleCafeEventLikeUseCase(): ToggleCafeEventLikeUseCase {
     val koin = requireNotNull(koinApplication?.koin)
     return koin.get()
 }

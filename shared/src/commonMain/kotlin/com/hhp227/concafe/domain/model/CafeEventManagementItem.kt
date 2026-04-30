@@ -11,7 +11,8 @@ data class CafeEventManagementItem(
     val statusLabel: String,
     val isDimmed: Boolean,
     val participantCastIds: List<String> = emptyList(),
-    val hasLivePerformance: Boolean = false
+    val hasLivePerformance: Boolean = false,
+    val likeCount: Int = 0
 ) {
     val periodText: String
         get() = "$startDate - $endDate"

@@ -363,6 +363,9 @@
     <string name="noticeevent_tab_notice">Notice</string>
     <string name="noticeevent_tab_event">Event</string>
     <string name="cafeevent_go_to_cafe">Go to event cafe</string>
+    <string name="cafeevent_section_participating_cast">참여 캐스트</string>
+    <string name="cafeevent_live_performance_badge">라이브 공연</string>
+    <string name="cafeevent_like_count">좋아요 %1$s</string>
     <string name="noticeevent_form_sheet_title_notice_edit">Edit Notice</string>
     <string name="noticeevent_form_sheet_title_notice_create">Register Notice</string>
     <string name="noticeevent_form_sheet_title_event_edit">Edit Event</string>

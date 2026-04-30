@@ -15501,6 +15501,54 @@
         }
       }
     },
+    "cafeevent_section_participating_cast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participating Casts"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "참여 캐스트"
+          }
+        }
+      }
+    },
+    "cafeevent_live_performance_badge" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Performance"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브 공연"
+          }
+        }
+      }
+    },
+    "cafeevent_like_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좋아요 %lld"
+          }
+        }
+      }
+    },
     "cafeevent_go_to_cafe" : {
       "localizations" : {
         "en" : {

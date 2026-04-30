@@ -642,6 +642,12 @@ service cloud.firestore {
         allow create, update: if canManageCafe(cafeId)
           && isValidCafeEventWriteData();
         allow delete: if canManageCafe(cafeId);
+
+        match /likes/{userId} {
+          allow read: if isSignedIn();
+          allow create: if isSignedIn() && request.auth.uid == userId;
+          allow delete: if isSignedIn() && request.auth.uid == userId;
+        }
       }
 
       match /castClaims/{metaId} {

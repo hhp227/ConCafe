@@ -1400,6 +1400,40 @@ class FirestoreNoticeRemoteDataSource(
         return eventId
     }
 
+    override suspend fun isCafeEventLikedByUser(cafeId: String, eventId: String, userId: String): Boolean {
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_EVENTS}/$eventId/${FirestorePaths.CAFE_EVENT_LIKES}/$userId"
+        return try {
+            restApi.get(path, idToken)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun toggleCafeEventLike(cafeId: String, eventId: String, userId: String): Boolean {
+        val idToken = tokenProvider.getIdToken()
+        val likePath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_EVENTS}/$eventId/${FirestorePaths.CAFE_EVENT_LIKES}/$userId"
+        val eventPath = "${config.documentBasePath()}/${FirestorePaths.CAFES}/$cafeId/${FirestorePaths.CAFE_EVENTS}/$eventId"
+        val isCurrentlyLiked = try { restApi.get(likePath, idToken); true } catch (e: Exception) { false }
+        return if (isCurrentlyLiked) {
+            restApi.delete(likePath, idToken)
+            val eventDoc = runCatching { Json.parseToJsonElement(restApi.get(eventPath, idToken)).jsonObject }.getOrNull()
+            val currentCount = eventDoc?.get("fields")?.jsonObject?.getFirestoreInt("likeCount") ?: 1
+            val newCount = maxOf(0, currentCount - 1)
+            restApi.patch(eventPath, firestoreDocumentBody(mapOf("likeCount" to firestoreLong(newCount.toLong()))), idToken, listOf("likeCount"))
+            false
+        } else {
+            val body = firestoreDocumentBody(mapOf("userId" to firestoreString(userId), "createdAt" to firestoreString(Clock.System.now().toString())))
+            restApi.patch(likePath, body, idToken)
+            val eventDoc = runCatching { Json.parseToJsonElement(restApi.get(eventPath, idToken)).jsonObject }.getOrNull()
+            val currentCount = eventDoc?.get("fields")?.jsonObject?.getFirestoreInt("likeCount") ?: 0
+            val newCount = currentCount + 1
+            restApi.patch(eventPath, firestoreDocumentBody(mapOf("likeCount" to firestoreLong(newCount.toLong()))), idToken, listOf("likeCount"))
+            true
+        }
+    }
+
     private suspend fun refreshCafeNoticeEventManagement(cafeId: String, idToken: String?) {
         val cafeName = runCatching {
             parseCafeDocument(loadCafeDocument(cafeId, idToken))?.name.orEmpty()
