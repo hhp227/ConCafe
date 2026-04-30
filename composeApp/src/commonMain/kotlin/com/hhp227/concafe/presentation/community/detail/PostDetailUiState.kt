@@ -14,6 +14,12 @@ data class PostDetailUiState(
     val isDeleting: Boolean = false,
     val comments: List<Comment> = emptyList(),
     val isLoadingComments: Boolean = false,
+    val hasMoreComments: Boolean = false,
+    val isLoadingMoreComments: Boolean = false,
+    val oldestCommentCursor: String? = null,
+    val editingCommentId: String? = null,
+    val editCommentText: String = "",
+    val isUpdatingComment: Boolean = false,
     val commentText: String = "",
     val isSendingComment: Boolean = false,
     val errorMessage: String? = null
@@ -21,4 +27,5 @@ data class PostDetailUiState(
     val likeCount: Int get() = post?.likeCount ?: 0
     val commentCount: Int get() = post?.commentCount ?: 0
     val canSendComment: Boolean get() = commentText.isNotBlank() && !isSendingComment
+    val canUpdateComment: Boolean get() = editCommentText.isNotBlank() && !isUpdatingComment
 }

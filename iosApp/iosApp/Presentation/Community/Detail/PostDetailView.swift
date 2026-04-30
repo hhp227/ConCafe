@@ -103,6 +103,8 @@ private struct PostDetailContentView: View {
 
     @FocusState private var isCommentFocused: Bool
 
+    @State private var localEditText: String = ""
+
     var body: some View {
         Group {
             if uiState.isLoading || uiState.isDeleting {
@@ -119,6 +121,59 @@ private struct PostDetailContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(hex: "F8F5F6"))
+        .sheet(isPresented: Binding(
+            get: { uiState.editingCommentId != nil },
+            set: { if !$0 { onAction(.dismissEditComment) } }
+        )) {
+            editCommentSheet
+        }
+    }
+
+    private var editCommentSheet: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("댓글 수정")
+                .font(.headline)
+                .foregroundStyle(Color(hex: "2B2330"))
+            TextEditor(text: $localEditText)
+                .frame(minHeight: 80, maxHeight: 160)
+                .padding(8)
+                .background(Color(hex: "F8F5F6"))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC"), lineWidth: 1)
+                )
+                .font(.system(size: 14))
+                .onAppear {
+                    localEditText = uiState.editCommentText
+                }
+            HStack {
+                Spacer()
+                Button("취소") {
+                    onAction(.dismissEditComment)
+                }
+                .foregroundStyle(Color(hex: "8C7E87"))
+                Button {
+                    onAction(.confirmEditComment(content: localEditText))
+                } label: {
+                    if uiState.isUpdatingComment {
+                        ProgressView().tint(.white).scaleEffect(0.8)
+                            .frame(width: 40, height: 20)
+                    } else {
+                        Text("수정")
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color(hex: "EF6797"))
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                }
+                .disabled(localEditText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || uiState.isUpdatingComment)
+            }
+        }
+        .padding(20)
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 
     private var mainContent: some View {
@@ -187,6 +242,23 @@ private struct PostDetailContentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             } else {
+                if uiState.isLoadingMoreComments {
+                    ProgressView()
+                        .tint(Color(hex: "EF6797"))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                } else if uiState.hasMoreComments {
+                    Button {
+                        onAction(.loadMoreComments)
+                    } label: {
+                        Text("이전 댓글 더보기")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Color(hex: "8C7E87"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+                }
                 ForEach(uiState.comments, id: \.id) { comment in
                     CommentItemView(
                         comment: comment,

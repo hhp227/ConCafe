@@ -74,6 +74,63 @@ private fun PostDetailContentScreen(
 ) {
     val pink = colorFromHex("EF6797")
     val textColor = colorFromHex("2B2330")
+    var localEditText by remember(uiState.editingCommentId) { mutableStateOf(uiState.editCommentText) }
+
+    if (uiState.editingCommentId != null) {
+        ModalBottomSheet(
+            onDismissRequest = { onAction(PostDetailAction.DismissEditComment) }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp)
+                    .navigationBarsPadding()
+                    .imePadding()
+            ) {
+                Text(
+                    text = "댓글 수정",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = textColor,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                OutlinedTextField(
+                    value = localEditText,
+                    onValueChange = { localEditText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("댓글 내용을 입력하세요", fontSize = 14.sp) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorFromHex("EF6797"),
+                        unfocusedBorderColor = colorFromHex("FFD1DC")
+                    ),
+                    maxLines = 5,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    TextButton(onClick = { onAction(PostDetailAction.DismissEditComment) }) {
+                        Text("취소", color = colorFromHex("8C7E87"))
+                    }
+                    Button(
+                        onClick = { onAction(PostDetailAction.ConfirmEditComment(localEditText)) },
+                        enabled = localEditText.isNotBlank() && !uiState.isUpdatingComment,
+                        colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
+                    ) {
+                        if (uiState.isUpdatingComment) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text("수정", color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (uiState.isDeleteConfirmVisible) {
         AlertDialog(
@@ -219,6 +276,25 @@ private fun PostDetailContentScreen(
                                     }
                                 }
                             } else {
+                                if (uiState.isLoadingMoreComments) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = pink, strokeWidth = 2.dp)
+                                        }
+                                    }
+                                } else if (uiState.hasMoreComments) {
+                                    item {
+                                        TextButton(
+                                            onClick = { onAction(PostDetailAction.LoadMoreComments) },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("이전 댓글 더보기", color = colorFromHex("8C7E87"), fontSize = 13.sp)
+                                        }
+                                    }
+                                }
                                 items(uiState.comments, key = { it.id }) { comment ->
                                     CommentItem(
                                         comment = comment,

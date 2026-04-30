@@ -24,4 +24,7 @@ interface CommunityPostRepository {
     suspend fun toggleLike(postId: String, userId: String): Boolean
     suspend fun getComments(postId: String): List<Comment>
     suspend fun addComment(postId: String, userId: String, content: String): Comment
+    suspend fun getCommentPage(postId: String, beforeCursor: String?, pageSize: Int): PagedResult<Comment>
+    suspend fun updateComment(postId: String, commentId: String, content: String): Comment
+    suspend fun deleteComment(postId: String, commentId: String)
 }

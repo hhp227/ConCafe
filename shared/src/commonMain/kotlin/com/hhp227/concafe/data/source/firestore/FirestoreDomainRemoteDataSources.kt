@@ -1933,6 +1933,69 @@ class FirestoreCommunityPostRemoteDataSource(
         )
     }
 
+    override suspend fun fetchCommentPage(postId: String, beforeCursor: String?, pageSize: Int): PagedResult<Comment> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId:runQuery"
+        val startAfterSection = if (!beforeCursor.isNullOrBlank()) {
+            val escaped = escapeFirestoreQueryString(beforeCursor)
+            ""","startAt": {"values": [{"stringValue": "$escaped"}], "before": false}"""
+        } else ""
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.POST_COMMENTS}", "allDescendants": false}],
+                "orderBy": [{"field": {"fieldPath": "createdAt"}, "direction": "DESCENDING"}]
+                $startAfterSection,
+                "limit": ${safePageSize + 1}
+              }
+            }
+        """.trimIndent()
+        val response = runCatching { restApi.post(path, body, idToken) }
+            .recoverCatching { restApi.post(path, body, null) }
+            .getOrElse { return PagedResult(items = emptyList(), nextCursor = null, hasNext = false) }
+        val parsed = runCatching { Json.parseToJsonElement(response).jsonArray }.getOrElse {
+            return PagedResult(items = emptyList(), nextCursor = null, hasNext = false)
+        }
+        val documents = parsed.mapNotNull { it.jsonObject["document"]?.jsonObject }
+        val pageDocuments = documents.take(safePageSize)
+        val hasMore = documents.size > safePageSize
+        val nextCursor = if (hasMore) {
+            pageDocuments.lastOrNull()?.get("fields")?.jsonObject?.getFirestoreString("createdAt")
+        } else null
+        // Return in ascending order (oldest first)
+        val items = pageDocuments.mapNotNull { parseCommentDocument(it, postId) }.reversed()
+        return PagedResult(items = items, nextCursor = nextCursor, hasNext = hasMore)
+    }
+
+    override suspend fun updateComment(postId: String, commentId: String, content: String): Comment {
+        val idToken = tokenProvider.getIdToken()
+        val updatedAt = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_COMMENTS}/$commentId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "content" to firestoreString(content),
+                "updatedAt" to firestoreString(updatedAt)
+            )
+        )
+        restApi.patch(path, body, idToken, listOf("content", "updatedAt"))
+        val response = restApi.get(path, idToken)
+        val document = Json.parseToJsonElement(response).jsonObject
+        return parseCommentDocument(document, postId)
+            ?: throw IllegalStateException("Failed to parse updated comment")
+    }
+
+    override suspend fun deleteComment(postId: String, commentId: String) {
+        val idToken = tokenProvider.getIdToken()
+        val commentPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId/${FirestorePaths.POST_COMMENTS}/$commentId"
+        restApi.delete(commentPath, idToken)
+        val postPath = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        val postDoc = runCatching { Json.parseToJsonElement(restApi.get(postPath, idToken)).jsonObject }.getOrNull()
+        val currentCount = postDoc?.get("fields")?.jsonObject?.getFirestoreInt("commentCount") ?: 1
+        val newCount = maxOf(0, currentCount - 1)
+        restApi.patch(postPath, firestoreDocumentBody(mapOf("commentCount" to firestoreLong(newCount.toLong()))), idToken, listOf("commentCount"))
+    }
+
     private fun parseCommentDocument(document: JsonObject, postId: String): Comment? {
         val fields = document["fields"]?.jsonObject ?: return null
         val documentName = document["name"]?.jsonPrimitive?.contentOrNull ?: return null

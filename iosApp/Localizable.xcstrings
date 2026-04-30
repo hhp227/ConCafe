@@ -10979,6 +10979,28 @@
         }
       }
     },
+    "home_community_latest_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending latest posts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今話題の最新投稿"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 뜨는 최신글"
+          }
+        }
+      }
+    },
     "home_community_shortcut_desc" : {
       "extractionState" : "stale",
       "localizations" : {
