@@ -67,8 +67,10 @@ import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_doll
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_other
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
@@ -947,6 +949,8 @@ private fun nearbyCafeConceptLabel(rawConceptType: String): String {
         "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
         "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
         "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
         else -> normalized
     }
 }

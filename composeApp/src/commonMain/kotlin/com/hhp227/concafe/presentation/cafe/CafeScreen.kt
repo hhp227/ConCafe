@@ -431,6 +431,7 @@ private fun CafeHeroSection(
 @Composable
 private fun CafeSummarySection(detail: CafeDetail) {
     val isDarkMode = androidx.compose.foundation.isSystemInDarkTheme()
+    val conceptLabel = localizedCafeConceptType(detail.cafe.conceptType)
 
     Column(
         modifier = Modifier
@@ -456,6 +457,18 @@ private fun CafeSummarySection(detail: CafeDetail) {
                     modifier = Modifier.size(22.dp)
                 )
             }
+        }
+        if (conceptLabel.isNotBlank()) {
+            Text(
+                text = conceptLabel,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colorFromHex("9E2E5C"),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(colorFromHex("FDE7EF"))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            )
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -493,6 +506,23 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun localizedCafeConceptType(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
+        else -> normalized
     }
 }
 

@@ -142,7 +142,7 @@ private fun CafeEventContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (topBarVisible) uiState.event?.title.orEmpty() else "",
+                        text = if (topBarVisible) uiState.event.title else "",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
