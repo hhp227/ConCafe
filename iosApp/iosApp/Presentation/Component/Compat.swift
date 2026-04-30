@@ -138,12 +138,32 @@ struct CompatLargeSheetDetentModifier: ViewModifier {
     }
 }
 
+struct CompatMediumSheetDetentModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.presentationDetents([.medium])
+        } else {
+            content
+        }
+    }
+}
+
 struct CompatFractionSheetDetentModifier: ViewModifier {
     let fraction: CGFloat
 
     func body(content: Content) -> some View {
         if #available(iOS 16.0, *) {
             content.presentationDetents([.fraction(fraction)])
+        } else {
+            content
+        }
+    }
+}
+
+struct CompatPresentationDragIndicatorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.presentationDragIndicator(.visible)
         } else {
             content
         }
@@ -333,8 +353,16 @@ extension View {
         modifier(CompatLargeSheetDetentModifier())
     }
 
+    func compatMediumSheetDetent() -> some View {
+        modifier(CompatMediumSheetDetentModifier())
+    }
+
     func compatFractionSheetDetent(_ fraction: CGFloat) -> some View {
         modifier(CompatFractionSheetDetentModifier(fraction: fraction))
+    }
+
+    func compatPresentationDragIndicator() -> some View {
+        modifier(CompatPresentationDragIndicatorModifier())
     }
 
     func compatSafeAreaBottomPadding() -> some View {

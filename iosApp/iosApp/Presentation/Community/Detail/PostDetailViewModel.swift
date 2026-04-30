@@ -22,9 +22,13 @@ final class PostDetailViewModel: ObservableObject {
 
     private let toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase
 
-    private let getCommunityCommentsUseCase: GetCommunityCommentsUseCase
+    private let getCommunityCommentPageUseCase: GetCommunityCommentPageUseCase
 
     private let addCommunityCommentUseCase: AddCommunityCommentUseCase
+
+    private let updateCommunityCommentUseCase: UpdateCommunityCommentUseCase
+
+    private let deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
@@ -91,18 +95,40 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
-    private func loadComments() {
+    private func loadInitialCommentPage() {
         tasks[.loadComments]?.cancel()
         tasks[.loadComments] = Task {
             uiState.isLoadingComments = true
             do {
-                let result = try await getCommunityCommentsUseCase.invoke(postId: postId)
+                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: nil, pageSize: 5)
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let comments = success.data as? [Comment] {
-                    uiState.comments = comments
+                   let page = success.data as? PagedResult<Comment> {
+                    uiState.comments = page.items as! [Comment]
+                    uiState.hasMoreComments = page.hasNext
+                    uiState.oldestCommentCursor = page.nextCursor
                 }
             } catch { }
             uiState.isLoadingComments = false
+        }
+    }
+
+    private func loadMoreComments() {
+        guard !uiState.isLoadingMoreComments, uiState.hasMoreComments,
+              let cursor = uiState.oldestCommentCursor else { return }
+        tasks[.loadMoreComments]?.cancel()
+        tasks[.loadMoreComments] = Task {
+            uiState.isLoadingMoreComments = true
+            do {
+                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: cursor, pageSize: 5)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<Comment> {
+                    let newComments = page.items as! [Comment]
+                    uiState.comments = newComments + uiState.comments
+                    uiState.hasMoreComments = page.hasNext
+                    uiState.oldestCommentCursor = page.nextCursor
+                }
+            } catch { }
+            uiState.isLoadingMoreComments = false
         }
     }
 
@@ -213,6 +239,62 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
+    private func confirmEditComment(content: String) {
+        guard let commentId = uiState.editingCommentId, !content.isEmpty else { return }
+        uiState.isUpdatingComment = true
+        tasks[.updateComment]?.cancel()
+        tasks[.updateComment] = Task {
+            do {
+                let result = try await updateCommunityCommentUseCase.invoke(postId: postId, commentId: commentId, content: content)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let updated = success.data as? Comment {
+                    uiState.isUpdatingComment = false
+                    uiState.editingCommentId = nil
+                    uiState.editCommentText = ""
+                    uiState.comments = uiState.comments.map { c in c.id == commentId ? updated : c }
+                } else {
+                    uiState.isUpdatingComment = false
+                    uiState.errorMessage = "댓글을 수정하지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isUpdatingComment = false
+                uiState.errorMessage = "댓글을 수정하지 못했습니다."
+            }
+        }
+    }
+
+    private func deleteComment(commentId: String) {
+        tasks[.deleteComment]?.cancel()
+        tasks[.deleteComment] = Task {
+            do {
+                let result = try await deleteCommunityCommentUseCase.invoke(postId: postId, commentId: commentId)
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.comments = uiState.comments.filter { $0.id != commentId }
+                    if let post = uiState.post {
+                        uiState.post = CommunityPost(
+                            id: post.id,
+                            userId: post.userId,
+                            userNickname: post.userNickname,
+                            title: post.title,
+                            content: post.content,
+                            imageUrls: post.imageUrls,
+                            likeCount: post.likeCount,
+                            commentCount: max(0, post.commentCount - 1),
+                            createdAt: post.createdAt,
+                            displayDate: post.displayDate
+                        )
+                    }
+                } else {
+                    uiState.errorMessage = "댓글을 삭제하지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.errorMessage = "댓글을 삭제하지 못했습니다."
+            }
+        }
+    }
+
     private func observeCommunityPostEvents() {
         tasks[.observeCommunityEvent]?.cancel()
         tasks[.observeCommunityEvent] = Task {
@@ -249,10 +331,17 @@ final class PostDetailViewModel: ObservableObject {
             uiState.isDeleteConfirmVisible = false
         case .clickReport:
             uiState.isMenuVisible = false
-        case .clickEditComment(commentId: _):
-            uiState.errorMessage = "댓글 수정 기능은 준비 중입니다."
-        case .clickDeleteComment(commentId: _):
-            uiState.errorMessage = "댓글 삭제 기능은 준비 중입니다."
+        case .clickEditComment(let commentId):
+            let comment = uiState.comments.first { $0.id == commentId }
+            uiState.editingCommentId = commentId
+            uiState.editCommentText = comment?.content ?? ""
+        case .confirmEditComment(let content):
+            confirmEditComment(content: content)
+        case .dismissEditComment:
+            uiState.editingCommentId = nil
+            uiState.editCommentText = ""
+        case .clickDeleteComment(let commentId):
+            deleteComment(commentId: commentId)
         case .clickReportComment(commentId: _):
             uiState.errorMessage = "신고가 접수되었습니다."
         case .changeCommentText(let text):
@@ -263,6 +352,8 @@ final class PostDetailViewModel: ObservableObject {
             uiState.errorMessage = nil
         case .clickImage(let imageUrl):
             eventSubject.send(.navigateToPicture(imageUrl: imageUrl))
+        case .loadMoreComments:
+            loadMoreComments()
         }
     }
 
@@ -272,8 +363,10 @@ final class PostDetailViewModel: ObservableObject {
         checkCommunityPostLikedUseCase: CheckCommunityPostLikedUseCase = KoinInitializerKt.resolveCheckCommunityPostLikedUseCase(),
         deleteCommunityPostUseCase: DeleteCommunityPostUseCase = KoinInitializerKt.resolveDeleteCommunityPostUseCase(),
         toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase = KoinInitializerKt.resolveToggleCommunityPostLikeUseCase(),
-        getCommunityCommentsUseCase: GetCommunityCommentsUseCase = KoinInitializerKt.resolveGetCommunityCommentsUseCase(),
+        getCommunityCommentPageUseCase: GetCommunityCommentPageUseCase = KoinInitializerKt.resolveGetCommunityCommentPageUseCase(),
         addCommunityCommentUseCase: AddCommunityCommentUseCase = KoinInitializerKt.resolveAddCommunityCommentUseCase(),
+        updateCommunityCommentUseCase: UpdateCommunityCommentUseCase = KoinInitializerKt.resolveUpdateCommunityCommentUseCase(),
+        deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase = KoinInitializerKt.resolveDeleteCommunityCommentUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
@@ -282,13 +375,15 @@ final class PostDetailViewModel: ObservableObject {
         self.checkCommunityPostLikedUseCase = checkCommunityPostLikedUseCase
         self.deleteCommunityPostUseCase = deleteCommunityPostUseCase
         self.toggleCommunityPostLikeUseCase = toggleCommunityPostLikeUseCase
-        self.getCommunityCommentsUseCase = getCommunityCommentsUseCase
+        self.getCommunityCommentPageUseCase = getCommunityCommentPageUseCase
         self.addCommunityCommentUseCase = addCommunityCommentUseCase
+        self.updateCommunityCommentUseCase = updateCommunityCommentUseCase
+        self.deleteCommunityCommentUseCase = deleteCommunityCommentUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.communityPostEventPublisher = communityPostEventPublisher
 
         loadPost()
-        loadComments()
+        loadInitialCommentPage()
         observeCommunityPostEvents()
     }
 
@@ -302,9 +397,12 @@ final class PostDetailViewModel: ObservableObject {
         case checkOwner
         case checkLike
         case loadComments
+        case loadMoreComments
         case toggleLike
         case deletePost
         case sendComment
+        case updateComment
+        case deleteComment
         case observeCommunityEvent
     }
 }

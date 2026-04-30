@@ -120,7 +120,7 @@ private struct HomeContentView: View {
     private var communitySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionTitle(
-                title: String(localized: String.LocalizationValue("community_title"), table: "Localizable"),
+                title: String(localized: String.LocalizationValue("home_community_latest_title"), table: "Localizable"),
                 actionTitle: String(localized: String.LocalizationValue("home_community_see_all"), table: "Localizable"),
                 onAction: { onAction(.communityTapped) }
             )

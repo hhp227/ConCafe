@@ -949,6 +949,7 @@
     <!-- Community -->
     <string name="community_title">커뮤니티</string>
     <string name="home_community_shortcut_desc">게시글을 확인하고 이웃과 소통해보세요</string>
+    <string name="home_community_latest_title">지금 뜨는 최신글</string>
     <string name="home_community_see_all">전체 보기</string>
     <string name="community_write_post">게시글 작성</string>
     <string name="community_empty">아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!</string>

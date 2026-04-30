@@ -73,7 +73,7 @@ import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
 import concafe.composeapp.generated.resources.home_popular_cast_empty_title
-import concafe.composeapp.generated.resources.community_title
+import concafe.composeapp.generated.resources.home_community_latest_title
 import concafe.composeapp.generated.resources.home_community_see_all
 import concafe.composeapp.generated.resources.home_section_birthday_cast
 import concafe.composeapp.generated.resources.home_section_nearby_cafe
@@ -803,7 +803,7 @@ private fun HomeCommunitySection(
     val communityPostListState = rememberLazyListState()
 
     SectionTitle(
-        text = stringResource(Res.string.community_title),
+        text = stringResource(Res.string.home_community_latest_title),
         actionLabel = stringResource(Res.string.home_community_see_all),
         onAction = { onAction(HomeAction.ClickCommunity) }
     )

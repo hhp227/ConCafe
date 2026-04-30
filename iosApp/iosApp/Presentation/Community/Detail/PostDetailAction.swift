@@ -18,10 +18,13 @@ enum PostDetailAction {
     case dismissDeleteConfirm
     case clickReport
     case clickEditComment(commentId: String)
+    case confirmEditComment(content: String)
+    case dismissEditComment
     case clickDeleteComment(commentId: String)
     case clickReportComment(commentId: String)
     case changeCommentText(String)
     case clickSendComment
     case dismissError
     case clickImage(String)
+    case loadMoreComments
 }

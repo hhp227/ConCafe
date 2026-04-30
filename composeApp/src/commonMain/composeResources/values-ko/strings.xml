@@ -945,4 +945,5 @@
     <string name="day_fri">금</string>
     <string name="day_sat">토</string>
     <string name="day_sun">일</string>
+    <string name="home_community_latest_title">지금 뜨는 최신글</string>
 </resources>

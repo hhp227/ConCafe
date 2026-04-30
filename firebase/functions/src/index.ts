@@ -739,7 +739,9 @@ async function createUserNotification(
     | "CAFE_OWNER_REJECTED"
     | "CAST_CLAIM_REJECTED"
     | "CAFE_CHECK_IN"
-    | "CAFE_TABLE_COUNT_UPDATE",
+    | "CAFE_TABLE_COUNT_UPDATE"
+    | "COMMUNITY_COMMENT"
+    | "COMMUNITY_LIKE",
   title: string,
   body: string,
   targetId: string,
@@ -5864,5 +5866,133 @@ export const onCafeWrittenSyncTableCountNotifications = onDocumentWritten(
     const afterData = event.data?.after.data() as Record<string, unknown> | undefined;
 
     await syncTableCountUpdateNotifications(cafeId, beforeData, afterData);
+  }
+);
+
+export const onCommunityPostDeletedCleanupChildren = onDocumentDeleted(
+  "communityPosts/{postId}",
+  async (event) => {
+    const postId = asNonBlankString(event.params.postId);
+
+    if (postId == null) {
+      return;
+    }
+
+    const postRef = db().collection("communityPosts").doc(postId);
+
+    await Promise.all([
+      db().recursiveDelete(postRef.collection("comments")),
+      db().recursiveDelete(postRef.collection("likes")),
+    ]);
+
+    logger.info("Deleted community post child collections.", {
+      postId: postId,
+      collections: ["comments", "likes"],
+    });
+  }
+);
+
+export const onCommunityPostLikeWrittenSendPushToAuthor = onDocumentWritten(
+  "communityPosts/{postId}/likes/{userId}",
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+
+    if (beforeData != null || afterData == null) {
+      return;
+    }
+    const postId = asNonBlankString(event.params.postId);
+    const likerUserId = asNonBlankString(event.params.userId)
+      ?? asNonBlankString(afterData.userId);
+
+    if (postId == null || likerUserId == null) {
+      return;
+    }
+    const postDoc = await db().collection("communityPosts").doc(postId).get();
+
+    if (!postDoc.exists) {
+      return;
+    }
+    const postAuthorId = asNonBlankString(postDoc.data()?.userId);
+
+    if (postAuthorId == null || postAuthorId === likerUserId) {
+      return;
+    }
+    const settings = await loadUserNotificationSettings(postAuthorId);
+
+    if (!settings.isPushNotificationsEnabled) {
+      return;
+    }
+    const likerDoc = await db().collection("users").doc(likerUserId).get();
+    const likerNickname = asNonBlankString(likerDoc.data()?.nickname) ?? "누군가";
+    const createdAt = new Date().toISOString();
+
+    await createUserNotification(
+      postAuthorId,
+      `post_like_${postId}_${likerUserId}_${postAuthorId}`,
+      "COMMUNITY_LIKE",
+      "새 좋아요 알림",
+      `${likerNickname}님이 회원님의 게시글을 좋아해요.`,
+      postId,
+      createdAt,
+      settings
+    );
+    logger.info("Sent community post like push notification.", {
+      postId: postId,
+      likerUserId: likerUserId,
+      authorId: postAuthorId,
+    });
+  }
+);
+
+export const onCommunityCommentWrittenSendPushToAuthor = onDocumentWritten(
+  "communityPosts/{postId}/comments/{commentId}",
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    // Only on create
+    if (beforeData != null || afterData == null) {
+      return;
+    }
+    const postId = asNonBlankString(event.params.postId);
+    const commentId = asNonBlankString(event.params.commentId);
+    const commenterUserId = asNonBlankString(afterData.userId);
+    const commenterNickname = asNonBlankString(afterData.userNickname) ?? "누군가";
+
+    if (postId == null || commentId == null || commenterUserId == null) {
+      return;
+    }
+    const postDoc = await db().collection("communityPosts").doc(postId).get();
+
+    if (!postDoc.exists) {
+      return;
+    }
+    const postAuthorId = asNonBlankString(postDoc.data()?.userId);
+
+    if (postAuthorId == null || postAuthorId === commenterUserId) {
+      return;
+    }
+    const settings = await loadUserNotificationSettings(postAuthorId);
+
+    if (!settings.isPushNotificationsEnabled) {
+      return;
+    }
+    const createdAt = new Date().toISOString();
+
+    await createUserNotification(
+      postAuthorId,
+      `post_comment_${commentId}_${postAuthorId}`,
+      "COMMUNITY_COMMENT",
+      "새 댓글 알림",
+      `${commenterNickname}님이 회원님의 게시글에 댓글을 남겼어요.`,
+      postId,
+      createdAt,
+      settings
+    );
+    logger.info("Sent community comment push notification.", {
+      postId: postId,
+      commentId: commentId,
+      authorId: postAuthorId,
+    });
   }
 );

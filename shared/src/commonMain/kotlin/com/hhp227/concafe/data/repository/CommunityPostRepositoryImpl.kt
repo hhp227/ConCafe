@@ -54,4 +54,16 @@ class CommunityPostRepositoryImpl(
     override suspend fun addComment(postId: String, userId: String, content: String): Comment {
         return communityPostRemoteDataSource.addComment(postId, userId, content)
     }
+
+    override suspend fun getCommentPage(postId: String, beforeCursor: String?, pageSize: Int): PagedResult<Comment> {
+        return communityPostRemoteDataSource.fetchCommentPage(postId, beforeCursor, pageSize)
+    }
+
+    override suspend fun updateComment(postId: String, commentId: String, content: String): Comment {
+        return communityPostRemoteDataSource.updateComment(postId, commentId, content)
+    }
+
+    override suspend fun deleteComment(postId: String, commentId: String) {
+        communityPostRemoteDataSource.deleteComment(postId, commentId)
+    }
 }

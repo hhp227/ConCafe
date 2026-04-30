@@ -97,8 +97,10 @@ private val composeAppPresentationModule = module {
             checkCommunityPostLikedUseCase = get(),
             deleteCommunityPostUseCase = get(),
             toggleCommunityPostLikeUseCase = get(),
-            getCommunityCommentsUseCase = get(),
+            getCommunityCommentPageUseCase = get(),
             addCommunityCommentUseCase = get(),
+            updateCommunityCommentUseCase = get(),
+            deleteCommunityCommentUseCase = get(),
             observeCurrentUserUseCase = get(),
             communityPostEventPublisher = get()
         )
