@@ -20,6 +20,8 @@ sealed interface NoticeEventAction {
     data object ClickRemoveFormImage : NoticeEventAction
     data class ChangeFormPinned(val value: Boolean) : NoticeEventAction
     data class ChangeFormReservedAt(val value: String) : NoticeEventAction
+    data class ToggleFormParticipantCast(val castId: String) : NoticeEventAction
+    data class ChangeFormHasLivePerformance(val value: Boolean) : NoticeEventAction
     data object ClickReserveSchedule : NoticeEventAction
     data object ClickSubmitForm : NoticeEventAction
     data object DismissInfoMessage : NoticeEventAction

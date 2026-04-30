@@ -6,5 +6,7 @@ data class CafeEventUpdate(
     val title: String,
     val content: String,
     val imageUrl: String,
-    val periodText: String? = null
+    val periodText: String? = null,
+    val participantCastIds: List<String> = emptyList(),
+    val hasLivePerformance: Boolean = false
 )

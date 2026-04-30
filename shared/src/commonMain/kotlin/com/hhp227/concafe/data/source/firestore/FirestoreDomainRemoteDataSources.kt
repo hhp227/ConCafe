@@ -316,6 +316,21 @@ class FirestoreCafeRemoteDataSource(
         val registrationClaimDocuments = runCatching { runUserScopedQuery(FirestorePaths.CAFE_REGISTRATION_CLAIMS, userId, idToken) }
             .recoverCatching { runUserScopedQuery(FirestorePaths.CAFE_REGISTRATION_CLAIMS, userId, null) }
             .getOrElse { emptyList() }
+        val directlyOwnedCafeDocuments = runCatching {
+            runArrayContainsStringQuery(
+                collectionId = FirestorePaths.CAFES,
+                fieldPath = "ownerIds",
+                fieldValue = userId,
+                idToken = idToken
+            )
+        }.recoverCatching {
+            runArrayContainsStringQuery(
+                collectionId = FirestorePaths.CAFES,
+                fieldPath = "ownerIds",
+                fieldValue = userId,
+                idToken = null
+            )
+        }.getOrElse { emptyList() }
         val ownedCafeIds = mutableSetOf<String>()
         ownerClaimDocuments.mapNotNull { parsePendingCafeOwnerClaimDocument(it) }.forEach { claim ->
             if (claim.status.isApprovedClaimStatus()) ownedCafeIds.add(claim.cafeId)
@@ -325,6 +340,9 @@ class FirestoreCafeRemoteDataSource(
             val status = fields?.getFirestoreString("status").orEmpty()
             val approvedCafeId = fields?.getFirestoreString("approvedCafeId") ?: fields?.getFirestoreString("cafeId")
             if (status.isApprovedClaimStatus() && !approvedCafeId.isNullOrBlank()) ownedCafeIds.add(approvedCafeId)
+        }
+        directlyOwnedCafeDocuments.mapNotNull { parseCafeDocument(it)?.id }.forEach { cafeId ->
+            ownedCafeIds.add(cafeId)
         }
         val userDocument = runCatching { loadUserDocument(userId, idToken) }
             .recoverCatching { loadUserDocument(userId, null) }
@@ -1257,6 +1275,7 @@ class FirestoreNoticeRemoteDataSource(
         val startDate = periodText.substringBefore(" - ", missingDelimiterValue = periodText)
         val endDate = periodText.substringAfter(" - ", missingDelimiterValue = startDate)
         val statusLabel = if (input.periodText.isNullOrBlank()) "진행 예정" else "진행 중"
+        val participantCastIds = input.participantCastIds.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
         val body = firestoreDocumentBody(
             mapOf(
                 "title" to firestoreString(input.title.trim()),
@@ -1265,7 +1284,9 @@ class FirestoreNoticeRemoteDataSource(
                 "startDate" to firestoreString(startDate),
                 "endDate" to firestoreString(endDate),
                 "statusLabel" to firestoreString(statusLabel),
-                "isDimmed" to firestoreBoolean(false)
+                "isDimmed" to firestoreBoolean(false),
+                "participantCastIds" to firestoreStringArray(participantCastIds),
+                "hasLivePerformance" to firestoreBoolean(input.hasLivePerformance)
             )
         )
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_EVENTS}/$eventId"
@@ -1280,7 +1301,9 @@ class FirestoreNoticeRemoteDataSource(
             startDate = startDate,
             endDate = endDate,
             statusLabel = statusLabel,
-            isDimmed = false
+            isDimmed = false,
+            participantCastIds = participantCastIds,
+            hasLivePerformance = input.hasLivePerformance
         )
     }
 
@@ -1324,9 +1347,11 @@ class FirestoreNoticeRemoteDataSource(
         val startDate = periodText.substringBefore(" - ", missingDelimiterValue = periodText)
         val endDate = periodText.substringAfter(" - ", missingDelimiterValue = startDate)
         val statusLabel = if (input.periodText.isNullOrBlank()) "진행 예정" else "진행 중"
+        val participantCastIds = input.participantCastIds.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${input.cafeId}/${FirestorePaths.CAFE_EVENTS}/${input.eventId}" +
             "?updateMask.fieldPaths=title&updateMask.fieldPaths=content&updateMask.fieldPaths=imageUrl" +
-            "&updateMask.fieldPaths=startDate&updateMask.fieldPaths=endDate&updateMask.fieldPaths=statusLabel&updateMask.fieldPaths=isDimmed"
+            "&updateMask.fieldPaths=startDate&updateMask.fieldPaths=endDate&updateMask.fieldPaths=statusLabel&updateMask.fieldPaths=isDimmed" +
+            "&updateMask.fieldPaths=participantCastIds&updateMask.fieldPaths=hasLivePerformance"
         val body = firestoreDocumentBody(
             mapOf(
                 "title" to firestoreString(input.title.trim()),
@@ -1335,7 +1360,9 @@ class FirestoreNoticeRemoteDataSource(
                 "startDate" to firestoreString(startDate),
                 "endDate" to firestoreString(endDate),
                 "statusLabel" to firestoreString(statusLabel),
-                "isDimmed" to firestoreBoolean(false)
+                "isDimmed" to firestoreBoolean(false),
+                "participantCastIds" to firestoreStringArray(participantCastIds),
+                "hasLivePerformance" to firestoreBoolean(input.hasLivePerformance)
             )
         )
 
@@ -1349,7 +1376,9 @@ class FirestoreNoticeRemoteDataSource(
             startDate = startDate,
             endDate = endDate,
             statusLabel = statusLabel,
-            isDimmed = false
+            isDimmed = false,
+            participantCastIds = participantCastIds,
+            hasLivePerformance = input.hasLivePerformance
         )
     }
 

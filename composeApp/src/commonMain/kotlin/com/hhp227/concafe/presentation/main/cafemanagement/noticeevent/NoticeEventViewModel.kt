@@ -17,6 +17,7 @@ import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
@@ -42,8 +43,9 @@ class NoticeEventViewModel(
     private val updateCafeEventUseCase: UpdateCafeEventUseCase,
     private val deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase,
     private val deleteCafeEventUseCase: DeleteCafeEventUseCase,
-    private val noticeManagementEventPublisher: NoticeManagementEventPublisher,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NoticeEventUiState())
     val uiState = _uiState.asStateFlow()
@@ -68,6 +70,8 @@ class NoticeEventViewModel(
                 formImageUrl = "",
                 formPinned = false,
                 formReservedAt = "",
+                formParticipantCastIds = emptyList(),
+                formHasLivePerformance = false,
                 infoMessage = null
             )
         }
@@ -89,6 +93,8 @@ class NoticeEventViewModel(
                 formImageUrl = "",
                 formPinned = target.isPinned,
                 formReservedAt = if (target.statusAccent == NoticeStatusAccent.DRAFT) target.displayDate else "",
+                formParticipantCastIds = emptyList(),
+                formHasLivePerformance = false,
                 infoMessage = null
             )
         }
@@ -110,8 +116,25 @@ class NoticeEventViewModel(
                 formImageUrl = target.imageUrl,
                 formPinned = false,
                 formReservedAt = target.periodText,
+                formParticipantCastIds = target.participantCastIds,
+                formHasLivePerformance = target.hasLivePerformance,
                 infoMessage = null
             )
+        }
+    }
+
+    private fun loadCafeCasts() {
+        jobs[JobKey.CAST_PAGE]?.cancel()
+        jobs[JobKey.CAST_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingCafeCasts = true) }
+            when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor = null, pageSize = CAST_PICKER_PAGE_SIZE)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(cafeCasts = result.data.items, isLoadingCafeCasts = false)
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(cafeCasts = emptyList(), isLoadingCafeCasts = false)
+                }
+            }
         }
     }
 
@@ -247,7 +270,9 @@ class NoticeEventViewModel(
                             title = state.formTitle,
                             content = state.formContent,
                             imageUrl = uploadedImageUrl,
-                            periodText = state.formReservedAt.ifBlank { null }
+                            periodText = state.formReservedAt.ifBlank { null },
+                            participantCastIds = state.formParticipantCastIds,
+                            hasLivePerformance = state.formHasLivePerformance
                         )
                     )
                 } else {
@@ -258,7 +283,9 @@ class NoticeEventViewModel(
                             title = state.formTitle,
                             content = state.formContent,
                             imageUrl = uploadedImageUrl,
-                            periodText = state.formReservedAt.ifBlank { null }
+                            periodText = state.formReservedAt.ifBlank { null },
+                            participantCastIds = state.formParticipantCastIds,
+                            hasLivePerformance = state.formHasLivePerformance
                         )
                     )
                 }
@@ -276,6 +303,8 @@ class NoticeEventViewModel(
                             formImageUrl = "",
                             formPinned = false,
                             formReservedAt = "",
+                            formParticipantCastIds = emptyList(),
+                            formHasLivePerformance = false,
                             infoMessage = if (state.selectedTab == NoticeEventTab.NOTICE) {
                                 if (state.formEditingId == null) MSG_NOTICE_CREATED else MSG_NOTICE_UPDATED
                             } else {
@@ -428,6 +457,17 @@ class NoticeEventViewModel(
             NoticeEventAction.ClickRemoveFormImage -> _uiState.update { it.copy(formImageUrl = "", infoMessage = null) }
             is NoticeEventAction.ChangeFormPinned -> _uiState.update { it.copy(formPinned = action.value) }
             is NoticeEventAction.ChangeFormReservedAt -> _uiState.update { it.copy(formReservedAt = action.value, infoMessage = null) }
+            is NoticeEventAction.ToggleFormParticipantCast -> _uiState.update { state ->
+                val nextIds = if (action.castId in state.formParticipantCastIds) {
+                    state.formParticipantCastIds - action.castId
+                } else {
+                    state.formParticipantCastIds + action.castId
+                }
+                state.copy(formParticipantCastIds = nextIds, infoMessage = null)
+            }
+            is NoticeEventAction.ChangeFormHasLivePerformance -> _uiState.update {
+                it.copy(formHasLivePerformance = action.value, infoMessage = null)
+            }
             NoticeEventAction.ClickReserveSchedule -> setInfoMessage(MSG_RESERVE_SCHEDULE_NEXT_STEP)
             NoticeEventAction.ClickSubmitForm -> submitForm()
             NoticeEventAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
@@ -442,12 +482,14 @@ class NoticeEventViewModel(
 
     init {
         observeNoticeManagementEvent()
+        loadCafeCasts()
         loadNoticePage(cursor = null, append = false)
     }
 
     private enum class JobKey {
         NOTICE_PAGE,
         EVENT_PAGE,
+        CAST_PAGE,
         SUBMIT,
         DELETE,
         OBSERVE_EVENT
@@ -475,6 +517,7 @@ class NoticeEventViewModel(
         private const val MSG_IMAGE_ONE_ONLY = "noticeevent_info_image_one_only"
         private const val MSG_IMAGE_PICK_REQUIRED = "noticeevent_info_image_pick_required"
         private const val MSG_RESERVE_SCHEDULE_NEXT_STEP = "noticeevent_info_reserve_schedule_next_step"
+        private const val CAST_PICKER_PAGE_SIZE = 100
         private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

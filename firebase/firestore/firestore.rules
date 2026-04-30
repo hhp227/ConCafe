@@ -378,6 +378,39 @@ service cloud.firestore {
         );
     }
 
+    function isValidCafeEventWriteData() {
+      return request.resource.data.keys().hasOnly([
+          "title",
+          "content",
+          "imageUrl",
+          "startDate",
+          "endDate",
+          "statusLabel",
+          "isDimmed",
+          "participantCastIds",
+          "hasLivePerformance"
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.imageUrl is string
+        && request.resource.data.startDate is string
+        && request.resource.data.endDate is string
+        && request.resource.data.statusLabel is string
+        && request.resource.data.isDimmed is bool
+        && (
+          !("participantCastIds" in request.resource.data)
+          || request.resource.data.participantCastIds is list
+        )
+        && (
+          !("hasLivePerformance" in request.resource.data)
+          || request.resource.data.hasLivePerformance is bool
+        );
+    }
+
     function isValidInquiryCreateData() {
       return request.resource.data.userId is string
         && request.resource.data.userNickname is string
@@ -606,7 +639,9 @@ service cloud.firestore {
 
       match /events/{eventId} {
         allow read: if true;
-        allow write: if canManageCafe(cafeId);
+        allow create, update: if canManageCafe(cafeId)
+          && isValidCafeEventWriteData();
+        allow delete: if canManageCafe(cafeId);
       }
 
       match /castClaims/{metaId} {

@@ -385,6 +385,10 @@
     <string name="noticeevent_form_image_title_attached">Main image attached</string>
     <string name="noticeevent_form_image_title_empty">Attach main image</string>
     <string name="noticeevent_form_image_description">Main image shown on event cards. Only one image can be attached.</string>
+    <string name="noticeevent_form_live_performance_title">Live performance</string>
+    <string name="noticeevent_form_live_performance_desc">Mark this event as including a live performance.</string>
+    <string name="noticeevent_form_participant_cast_label">Participant casts</string>
+    <string name="noticeevent_form_participant_cast_empty">No casts registered for this cafe.</string>
     <string name="noticeevent_pinned_title">Important Notice (Pinned)</string>
     <string name="noticeevent_pinned_desc">Pinned at the top of the list.</string>
     <string name="noticeevent_remove">Remove</string>
