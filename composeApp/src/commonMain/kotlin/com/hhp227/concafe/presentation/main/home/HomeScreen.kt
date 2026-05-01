@@ -278,14 +278,14 @@ fun HomeContentScreen(
                     }
                 }
             }
-            /*if (uiState.communityPosts.isNotEmpty()) {
+            if (uiState.communityPosts.isNotEmpty()) {
                 item {
                     HomeCommunitySection(
                         posts = uiState.communityPosts,
                         onAction = onAction
                     )
                 }
-            }*/
+            }
             if (uiState.birthdayCasts.isNotEmpty()) {
                 item {
                     val birthdayCastListState = rememberLazyListState()
