@@ -1,11 +1,8 @@
 package com.hhp227.concafe.presentation.component
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color as AndroidColor
-import android.graphics.Paint
-import android.graphics.Path
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,8 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path as ComposePath
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,15 +41,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.MapsInitializer
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import kotlin.math.roundToInt
@@ -64,23 +58,11 @@ actual fun CheckInCafeMap(
     cameraTarget: CheckInMapCameraTarget?,
     modifier: Modifier
 ) {
-    val context = LocalContext.current
     val cameraState = rememberCameraPositionState()
     var selectedCafe by remember { mutableStateOf<CheckInCafeSummary?>(null) }
     var calloutWidthPx by remember { mutableIntStateOf(0) }
     var calloutHeightPx by remember { mutableIntStateOf(0) }
-    var isMapLoaded by remember { mutableStateOf(false) }
     val density = LocalDensity.current
-    val smallMarkerIcon = remember(isMapLoaded, density.density) {
-        if (isMapLoaded) {
-            runCatching {
-                MapsInitializer.initialize(context.applicationContext)
-                createSmallDefaultMarkerIcon(density.density)
-            }.getOrNull()
-        } else {
-            null
-        }
-    }
 
     LaunchedEffect(cafes, cameraTarget) {
         val targetPosition = resolveCheckInMapCameraPosition(
@@ -94,27 +76,8 @@ actual fun CheckInCafeMap(
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraState,
-            onMapClick = { selectedCafe = null },
-            onMapLoaded = { isMapLoaded = true }
-        ) {
-            cafes.forEach { cafe ->
-                val markerPosition = LatLng(
-                    cafe.geoPoint.latitude,
-                    cafe.geoPoint.longitude
-                )
-
-                Marker(
-                    state = MarkerState(position = markerPosition),
-                    icon = smallMarkerIcon,
-                    anchor = Offset(0.5f, 1f),
-                    title = cafe.name,
-                    onClick = {
-                        selectedCafe = cafe
-                        true
-                    }
-                )
-            }
-        }
+            onMapClick = { selectedCafe = null }
+        )
         val cameraPosition = cameraState.position
         val isCameraMoving = cameraState.isMoving
 
@@ -136,6 +99,32 @@ actual fun CheckInCafeMap(
                         cameraPosition
                         isCameraMoving
                         IntOffset(labelX, labelY)
+                    }
+                )
+            }
+        }
+        cafes.forEach { cafe ->
+            val projection = cameraState.projection
+
+            if (projection != null) {
+                val screenPoint = projection.toScreenLocation(
+                    LatLng(cafe.geoPoint.latitude, cafe.geoPoint.longitude)
+                )
+                val pinWidthPx = with(density) { MARKER_PIN_WIDTH_DP.dp.toPx() }.roundToInt()
+                val pinHeightPx = with(density) { MARKER_PIN_HEIGHT_DP.dp.toPx() }.roundToInt()
+                val pinX = screenPoint.x - pinWidthPx / 2
+                val pinY = screenPoint.y - pinHeightPx
+
+                CafeMapPin(
+                    modifier = Modifier
+                        .absoluteOffset {
+                            cameraPosition
+                            isCameraMoving
+                            IntOffset(pinX, pinY)
+                        }
+                        .size(MARKER_PIN_WIDTH_DP.dp, MARKER_PIN_HEIGHT_DP.dp),
+                    onClick = {
+                        selectedCafe = cafe
                     }
                 )
             }
@@ -177,42 +166,6 @@ actual fun CheckInCafeMap(
     }
 }
 
-private fun createSmallDefaultMarkerIcon(density: Float): BitmapDescriptor {
-    val pinWidth = (24f * density).roundToInt().coerceAtLeast(1)
-    val pinHeight = (34f * density).roundToInt().coerceAtLeast(1)
-    val bitmap = Bitmap.createBitmap(pinWidth, pinHeight, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val pinPath = Path().apply {
-        val w = pinWidth.toFloat()
-        val h = pinHeight.toFloat()
-
-        moveTo(w / 2f, h)
-        cubicTo(w * 0.18f, h * 0.64f, 0f, h * 0.46f, 0f, h * 0.36f)
-        cubicTo(0f, h * 0.15f, w * 0.18f, 0f, w / 2f, 0f)
-        cubicTo(w * 0.82f, 0f, w, h * 0.15f, w, h * 0.36f)
-        cubicTo(w, h * 0.46f, w * 0.82f, h * 0.64f, w / 2f, h)
-        close()
-    }
-    val pinPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.rgb(239, 103, 151)
-        style = Paint.Style.FILL
-    }
-    val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = 2f * density
-    }
-    val centerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = AndroidColor.argb(235, 255, 255, 255)
-        style = Paint.Style.FILL
-    }
-
-    canvas.drawPath(pinPath, pinPaint)
-    canvas.drawPath(pinPath, strokePaint)
-    canvas.drawCircle(pinWidth / 2f, pinHeight * 0.36f, pinWidth * 0.19f, centerPaint)
-    return BitmapDescriptorFactory.fromBitmap(bitmap)
-}
-
 @Composable
 private fun CafeMarkerLabel(
     cafeName: String,
@@ -227,6 +180,58 @@ private fun CafeMarkerLabel(
         textAlign = TextAlign.Center,
         modifier = modifier.width(MARKER_LABEL_WIDTH_DP.dp)
     )
+}
+
+@Composable
+private fun CafeMapPin(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Canvas(
+        modifier = modifier.pointerInput(onClick) {
+            detectTapGestures { tapOffset ->
+                if (tapOffset.isInsideMarkerPin(size.width.toFloat(), size.height.toFloat())) {
+                    onClick()
+                }
+            }
+        }
+    ) {
+        val w = size.width
+        val h = size.height
+        val pinPath = ComposePath().apply {
+            moveTo(w / 2f, h)
+            cubicTo(w * 0.18f, h * 0.64f, 0f, h * 0.46f, 0f, h * 0.36f)
+            cubicTo(0f, h * 0.15f, w * 0.18f, 0f, w / 2f, 0f)
+            cubicTo(w * 0.82f, 0f, w, h * 0.15f, w, h * 0.36f)
+            cubicTo(w, h * 0.46f, w * 0.82f, h * 0.64f, w / 2f, h)
+            close()
+        }
+
+        drawPath(pinPath, Color(0xFFEF6797))
+        drawPath(
+            path = pinPath,
+            color = Color.White,
+            style = Stroke(width = 2.dp.toPx())
+        )
+        drawCircle(
+            color = Color.White.copy(alpha = 0.92f),
+            radius = w * 0.19f,
+            center = Offset(w / 2f, h * 0.36f)
+        )
+    }
+}
+
+private fun Offset.isInsideMarkerPin(width: Float, height: Float): Boolean {
+    val normalizedX = x / width
+    val normalizedY = y / height
+    val topCircleCenterY = 0.36f
+    val topCircleRadius = 0.36f
+    val circleDistanceX = (normalizedX - 0.5f) / topCircleRadius
+    val circleDistanceY = (normalizedY - topCircleCenterY) / topCircleRadius
+    val isInsideTopCircle = circleDistanceX * circleDistanceX + circleDistanceY * circleDistanceY <= 1f
+    val isInsideLowerTip = normalizedY in 0.36f..1f &&
+            kotlin.math.abs(normalizedX - 0.5f) <= (1f - normalizedY) * 0.5f
+    return isInsideTopCircle || isInsideLowerTip
 }
 
 private fun String.toMarkerLabel(): String {
@@ -314,6 +319,8 @@ private fun resolveCheckInMapCameraPosition(
 }
 
 private const val CHECK_IN_MAP_ZOOM_IN_STEP = 1.0f
+private const val MARKER_PIN_WIDTH_DP = 20
+private const val MARKER_PIN_HEIGHT_DP = 29
 private const val MARKER_LABEL_WIDTH_DP = 80
 private const val MARKER_LABEL_ELLIPSIS_THRESHOLD = 7
 private const val MARKER_LABEL_VISIBLE_CHARS = 6
