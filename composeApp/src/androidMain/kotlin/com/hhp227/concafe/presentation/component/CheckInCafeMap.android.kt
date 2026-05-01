@@ -54,6 +54,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
 
 @Composable
 actual fun CheckInCafeMap(
@@ -180,7 +181,7 @@ actual fun CheckInCafeMap(
 private fun createSmallDefaultMarkerIcon(density: Float): BitmapDescriptor {
     val pinWidth = (24f * density).roundToInt().coerceAtLeast(1)
     val pinHeight = (34f * density).roundToInt().coerceAtLeast(1)
-    val bitmap = Bitmap.createBitmap(pinWidth, pinHeight, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(pinWidth, pinHeight)
     val canvas = Canvas(bitmap)
     val pinPath = Path().apply {
         val w = pinWidth.toFloat()
