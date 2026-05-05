@@ -932,6 +932,13 @@
     <string name="admin_inquiry_title">Inquiries</string>
     <string name="admin_inquiry_empty">No inquiries have been registered.</string>
     <string name="admin_inquiry_load_more">Load More Inquiries</string>
+    <string name="community_report_sheet_title">Select Report Type</string>
+    <string name="community_report_submit">Submit Report</string>
+    <string name="community_report_type_spam">Spam/Ads</string>
+    <string name="community_report_type_abuse">Abusive/Hateful Content</string>
+    <string name="community_report_type_sexual">Sexual Content</string>
+    <string name="community_report_type_privacy">Personal Info Exposure</string>
+    <string name="community_report_type_other">Other</string>
     <string name="admin_writer">Writer %1$s</string>
     <string name="admin_quick_menu_title">Operations Quick Menu</string>
     <string name="ranking_native_ad_badge">Sponsored</string>

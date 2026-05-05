@@ -15,6 +15,7 @@ import com.hhp227.concafe.data.source.firestore.FirestoreMyInfoRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreNoticeRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreNotificationDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreRankingDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreReportRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreReviewRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncRemoteDataSource
@@ -38,6 +39,7 @@ val dataSourceModule = module {
     single<CastRemoteDataSource> { FirestoreCastRemoteDataSource(get(), get(), get()) }
     single<CastClaimRemoteDataSource> { FirestoreCastClaimRemoteDataSource(get(), get(), get()) }
     single<InquiryRemoteDataSource> { FirestoreInquiryRemoteDataSource(get(), get(), get()) }
+    single<ReportRemoteDataSource> { FirestoreReportRemoteDataSource(get(), get(), get()) }
     single<NoticeRemoteDataSource> { FirestoreNoticeRemoteDataSource(get(), get(), get()) }
     single<AuthDataSource> { FirestoreAuthDataSource() }
     single<RankingDataSource> { FirestoreRankingDataSource(get(), get(), get()) }
@@ -63,6 +65,7 @@ val repositoryModule = module {
     single<CastRepository> { CastRepositoryImpl(get(), get()) }
     single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get()) }
     single<InquiryRepository> { InquiryRepositoryImpl(get()) }
+    single<ReportRepository> { ReportRepositoryImpl(get()) }
     single<VisitRepository> { VisitRepositoryImpl(get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get()) }
@@ -98,6 +101,7 @@ val useCaseModule = module {
     factory { GetHomeFeedUseCase(get(), get(), get(), get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
+    factory { GetAdminReportPageUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }
@@ -116,6 +120,7 @@ val useCaseModule = module {
     factory { CreateCafeNoticeUseCase(get(), get()) }
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
+    factory { CreateCommunityPostReportUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get(), get()) }

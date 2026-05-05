@@ -10,6 +10,9 @@ sealed interface PostDetailAction {
     data object ConfirmDelete : PostDetailAction
     data object DismissDeleteConfirm : PostDetailAction
     data object ClickReport : PostDetailAction
+    data class SelectReportType(val reportType: String) : PostDetailAction
+    data object DismissReportSheet : PostDetailAction
+    data object SubmitReport : PostDetailAction
     data class ClickEditComment(val commentId: String) : PostDetailAction
     data class ConfirmEditComment(val content: String) : PostDetailAction
     data object DismissEditComment : PostDetailAction

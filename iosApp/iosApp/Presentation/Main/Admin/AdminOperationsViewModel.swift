@@ -20,6 +20,8 @@ final class AdminOperationsViewModel: ObservableObject {
 
     private let getAdminInquiryPageUseCase: GetAdminInquiryPageUseCase
 
+    private let getAdminReportPageUseCase: GetAdminReportPageUseCase
+
     private let approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase
 
     private let approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase
@@ -141,6 +143,10 @@ final class AdminOperationsViewModel: ObservableObject {
         loadInquiryPage(cursor: nil, append: false)
     }
 
+    private func loadInitialReports() {
+        loadReportPage(cursor: nil, append: false)
+    }
+
     private func loadMoreInquiries() {
         let canLoadMore = uiState.canLoadMoreInquiries
         let isLoadingMore = uiState.isLoadingMoreInquiries
@@ -151,6 +157,11 @@ final class AdminOperationsViewModel: ObservableObject {
         } else {
             return
         }
+    }
+
+    private func loadMoreReports() {
+        guard uiState.canLoadMoreReports, !uiState.isLoadingMoreReports, let cursor = uiState.reportNextCursor else { return }
+        loadReportPage(cursor: cursor, append: true)
     }
 
     private func loadInquiryPage(cursor: String?, append: Bool) {
@@ -190,6 +201,39 @@ final class AdminOperationsViewModel: ObservableObject {
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoadingMoreInquiries = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func loadReportPage(cursor: String?, append: Bool) {
+        tasks[.reportPage]?.cancel()
+        tasks[.reportPage] = Task {
+            if append {
+                uiState.isLoadingMoreReports = true
+                do {
+                    try await Task.sleep(nanoseconds: paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                } catch { return }
+            }
+            do {
+                let result = try await getAdminReportPageUseCase.invoke(cursor: cursor, pageSize: adminReportPageSize)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? Shared.PagedResult<Report> {
+                    let pageItems = (page.items as? [Report] ?? []).sorted { $0.createdAt > $1.createdAt }
+                    uiState.reports = append ? (uiState.reports + pageItems) : pageItems
+                    uiState.reportNextCursor = page.nextCursor
+                    uiState.canLoadMoreReports = page.hasNext
+                    uiState.isLoadingMoreReports = false
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isLoadingMoreReports = false
+                    uiState.infoMessage = "\(failure.error)"
+                } else {
+                    uiState.isLoadingMoreReports = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMoreReports = false
                 uiState.infoMessage = error.localizedDescription
             }
         }
@@ -382,6 +426,8 @@ final class AdminOperationsViewModel: ObservableObject {
             event.send(.navigateToBannerEdit)
         case .loadMoreInquiries:
             loadMoreInquiries()
+        case .loadMoreReports:
+            loadMoreReports()
         case .selectPendingFilter(let filter):
             uiState.selectedPendingFilter = filter
             uiState.infoMessage = nil
@@ -406,6 +452,7 @@ final class AdminOperationsViewModel: ObservableObject {
         getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase = KoinInitializerKt.resolveGetPendingCafeOwnerClaimsUseCase(),
         getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase = KoinInitializerKt.resolveGetAdminOperationsMetricsUseCase(),
         getAdminInquiryPageUseCase: GetAdminInquiryPageUseCase = KoinInitializerKt.resolveGetAdminInquiryPageUseCase(),
+        getAdminReportPageUseCase: GetAdminReportPageUseCase = KoinInitializerKt.resolveGetAdminReportPageUseCase(),
         approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase = KoinInitializerKt.resolveApproveCafeRegistrationClaimUseCase(),
         approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase = KoinInitializerKt.resolveApproveCafeOwnerClaimUseCase(),
         rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase = KoinInitializerKt.resolveRejectCafeRegistrationClaimUseCase(),
@@ -417,6 +464,7 @@ final class AdminOperationsViewModel: ObservableObject {
         self.getPendingCafeOwnerClaimsUseCase = getPendingCafeOwnerClaimsUseCase
         self.getAdminOperationsMetricsUseCase = getAdminOperationsMetricsUseCase
         self.getAdminInquiryPageUseCase = getAdminInquiryPageUseCase
+        self.getAdminReportPageUseCase = getAdminReportPageUseCase
         self.approveCafeRegistrationClaimUseCase = approveCafeRegistrationClaimUseCase
         self.approveCafeOwnerClaimUseCase = approveCafeOwnerClaimUseCase
         self.rejectCafeRegistrationClaimUseCase = rejectCafeRegistrationClaimUseCase
@@ -430,6 +478,7 @@ final class AdminOperationsViewModel: ObservableObject {
         startClaimPolling()
         loadPendingRequests()
         loadInitialInquiries()
+        loadInitialReports()
     }
 
     deinit {
@@ -442,12 +491,14 @@ final class AdminOperationsViewModel: ObservableObject {
         case ownerClaimEvent
         case claimPolling
         case inquiryPage
+        case reportPage
     }
 }
 
 private let adminBannerMenuId = "banner"
 private let claimPollingIntervalNanoseconds: UInt64 = 60_000_000_000
 private let adminInquiryPageSize: Int32 = 10
+private let adminReportPageSize: Int32 = 10
 private let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
 private struct AdminPendingSnapshot {

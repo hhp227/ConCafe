@@ -929,6 +929,13 @@
     <string name="admin_inquiry_title">문의하기</string>
     <string name="admin_inquiry_empty">등록된 문의가 없습니다.</string>
     <string name="admin_inquiry_load_more">문의 더 불러오기</string>
+    <string name="community_report_sheet_title">신고 유형 선택</string>
+    <string name="community_report_submit">신고 접수</string>
+    <string name="community_report_type_spam">스팸/광고</string>
+    <string name="community_report_type_abuse">욕설/혐오</string>
+    <string name="community_report_type_sexual">음란물</string>
+    <string name="community_report_type_privacy">개인정보 노출</string>
+    <string name="community_report_type_other">기타</string>
     <string name="admin_writer">작성자 %1$s</string>
     <string name="admin_quick_menu_title">운영 퀵메뉴</string>
     <string name="ranking_native_ad_badge">광고</string>

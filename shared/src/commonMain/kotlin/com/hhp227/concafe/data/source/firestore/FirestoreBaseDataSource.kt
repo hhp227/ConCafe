@@ -1567,6 +1567,24 @@ abstract class FirestoreBaseDataSource(
         return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
     }
 
+    protected suspend fun runReportPageQuery(cursor: String?, limit: Int, idToken: String?): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.REPORTS}"}],
+                "orderBy": [{"field": {"fieldPath": "createdAt"},"direction": "DESCENDING"}]$startAfterSection,
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
+    }
+
     protected suspend fun runCastByLinkedUserIdQuery(userId: String, idToken: String?): List<JsonObject> {
         val path = "${config.documentBasePath()}:runQuery"
         val body = """
@@ -1976,6 +1994,32 @@ abstract class FirestoreBaseDataSource(
             inquiryType = fields.getFirestoreString("inquiryType").orEmpty(),
             title = fields.getFirestoreString("title").orEmpty(),
             content = fields.getFirestoreString("content").orEmpty(),
+            status = status,
+            createdAt = createdAt,
+            createdAtLabel = fields.getFirestoreString("createdAtLabel") ?: "최근"
+        )
+    }
+
+    protected fun parseReportDocument(document: JsonObject): Report? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val reportId = name.substringAfterLast("/")
+        val status = when (fields.getFirestoreString("status")?.uppercase()) {
+            ReportStatus.RESOLVED.name -> ReportStatus.RESOLVED
+            else -> ReportStatus.PENDING
+        }
+        val targetType = when (fields.getFirestoreString("targetType")?.uppercase()) {
+            ReportTargetType.COMMUNITY_COMMENT.name -> ReportTargetType.COMMUNITY_COMMENT
+            else -> ReportTargetType.COMMUNITY_POST
+        }
+        val createdAt = fields.getFirestoreString("createdAt").orEmpty()
+        return Report(
+            id = reportId,
+            targetType = targetType,
+            targetId = fields.getFirestoreString("targetId").orEmpty(),
+            reporterUserId = fields.getFirestoreString("reporterUserId").orEmpty(),
+            reporterNickname = fields.getFirestoreString("reporterNickname").orEmpty(),
+            reportType = fields.getFirestoreString("reportType").orEmpty(),
             status = status,
             createdAt = createdAt,
             createdAtLabel = fields.getFirestoreString("createdAtLabel") ?: "최근"

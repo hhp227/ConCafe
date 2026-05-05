@@ -35,6 +35,15 @@ import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.community_report_sheet_title
+import concafe.composeapp.generated.resources.community_report_submit
+import concafe.composeapp.generated.resources.community_report_type_abuse
+import concafe.composeapp.generated.resources.community_report_type_other
+import concafe.composeapp.generated.resources.community_report_type_privacy
+import concafe.composeapp.generated.resources.community_report_type_sexual
+import concafe.composeapp.generated.resources.community_report_type_spam
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 
@@ -126,6 +135,55 @@ private fun PostDetailContentScreen(
                         } else {
                             Text("수정", color = Color.White)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    if (uiState.isReportSheetVisible) {
+        val reportTypes = listOf(
+            stringResource(Res.string.community_report_type_spam),
+            stringResource(Res.string.community_report_type_abuse),
+            stringResource(Res.string.community_report_type_sexual),
+            stringResource(Res.string.community_report_type_privacy),
+            stringResource(Res.string.community_report_type_other)
+        )
+        ModalBottomSheet(onDismissRequest = { onAction(PostDetailAction.DismissReportSheet) }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp)
+            ) {
+                Text(stringResource(Res.string.community_report_sheet_title), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = textColor)
+                Spacer(Modifier.height(12.dp))
+                reportTypes.forEach { type ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onAction(PostDetailAction.SelectReportType(type)) }
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = uiState.selectedReportType == type,
+                            onClick = { onAction(PostDetailAction.SelectReportType(type)) }
+                        )
+                        Text(type, color = textColor)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { onAction(PostDetailAction.SubmitReport) },
+                    enabled = uiState.selectedReportType != null && !uiState.isSubmittingReport,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
+                ) {
+                    if (uiState.isSubmittingReport) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text(stringResource(Res.string.community_report_submit), color = Color.White)
                     }
                 }
             }

@@ -12,6 +12,7 @@ import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminReportPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
@@ -34,6 +35,7 @@ class AdminOperationsViewModel(
     private val getPendingCafeOwnerClaimsUseCase: GetPendingCafeOwnerClaimsUseCase,
     private val getAdminOperationsMetricsUseCase: GetAdminOperationsMetricsUseCase,
     private val getAdminInquiryPageUseCase: GetAdminInquiryPageUseCase,
+    private val getAdminReportPageUseCase: GetAdminReportPageUseCase,
     private val approveCafeRegistrationClaimUseCase: ApproveCafeRegistrationClaimUseCase,
     private val approveCafeOwnerClaimUseCase: ApproveCafeOwnerClaimUseCase,
     private val rejectCafeRegistrationClaimUseCase: RejectCafeRegistrationClaimUseCase,
@@ -153,6 +155,10 @@ class AdminOperationsViewModel(
         loadInquiryPage(cursor = null, append = false)
     }
 
+    private fun loadInitialReports() {
+        loadReportPage(cursor = null, append = false)
+    }
+
     private fun loadMoreInquiries() {
         val state = _uiState.value
         val cursor = state.inquiryNextCursor
@@ -160,6 +166,13 @@ class AdminOperationsViewModel(
             return
         }
         loadInquiryPage(cursor = cursor, append = true)
+    }
+
+    private fun loadMoreReports() {
+        val state = _uiState.value
+        val cursor = state.reportNextCursor
+        if (cursor == null || !state.canLoadMoreReports || state.isLoadingMoreReports) return
+        loadReportPage(cursor = cursor, append = true)
     }
 
     private fun loadInquiryPage(cursor: String?, append: Boolean) {
@@ -200,6 +213,32 @@ class AdminOperationsViewModel(
                             infoMessage = result.error.toString()
                         )
                     }
+                }
+            }
+        }
+    }
+
+    private fun loadReportPage(cursor: String?, append: Boolean) {
+        jobs[TaskKey.REPORT_PAGE]?.cancel()
+        jobs[TaskKey.REPORT_PAGE] = viewModelScope.launch {
+            if (append) {
+                _uiState.update { it.copy(isLoadingMoreReports = true) }
+                delay(PAGINATION_DELAY_MILLIS)
+            }
+            when (val result = getAdminReportPageUseCase.invoke(cursor = cursor, pageSize = ADMIN_REPORT_PAGE_SIZE)) {
+                is AppResult.Success -> {
+                    val sortedItems = result.data.items.sortedByDescending { it.createdAt }
+                    _uiState.update { state ->
+                        state.copy(
+                            reports = if (append) state.reports + sortedItems else sortedItems,
+                            reportNextCursor = result.data.nextCursor,
+                            canLoadMoreReports = result.data.hasNext,
+                            isLoadingMoreReports = false
+                        )
+                    }
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(isLoadingMoreReports = false, infoMessage = result.error.toString())
                 }
             }
         }
@@ -406,6 +445,9 @@ class AdminOperationsViewModel(
             AdminOperationsAction.LoadMoreInquiries -> {
                 loadMoreInquiries()
             }
+            AdminOperationsAction.LoadMoreReports -> {
+                loadMoreReports()
+            }
             is AdminOperationsAction.SelectPendingFilter -> {
                 _uiState.update { it.copy(selectedPendingFilter = action.filter, infoMessage = null) }
             }
@@ -438,6 +480,7 @@ class AdminOperationsViewModel(
         startClaimPolling()
         loadPendingRequests()
         loadInitialInquiries()
+        loadInitialReports()
     }
 
     override fun onCleared() {
@@ -450,12 +493,14 @@ class AdminOperationsViewModel(
         CLAIM_EVENT,
         OWNER_CLAIM_EVENT,
         CLAIM_POLLING,
-        INQUIRY_PAGE
+        INQUIRY_PAGE,
+        REPORT_PAGE
     }
 }
 
 private const val ADMIN_CLAIM_POLLING_INTERVAL_MILLIS = 60_000L
 private const val ADMIN_INQUIRY_PAGE_SIZE = 10
+private const val ADMIN_REPORT_PAGE_SIZE = 10
 private const val PAGINATION_DELAY_MILLIS = 1_000L
 
 private const val ADMIN_BANNER_MENU_ID = "banner"

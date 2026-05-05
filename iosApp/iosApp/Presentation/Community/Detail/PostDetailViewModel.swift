@@ -30,6 +30,8 @@ final class PostDetailViewModel: ObservableObject {
 
     private let deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase
 
+    private let createCommunityPostReportUseCase: CreateCommunityPostReportUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let communityPostEventPublisher: CommunityPostEventPublisher
@@ -295,6 +297,30 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
+    private func submitReport() {
+        guard let reportType = uiState.selectedReportType else { return }
+        uiState.isSubmittingReport = true
+        tasks[.submitReport]?.cancel()
+        tasks[.submitReport] = Task {
+            do {
+                let result = try await createCommunityPostReportUseCase.invoke(postId: postId, reportType: reportType)
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSubmittingReport = false
+                    uiState.isReportSheetVisible = false
+                    uiState.selectedReportType = nil
+                    uiState.errorMessage = "신고가 접수되었습니다."
+                } else {
+                    uiState.isSubmittingReport = false
+                    uiState.errorMessage = "신고를 접수하지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isSubmittingReport = false
+                uiState.errorMessage = "신고를 접수하지 못했습니다."
+            }
+        }
+    }
+
     private func observeCommunityPostEvents() {
         tasks[.observeCommunityEvent]?.cancel()
         tasks[.observeCommunityEvent] = Task {
@@ -331,6 +357,15 @@ final class PostDetailViewModel: ObservableObject {
             uiState.isDeleteConfirmVisible = false
         case .clickReport:
             uiState.isMenuVisible = false
+            uiState.isReportSheetVisible = true
+        case .selectReportType(let type):
+            uiState.selectedReportType = type
+        case .dismissReportSheet:
+            uiState.isReportSheetVisible = false
+            uiState.selectedReportType = nil
+            uiState.isSubmittingReport = false
+        case .submitReport:
+            submitReport()
         case .clickEditComment(let commentId):
             let comment = uiState.comments.first { $0.id == commentId }
             uiState.editingCommentId = commentId
@@ -367,6 +402,7 @@ final class PostDetailViewModel: ObservableObject {
         addCommunityCommentUseCase: AddCommunityCommentUseCase = KoinInitializerKt.resolveAddCommunityCommentUseCase(),
         updateCommunityCommentUseCase: UpdateCommunityCommentUseCase = KoinInitializerKt.resolveUpdateCommunityCommentUseCase(),
         deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase = KoinInitializerKt.resolveDeleteCommunityCommentUseCase(),
+        createCommunityPostReportUseCase: CreateCommunityPostReportUseCase = KoinInitializerKt.resolveCreateCommunityPostReportUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
@@ -379,6 +415,7 @@ final class PostDetailViewModel: ObservableObject {
         self.addCommunityCommentUseCase = addCommunityCommentUseCase
         self.updateCommunityCommentUseCase = updateCommunityCommentUseCase
         self.deleteCommunityCommentUseCase = deleteCommunityCommentUseCase
+        self.createCommunityPostReportUseCase = createCommunityPostReportUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.communityPostEventPublisher = communityPostEventPublisher
 
@@ -404,5 +441,6 @@ final class PostDetailViewModel: ObservableObject {
         case updateComment
         case deleteComment
         case observeCommunityEvent
+        case submitReport
     }
 }
