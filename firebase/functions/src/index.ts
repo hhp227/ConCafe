@@ -359,6 +359,14 @@ type UserNotificationSettings = {
   quietHoursMode: NotificationQuietHoursMode;
 };
 
+type PushDeliveryOptions = {
+  androidCollapseKey?: string;
+  androidTtlMillis?: number;
+  apnsCollapseId?: string;
+};
+
+const ANDROID_HIGH_IMPORTANCE_CHANNEL_ID = "concafe_default";
+
 function asPlainObject(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value == null || Array.isArray(value)) {
     return null;
@@ -746,7 +754,8 @@ async function createUserNotification(
   body: string,
   targetId: string,
   createdAt: string,
-  settings: UserNotificationSettings | null = null
+  settings: UserNotificationSettings | null = null,
+  pushOptions: PushDeliveryOptions | null = null
 ): Promise<void> {
   const sanitizedId = sanitizeNotificationDocumentId(notificationId);
   const userRef = db().collection("users").doc(userId);
@@ -773,7 +782,7 @@ async function createUserNotification(
     }
     throw error;
   }
-  await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings);
+  await sendPushToUser(userId, title, body, type, targetId, sanitizedId, settings, pushOptions);
 }
 
 async function sendPushToUser(
@@ -783,7 +792,8 @@ async function sendPushToUser(
   type: string,
   targetId: string,
   notificationId: string,
-  settings: UserNotificationSettings | null = null
+  settings: UserNotificationSettings | null = null,
+  pushOptions: PushDeliveryOptions | null = null
 ): Promise<void> {
   const resolvedSettings = settings ?? await loadUserNotificationSettings(userId);
 
@@ -815,22 +825,40 @@ async function sendPushToUser(
       body: body,
     },
     data: {
+      title: title,
+      body: body,
       type: type,
       targetId: targetId,
       notificationId: notificationId,
     },
     apns: {
+      headers: {
+        "apns-push-type": "alert",
+        "apns-priority": "10",
+        ...(pushOptions?.apnsCollapseId != null
+          ? {"apns-collapse-id": pushOptions.apnsCollapseId}
+          : {}),
+      },
       payload: {
         aps: {
+          alert: {
+            title: title,
+            body: body,
+          },
           sound: "default",
         },
       },
     },
     android: {
+      collapseKey: pushOptions?.androidCollapseKey,
       priority: "high",
+      ttl: pushOptions?.androidTtlMillis,
       notification: {
+        channelId: ANDROID_HIGH_IMPORTANCE_CHANNEL_ID,
         color: "#EF6797",
+        priority: "max",
         sound: "default",
+        visibility: "public",
       },
     },
   });
@@ -846,6 +874,12 @@ async function sendPushToUser(
     const errorCode = sendResponse.error?.code ?? "";
     const shouldDeleteToken = errorCode.includes("registration-token-not-registered")
       || errorCode.includes("invalid-argument");
+
+    logger.warn("Push token send failed.", {
+      userId: userId,
+      errorCode: errorCode,
+      shouldDeleteToken: shouldDeleteToken,
+    });
 
     if (!shouldDeleteToken) {
       return;
@@ -5839,7 +5873,12 @@ async function syncTableCountUpdateNotifications(
       `현재 이용 가능한 테이블: ${current}`,
       cafeId,
       createdAt,
-      settings
+      settings,
+      {
+        androidCollapseKey: `cafe_table_count_${cafeId}`,
+        androidTtlMillis: 60 * 60 * 1000,
+        apnsCollapseId: `cafe_table_count_${cafeId}`,
+      }
     );
     sentCount += 1;
   });
