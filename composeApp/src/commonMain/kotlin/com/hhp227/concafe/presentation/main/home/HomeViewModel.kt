@@ -81,7 +81,7 @@ class HomeViewModel(
                         birthdayCasts = result.data.birthdayCasts,
                         notices = result.data.notices,
                         cafeEvents = result.data.cafeEvents
-                            .filter { isOngoingCafeEvent(it.statusLabel) }
+                            .filter { isDisplayableCafeEvent(it.statusLabel) }
                             .take(MAX_HOME_CAFE_EVENTS)
                     )
                 }
@@ -347,7 +347,7 @@ class HomeViewModel(
     }
 
     private fun toHomeCafeEvent(event: CafeEventManagementItem, currentState: HomeUiState): HomeCafeEvent? {
-        if (!isOngoingCafeEvent(event.statusLabel) || event.isDimmed) {
+        if (!isDisplayableCafeEvent(event.statusLabel) || event.isDimmed) {
             return null
         }
         val cafeName = currentState.nearbyCafes.firstOrNull { it.id == event.cafeId }?.name
@@ -365,9 +365,14 @@ class HomeViewModel(
         )
     }
 
-    private fun isOngoingCafeEvent(statusLabel: String): Boolean {
+    private fun isDisplayableCafeEvent(statusLabel: String): Boolean {
         val normalized = statusLabel.trim().lowercase()
-        return normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing")
+        return normalized.contains("진행 중") ||
+            normalized.contains("진행중") ||
+            normalized.contains("ongoing") ||
+            normalized.contains("예정") ||
+            normalized.contains("upcoming") ||
+            normalized.contains("scheduled")
     }
 
     private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
