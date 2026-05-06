@@ -237,14 +237,21 @@ class PostDetailViewModel(
 
     private fun submitReport() {
         val reportType = _uiState.value.selectedReportType ?: return
+        val reportingCommentId = _uiState.value.reportingCommentId
         _uiState.update { it.copy(isSubmittingReport = true) }
         jobs[JobKey.SUBMIT_REPORT]?.cancel()
         jobs[JobKey.SUBMIT_REPORT] = viewModelScope.launch {
-            when (createCommunityPostReportUseCase(postId, reportType)) {
+            val result = if (reportingCommentId == null) {
+                createCommunityPostReportUseCase(postId, reportType)
+            } else {
+                createCommunityPostReportUseCase.createCommentReport(postId, reportingCommentId, reportType)
+            }
+            when (result) {
                 is AppResult.Success -> _uiState.update {
                     it.copy(
                         isSubmittingReport = false,
                         isReportSheetVisible = false,
+                        reportingCommentId = null,
                         selectedReportType = null,
                         errorMessage = "신고가 접수되었습니다."
                     )
@@ -288,10 +295,22 @@ class PostDetailViewModel(
             PostDetailAction.ClickDelete -> _uiState.update { it.copy(isMenuVisible = false, isDeleteConfirmVisible = true) }
             PostDetailAction.ConfirmDelete -> deletePost()
             PostDetailAction.DismissDeleteConfirm -> _uiState.update { it.copy(isDeleteConfirmVisible = false) }
-            PostDetailAction.ClickReport -> _uiState.update { it.copy(isMenuVisible = false, isReportSheetVisible = true) }
+            PostDetailAction.ClickReport -> _uiState.update {
+                it.copy(
+                    isMenuVisible = false,
+                    reportingCommentId = null,
+                    selectedReportType = null,
+                    isReportSheetVisible = true
+                )
+            }
             is PostDetailAction.SelectReportType -> _uiState.update { it.copy(selectedReportType = action.reportType) }
             PostDetailAction.DismissReportSheet -> _uiState.update {
-                it.copy(isReportSheetVisible = false, selectedReportType = null, isSubmittingReport = false)
+                it.copy(
+                    isReportSheetVisible = false,
+                    reportingCommentId = null,
+                    selectedReportType = null,
+                    isSubmittingReport = false
+                )
             }
             PostDetailAction.SubmitReport -> submitReport()
             is PostDetailAction.ClickEditComment -> {
@@ -301,7 +320,13 @@ class PostDetailViewModel(
             is PostDetailAction.ConfirmEditComment -> confirmEditComment(action.content)
             PostDetailAction.DismissEditComment -> _uiState.update { it.copy(editingCommentId = null, editCommentText = "") }
             is PostDetailAction.ClickDeleteComment -> deleteComment(action.commentId)
-            is PostDetailAction.ClickReportComment -> _uiState.update { it.copy(errorMessage = "신고가 접수되었습니다.") }
+            is PostDetailAction.ClickReportComment -> _uiState.update {
+                it.copy(
+                    reportingCommentId = action.commentId,
+                    selectedReportType = null,
+                    isReportSheetVisible = true
+                )
+            }
             is PostDetailAction.ChangeCommentText -> _uiState.update { it.copy(commentText = action.text) }
             PostDetailAction.ClickSendComment -> sendComment()
             PostDetailAction.DismissError -> _uiState.update { it.copy(errorMessage = null) }

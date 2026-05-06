@@ -245,14 +245,11 @@ private struct HomeContentView: View {
                                 ZStack {
                                     Circle()
                                         .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
-                                    if let rawImageUrl = maid.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                                       !rawImageUrl.isEmpty,
-                                       let imageUrl = URL(string: rawImageUrl) {
-                                        CachedAsyncImage(
-                                            url: imageUrl,
-                                            displaySize: .thumbnail
-                                        )
-                                    }
+                                    CachedAsyncImage(
+                                        url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
+                                        placeholder: birthdayCastFallbackImage,
+                                        displaySize: .thumbnail
+                                    )
                                 }
                                 .frame(width: proxy.size.width, height: proxy.size.height)
                                 .clipShape(Circle())
@@ -272,6 +269,12 @@ private struct HomeContentView: View {
             }
             .compatViewAlignedScrollSnap()
         }
+    }
+
+    private var birthdayCastFallbackImage: some View {
+        Image("maid_logo")
+            .resizable()
+            .scaledToFill()
     }
 
     private var cafeEventSection: some View {

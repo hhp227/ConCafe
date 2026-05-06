@@ -299,14 +299,25 @@ final class PostDetailViewModel: ObservableObject {
 
     private func submitReport() {
         guard let reportType = uiState.selectedReportType else { return }
+        let reportingCommentId = uiState.reportingCommentId
         uiState.isSubmittingReport = true
         tasks[.submitReport]?.cancel()
         tasks[.submitReport] = Task {
             do {
-                let result = try await createCommunityPostReportUseCase.invoke(postId: postId, reportType: reportType)
+                let result: Any
+                if let reportingCommentId {
+                    result = try await createCommunityPostReportUseCase.createCommentReport(
+                        postId: postId,
+                        commentId: reportingCommentId,
+                        reportType: reportType
+                    )
+                } else {
+                    result = try await createCommunityPostReportUseCase.invoke(postId: postId, reportType: reportType)
+                }
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isSubmittingReport = false
                     uiState.isReportSheetVisible = false
+                    uiState.reportingCommentId = nil
                     uiState.selectedReportType = nil
                     uiState.errorMessage = "신고가 접수되었습니다."
                 } else {
@@ -357,11 +368,14 @@ final class PostDetailViewModel: ObservableObject {
             uiState.isDeleteConfirmVisible = false
         case .clickReport:
             uiState.isMenuVisible = false
+            uiState.reportingCommentId = nil
+            uiState.selectedReportType = nil
             uiState.isReportSheetVisible = true
         case .selectReportType(let type):
             uiState.selectedReportType = type
         case .dismissReportSheet:
             uiState.isReportSheetVisible = false
+            uiState.reportingCommentId = nil
             uiState.selectedReportType = nil
             uiState.isSubmittingReport = false
         case .submitReport:
@@ -377,8 +391,10 @@ final class PostDetailViewModel: ObservableObject {
             uiState.editCommentText = ""
         case .clickDeleteComment(let commentId):
             deleteComment(commentId: commentId)
-        case .clickReportComment(commentId: _):
-            uiState.errorMessage = "신고가 접수되었습니다."
+        case .clickReportComment(let commentId):
+            uiState.reportingCommentId = commentId
+            uiState.selectedReportType = nil
+            uiState.isReportSheetVisible = true
         case .changeCommentText(let text):
             uiState.commentText = text
         case .clickSendComment:

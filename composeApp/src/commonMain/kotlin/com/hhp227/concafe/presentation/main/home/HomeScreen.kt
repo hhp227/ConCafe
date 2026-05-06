@@ -1,6 +1,7 @@
 package com.hhp227.concafe.presentation.main.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -82,9 +84,11 @@ import concafe.composeapp.generated.resources.home_section_nearby_cafe
 import concafe.composeapp.generated.resources.home_section_ongoing_cafe_event
 import concafe.composeapp.generated.resources.home_section_popular_cast
 import concafe.composeapp.generated.resources.home_show_more
+import concafe.composeapp.generated.resources.maid_logo
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 
@@ -318,6 +322,14 @@ fun HomeContentScreen(
                                             )
                                         )
                                 ) {
+                                    Image(
+                                        painter = painterResource(Res.drawable.maid_logo),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
                                     if (!maid.profileImage.isNullOrBlank()) {
                                         CompatImageDisplay(
                                             imageUrl = maid.profileImage,
