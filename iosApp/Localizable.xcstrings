@@ -9070,6 +9070,160 @@
         }
       }
     },
+    "community_report_sheet_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Report Type"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通報種類を選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신고 유형 선택"
+          }
+        }
+      }
+    },
+    "community_report_submit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Submit Report"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通報を送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "신고 접수"
+          }
+        }
+      }
+    },
+    "community_report_type_abuse" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abusive/Hateful Content"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暴言/ヘイト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "욕설/혐오"
+          }
+        }
+      }
+    },
+    "community_report_type_other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기타"
+          }
+        }
+      }
+    },
+    "community_report_type_privacy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personal Info Exposure"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "個人情報の露出"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개인정보 노출"
+          }
+        }
+      }
+    },
+    "community_report_type_sexual" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sexual Content"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "性的コンテンツ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "음란물"
+          }
+        }
+      }
+    },
+    "community_report_type_spam" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam/Ads"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スパム/広告"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스팸/광고"
+          }
+        }
+      }
+    },
     "community_title" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -11164,6 +11318,29 @@
         }
       }
     },
+    "home_nearby_cafe_type_cosplay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosplay"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コスプレ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코스프레"
+          }
+        }
+      }
+    },
     "home_nearby_cafe_type_devil" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11252,29 +11429,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "메이드"
-          }
-        }
-      }
-    },
-    "home_nearby_cafe_type_cosplay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cosplay"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コスプレ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "코스프레"
           }
         }
       }
@@ -20179,6 +20333,16 @@
     "닫기" : {
 
     },
+    "대상: %@ / %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "대상: %1$@ / %2$@"
+          }
+        }
+      }
+    },
     "댓글 %d" : {
 
     },
@@ -20189,6 +20353,9 @@
 
     },
     "등록" : {
+
+    },
+    "등록된 신고가 없습니다." : {
 
     },
     "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다." : {
@@ -20209,7 +20376,13 @@
     "수정" : {
 
     },
-    "신고하기" : {
+    "신고 내역" : {
+
+    },
+    "신고 더 불러오기" : {
+
+    },
+    "신고자: %@" : {
 
     },
     "아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!" : {
@@ -20286,160 +20459,6 @@
     },
     "휴무" : {
 
-    },
-    "community_report_sheet_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select Report Type"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通報種類を選択"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "신고 유형 선택"
-          }
-        }
-      }
-    },
-    "community_report_submit" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Submit Report"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通報を送信"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "신고 접수"
-          }
-        }
-      }
-    },
-    "community_report_type_spam" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spam/Ads"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スパム/広告"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스팸/광고"
-          }
-        }
-      }
-    },
-    "community_report_type_abuse" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abusive/Hateful Content"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暴言/ヘイト"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "욕설/혐오"
-          }
-        }
-      }
-    },
-    "community_report_type_sexual" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sexual Content"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "性的コンテンツ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "음란물"
-          }
-        }
-      }
-    },
-    "community_report_type_privacy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Personal Info Exposure"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "個人情報の露出"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "개인정보 노출"
-          }
-        }
-      }
-    },
-    "community_report_type_other" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "その他"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "기타"
-          }
-        }
-      }
     }
   },
   "version" : "1.0"
