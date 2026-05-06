@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.Report
+import com.hhp227.concafe.domain.model.ReportTargetType
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -160,11 +161,16 @@ private fun ReportCard(report: Report) {
                 Text(report.reportType, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
                 Text(report.createdAtLabel, color = colorFromHex("7A707A"), style = MaterialTheme.typography.labelSmall)
             }
-            Text("대상: ${report.targetType.name} / ${report.targetId}", style = MaterialTheme.typography.labelMedium)
+            Text("대상: ${report.targetLabel()} / ${report.targetId}", style = MaterialTheme.typography.labelMedium)
             Text("신고자: ${report.reporterNickname}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("8B7F8A"))
             Text("상태: ${report.status.name}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("6F6670"))
         }
     }
+}
+
+private fun Report.targetLabel(): String = when (targetType) {
+    ReportTargetType.COMMUNITY_POST -> "게시글"
+    ReportTargetType.COMMUNITY_COMMENT -> "댓글"
 }
 
 @Composable

@@ -24,7 +24,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -104,7 +106,7 @@ private fun PostDetailContentScreen(
                     color = textColor,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
-                OutlinedTextField(
+                ImeSafeOutlinedTextField(
                     value = localEditText,
                     onValueChange = { localEditText = it },
                     modifier = Modifier.fillMaxWidth(),
@@ -601,7 +603,7 @@ private fun CommentInputBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
+            ImeSafeOutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
                 modifier = Modifier.weight(1f),
@@ -637,4 +639,49 @@ private fun CommentInputBar(
             }
         }
     }
+}
+
+@Composable
+private fun ImeSafeOutlinedTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: @Composable (() -> Unit)? = null,
+    shape: RoundedCornerShape = RoundedCornerShape(12.dp),
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    maxLines: Int = Int.MAX_VALUE,
+    textStyle: androidx.compose.ui.text.TextStyle = LocalTextStyle.current
+) {
+    var textFieldValue by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = value,
+                selection = TextRange(value.length)
+            )
+        )
+    }
+
+    LaunchedEffect(value) {
+        if (textFieldValue.text != value && textFieldValue.composition == null) {
+            textFieldValue = TextFieldValue(
+                text = value,
+                selection = TextRange(value.length)
+            )
+        }
+    }
+    OutlinedTextField(
+        value = textFieldValue,
+        onValueChange = { nextValue ->
+            textFieldValue = nextValue
+            if (nextValue.text != value) {
+                onValueChange(nextValue.text)
+            }
+        },
+        modifier = modifier,
+        placeholder = placeholder,
+        shape = shape,
+        colors = colors,
+        maxLines = maxLines,
+        textStyle = textStyle
+    )
 }

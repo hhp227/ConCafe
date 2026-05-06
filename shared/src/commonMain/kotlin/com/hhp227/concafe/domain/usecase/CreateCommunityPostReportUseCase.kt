@@ -13,6 +13,26 @@ class CreateCommunityPostReportUseCase(
     private val reportRepository: ReportRepository
 ) {
     suspend operator fun invoke(postId: String, reportType: String): AppResult<Report> {
+        return createReport(
+            targetType = ReportTargetType.COMMUNITY_POST,
+            targetId = postId,
+            reportType = reportType
+        )
+    }
+
+    suspend fun createCommentReport(postId: String, commentId: String, reportType: String): AppResult<Report> {
+        return createReport(
+            targetType = ReportTargetType.COMMUNITY_COMMENT,
+            targetId = "${postId.trim()}/${commentId.trim()}",
+            reportType = reportType
+        )
+    }
+
+    private suspend fun createReport(
+        targetType: ReportTargetType,
+        targetId: String,
+        reportType: String
+    ): AppResult<Report> {
         return try {
             val currentUser = authRepository.getCurrentUser()
                 ?: return AppResult.Failure(AppError.Unauthorized)
@@ -21,8 +41,8 @@ class CreateCommunityPostReportUseCase(
                     reporterUserId = currentUser.id,
                     reporterNickname = currentUser.nickname,
                     input = ReportCreate(
-                        targetType = ReportTargetType.COMMUNITY_POST,
-                        targetId = postId,
+                        targetType = targetType,
+                        targetId = targetId,
                         reportType = reportType
                     )
                 )

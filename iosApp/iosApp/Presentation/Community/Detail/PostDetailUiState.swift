@@ -17,6 +17,7 @@ struct PostDetailUiState {
     var isMenuVisible: Bool = false
     var isDeleteConfirmVisible: Bool = false
     var isReportSheetVisible: Bool = false
+    var reportingCommentId: String? = nil
     var selectedReportType: String? = nil
     var isSubmittingReport: Bool = false
     var isDeleting: Bool = false

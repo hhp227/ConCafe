@@ -424,7 +424,17 @@ service cloud.firestore {
     }
 
     function isValidReportCreateData() {
-      return request.resource.data.targetType is string
+      return request.resource.data.keys().hasOnly([
+          "targetType",
+          "targetId",
+          "reporterUserId",
+          "reporterNickname",
+          "reportType",
+          "status",
+          "createdAt",
+          "createdAtLabel"
+        ])
+        && request.resource.data.targetType is string
         && (request.resource.data.targetType == "COMMUNITY_POST" || request.resource.data.targetType == "COMMUNITY_COMMENT")
         && request.resource.data.targetId is string
         && request.resource.data.targetId.size() > 0

@@ -367,7 +367,7 @@ struct AdminOperationsView: View {
                                 .font(.caption2)
                                 .foregroundStyle(Color(hex: "7A707A"))
                         }
-                        Text("대상: \(report.targetType.name) / \(report.targetId)")
+                        Text("대상: \(reportTargetLabel(report)) / \(report.targetId)")
                             .font(.caption)
                         Text("신고자: \(report.reporterNickname)")
                             .font(.caption2)
@@ -397,6 +397,10 @@ struct AdminOperationsView: View {
                 }
             }
         }
+    }
+
+    private func reportTargetLabel(_ report: Report) -> String {
+        report.targetType.name == "COMMUNITY_COMMENT" ? "댓글" : "게시글"
     }
 
     private func infoBanner(_ message: String) -> some View {

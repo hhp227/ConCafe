@@ -12,6 +12,7 @@ data class PostDetailUiState(
     val isMenuVisible: Boolean = false,
     val isDeleteConfirmVisible: Boolean = false,
     val isReportSheetVisible: Boolean = false,
+    val reportingCommentId: String? = null,
     val selectedReportType: String? = null,
     val isSubmittingReport: Boolean = false,
     val isDeleting: Boolean = false,
