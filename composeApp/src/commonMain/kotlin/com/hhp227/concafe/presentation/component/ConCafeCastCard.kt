@@ -2,7 +2,6 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -106,7 +105,7 @@ fun ConCafeCastCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -114,7 +113,7 @@ fun ConCafeCastCard(
                 text = subtitle,
                 maxLines = subtitleMaxLines,
                 overflow = TextOverflow.Ellipsis,
-                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
             if (!metaText.isNullOrBlank()) {
