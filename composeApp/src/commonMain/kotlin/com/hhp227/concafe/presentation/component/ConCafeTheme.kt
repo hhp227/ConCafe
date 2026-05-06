@@ -8,8 +8,11 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 
 @Composable
-fun ConCafeTheme(content: @Composable () -> Unit) {
-    val darkMode = isSystemInDarkTheme()
+fun ConCafeTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val darkMode = darkTheme
     val colorScheme = if (darkMode) {
         darkColorScheme(
             primary = colorFromHex("EF6797"),

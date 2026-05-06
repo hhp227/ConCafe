@@ -169,6 +169,12 @@
     <string name="ranking_empty_title">아직 집계된 랭킹이 없어요</string>
     <string name="ranking_empty_desc">활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.</string>
     <string name="settings_title">설정</string>
+    <string name="settings_preferences_title">환경설정</string>
+    <string name="settings_general_title">일반</string>
+    <string name="settings_theme_title">테마</string>
+    <string name="settings_theme_desc">화면 테마를 선택할 수 있습니다.</string>
+    <string name="settings_theme_light">라이트모드</string>
+    <string name="settings_theme_dark">다크모드</string>
     <string name="settings_account_title">계정 관리</string>
     <string name="settings_account_desc">프로필과 로그인 정보를 관리합니다.</string>
     <string name="settings_notification_title">알림 설정</string>
@@ -929,6 +935,13 @@
     <string name="admin_inquiry_title">문의하기</string>
     <string name="admin_inquiry_empty">등록된 문의가 없습니다.</string>
     <string name="admin_inquiry_load_more">문의 더 불러오기</string>
+    <string name="community_report_sheet_title">신고 유형 선택</string>
+    <string name="community_report_submit">신고 접수</string>
+    <string name="community_report_type_spam">스팸/광고</string>
+    <string name="community_report_type_abuse">욕설/혐오</string>
+    <string name="community_report_type_sexual">음란물</string>
+    <string name="community_report_type_privacy">개인정보 노출</string>
+    <string name="community_report_type_other">기타</string>
     <string name="admin_writer">작성자 %1$s</string>
     <string name="admin_quick_menu_title">운영 퀵메뉴</string>
     <string name="ranking_native_ad_badge">광고</string>

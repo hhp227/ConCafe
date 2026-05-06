@@ -78,7 +78,10 @@ struct PostDetailView: View {
                 Button {
                     viewModel.onAction(.clickReport)
                 } label: {
-                    Label("신고하기", systemImage: "exclamationmark.bubble")
+                    Label(
+                        String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"),
+                        systemImage: "exclamationmark.bubble"
+                    )
                 }
             }
         } label: {
@@ -127,6 +130,57 @@ private struct PostDetailContentView: View {
         )) {
             editCommentSheet
         }
+        .sheet(isPresented: Binding(
+            get: { uiState.isReportSheetVisible },
+            set: { if !$0 { onAction(.dismissReportSheet) } }
+        )) {
+            reportSheet
+        }
+    }
+
+    private var reportSheet: some View {
+        let reportTypes = [
+            String(localized: String.LocalizationValue("community_report_type_spam"), table: "Localizable"),
+            String(localized: String.LocalizationValue("community_report_type_abuse"), table: "Localizable"),
+            String(localized: String.LocalizationValue("community_report_type_sexual"), table: "Localizable"),
+            String(localized: String.LocalizationValue("community_report_type_privacy"), table: "Localizable"),
+            String(localized: String.LocalizationValue("community_report_type_other"), table: "Localizable")
+        ]
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: String.LocalizationValue("community_report_sheet_title"), table: "Localizable"))
+                .font(.headline)
+            ForEach(reportTypes, id: \.self) { type in
+                Button {
+                    onAction(.selectReportType(type))
+                } label: {
+                    HStack {
+                        Image(systemName: uiState.selectedReportType == type ? "largecircle.fill.circle" : "circle")
+                        Text(type)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            Button {
+                onAction(.submitReport)
+            } label: {
+                if uiState.isSubmittingReport {
+                    ProgressView()
+                        .tint(.white)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text(String(localized: String.LocalizationValue("community_report_submit"), table: "Localizable"))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.vertical, 10)
+            .background(Color(hex: "EF6797"))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .disabled(uiState.selectedReportType == nil || uiState.isSubmittingReport)
+        }
+        .padding(20)
+        .compatMediumSheetDetent()
     }
 
     private var editCommentSheet: some View {
@@ -461,7 +515,10 @@ private struct CommentItemView: View {
                         }
                     } else {
                         Button(action: onReport) {
-                            Label("신고하기", systemImage: "exclamationmark.bubble")
+                            Label(
+                                String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"),
+                                systemImage: "exclamationmark.bubble"
+                            )
                         }
                     }
                 } label: {

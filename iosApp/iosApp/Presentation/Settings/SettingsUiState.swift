@@ -11,6 +11,7 @@ struct SettingsUiState {
     var isLoading: Bool = false
     var errorMessage: String?
     var appVersion: String = Self.resolvedAppVersion()
+    var themeMode: AppThemeMode = .light
 
     static let empty = SettingsUiState()
 

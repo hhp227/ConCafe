@@ -1,8 +1,6 @@
 package com.hhp227.concafe.push
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -28,7 +26,7 @@ class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
         if (body.isEmpty()) {
             return
         } else {
-            ensureDefaultChannel()
+            PushNotificationChannels.ensureDefaultChannel(this)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -61,27 +59,7 @@ class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun ensureDefaultChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return
-        } else {
-            val manager = getSystemService(NotificationManager::class.java) ?: return
-            val existing = manager.getNotificationChannel(DEFAULT_CHANNEL_ID)
-
-            if (existing == null) {
-                val channel = NotificationChannel(
-                    DEFAULT_CHANNEL_ID,
-                    getString(R.string.push_channel_name),
-                    NotificationManager.IMPORTANCE_HIGH
-                )
-
-                channel.description = getString(R.string.push_channel_description)
-                manager.createNotificationChannel(channel)
-            }
-        }
-    }
-
     companion object {
-        const val DEFAULT_CHANNEL_ID = "concafe_default"
+        const val DEFAULT_CHANNEL_ID = PushNotificationChannels.DEFAULT_CHANNEL_ID
     }
 }

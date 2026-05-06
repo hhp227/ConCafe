@@ -19,6 +19,7 @@ struct AdminOperationsView: View {
                 metricsGrid
                 pendingSection
                 inquirySection
+                reportSection
                 quickMenuSection
                 bannerRegisterSection
                 if let message = viewModel.uiState.infoMessage {
@@ -340,6 +341,62 @@ struct AdminOperationsView: View {
             Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white })
         )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var reportSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("신고 내역")
+                .font(.headline.weight(.bold))
+            if viewModel.uiState.reports.isEmpty {
+                Text("등록된 신고가 없습니다.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: "7A707A"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            } else {
+                ForEach(viewModel.uiState.reports, id: \.id) { report in
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(report.reportType)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color(hex: "EF6797"))
+                            Spacer()
+                            Text(report.createdAtLabel)
+                                .font(.caption2)
+                                .foregroundStyle(Color(hex: "7A707A"))
+                        }
+                        Text("대상: \(report.targetType.name) / \(report.targetId)")
+                            .font(.caption)
+                        Text("신고자: \(report.reporterNickname)")
+                            .font(.caption2)
+                            .foregroundStyle(Color(hex: "8B7F8A"))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                }
+                if viewModel.uiState.canLoadMoreReports || viewModel.uiState.isLoadingMoreReports {
+                    Button {
+                        viewModel.onAction(.loadMoreReports)
+                    } label: {
+                        if viewModel.uiState.isLoadingMoreReports {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else {
+                            Text("신고 더 불러오기")
+                                .font(.subheadline.weight(.bold))
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 12)
+                    .background(Color(hex: "F5F2F4"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+        }
     }
 
     private func infoBanner(_ message: String) -> some View {

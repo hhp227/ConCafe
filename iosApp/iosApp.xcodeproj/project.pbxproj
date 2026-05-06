@@ -76,6 +76,7 @@
 		0A3BB97E2F99307900737CDB /* CafeEventViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */; };
 		0A3BB9802F9930A100737CDB /* CafeEventAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */; };
 		0A3BB9822F9930C600737CDB /* CafeEventEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */; };
+		0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */; };
 		0A3D3AC02F6D1F3400167893 /* NetworkStatusBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */; };
 		0A3DB80A2F649F2E00064804 /* BannerEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */; };
 		0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB80B2F649F5000064804 /* BannerEditAction.swift */; };
@@ -242,6 +243,7 @@
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
 		0AE848072F6BE850006A4491 /* ImageCompressionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */; };
 		0AFA10022FA1001000FA1001 /* CastScheduleAttendanceUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */; };
+		0AFA20022FA2001000FA2001 /* AppThemePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA20012FA2001000FA2001 /* AppThemePreferences.swift */; };
 		0AFECA4D2F62CDC400C2C099 /* ReviewEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */; };
 		0AFECA4F2F62CDEF00C2C099 /* ReviewEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */; };
 		0AFECA512F62CE0D00C2C099 /* ReviewEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */; };
@@ -327,6 +329,7 @@
 		0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventViewModel.swift; sourceTree = "<group>"; };
 		0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventAction.swift; sourceTree = "<group>"; };
 		0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventEvent.swift; sourceTree = "<group>"; };
+		0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeMode.swift; sourceTree = "<group>"; };
 		0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatusBannerView.swift; sourceTree = "<group>"; };
 		0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditUiState.swift; sourceTree = "<group>"; };
 		0A3DB80B2F649F5000064804 /* BannerEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditAction.swift; sourceTree = "<group>"; };
@@ -493,6 +496,7 @@
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
 		0AE848062F6BE850006A4491 /* ImageCompressionUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCompressionUtils.swift; sourceTree = "<group>"; };
 		0AFA10012FA1001000FA1001 /* CastScheduleAttendanceUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastScheduleAttendanceUtils.swift; sourceTree = "<group>"; };
+		0AFA20012FA2001000FA2001 /* AppThemePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemePreferences.swift; sourceTree = "<group>"; };
 		0AFECA4C2F62CDC400C2C099 /* ReviewEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditViewModel.swift; sourceTree = "<group>"; };
 		0AFECA4E2F62CDEF00C2C099 /* ReviewEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditUiState.swift; sourceTree = "<group>"; };
 		0AFECA502F62CE0D00C2C099 /* ReviewEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditAction.swift; sourceTree = "<group>"; };
@@ -718,6 +722,15 @@
 			path = Event;
 			sourceTree = "<group>";
 		};
+		0A3C35712FAB277A00CB6B11 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				0AFA20012FA2001000FA2001 /* AppThemePreferences.swift */,
+				0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
 		0A3DB8082F649EFC00064804 /* BannerEdit */ = {
 			isa = PBXGroup;
 			children = (
@@ -805,6 +818,7 @@
 				0A4C9E162F7BB079001F94DC /* Picture */,
 				0AFECA4B2F62CD8C00C2C099 /* Review */,
 				0A8ABA702F5C1D0B00265D4F /* Settings */,
+				0A3C35712FAB277A00CB6B11 /* Theme */,
 				0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */,
 				0A45CA292F7DA44C00A7F8F7 /* ContentAction.swift */,
 				0A45CA2A2F7DA44C00A7F8F7 /* ContentEvent.swift */,
@@ -1402,6 +1416,7 @@
 				0A45CA302F7DA44C00A7F8F7 /* ContentEvent.swift in Sources */,
 				0A45CA312F7DA44C00A7F8F7 /* ContentView.swift in Sources */,
 				0A45CA322F7DA44C00A7F8F7 /* ContentUiState.swift in Sources */,
+				0AFA20022FA2001000FA2001 /* AppThemePreferences.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
 				0A51B0512F6155DB00051A97 /* CastEditUiState.swift in Sources */,
@@ -1505,6 +1520,7 @@
 				0A4C9E1C2F7BB0D2001F94DC /* PictureAction.swift in Sources */,
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
 				0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */,
+				0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,
 				0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */,
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
@@ -1662,7 +1678,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1684,7 +1700,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13;
+				MARKETING_VERSION = 1.20;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -1706,7 +1722,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 19;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1728,7 +1744,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.13;
+				MARKETING_VERSION = 1.20;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",

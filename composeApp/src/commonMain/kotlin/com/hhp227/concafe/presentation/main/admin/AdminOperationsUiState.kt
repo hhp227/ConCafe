@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.admin
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.model.Inquiry
+import com.hhp227.concafe.domain.model.Report
 
 data class AdminOperationsUiState(
     val totalUsersCount: Int = 0,
@@ -18,9 +19,13 @@ data class AdminOperationsUiState(
     val pendingCafeRegistrationClaims: List<PendingCafeRegistrationClaimPreview> = emptyList(),
     val pendingCafeOwnerClaims: List<PendingCafeOwnerClaimPreview> = emptyList(),
     val inquiries: List<Inquiry> = emptyList(),
+    val reports: List<Report> = emptyList(),
     val inquiryNextCursor: String? = null,
+    val reportNextCursor: String? = null,
     val canLoadMoreInquiries: Boolean = false,
+    val canLoadMoreReports: Boolean = false,
     val isLoadingMoreInquiries: Boolean = false,
+    val isLoadingMoreReports: Boolean = false,
     val quickMenus: List<AdminQuickMenu> = defaultQuickMenus,
     val hasUnreadNotifications: Boolean = true,
     val infoMessage: String? = null

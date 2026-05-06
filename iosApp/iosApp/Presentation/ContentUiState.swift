@@ -11,4 +11,5 @@ import Shared
 struct ContentUiState {
     var networkAlertState: NetworkAlertState? = nil
     var hasUnreadNotifications: Bool = false
+    var themeMode: AppThemeMode = .light
 }

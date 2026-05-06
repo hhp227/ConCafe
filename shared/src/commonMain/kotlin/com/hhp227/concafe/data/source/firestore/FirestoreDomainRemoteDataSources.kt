@@ -1153,6 +1153,68 @@ class FirestoreInquiryRemoteDataSource(
     }
 }
 
+class FirestoreReportRemoteDataSource(
+    config: FirestoreConfig,
+    restApi: FirestoreRestApi,
+    tokenProvider: FirestoreAuthTokenProvider
+) : FirestoreBaseDataSource(config, restApi, tokenProvider), ReportRemoteDataSource {
+    override suspend fun createReport(
+        reporterUserId: String,
+        reporterNickname: String,
+        input: ReportCreate
+    ): Report {
+        val idToken = tokenProvider.getIdToken()
+        val reportId = nextFirestoreEntityId("report")
+        val createdAt = Clock.System.now().toString()
+        val normalizedType = input.reportType.trim()
+        val path = "${config.documentBasePath()}/${FirestorePaths.REPORTS}/$reportId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "targetType" to firestoreString(input.targetType.name),
+                "targetId" to firestoreString(input.targetId.trim()),
+                "reporterUserId" to firestoreString(reporterUserId),
+                "reporterNickname" to firestoreString(reporterNickname),
+                "reportType" to firestoreString(normalizedType),
+                "status" to firestoreString(ReportStatus.PENDING.name),
+                "createdAt" to firestoreString(createdAt),
+                "createdAtLabel" to firestoreString("방금 전")
+            )
+        )
+        restApi.patch(path, body, idToken)
+        return Report(
+            id = reportId,
+            targetType = input.targetType,
+            targetId = input.targetId.trim(),
+            reporterUserId = reporterUserId,
+            reporterNickname = reporterNickname,
+            reportType = normalizedType,
+            status = ReportStatus.PENDING,
+            createdAt = createdAt,
+            createdAtLabel = "방금 전"
+        )
+    }
+
+    override suspend fun fetchReportPage(cursor: String?, pageSize: Int): PagedResult<Report> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val documents = runCatching { runReportPageQuery(cursor, safePageSize + 1, idToken) }
+            .recoverCatching { runReportPageQuery(cursor, safePageSize + 1, null) }
+            .getOrElse { throwable ->
+                throw IllegalStateException("Failed to load report page", throwable)
+            }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()?.get("fields")?.jsonObject?.getFirestoreString("createdAt")
+        } else null
+        return PagedResult(
+            items = pageDocuments.mapNotNull { parseReportDocument(it) },
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
+    }
+}
+
 // ── Notice ────────────────────────────────────────────────────────────────────
 
 class FirestoreNoticeRemoteDataSource(

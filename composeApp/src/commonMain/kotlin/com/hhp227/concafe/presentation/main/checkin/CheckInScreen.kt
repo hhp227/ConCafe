@@ -1527,7 +1527,7 @@ private fun MoreVisitCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(Res.string.checkin_more_visit_label),
-                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
@@ -1589,7 +1589,7 @@ fun TimelineItem(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
                     modifier = Modifier.padding(6.dp),
-                    tint = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
             Box(
@@ -1613,14 +1613,14 @@ fun TimelineItem(
                     Text(
                         visit.cafeName,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                         Text(
                             text = visit.relativeVisitedLabel(),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontSize = 12.sp,
-                            color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.86f) else MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1631,7 +1631,7 @@ fun TimelineItem(
                     } else {
                         stringResource(Res.string.checkin_visit_memo_empty)
                     },
-                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))

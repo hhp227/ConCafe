@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Inquiry
+import com.hhp227.concafe.domain.model.Report
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
@@ -107,6 +108,9 @@ fun AdminOperationsScreen(
             InquirySection(uiState = uiState, onAction = viewModel::onAction)
         }
         item {
+            ReportSection(uiState = uiState, onAction = viewModel::onAction)
+        }
+        item {
             QuickMenuSection(uiState = uiState, onAction = viewModel::onAction)
         }
         item {
@@ -118,6 +122,47 @@ fun AdminOperationsScreen(
                     viewModel.onAction(AdminOperationsAction.DismissInfoMessage)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReportSection(
+    uiState: AdminOperationsUiState,
+    onAction: (AdminOperationsAction) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("신고 내역", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        if (uiState.reports.isEmpty()) {
+            Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Text("등록된 신고가 없습니다.", modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp), color = colorFromHex("7A707A"))
+            }
+        } else {
+            uiState.reports.forEach { report -> ReportCard(report) }
+            if (uiState.canLoadMoreReports || uiState.isLoadingMoreReports) {
+                Button(
+                    onClick = { onAction(AdminOperationsAction.LoadMoreReports) },
+                    enabled = !uiState.isLoadingMoreReports
+                ) {
+                    if (uiState.isLoadingMoreReports) CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    else Text("신고 더 불러오기", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportCard(report: Report) {
+    Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(report.reportType, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+                Text(report.createdAtLabel, color = colorFromHex("7A707A"), style = MaterialTheme.typography.labelSmall)
+            }
+            Text("대상: ${report.targetType.name} / ${report.targetId}", style = MaterialTheme.typography.labelMedium)
+            Text("신고자: ${report.reporterNickname}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("8B7F8A"))
+            Text("상태: ${report.status.name}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("6F6670"))
         }
     }
 }

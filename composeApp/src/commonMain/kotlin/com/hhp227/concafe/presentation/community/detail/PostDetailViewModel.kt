@@ -14,6 +14,7 @@ import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCommunityCommentUseCase
+import com.hhp227.concafe.domain.usecase.CreateCommunityPostReportUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,7 @@ class PostDetailViewModel(
     private val addCommunityCommentUseCase: AddCommunityCommentUseCase,
     private val updateCommunityCommentUseCase: UpdateCommunityCommentUseCase,
     private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase,
+    private val createCommunityPostReportUseCase: CreateCommunityPostReportUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val communityPostEventPublisher: CommunityPostEventPublisher
 ) : ViewModel() {
@@ -233,6 +235,27 @@ class PostDetailViewModel(
         }
     }
 
+    private fun submitReport() {
+        val reportType = _uiState.value.selectedReportType ?: return
+        _uiState.update { it.copy(isSubmittingReport = true) }
+        jobs[JobKey.SUBMIT_REPORT]?.cancel()
+        jobs[JobKey.SUBMIT_REPORT] = viewModelScope.launch {
+            when (createCommunityPostReportUseCase(postId, reportType)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(
+                        isSubmittingReport = false,
+                        isReportSheetVisible = false,
+                        selectedReportType = null,
+                        errorMessage = "신고가 접수되었습니다."
+                    )
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(isSubmittingReport = false, errorMessage = "신고를 접수하지 못했습니다.")
+                }
+            }
+        }
+    }
+
     private fun observeCommunityPostEvents() {
         jobs[JobKey.OBSERVE_COMMUNITY_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_COMMUNITY_EVENT] = viewModelScope.launch {
@@ -265,7 +288,12 @@ class PostDetailViewModel(
             PostDetailAction.ClickDelete -> _uiState.update { it.copy(isMenuVisible = false, isDeleteConfirmVisible = true) }
             PostDetailAction.ConfirmDelete -> deletePost()
             PostDetailAction.DismissDeleteConfirm -> _uiState.update { it.copy(isDeleteConfirmVisible = false) }
-            PostDetailAction.ClickReport -> _uiState.update { it.copy(isMenuVisible = false) }
+            PostDetailAction.ClickReport -> _uiState.update { it.copy(isMenuVisible = false, isReportSheetVisible = true) }
+            is PostDetailAction.SelectReportType -> _uiState.update { it.copy(selectedReportType = action.reportType) }
+            PostDetailAction.DismissReportSheet -> _uiState.update {
+                it.copy(isReportSheetVisible = false, selectedReportType = null, isSubmittingReport = false)
+            }
+            PostDetailAction.SubmitReport -> submitReport()
             is PostDetailAction.ClickEditComment -> {
                 val comment = _uiState.value.comments.find { it.id == action.commentId }
                 _uiState.update { it.copy(editingCommentId = action.commentId, editCommentText = comment?.content.orEmpty()) }
@@ -302,6 +330,6 @@ class PostDetailViewModel(
     private enum class JobKey {
         LOAD_POST, CHECK_OWNER, CHECK_LIKE, LOAD_COMMENTS, LOAD_MORE_COMMENTS,
         TOGGLE_LIKE, DELETE_POST, SEND_COMMENT, UPDATE_COMMENT, DELETE_COMMENT,
-        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT
+        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT, SUBMIT_REPORT
     }
 }

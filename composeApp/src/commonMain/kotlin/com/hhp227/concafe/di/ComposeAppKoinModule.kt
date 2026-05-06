@@ -42,7 +42,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { AppViewModel(get(), get(), get(), get()) }
+    factory { AppViewModel(get(), get(), get(), get(), get()) }
     factory { SignInViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -54,12 +54,12 @@ private val composeAppPresentationModule = module {
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
-    factory { SettingsViewModel(get()) }
+    factory { SettingsViewModel(get(), get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, eventId: String) -> CafeEventViewModel(cafeId, eventId, get(), get(), get(), get(), get()) }
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get()) }
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get(), get()) }
-    factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get(), get()) }
     factory { (initialCafeId: String?, initialBannerId: String?) ->
         BannerEditViewModel(initialCafeId, initialBannerId, get(), get(), get(), get(), get(), get(), get(), get())
@@ -101,6 +101,7 @@ private val composeAppPresentationModule = module {
             addCommunityCommentUseCase = get(),
             updateCommunityCommentUseCase = get(),
             deleteCommunityCommentUseCase = get(),
+            createCommunityPostReportUseCase = get(),
             observeCurrentUserUseCase = get(),
             communityPostEventPublisher = get()
         )

@@ -24,19 +24,26 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.theme.AppThemeMode
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.settings_account_desc
 import concafe.composeapp.generated.resources.settings_account_title
 import concafe.composeapp.generated.resources.settings_app_info_desc
 import concafe.composeapp.generated.resources.settings_app_info_title
+import concafe.composeapp.generated.resources.settings_general_title
 import concafe.composeapp.generated.resources.settings_inquiry_desc
 import concafe.composeapp.generated.resources.settings_inquiry_title
 import concafe.composeapp.generated.resources.settings_notification_desc
 import concafe.composeapp.generated.resources.settings_notification_title
+import concafe.composeapp.generated.resources.settings_preferences_title
 import concafe.composeapp.generated.resources.settings_privacy_desc
 import concafe.composeapp.generated.resources.settings_privacy_title
 import concafe.composeapp.generated.resources.settings_sign_out_desc
 import concafe.composeapp.generated.resources.settings_sign_out_title
+import concafe.composeapp.generated.resources.settings_theme_dark
+import concafe.composeapp.generated.resources.settings_theme_desc
+import concafe.composeapp.generated.resources.settings_theme_light
+import concafe.composeapp.generated.resources.settings_theme_title
 import concafe.composeapp.generated.resources.settings_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -75,7 +82,7 @@ fun SettingsScreen(
         }
     }
     Scaffold(
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.settings_title)) },
@@ -109,7 +116,7 @@ private fun SettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 16.dp,
@@ -127,6 +134,18 @@ private fun SettingsContentScreen(
                 )
             }
         }
+        item {
+            SettingsSectionTitle(stringResource(Res.string.settings_preferences_title))
+        }
+        item {
+            SettingsThemeCard(
+                selectedThemeMode = uiState.themeMode,
+                onAction = onAction
+            )
+        }
+        item {
+            SettingsSectionTitle(stringResource(Res.string.settings_general_title))
+        }
         items(settingsItems, key = { it.id }) { item ->
             SettingsItemCard(
                 item = item,
@@ -134,6 +153,96 @@ private fun SettingsContentScreen(
             )
         }
     }
+}
+
+@Composable
+private fun SettingsSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+    )
+}
+
+@Composable
+private fun SettingsThemeCard(
+    selectedThemeMode: AppThemeMode,
+    onAction: (SettingsAction) -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Palette,
+                    contentDescription = null,
+                    tint = colorFromHex("EF6797")
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 14.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.settings_theme_title),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = stringResource(Res.string.settings_theme_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_theme_light),
+                    selected = selectedThemeMode == AppThemeMode.LIGHT,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectThemeMode(AppThemeMode.LIGHT)) }
+                )
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_theme_dark),
+                    selected = selectedThemeMode == AppThemeMode.DARK,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectThemeMode(AppThemeMode.DARK)) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeOptionButton(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(text) },
+        leadingIcon = {
+            RadioButton(
+                selected = selected,
+                onClick = onClick
+            )
+        },
+        modifier = modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

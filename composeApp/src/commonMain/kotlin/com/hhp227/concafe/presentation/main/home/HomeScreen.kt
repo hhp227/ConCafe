@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -332,7 +331,7 @@ fun HomeContentScreen(
                                 Text(
                                     maid.name,
                                     modifier = Modifier.padding(top = 8.dp),
-                                    color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -470,7 +469,7 @@ private fun HomeCafeEventCard(
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -625,7 +624,7 @@ private fun HomeSectionPlaceholderCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -637,12 +636,12 @@ private fun HomeSectionPlaceholderCard(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("5C525D")
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8A7F8B")
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -671,13 +670,13 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = stringResource(Res.string.home_banner_placeholder_title),
-                    color = colorFromHex("6E6671"),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = stringResource(Res.string.home_banner_placeholder_desc),
-                    color = colorFromHex("8E8794"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -722,7 +721,7 @@ private fun SectionTitle(
             text = text,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = colorFromHex("2B2330"),
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -771,7 +770,7 @@ private fun NearByCafeItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = cafe.name,
-                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -875,21 +874,21 @@ private fun HomeCommunityPostCard(
                 Text(
                     text = post.userNickname.ifBlank { "익명" },
                     style = MaterialTheme.typography.labelMedium,
-                    color = colorFromHex("665A63"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
                 Spacer(Modifier.weight(1f))
                 Text(
                     text = post.displayDate,
                     style = MaterialTheme.typography.labelSmall,
-                    color = colorFromHex("B1A3AC")
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 text = post.title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("2B2330"),
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -897,7 +896,7 @@ private fun HomeCommunityPostCard(
                 text = post.content,
                 modifier = Modifier.height(64.dp),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("665A63"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
@@ -910,13 +909,13 @@ private fun HomeCommunityPostCard(
                     Icon(
                         imageVector = Icons.Default.FavoriteBorder,
                         contentDescription = null,
-                        tint = colorFromHex("B1A3AC"),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(12.dp)
                     )
                     Text(
                         text = stringResource(Res.string.community_post_like_count, post.likeCount),
                         style = MaterialTheme.typography.labelSmall,
-                        color = colorFromHex("8C7E87")
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Row(
@@ -926,13 +925,13 @@ private fun HomeCommunityPostCard(
                     Icon(
                         imageVector = Icons.Default.ChatBubbleOutline,
                         contentDescription = null,
-                        tint = colorFromHex("B1A3AC"),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(12.dp)
                     )
                     Text(
                         text = stringResource(Res.string.community_post_comment_count, post.commentCount),
                         style = MaterialTheme.typography.labelSmall,
-                        color = colorFromHex("8C7E87")
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

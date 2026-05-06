@@ -20,6 +20,8 @@ final class ContentViewModel: ObservableObject {
 
     private let getNotificationFeedUseCase: GetNotificationFeedUseCase
 
+    private let themePreferences: AppThemePreferences
+
     @Published private(set) var uiState = ContentUiState()
 
     let event = PassthroughSubject<ContentEvent, Never>()
@@ -35,6 +37,15 @@ final class ContentViewModel: ObservableObject {
                 }
             } catch {
                 uiState.networkAlertState = nil
+            }
+        }
+    }
+
+    private func observeThemeMode() {
+        tasks[.observeTheme]?.cancel()
+        tasks[.observeTheme] = Task {
+            for await themeMode in themePreferences.observeThemeMode() {
+                uiState.themeMode = themeMode
             }
         }
     }
@@ -111,14 +122,17 @@ final class ContentViewModel: ObservableObject {
         observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase = KoinInitializerKt.resolveObserveNetworkAlertStateUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase(),
-        getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase()
+        getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase(),
+        themePreferences: AppThemePreferences = .shared
     ) {
         self.observeNetworkAlertStateUseCase = observeNetworkAlertStateUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.registerPushTokenUseCase = registerPushTokenUseCase
         self.getNotificationFeedUseCase = getNotificationFeedUseCase
+        self.themePreferences = themePreferences
 
         observeNetworkAlertState()
+        observeThemeMode()
         observeSessionAndSyncPushToken()
     }
 
@@ -129,6 +143,7 @@ final class ContentViewModel: ObservableObject {
 
     private enum TaskKey {
         case observeNetworkAlert
+        case observeTheme
         case observeCurrentUser
         case unreadNotificationPoll
     }
