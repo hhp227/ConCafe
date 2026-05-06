@@ -43,6 +43,12 @@ private struct SettingsContentView: View {
 
     var body: some View {
         List {
+            Section(String(localized: String.LocalizationValue("settings_preferences_title"), table: "Localizable")) {
+                ThemePickerRow(
+                    selectedThemeMode: uiState.themeMode,
+                    onSelect: { onAction(.themeModeSelected($0)) }
+                )
+            }
             Section {
                 SettingsRow(item: .account)
                     .contentShape(Rectangle())
@@ -69,6 +75,42 @@ private struct SettingsContentView: View {
                 }
             }
         }
+    }
+}
+
+private struct ThemePickerRow: View {
+    let selectedThemeMode: AppThemeMode
+
+    let onSelect: (AppThemeMode) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "paintpalette")
+                    .foregroundStyle(Color(hex: "EF6797"))
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("settings_theme_title"), table: "Localizable"))
+                        .font(.subheadline)
+                        .bold()
+                    Text(String(localized: String.LocalizationValue("settings_theme_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            Picker(String(localized: String.LocalizationValue("settings_theme_title"), table: "Localizable"), selection: Binding(
+                get: { selectedThemeMode },
+                set: { onSelect($0) }
+            )) {
+                ForEach(AppThemeMode.allCases) { themeMode in
+                    Text(themeMode.title)
+                        .tag(themeMode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 4)
     }
 }
 

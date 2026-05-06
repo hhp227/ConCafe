@@ -169,6 +169,12 @@
     <string name="ranking_empty_title">まだ集計されたランキングがありません</string>
     <string name="ranking_empty_desc">活動データが蓄積されるとここに順位が表示されます。</string>
     <string name="settings_title">設定</string>
+    <string name="settings_preferences_title">環境設定</string>
+    <string name="settings_general_title">一般</string>
+    <string name="settings_theme_title">テーマ</string>
+    <string name="settings_theme_desc">ConCafeの表示モードを選択します。</string>
+    <string name="settings_theme_light">ライトモード</string>
+    <string name="settings_theme_dark">ダークモード</string>
     <string name="settings_account_title">アカウント管理</string>
     <string name="settings_account_desc">プロフィールとログイン情報を管理します。</string>
     <string name="settings_notification_title">通知設定</string>

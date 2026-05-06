@@ -13,11 +13,13 @@ import Shared
 final class SettingsViewModel: ObservableObject {
     private let signOutUseCase: SignOutUseCase
 
+    private let themePreferences: AppThemePreferences
+
     @Published private(set) var uiState = SettingsUiState.empty
 
     let event = PassthroughSubject<SettingsEvent, Never>()
 
-    private var signOutTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func clickAccountSettings() {
         event.send(.navigateToAccountSettings)
@@ -44,8 +46,8 @@ final class SettingsViewModel: ObservableObject {
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        signOutTask?.cancel()
-        signOutTask = Task {
+        tasks[.signOut]?.cancel()
+        tasks[.signOut] = Task {
             do {
                 let result = try await signOutUseCase.invoke()
 
@@ -60,6 +62,20 @@ final class SettingsViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
                 uiState.errorMessage = "로그아웃에 실패했습니다."
+            }
+        }
+    }
+
+    private func selectThemeMode(_ themeMode: AppThemeMode) {
+        themePreferences.setThemeMode(themeMode)
+        uiState.themeMode = themeMode
+    }
+
+    private func observeThemeMode() {
+        tasks[.observeTheme]?.cancel()
+        tasks[.observeTheme] = Task {
+            for await themeMode in themePreferences.observeThemeMode() {
+                uiState.themeMode = themeMode
             }
         }
     }
@@ -80,17 +96,29 @@ final class SettingsViewModel: ObservableObject {
             clickPrivacyPolicy()
         case .signOutTapped:
             signOut()
+        case .themeModeSelected(let themeMode):
+            selectThemeMode(themeMode)
         }
     }
 
     init(
-        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase()
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
+        themePreferences: AppThemePreferences = .shared
     ) {
         self.signOutUseCase = signOutUseCase
+        self.themePreferences = themePreferences
+
+        observeThemeMode()
     }
 
     deinit {
-        signOutTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case signOut
+        case observeTheme
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"

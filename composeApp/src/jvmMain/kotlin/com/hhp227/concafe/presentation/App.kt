@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeTheme
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
+import com.hhp227.concafe.presentation.theme.AppThemeMode
 import kotlinx.coroutines.delay
 import org.koin.core.context.GlobalContext
 
@@ -30,7 +31,7 @@ fun App() {
         delay(800)
         isLaunchScreenVisible = false
     }
-    ConCafeTheme {
+    ConCafeTheme(darkTheme = uiState.themeMode == AppThemeMode.DARK) {
         if (isLaunchScreenVisible) {
             DesktopLaunchScreen()
         } else {

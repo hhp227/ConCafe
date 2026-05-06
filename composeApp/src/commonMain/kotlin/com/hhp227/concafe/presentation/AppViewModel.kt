@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
+import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +24,8 @@ class AppViewModel(
     private val observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
-    private val getNotificationFeedUseCase: GetNotificationFeedUseCase
+    private val getNotificationFeedUseCase: GetNotificationFeedUseCase,
+    private val themePreferenceStore: ThemePreferenceStore
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState = _uiState.asStateFlow()
@@ -38,6 +40,15 @@ class AppViewModel(
         jobs[JobKey.OBSERVE_NETWORK_ALERT] = viewModelScope.launch {
             observeNetworkAlertStateUseCase.invoke().collect { networkAlertState ->
                 _uiState.update { it.copy(networkAlertState = networkAlertState) }
+            }
+        }
+    }
+
+    private fun observeThemeMode() {
+        jobs[JobKey.OBSERVE_THEME]?.cancel()
+        jobs[JobKey.OBSERVE_THEME] = viewModelScope.launch {
+            themePreferenceStore.themeMode.collect { themeMode ->
+                _uiState.update { it.copy(themeMode = themeMode) }
             }
         }
     }
@@ -110,11 +121,13 @@ class AppViewModel(
 
     init {
         observeNetworkAlertState()
+        observeThemeMode()
         observeSessionAndSyncPushToken()
     }
 
     private enum class JobKey {
         OBSERVE_NETWORK_ALERT,
+        OBSERVE_THEME,
         OBSERVE_CURRENT_USER,
         UNREAD_NOTIFICATION_POLL
     }

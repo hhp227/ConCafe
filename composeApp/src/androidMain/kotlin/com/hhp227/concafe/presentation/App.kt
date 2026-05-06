@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeTheme
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
+import com.hhp227.concafe.presentation.theme.AppThemeMode
 import com.hhp227.concafe.push.resolveAndroidPushTokenClient
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.context.GlobalContext
@@ -33,7 +34,7 @@ fun App() {
     )
     val uiState by appViewModel.uiState.collectAsState()
 
-    ConCafeTheme {
+    ConCafeTheme(darkTheme = uiState.themeMode == AppThemeMode.DARK) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {

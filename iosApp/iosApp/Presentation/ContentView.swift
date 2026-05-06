@@ -19,6 +19,7 @@ struct ContentView: View {
                 .zIndex(1)
             }
         }
+        .preferredColorScheme(viewModel.uiState.themeMode.colorScheme)
         .animation(
             .easeInOut(duration: 0.2),
             value: viewModel.uiState.networkAlertState?.isVisible == true

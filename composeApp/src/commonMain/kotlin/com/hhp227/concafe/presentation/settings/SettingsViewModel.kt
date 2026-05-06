@@ -8,18 +8,23 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.hhp227.concafe.di.resolveSignOutUseCase
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
+import com.hhp227.concafe.presentation.theme.AppThemeMode
+import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
+import kotlinx.coroutines.Job
 
 class SettingsViewModel(
-    private val signOutUseCase: SignOutUseCase
+    private val signOutUseCase: SignOutUseCase,
+    private val themePreferenceStore: ThemePreferenceStore
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
 
     private val _event = MutableSharedFlow<SettingsEvent>(replay = 0)
     val event = _event.asSharedFlow()
+
+    private val jobs = mutableMapOf<JobKey, Job>()
 
     private fun clickAccountSettings() {
         viewModelScope.launch {
@@ -53,7 +58,8 @@ class SettingsViewModel(
     private fun signOut() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[JobKey.SIGN_OUT]?.cancel()
+        jobs[JobKey.SIGN_OUT] = viewModelScope.launch {
             when (signOutUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isLoading = false, errorMessage = null) }
@@ -71,6 +77,20 @@ class SettingsViewModel(
         }
     }
 
+    private fun selectThemeMode(themeMode: AppThemeMode) {
+        themePreferenceStore.setThemeMode(themeMode)
+        _uiState.update { it.copy(themeMode = themeMode) }
+    }
+
+    private fun observeThemeMode() {
+        jobs[JobKey.OBSERVE_THEME]?.cancel()
+        jobs[JobKey.OBSERVE_THEME] = viewModelScope.launch {
+            themePreferenceStore.themeMode.collect { themeMode ->
+                _uiState.update { it.copy(themeMode = themeMode) }
+            }
+        }
+    }
+
     fun onAction(action: SettingsAction) {
         when (action) {
             SettingsAction.ClickBack -> {
@@ -84,7 +104,23 @@ class SettingsViewModel(
             SettingsAction.ClickInquiry -> clickInquiry()
             SettingsAction.ClickPrivacyPolicy -> clickPrivacyPolicy()
             SettingsAction.ClickSignOut -> signOut()
+            is SettingsAction.SelectThemeMode -> selectThemeMode(action.themeMode)
         }
+    }
+
+    init {
+        observeThemeMode()
+    }
+
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
+    }
+
+    private enum class JobKey {
+        SIGN_OUT,
+        OBSERVE_THEME
     }
 
     private companion object {
