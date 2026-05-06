@@ -96,9 +96,9 @@ private struct HomeContentView: View {
                     cafeEventSection
                     popularCastSection
                     nearbyCafeSection
-                    /*if !uiState.communityPosts.isEmpty {
+                    if !uiState.communityPosts.isEmpty {
                         communitySection
-                    }*/
+                    }
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
