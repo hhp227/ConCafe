@@ -84,7 +84,8 @@ private fun PostDetailContentScreen(
     onAction: (PostDetailAction) -> Unit
 ) {
     val pink = colorFromHex("EF6797")
-    val textColor = colorFromHex("2B2330")
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant
     var localEditText by remember(uiState.editingCommentId) { mutableStateOf(uiState.editCommentText) }
 
     if (uiState.editingCommentId != null) {
@@ -125,7 +126,7 @@ private fun PostDetailContentScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     TextButton(onClick = { onAction(PostDetailAction.DismissEditComment) }) {
-                        Text("취소", color = colorFromHex("8C7E87"))
+                        Text("취소", color = secondaryTextColor)
                     }
                     Button(
                         onClick = { onAction(PostDetailAction.ConfirmEditComment(localEditText)) },
@@ -211,7 +212,7 @@ private fun PostDetailContentScreen(
     }
 
     Scaffold(
-        containerColor = colorFromHex("F8F5F6"),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text("게시글", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = textColor) },
@@ -253,7 +254,7 @@ private fun PostDetailContentScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
     ) { innerPadding ->
@@ -285,7 +286,7 @@ private fun PostDetailContentScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("게시글을 불러오지 못했습니다.", color = colorFromHex("8C7E87"), textAlign = TextAlign.Center)
+                            Text("게시글을 불러오지 못했습니다.", color = secondaryTextColor, textAlign = TextAlign.Center)
                         }
                     }
                     else -> {
@@ -315,14 +316,14 @@ private fun PostDetailContentScreen(
                                     Icon(
                                         imageVector = Icons.Default.ChatBubbleOutline,
                                         contentDescription = null,
-                                        tint = colorFromHex("B1A3AC"),
+                                        tint = secondaryTextColor,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
                                         text = "댓글 ${uiState.commentCount}",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = colorFromHex("665A63")
+                                        color = secondaryTextColor
                                     )
                                 }
                             }
@@ -351,7 +352,7 @@ private fun PostDetailContentScreen(
                                             onClick = { onAction(PostDetailAction.LoadMoreComments) },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("이전 댓글 더보기", color = colorFromHex("8C7E87"), fontSize = 13.sp)
+                                            Text("이전 댓글 더보기", color = secondaryTextColor, fontSize = 13.sp)
                                         }
                                     }
                                 }
@@ -402,7 +403,7 @@ private fun PostBody(
 ) {
     val pink = colorFromHex("EF6797")
 
-    Column(modifier = Modifier.background(Color.White).padding(16.dp)) {
+    Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -427,17 +428,17 @@ private fun PostBody(
                         text = post.userNickname.ifBlank { "익명" },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = colorFromHex("2B2330")
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(text = post.displayDate, fontSize = 12.sp, color = colorFromHex("B1A3AC"))
+                    Text(text = post.displayDate, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         Spacer(Modifier.height(14.dp))
-        Text(text = post.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colorFromHex("2B2330"))
+        Text(text = post.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         if (post.content.isNotBlank()) {
             Spacer(Modifier.height(10.dp))
-            Text(text = post.content, fontSize = 15.sp, color = colorFromHex("665A63"), lineHeight = 24.sp)
+            Text(text = post.content, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 24.sp)
         }
         if (post.imageUrls.isNotEmpty()) {
             Spacer(Modifier.height(14.dp))
@@ -465,13 +466,13 @@ private fun PostBody(
                 Icon(
                     imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = null,
-                    tint = if (isLiked) pink else colorFromHex("B1A3AC"),
+                    tint = if (isLiked) pink else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
                     text = "좋아요 ${post.likeCount}",
                     fontSize = 13.sp,
-                    color = if (isLiked) pink else colorFromHex("8C7E87")
+                    color = if (isLiked) pink else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Row(
@@ -481,10 +482,10 @@ private fun PostBody(
                 Icon(
                     imageVector = Icons.Default.ChatBubbleOutline,
                     contentDescription = null,
-                    tint = colorFromHex("B1A3AC"),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
-                Text(text = "댓글 ${post.commentCount}", fontSize = 13.sp, color = colorFromHex("8C7E87"))
+                Text(text = "댓글 ${post.commentCount}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -526,10 +527,10 @@ private fun CommentItem(
                 text = comment.userNickname.ifBlank { "익명" },
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("2B2330")
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.weight(1f))
-            Text(text = comment.displayDate, fontSize = 11.sp, color = colorFromHex("B1A3AC"))
+            Text(text = comment.displayDate, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box {
                 IconButton(
                     onClick = { isMenuVisible = true },
@@ -538,7 +539,7 @@ private fun CommentItem(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = null,
-                        tint = colorFromHex("B1A3AC"),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -577,7 +578,7 @@ private fun CommentItem(
         Text(
             text = comment.content,
             fontSize = 14.sp,
-            color = colorFromHex("665A63"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 21.sp,
             modifier = Modifier.padding(start = 36.dp)
         )
@@ -593,7 +594,7 @@ private fun CommentInputBar(
     onSend: () -> Unit
 ) {
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 4.dp
     ) {
         Row(

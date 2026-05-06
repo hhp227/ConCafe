@@ -144,7 +144,7 @@ fun CheckInScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         CheckInContentScreen(
             uiState = uiState,

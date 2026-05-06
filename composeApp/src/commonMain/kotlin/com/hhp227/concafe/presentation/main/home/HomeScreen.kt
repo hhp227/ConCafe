@@ -170,7 +170,7 @@ fun HomeContentScreen(
     pagerState: PagerState,
     onAction: (HomeAction) -> Unit
 ) {
-    val screenBackgroundColor = colorFromHex("FFFBFD")
+    val screenBackgroundColor = MaterialTheme.colorScheme.background
 
     if (!uiState.isLoading) {
         LazyColumn(

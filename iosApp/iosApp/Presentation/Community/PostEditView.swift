@@ -92,11 +92,12 @@ private struct PostEditContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 
     private var imageSection: some View {
@@ -105,7 +106,7 @@ private struct PostEditContentView: View {
             HStack {
                 Text("사진 첨부")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text(limitText)
                     .font(.caption.weight(.bold))
@@ -128,7 +129,7 @@ private struct PostEditContentView: View {
             }
             Text("사진은 최대 \(uiState.imageMaxCount)장까지 첨부할 수 있습니다.")
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -201,13 +202,13 @@ private struct PostEditContentView: View {
         } label: {
             HStack(spacing: 8) {
                 if uiState.isSubmitting {
-                    ProgressView().tint(Color(hex: "2B2330"))
+                    ProgressView().tint(.primary)
                 } else {
                     Image(systemName: uiState.isEditMode ? "checkmark.circle" : "square.and.pencil")
                 }
                 Text(uiState.isEditMode ? "저장하기" : "등록하기").fontWeight(.bold)
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
@@ -220,11 +221,7 @@ private struct PostEditContentView: View {
         .buttonStyle(.plain)
         .disabled(!uiState.canSubmit || uiState.isSubmitting)
         .padding(16)
-        .background(
-            UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
-                : Color.white.opacity(0.92)
-        )
+        .background(Color(uiColor: .secondarySystemBackground).opacity(0.96))
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))

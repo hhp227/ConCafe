@@ -25,7 +25,7 @@ fun ConCafeCastCard(
     modifier: Modifier = Modifier,
     imageHeight: Dp = 130.dp,
     subtitleMaxLines: Int = 1,
-    containerColor: Color = colorFromHex("FFF9FC"),
+    containerColor: Color? = null,
     containerCornerRadius: Dp = 18.dp,
     imageCornerRadius: Dp = 16.dp,
     contentPadding: Dp = 10.dp,
@@ -36,11 +36,12 @@ fun ConCafeCastCard(
     onClick: () -> Unit
 ) {
     val statusText = attendanceStatusText ?: if (isWorking) "출근중" else null
+    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surface
 
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(containerCornerRadius))
-            .background(containerColor)
+            .background(resolvedContainerColor)
             .clickable(onClick = onClick)
     ) {
         Box(
