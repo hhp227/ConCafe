@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -63,13 +65,17 @@ import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
 import concafe.composeapp.generated.resources.cafe_error_retry_prompt
 import concafe.composeapp.generated.resources.cafeevent_go_to_cafe
 import concafe.composeapp.generated.resources.cafeevent_like_count
 import concafe.composeapp.generated.resources.cafeevent_live_performance_badge
 import concafe.composeapp.generated.resources.cafeevent_section_participating_cast
+import concafe.composeapp.generated.resources.common_cancel
 import concafe.composeapp.generated.resources.noticeevent_info_event_load_failed
 import concafe.composeapp.generated.resources.noticeevent_validation_event_required
+import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -113,6 +119,23 @@ fun CafeEventScreen(
         showCafeButton = showCafeButton,
         onAction = viewModel::onAction
     )
+    if (uiState.isLoginPromptVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CafeEventAction.DismissLoginPrompt) },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CafeEventAction.ClickLoginPromptSignIn) }) {
+                    Text(stringResource(Res.string.signin_submit))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(CafeEventAction.DismissLoginPrompt) }) {
+                    Text(stringResource(Res.string.common_cancel))
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
