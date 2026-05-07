@@ -114,7 +114,7 @@ class GetHomeFeedUseCase(
             ?.distinct()
             .orEmpty()
         val cafeNameById = nearbyCafeNameById + popularCastCafeNames
-        val ongoingCafeEvents = runCatching {
+        val displayableCafeEvents = runCatching {
             val candidateCafeIds = (
                 (nearbyCafePage?.items?.map { cafe -> cafe.id } ?: emptyList()) + popularCastCafeIds
             ).distinct().take(HOME_EVENT_SOURCE_CAFE_LIMIT)
@@ -126,7 +126,7 @@ class GetHomeFeedUseCase(
                     cursor = null,
                     pageSize = HOME_EVENT_PAGE_SIZE
                 ).items
-                    .filter { item -> item.isOngoingEvent() }
+                    .filter { item -> item.isDisplayableHomeEvent() }
                     .map { item ->
                         item.toHomeCafeEvent(cafeNameById[cafeId] ?: cafeId)
                     }
@@ -147,7 +147,7 @@ class GetHomeFeedUseCase(
                 hasMoreNearbyCafes = nearbyCafePage?.hasNext == true,
                 birthdayCasts = birthdayCastsResult.getOrElse { emptyList() },
                 notices = noticesResult.getOrElse { emptyList() },
-                cafeEvents = ongoingCafeEvents
+                cafeEvents = displayableCafeEvents
             )
         )
     }
@@ -173,8 +173,13 @@ private fun CafeEventManagementItem.toHomeCafeEvent(cafeName: String): HomeCafeE
     )
 }
 
-private fun CafeEventManagementItem.isOngoingEvent(): Boolean {
+private fun CafeEventManagementItem.isDisplayableHomeEvent(): Boolean {
     val normalized = statusLabel.trim().lowercase()
-    val isOngoingLabel = normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing")
-    return isOngoingLabel && !isDimmed
+    val isVisibleStatusLabel = normalized.contains("진행 중") ||
+        normalized.contains("진행중") ||
+        normalized.contains("ongoing") ||
+        normalized.contains("예정") ||
+        normalized.contains("upcoming") ||
+        normalized.contains("scheduled")
+    return isVisibleStatusLabel && !isDimmed
 }

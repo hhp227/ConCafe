@@ -904,8 +904,8 @@ private fun DashboardMetricGrid(
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = stringResource(Res.string.dashboard_metric_today_review),
-                value = cafe.todayReviews.toString(),
+                title = stringResource(Res.string.dashboard_metric_follower),
+                value = cafe.followerCount.toString(),
                 accent = colorFromHex("47A88B")
             )
             DashboardMetricCard(

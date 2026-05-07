@@ -1751,7 +1751,10 @@ abstract class FirestoreBaseDataSource(
                     current = tableFields?.getFirestoreInt("current") ?: 0,
                     total = tableFields?.getFirestoreInt("total") ?: 0
                 )
-            }
+            },
+            favoriteCount = fields.getFirestoreLong("favoriteCount")?.toInt()
+                ?: fields.getFirestoreLong("followerCount")?.toInt()
+                ?: 0
         )
     }
 

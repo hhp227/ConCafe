@@ -29,7 +29,7 @@ class FakeCafeDashboardRepository(
             name = cafe.name,
             city = cafe.region.city,
             todayCheckIns = dataSource.cafeTodayCheckInCountById[cafe.id] ?: 0,
-            todayReviews = dataSource.cafeTodayReviewCountById[cafe.id] ?: 0,
+            followerCount = cafe.favoriteCount,
             rating = cafe.ratingAvg,
             castPreviews = castPreviews,
             homeBannerPreview = homeBannerPreview

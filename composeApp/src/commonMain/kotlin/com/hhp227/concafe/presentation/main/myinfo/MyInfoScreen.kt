@@ -3,7 +3,6 @@ package com.hhp227.concafe.presentation.main.myinfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -199,7 +198,7 @@ private fun GuestMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -281,7 +280,7 @@ private fun GuestMyInfoScreen(
                             Text(
                                 feature.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 3,
                                 overflow = TextOverflow.Clip
                             )
@@ -383,7 +382,11 @@ private fun GuestMyInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("✨", style = MaterialTheme.typography.headlineMedium)
-                    Text(stringResource(Res.string.myinfo_guest_start_title), fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(Res.string.myinfo_guest_start_title),
+                        color = colorFromHex("2B2330"),
+                        fontWeight = FontWeight.Bold
+                    )
                     Text(
                         stringResource(Res.string.myinfo_guest_start_subtitle),
                         style = MaterialTheme.typography.bodySmall,
@@ -420,7 +423,7 @@ private fun MyInfoSectionTitle(
         modifier = modifier,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = colorFromHex("2B2330")
+        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
@@ -464,7 +467,7 @@ private fun ProfileMyInfoScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -490,7 +493,11 @@ private fun ProfileMyInfoScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 MyInfoSectionTitle(stringResource(Res.string.myinfo_profile_section_badges))
-                Text("${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "${uiState.badges.count { it.unlocked }} / ${uiState.badges.size}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Row(
                 modifier = Modifier
@@ -546,7 +553,12 @@ private fun ProfileMyInfoScreen(
                                     )
                                 }
                             }
-                            Text(cafe.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(
+                                cafe.name,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
@@ -634,7 +646,11 @@ private fun ProfileMyInfoScreen(
                                         )
                                     }
                                 }
-                                Text(maid.name, style = MaterialTheme.typography.bodySmall)
+                                Text(
+                                    maid.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
                     }
@@ -859,7 +875,12 @@ private fun BadgeItem(badge: ProfileBadge) {
             ) {
                 Text(badge.icon)
             }
-            Text(badge.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+            Text(
+                badge.name,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
         }
         if (showTooltip) {
             Popup(

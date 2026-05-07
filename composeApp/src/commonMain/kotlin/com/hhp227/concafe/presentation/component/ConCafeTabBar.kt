@@ -7,7 +7,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
@@ -21,7 +20,7 @@ fun ConCafeTabBar(
     TabRow(
         selectedTabIndex = selectedIndex,
         modifier = modifier,
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = MaterialTheme.colorScheme.background,
         contentColor = colorFromHex("EF6797"),
         indicator = { tabPositions ->
             TabRowDefaults.Indicator(
@@ -38,7 +37,7 @@ fun ConCafeTabBar(
                 text = {
                     Text(
                         text = label,
-                        color = if (index == selectedIndex) colorFromHex("EF6797") else colorFromHex("777777"),
+                        color = if (index == selectedIndex) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (index == selectedIndex) FontWeight.Bold else FontWeight.Normal,
                         style = MaterialTheme.typography.bodyMedium
                     )

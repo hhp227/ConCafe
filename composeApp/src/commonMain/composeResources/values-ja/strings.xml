@@ -880,7 +880,7 @@
     <string name="dashboard_section_metrics_title">運営ダッシュボード</string>
     <string name="dashboard_section_metrics_subtitle">本日時点の主要指標</string>
     <string name="dashboard_metric_today_checkin">本日のチェックイン</string>
-    <string name="dashboard_metric_today_review">本日のレビュー</string>
+    <string name="dashboard_metric_follower">フォロワー</string>
     <string name="dashboard_metric_rating">評価</string>
     <string name="dashboard_metric_table_count">テーブル数</string>
     <string name="dashboard_metric_checkin_qr">チェックインQR</string>

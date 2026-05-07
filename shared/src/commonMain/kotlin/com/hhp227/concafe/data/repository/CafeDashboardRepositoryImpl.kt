@@ -50,7 +50,7 @@ class CafeDashboardRepositoryImpl(
             name = cafe.name,
             city = cafe.region.city,
             todayCheckIns = cafeRemoteDataSource.fetchCafeTodayCheckInCount(cafe.id),
-            todayReviews = cafeRemoteDataSource.fetchCafeTodayReviewCount(cafe.id),
+            followerCount = cafe.favoriteCount,
             rating = cafe.ratingAvg,
             castPreviews = castPreviews,
             homeBannerPreview = homeBannerPreview,

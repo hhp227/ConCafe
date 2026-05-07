@@ -86,7 +86,7 @@ struct PostDetailView: View {
             }
         } label: {
             Image(systemName: "ellipsis.circle")
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
         }
         .disabled(!isVisible)
         .opacity(isVisible ? 1 : 0)
@@ -116,14 +116,14 @@ private struct PostDetailContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if uiState.post == nil {
                 Text("게시글을 불러오지 못했습니다.")
-                    .foregroundStyle(Color(hex: "8C7E87"))
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 mainContent
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .systemGroupedBackground))
         .sheet(isPresented: Binding(
             get: { uiState.editingCommentId != nil },
             set: { if !$0 { onAction(.dismissEditComment) } }
@@ -187,11 +187,11 @@ private struct PostDetailContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("댓글 수정")
                 .font(.headline)
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             TextEditor(text: $localEditText)
                 .frame(minHeight: 80, maxHeight: 160)
                 .padding(8)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: .secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -206,7 +206,7 @@ private struct PostDetailContentView: View {
                 Button("취소") {
                     onAction(.dismissEditComment)
                 }
-                .foregroundStyle(Color(hex: "8C7E87"))
+                .foregroundStyle(.secondary)
                 Button {
                     onAction(.confirmEditComment(content: localEditText))
                 } label: {
@@ -282,10 +282,10 @@ private struct PostDetailContentView: View {
             HStack(spacing: 6) {
                 Image(systemName: "bubble.left")
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "B1A3AC"))
+                    .foregroundStyle(.secondary)
                 Text("댓글 \(uiState.commentCount)")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -307,7 +307,7 @@ private struct PostDetailContentView: View {
                     } label: {
                         Text("이전 댓글 더보기")
                             .font(.system(size: 13))
-                            .foregroundStyle(Color(hex: "8C7E87"))
+                            .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                     }
@@ -341,7 +341,7 @@ private struct PostDetailContentView: View {
                 .font(.system(size: 14))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: .secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -369,7 +369,7 @@ private struct PostDetailContentView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemBackground))
             .compatSafeAreaBottomPadding()
         }
         .frame(maxWidth: .infinity)
@@ -402,23 +402,23 @@ private struct PostBodyView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(post.userNickname.isEmpty ? "익명" : post.userNickname)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                     Text(post.displayDate)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
             Text(post.title)
                 .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
             if !post.content.isEmpty {
                 Text(post.content)
                     .font(.system(size: 15))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(.secondary)
                     .lineSpacing(6)
                     .padding(.horizontal, 16)
                     .padding(.top, 10)
@@ -450,20 +450,20 @@ private struct PostBodyView: View {
                     HStack(spacing: 4) {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
                             .font(.system(size: 16))
-                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : Color(hex: "B1A3AC"))
+                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
                         Text("좋아요 \(post.likeCount)")
                             .font(.system(size: 13))
-                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : Color(hex: "8C7E87"))
+                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
                     }
                 }
                 .buttonStyle(.plain)
                 HStack(spacing: 4) {
                     Image(systemName: "bubble.left")
                         .font(.system(size: 15))
-                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .foregroundStyle(.secondary)
                     Text("댓글 \(post.commentCount)")
                         .font(.system(size: 13))
-                        .foregroundStyle(Color(hex: "8C7E87"))
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 16)
@@ -471,7 +471,7 @@ private struct PostBodyView: View {
             .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemBackground))
     }
 }
 
@@ -502,11 +502,11 @@ private struct CommentItemView: View {
                     }
                 Text(comment.userNickname.isEmpty ? "익명" : comment.userNickname)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 Text(comment.displayDate)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "B1A3AC"))
+                    .foregroundStyle(.secondary)
                 Menu {
                     if isMine {
                         Button("수정", action: onEdit)
@@ -524,14 +524,14 @@ private struct CommentItemView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .foregroundStyle(.secondary)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
             }
             Text(comment.content)
                 .font(.system(size: 14))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
                 .lineSpacing(4)
                 .padding(.leading, 36)
         }

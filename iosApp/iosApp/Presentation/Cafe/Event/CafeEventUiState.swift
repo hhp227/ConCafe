@@ -16,6 +16,8 @@ struct CafeEventUiState {
     var isLikedByMe: Bool = false
     var likeCount: Int = 0
     var isTogglingLike: Bool = false
+    var isLoggedIn: Bool = false
+    var isLoginPromptVisible: Bool = false
 
     static let empty = CafeEventUiState()
 }

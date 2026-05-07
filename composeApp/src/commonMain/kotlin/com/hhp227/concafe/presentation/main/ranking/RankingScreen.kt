@@ -103,7 +103,7 @@ private fun RankingContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

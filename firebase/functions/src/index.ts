@@ -1349,6 +1349,30 @@ async function syncUserFavoriteCountAggregate(userId: string, delta: number): Pr
   });
 }
 
+async function syncCafeFavoriteCountAggregate(cafeId: string, delta: number): Promise<void> {
+  if (cafeId.length == 0 || delta == 0) {
+    return;
+  }
+  const cafeRef = db().collection("cafes").doc(cafeId);
+
+  await db().runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(cafeRef);
+    const cafeData = snapshot.data();
+    const currentFavoriteCount = asNonNegativeInt(cafeData?.favoriteCount)
+      ?? asNonNegativeInt(cafeData?.followerCount)
+      ?? 0;
+    const nextFavoriteCount = Math.max(0, currentFavoriteCount + delta);
+
+    transaction.set(
+      cafeRef,
+      {
+        favoriteCount: nextFavoriteCount,
+      },
+      {merge: true}
+    );
+  });
+}
+
 async function applyUserStampCountDelta(userId: string, delta: number): Promise<void> {
   if (userId.length == 0 || delta == 0) {
     return;
@@ -3374,7 +3398,10 @@ export const onCafeFavoriteWrittenSyncUserFavoriteStats = onDocumentWritten(
     const afterData = event.data?.after.data() as CafeFavoriteLike | undefined;
     const beforeUserId = asNonBlankString(beforeData?.userId);
     const afterUserId = asNonBlankString(afterData?.userId);
+    const beforeCafeId = asNonBlankString(beforeData?.cafeId);
+    const afterCafeId = asNonBlankString(afterData?.cafeId);
     const deltaByUserId = new Map<string, number>();
+    const deltaByCafeId = new Map<string, number>();
 
     if (beforeUserId != null) {
       deltaByUserId.set(beforeUserId, (deltaByUserId.get(beforeUserId) ?? 0) - 1);
@@ -3382,20 +3409,34 @@ export const onCafeFavoriteWrittenSyncUserFavoriteStats = onDocumentWritten(
     if (afterUserId != null) {
       deltaByUserId.set(afterUserId, (deltaByUserId.get(afterUserId) ?? 0) + 1);
     }
+    if (beforeCafeId != null) {
+      deltaByCafeId.set(beforeCafeId, (deltaByCafeId.get(beforeCafeId) ?? 0) - 1);
+    }
+    if (afterCafeId != null) {
+      deltaByCafeId.set(afterCafeId, (deltaByCafeId.get(afterCafeId) ?? 0) + 1);
+    }
 
-    const targetEntries = Array.from(deltaByUserId.entries())
+    const targetUserEntries = Array.from(deltaByUserId.entries())
       .filter(([userId, delta]) => userId.length > 0 && delta != 0);
-    if (targetEntries.length == 0) {
+    const targetCafeEntries = Array.from(deltaByCafeId.entries())
+      .filter(([cafeId, delta]) => cafeId.length > 0 && delta != 0);
+    if (targetUserEntries.length == 0 && targetCafeEntries.length == 0) {
       return;
     }
 
-    await Promise.all(targetEntries.map(async ([userId, delta]) => {
-      await syncUserFavoriteCountAggregate(userId, delta);
-    }));
+    await Promise.all([
+      ...targetUserEntries.map(async ([userId, delta]) => {
+        await syncUserFavoriteCountAggregate(userId, delta);
+      }),
+      ...targetCafeEntries.map(async ([cafeId, delta]) => {
+        await syncCafeFavoriteCountAggregate(cafeId, delta);
+      }),
+    ]);
 
-    logger.info("Synced user favoritesCount aggregate from favorite write.", {
+    logger.info("Synced favorite aggregates from favorite write.", {
       favoriteId: event.params.favoriteId,
-      targets: targetEntries.map(([userId, delta]) => ({userId, delta})),
+      userTargets: targetUserEntries.map(([userId, delta]) => ({userId, delta})),
+      cafeTargets: targetCafeEntries.map(([cafeId, delta]) => ({cafeId, delta})),
     });
   }
 );

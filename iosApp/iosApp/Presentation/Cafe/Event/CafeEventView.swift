@@ -30,6 +30,26 @@ struct CafeEventView: View {
             onAction: viewModel.onAction
         )
         .compatNavigationBarStyle(.transparentScrollEdge)
+        .alert(
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
+            isPresented: Binding(
+                get: { viewModel.uiState.isLoginPromptVisible },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.onAction(.dismissLoginPrompt)
+                    }
+                }
+            )
+        ) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
+                viewModel.onAction(.dismissLoginPrompt)
+            }
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
+                viewModel.onAction(.loginPromptSignInTapped)
+            }
+        } message: {
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:

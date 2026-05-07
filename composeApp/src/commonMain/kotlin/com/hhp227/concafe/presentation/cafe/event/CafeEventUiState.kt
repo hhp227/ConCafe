@@ -10,7 +10,9 @@ data class CafeEventUiState(
     val participantCasts: List<Cast> = emptyList(),
     val isLikedByMe: Boolean = false,
     val likeCount: Int = 0,
-    val isTogglingLike: Boolean = false
+    val isTogglingLike: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val isLoginPromptVisible: Boolean = false
 ) {
     companion object {
         fun empty() = CafeEventUiState()

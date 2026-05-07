@@ -10161,24 +10161,24 @@
         }
       }
     },
-    "dashboard_metric_today_review" : {
+    "dashboard_metric_follower" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Today's Reviews"
+            "value" : "Followers"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本日のレビュー"
+            "value" : "フォロワー"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오늘 리뷰"
+            "value" : "팔로워"
           }
         }
       }

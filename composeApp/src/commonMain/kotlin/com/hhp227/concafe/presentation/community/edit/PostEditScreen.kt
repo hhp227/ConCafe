@@ -78,10 +78,10 @@ private fun PostEditContentScreen(
 ) {
     val pink = colorFromHex("EF6797")
     val softPink = colorFromHex("FFD1DC")
-    val textColor = colorFromHex("2B2330")
+    val textColor = MaterialTheme.colorScheme.onSurface
 
     Scaffold(
-        containerColor = colorFromHex("F8F5F6"),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -115,13 +115,13 @@ private fun PostEditContentScreen(
                         } else {
                             Text(
                                 text = if (uiState.isEditMode) "저장" else stringResource(Res.string.post_edit_submit),
-                                color = if (uiState.canSubmit) pink else colorFromHex("B1A3AC"),
+                                color = if (uiState.canSubmit) pink else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { innerPadding ->
@@ -202,7 +202,7 @@ private fun ImageSection(
                 text = stringResource(Res.string.post_edit_image_label),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = colorFromHex("665A63")
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = stringResource(Res.string.post_edit_image_limit, imageUrls.size, imageMaxCount),
@@ -263,7 +263,7 @@ private fun ImageSection(
         Text(
             text = stringResource(Res.string.post_edit_image_guide, imageMaxCount),
             fontSize = 12.sp,
-            color = colorFromHex("8A8088")
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

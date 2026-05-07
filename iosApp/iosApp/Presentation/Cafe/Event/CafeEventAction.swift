@@ -13,4 +13,6 @@ enum CafeEventAction {
     case toggleLike
     case goToCafe
     case castTapped(id: String)
+    case loginPromptSignInTapped
+    case dismissLoginPrompt
 }

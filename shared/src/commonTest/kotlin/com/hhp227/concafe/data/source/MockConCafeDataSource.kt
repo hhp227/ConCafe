@@ -206,7 +206,8 @@ class MockConCafeDataSource : ConCafeDataSource {
             ratingAvg = 4.8,
             reviewCount = 221,
             approved = true,
-            conceptType = "MAID"
+            conceptType = "MAID",
+            favoriteCount = 1
         ),
         Cafe(
             id = "cafe-2",

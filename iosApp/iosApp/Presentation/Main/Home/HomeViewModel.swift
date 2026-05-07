@@ -65,7 +65,7 @@ final class HomeViewModel: ObservableObject {
                             isLoadingMoreNearbyCafes: false,
                             birthdayCasts: feed.birthdayCasts,
                             notices: feed.notices,
-                            cafeEvents: Array(feed.cafeEvents.filter { isOngoingCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents)),
+                            cafeEvents: Array(feed.cafeEvents.filter { isDisplayableCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents)),
                             communityPosts: uiState.communityPosts
                         )
                     } else {
@@ -683,7 +683,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func toHomeCafeEvent(_ event: Shared.CafeEventManagementItem) -> Shared.HomeCafeEvent? {
-        if !isOngoingCafeEvent(event.statusLabel) || event.isDimmed {
+        if !isDisplayableCafeEvent(event.statusLabel) || event.isDimmed {
             return nil
         }
         let cafeName = uiState.nearbyCafes.first(where: { $0.id == event.cafeId })?.name
@@ -701,9 +701,14 @@ final class HomeViewModel: ObservableObject {
         )
     }
 
-    private func isOngoingCafeEvent(_ statusLabel: String) -> Bool {
+    private func isDisplayableCafeEvent(_ statusLabel: String) -> Bool {
         let normalized = statusLabel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing")
+        return normalized.contains("진행 중") ||
+            normalized.contains("진행중") ||
+            normalized.contains("ongoing") ||
+            normalized.contains("예정") ||
+            normalized.contains("upcoming") ||
+            normalized.contains("scheduled")
     }
 
     private func requireSignedIn(onAuthenticated: @escaping () -> Void) {

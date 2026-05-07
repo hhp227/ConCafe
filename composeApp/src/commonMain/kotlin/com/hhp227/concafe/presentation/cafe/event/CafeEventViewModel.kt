@@ -10,6 +10,7 @@ import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
+import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCafeEventLikeUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -28,7 +29,8 @@ class CafeEventViewModel(
     private val cafeEventEventPublisher: CafeEventEventPublisher,
     private val getCafeEventLikeStatusUseCase: GetCafeEventLikeStatusUseCase,
     private val toggleCafeEventLikeUseCase: ToggleCafeEventLikeUseCase,
-    private val getCafeEventParticipantCastsUseCase: GetCafeEventParticipantCastsUseCase
+    private val getCafeEventParticipantCastsUseCase: GetCafeEventParticipantCastsUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeEventUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -117,6 +119,28 @@ class CafeEventViewModel(
         }
     }
 
+    private fun observeSession() {
+        jobs[JobKey.OBSERVE_SESSION]?.cancel()
+        jobs[JobKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun requireSignedIn(onAuthenticated: suspend () -> Unit) {
+        if (_uiState.value.isLoggedIn) {
+            onAuthenticated()
+        } else {
+            _uiState.update { it.copy(isLoginPromptVisible = true) }
+        }
+    }
+
     private fun toggleLike() {
         if (_uiState.value.isTogglingLike) return
         jobs[JobKey.TOGGLE_LIKE]?.cancel()
@@ -146,13 +170,25 @@ class CafeEventViewModel(
                 CafeEventAction.ClickBack -> _event.emit(CafeEventEvent.NavigateBack)
                 CafeEventAction.Retry -> loadEvent()
                 CafeEventAction.ToggleLike -> toggleLike()
-                CafeEventAction.GoToCafe -> _event.emit(CafeEventEvent.NavigateToCafe)
-                is CafeEventAction.ClickCast -> _event.emit(CafeEventEvent.NavigateToCast(action.castId))
+                CafeEventAction.GoToCafe -> requireSignedIn {
+                    _event.emit(CafeEventEvent.NavigateToCafe)
+                }
+                is CafeEventAction.ClickCast -> requireSignedIn {
+                    _event.emit(CafeEventEvent.NavigateToCast(action.castId))
+                }
+                CafeEventAction.ClickLoginPromptSignIn -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                    _event.emit(CafeEventEvent.NavigateToSignIn)
+                }
+                CafeEventAction.DismissLoginPrompt -> {
+                    _uiState.update { it.copy(isLoginPromptVisible = false) }
+                }
             }
         }
     }
 
     init {
+        observeSession()
         observeCafeEventEvent()
         loadEvent()
     }
@@ -166,6 +202,7 @@ class CafeEventViewModel(
     private enum class JobKey {
         LOAD_EVENT,
         OBSERVE_EVENT,
+        OBSERVE_SESSION,
         TOGGLE_LIKE
     }
 

@@ -133,7 +133,7 @@ fun ExploreContentScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         val gridColumnCount = exploreGridColumnCount(maxWidth)
         val rows = remember(uiState.selectedTab, uiState.cafes, uiState.maids, gridColumnCount) {
@@ -200,7 +200,7 @@ fun ExploreContentScreen(
             }
             stickyHeader {
                 Surface(
-                    color = colorFromHex("FFFBFD"),
+                    color = MaterialTheme.colorScheme.background,
                     modifier = Modifier
                         .fillMaxWidth()
                         .zIndex(1f)

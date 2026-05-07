@@ -3,7 +3,6 @@ package com.hhp227.concafe.presentation.cast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -133,9 +132,8 @@ private fun CastContentScreen(
                 summaryOffset <= with(LocalDensity.current) { SummaryTitleTriggerOffset.roundToPx() }
             } == true)
         )
-
     Scaffold(
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -170,7 +168,7 @@ private fun CastContentScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(colorFromHex("FFFBFD")),
+                        .background(MaterialTheme.colorScheme.background),
                     contentPadding = PaddingValues(
                         bottom = innerPadding.calculateBottomPadding() + 28.dp
                     ),
@@ -409,7 +407,7 @@ private fun CastSummarySection(
                             text = detail.cast.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         if (!detail.cast.linkedUserId.isNullOrBlank()) {
                             Icon(
@@ -442,12 +440,12 @@ private fun CastSummarySection(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = "${detail.cafe.name} · ${detail.cafe.region.city}",
-                            color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
@@ -611,7 +609,7 @@ private fun CastScheduleCard(
             Text(
                 text = dayLabel,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isWorking) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(if (isWorking) {
@@ -620,7 +618,7 @@ private fun CastScheduleCard(
                     Res.string.cast_schedule_off
                 }),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isWorking) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -646,7 +644,7 @@ private fun CastIntroductionSection(detail: CastDetail) {
         ) {
             Text(
                 text = detail.cast.desc,
-                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(18.dp),
                 lineHeight = 22.sp
             )
@@ -718,7 +716,7 @@ private fun CastActivityCard(
             )
             Text(
                 text = label,
-                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -778,7 +776,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                 }
                                 Text(
                                     text = review.createdDateLabel,
-                                    color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                             }
@@ -799,7 +797,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                             }
                             Text(
                                 text = review.content,
-                                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -826,11 +824,11 @@ private fun CastRecentReviewEmptyView() {
             Text(
                 text = stringResource(Res.string.cast_tagged_reviews_empty_title),
                 fontWeight = FontWeight.SemiBold,
-                color = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(Res.string.cast_tagged_reviews_empty_desc),
-                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -857,7 +855,7 @@ private fun CastStatItem(
         ) {
             Text(
                 text = label,
-                color = if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
             Text(

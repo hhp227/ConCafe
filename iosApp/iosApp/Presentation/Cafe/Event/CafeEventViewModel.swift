@@ -26,6 +26,8 @@ class CafeEventViewModel: ObservableObject {
 
     private let getCafeEventParticipantCastsUseCase: GetCafeEventParticipantCastsUseCase
 
+    private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+
     @Published private(set) var uiState = CafeEventUiState.empty
 
     let event = PassthroughSubject<CafeEventEvent, Never>()
@@ -118,6 +120,30 @@ class CafeEventViewModel: ObservableObject {
         }
     }
 
+    private func observeSession() {
+        tasks[.observeSession]?.cancel()
+        tasks[.observeSession] = Task {
+            do {
+                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    uiState.isLoggedIn = user != nil
+                    if user != nil {
+                        uiState.isLoginPromptVisible = false
+                    }
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    private func requireSignedIn(onAuthenticated: () -> Void) {
+        if uiState.isLoggedIn {
+            onAuthenticated()
+        } else {
+            uiState.isLoginPromptVisible = true
+        }
+    }
+
     private func loadParticipantCasts(_ castIds: [String]) async -> [Cast] {
         do {
             let result = try await getCafeEventParticipantCastsUseCase.invoke(castIds: castIds)
@@ -170,9 +196,18 @@ class CafeEventViewModel: ObservableObject {
         case .toggleLike:
             toggleLike()
         case .goToCafe:
-            event.send(.navigateToCafe)
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCafe)
+            }
         case .castTapped(let id):
-            event.send(.navigateToCast(id: id))
+            requireSignedIn { [weak self] in
+                self?.event.send(.navigateToCast(id: id))
+            }
+        case .loginPromptSignInTapped:
+            uiState.isLoginPromptVisible = false
+            event.send(.navigateToSignIn)
+        case .dismissLoginPrompt:
+            uiState.isLoginPromptVisible = false
         }
     }
 
@@ -183,7 +218,8 @@ class CafeEventViewModel: ObservableObject {
         cafeEventEventPublisher: CafeEventEventPublisher = KoinInitializerKt.resolveCafeEventEventPublisher(),
         getCafeEventLikeStatusUseCase: GetCafeEventLikeStatusUseCase = KoinInitializerKt.resolveGetCafeEventLikeStatusUseCase(),
         toggleCafeEventLikeUseCase: ToggleCafeEventLikeUseCase = KoinInitializerKt.resolveToggleCafeEventLikeUseCase(),
-        getCafeEventParticipantCastsUseCase: GetCafeEventParticipantCastsUseCase = KoinInitializerKt.resolveGetCafeEventParticipantCastsUseCase()
+        getCafeEventParticipantCastsUseCase: GetCafeEventParticipantCastsUseCase = KoinInitializerKt.resolveGetCafeEventParticipantCastsUseCase(),
+        observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase()
     ) {
         self.cafeId = cafeId
         self.eventId = eventId
@@ -192,7 +228,9 @@ class CafeEventViewModel: ObservableObject {
         self.getCafeEventLikeStatusUseCase = getCafeEventLikeStatusUseCase
         self.toggleCafeEventLikeUseCase = toggleCafeEventLikeUseCase
         self.getCafeEventParticipantCastsUseCase = getCafeEventParticipantCastsUseCase
+        self.observeCurrentUserUseCase = observeCurrentUserUseCase
 
+        observeSession()
         observeCafeEventEvent()
         loadEvent()
     }
@@ -205,6 +243,7 @@ class CafeEventViewModel: ObservableObject {
     private enum TaskKey {
         case loadEvent
         case observeEvent
+        case observeSession
         case toggleLike
     }
 

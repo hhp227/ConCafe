@@ -95,10 +95,24 @@ class FakeCafeRepository(
         val set = dataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
         return if (set.contains(cafeId)) {
             set.remove(cafeId)
+            dataSource.favoriteUserIdsByCafeId[cafeId]?.remove(userId)
+            patchCafeFavoriteCount(cafeId = cafeId, delta = -1)
             false
         } else {
             set.add(cafeId)
+            dataSource.favoriteUserIdsByCafeId.getOrPut(cafeId) { mutableSetOf() }.add(userId)
+            patchCafeFavoriteCount(cafeId = cafeId, delta = 1)
             true
+        }
+    }
+
+    private fun patchCafeFavoriteCount(cafeId: String, delta: Int) {
+        dataSource.cafes.replaceAll { cafe ->
+            if (cafe.id == cafeId) {
+                cafe.copy(favoriteCount = (cafe.favoriteCount + delta).coerceAtLeast(0))
+            } else {
+                cafe
+            }
         }
     }
 
