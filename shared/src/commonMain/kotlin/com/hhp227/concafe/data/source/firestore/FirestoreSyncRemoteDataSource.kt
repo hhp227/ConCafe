@@ -404,7 +404,8 @@ class FirestoreSyncRemoteDataSource(
                 "createdAt" to firestoreString(now),
                 "updatedAt" to firestoreString(now),
                 "ratingAvg" to firestoreLong(0),
-                "reviewCount" to firestoreLong(0)
+                "reviewCount" to firestoreLong(0),
+                "favoriteCount" to firestoreLong(0)
             )
         )
         restApi.patch(path = path, body = body, idToken = idToken)

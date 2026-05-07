@@ -13,7 +13,8 @@ data class Cafe(
     val ownerIds: List<String> = emptyList(),
     val socialMedia: Map<String, String> = emptyMap(),
     val reservationUrl: String? = null,
-    val tableCounts: TableCounts = TableCounts()
+    val tableCounts: TableCounts = TableCounts(),
+    val favoriteCount: Int = 0
 )
 
 data class TableCounts(

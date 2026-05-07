@@ -898,7 +898,7 @@
     <string name="dashboard_section_metrics_title">Operations Dashboard</string>
     <string name="dashboard_section_metrics_subtitle">Key metrics as of today</string>
     <string name="dashboard_metric_today_checkin">Today&#39;s Check-ins</string>
-    <string name="dashboard_metric_today_review">Today&#39;s Reviews</string>
+    <string name="dashboard_metric_follower">Followers</string>
     <string name="dashboard_metric_rating">Rating</string>
     <string name="dashboard_metric_table_count">Tables</string>
     <string name="dashboard_metric_checkin_qr">Check-In QR</string>

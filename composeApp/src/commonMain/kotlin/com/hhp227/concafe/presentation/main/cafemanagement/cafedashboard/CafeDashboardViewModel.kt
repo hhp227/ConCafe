@@ -598,7 +598,9 @@ class CafeDashboardViewModel(
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         patchCafeInfo(event.cafe)
                     }
-                    is CafeDetailEvent.FavoriteToggled -> Unit
+                    is CafeDetailEvent.FavoriteToggled -> if (event.cafeId == cafeId) {
+                        patchFollowerCount(isFavorite = event.isFavorite)
+                    }
                     is CafeDetailEvent.MenuCreated,
                     is CafeDetailEvent.MenuUpdated,
                     is CafeDetailEvent.MenuDeleted,
@@ -663,6 +665,21 @@ class CafeDashboardViewModel(
                     city = cafe.region.city,
                     rating = cafe.ratingAvg
                 )
+            )
+        }
+    }
+
+    private fun patchFollowerCount(isFavorite: Boolean) {
+        _uiState.update { state ->
+            state.copy(
+                cafe = state.cafe?.let { cafe ->
+                    val nextCount = if (isFavorite) {
+                        cafe.followerCount + 1
+                    } else {
+                        (cafe.followerCount - 1).coerceAtLeast(0)
+                    }
+                    cafe.copy(followerCount = nextCount)
+                }
             )
         }
     }

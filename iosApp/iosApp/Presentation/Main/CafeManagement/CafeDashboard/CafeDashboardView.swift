@@ -274,7 +274,7 @@ private struct CafeDashboardContentView: View {
             )
             HStack(spacing: 12) {
                 dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_checkin"), table: "Localizable"), value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
-                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_review"), table: "Localizable"), value: "\(cafe.todayReviews)", accent: Color(hex: "47A88B"))
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_follower"), table: "Localizable"), value: "\(cafe.followerCount)", accent: Color(hex: "47A88B"))
                 dashboardMetricCard(
                     title: String(localized: String.LocalizationValue("dashboard_metric_table_count"), table: "Localizable"),
                     value: "\(cafe.tableCounts.current)/\(cafe.tableCounts.total)",

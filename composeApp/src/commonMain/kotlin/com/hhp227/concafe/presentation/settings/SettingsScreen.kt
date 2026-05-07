@@ -121,7 +121,7 @@ private fun SettingsContentScreen(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 16.dp,
             end = 16.dp,
-            bottom = 24.dp
+            bottom = innerPadding.calculateBottomPadding() + 24.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

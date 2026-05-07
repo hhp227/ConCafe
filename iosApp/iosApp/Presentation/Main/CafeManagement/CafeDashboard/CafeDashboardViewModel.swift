@@ -371,7 +371,7 @@ final class CafeDashboardViewModel: ObservableObject {
                             name: cafeCurrent.name,
                             city: cafeCurrent.city,
                             todayCheckIns: cafeCurrent.todayCheckIns,
-                            todayReviews: cafeCurrent.todayReviews,
+                            followerCount: cafeCurrent.followerCount,
                             rating: cafeCurrent.rating,
                             castPreviews: cafeCurrent.castPreviews,
                             homeBannerPreview: cafeCurrent.homeBannerPreview,
@@ -414,7 +414,7 @@ final class CafeDashboardViewModel: ObservableObject {
                             name: current.name,
                             city: current.city,
                             todayCheckIns: current.todayCheckIns,
-                            todayReviews: current.todayReviews,
+                            followerCount: current.followerCount,
                             rating: current.rating,
                             castPreviews: current.castPreviews,
                             homeBannerPreview: current.homeBannerPreview,
@@ -546,6 +546,10 @@ final class CafeDashboardViewModel: ObservableObject {
                         if updated.cafeId == self.cafeId {
                             self.patchCafeInfo(updated.cafe)
                         }
+                    case let favorite as CafeDetailEvent.FavoriteToggled:
+                        if favorite.cafeId == self.cafeId {
+                            self.patchFollowerCount(isFavorite: favorite.isFavorite)
+                        }
                     case is CafeDetailEvent.MenuCreated,
                          is CafeDetailEvent.MenuUpdated,
                          is CafeDetailEvent.MenuDeleted,
@@ -599,7 +603,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 name: current.name,
                 city: current.city,
                 todayCheckIns: current.todayCheckIns,
-                todayReviews: current.todayReviews,
+                followerCount: current.followerCount,
                 rating: current.rating,
                 castPreviews: current.castPreviews,
                 homeBannerPreview: CafeDashboardData.HomeBannerPreview(
@@ -622,8 +626,28 @@ final class CafeDashboardViewModel: ObservableObject {
             name: cafe.name,
             city: cafe.region.city,
             todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
+            followerCount: current.followerCount,
             rating: cafe.ratingAvg,
+            castPreviews: current.castPreviews,
+            homeBannerPreview: current.homeBannerPreview,
+            socialMedia: current.socialMedia,
+            reservationUrl: current.reservationUrl,
+            tableCounts: current.tableCounts
+        )
+    }
+
+    private func patchFollowerCount(isFavorite: Bool) {
+        guard let current = uiState.cafe else { return }
+        let nextCount = isFavorite
+            ? Int(current.followerCount) + 1
+            : max(Int(current.followerCount) - 1, 0)
+        uiState.cafe = CafeDashboardData(
+            id: current.id,
+            name: current.name,
+            city: current.city,
+            todayCheckIns: current.todayCheckIns,
+            followerCount: Int32(nextCount),
+            rating: current.rating,
             castPreviews: current.castPreviews,
             homeBannerPreview: current.homeBannerPreview,
             socialMedia: current.socialMedia,
@@ -685,7 +709,7 @@ final class CafeDashboardViewModel: ObservableObject {
                                 name: current.name,
                                 city: current.city,
                                 todayCheckIns: current.todayCheckIns + 1,
-                                todayReviews: current.todayReviews,
+                                followerCount: current.followerCount,
                                 rating: current.rating,
                                 castPreviews: current.castPreviews,
                                 homeBannerPreview: current.homeBannerPreview,

@@ -895,7 +895,7 @@
     <string name="dashboard_section_metrics_title">운영 대시보드</string>
     <string name="dashboard_section_metrics_subtitle">오늘 기준 핵심 수치</string>
     <string name="dashboard_metric_today_checkin">오늘 체크인</string>
-    <string name="dashboard_metric_today_review">오늘 리뷰</string>
+    <string name="dashboard_metric_follower">팔로워</string>
     <string name="dashboard_metric_rating">평점</string>
     <string name="dashboard_metric_table_count">테이블 수</string>
     <string name="dashboard_metric_checkin_qr">체크인 QR</string>

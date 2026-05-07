@@ -5,7 +5,7 @@ data class CafeDashboardData(
     val name: String,
     val city: String,
     val todayCheckIns: Int,
-    val todayReviews: Int,
+    val followerCount: Int,
     val rating: Double,
     val castPreviews: List<CastPreview>,
     val homeBannerPreview: HomeBannerPreview,
