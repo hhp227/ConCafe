@@ -1295,6 +1295,33 @@ class FirestoreNoticeRemoteDataSource(
         return PagedResult(items = pageItems, nextCursor = nextCursorToken, hasNext = hasNext)
     }
 
+    override suspend fun fetchHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem> {
+        val safePageSize = if (pageSize > 0) pageSize else 1
+        val todayText = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+            .toString()
+            .replace("-", ".")
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val documents = runCatching { runHomeCafeEventFeedQuery(cursor, todayText, safePageSize + 1, idToken) }
+            .recoverCatching { runHomeCafeEventFeedQuery(cursor, todayText, safePageSize + 1, null) }
+            .getOrElse { throwable ->
+                throw IllegalStateException("Failed to load home cafe event page", throwable)
+            }
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) pageDocuments.lastOrNull()?.toHomeEventQueryCursor() else null
+        val pageItems = pageDocuments.mapNotNull { document ->
+            val name = document["name"]?.jsonPrimitive?.contentOrNull
+            val cafeId = name?.toCafeIdFromEventDocumentName() ?: return@mapNotNull null
+            parseEventManagementDocument(cafeId, document)
+        }
+        return PagedResult(items = pageItems, nextCursor = nextCursorToken, hasNext = hasNext)
+    }
+
     override suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem {
         val idToken = tokenProvider.getIdToken()
         val noticeId = nextFirestoreEntityId("notice-management")

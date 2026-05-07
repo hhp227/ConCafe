@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
 import com.hhp227.concafe.domain.event.BannerEvent
@@ -32,6 +36,7 @@ import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeCafeEventsUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
@@ -40,6 +45,7 @@ import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
 
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase,
     private val getNearbyCafePageUseCase: GetNearbyCafePageUseCase,
     private val getPopularCastPageUseCase: GetPopularCastPageUseCase,
     private val getCommunityPostPageUseCase: GetCommunityPostPageUseCase,
@@ -80,9 +86,7 @@ class HomeViewModel(
                         canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
                         birthdayCasts = result.data.birthdayCasts,
                         notices = result.data.notices,
-                        cafeEvents = result.data.cafeEvents
-                            .filter { isDisplayableCafeEvent(it.statusLabel) }
-                            .take(MAX_HOME_CAFE_EVENTS)
+                        cafeEvents = prev.cafeEvents
                     )
                 }
             } else if (result is AppResult.Failure) {
@@ -109,6 +113,22 @@ class HomeViewModel(
             when (val result = getCommunityPostPageUseCase.invoke(cursor = null, pageSize = MAX_HOME_COMMUNITY_POSTS)) {
                 is AppResult.Success -> _uiState.update { it.copy(communityPosts = result.data.items) }
                 else -> Unit
+            }
+        }
+    }
+
+    private fun loadHomeCafeEvents() {
+        jobs[TaskKey.HOME_CAFE_EVENTS]?.cancel()
+        jobs[TaskKey.HOME_CAFE_EVENTS] = viewModelScope.launch {
+            when (val result = getHomeCafeEventsUseCase.invoke(MAX_HOME_CAFE_EVENTS)) {
+                is AppResult.Success -> _uiState.update { state ->
+                    state.copy(
+                        cafeEvents = result.data
+                            .filter { isDisplayableCafeEvent(it.statusLabel) }
+                            .take(MAX_HOME_CAFE_EVENTS)
+                    )
+                }
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -334,7 +354,7 @@ class HomeViewModel(
         }
         _uiState.update { state ->
             val merged = (state.cafeEvents.filterNot { it.id == homeEvent.id } + homeEvent)
-                .sortedByDescending { it.periodText }
+                .sortedWith(compareBy<HomeCafeEvent> { it.homeEventSortGroup() }.thenBy { it.normalizedStartDate() ?: "9999.12.31" })
                 .take(MAX_HOME_CAFE_EVENTS)
             state.copy(cafeEvents = merged)
         }
@@ -347,7 +367,7 @@ class HomeViewModel(
     }
 
     private fun toHomeCafeEvent(event: CafeEventManagementItem, currentState: HomeUiState): HomeCafeEvent? {
-        if (!isDisplayableCafeEvent(event.statusLabel) || event.isDimmed) {
+        if (!event.isDisplayableHomeEvent()) {
             return null
         }
         val cafeName = currentState.nearbyCafes.firstOrNull { it.id == event.cafeId }?.name
@@ -361,8 +381,49 @@ class HomeViewModel(
             content = event.content,
             imageUrl = event.imageUrl,
             periodText = event.periodText,
-            statusLabel = event.statusLabel
+            statusLabel = event.resolveHomeEventStatusLabel()
         )
+    }
+
+    private fun CafeEventManagementItem.isDisplayableHomeEvent(): Boolean {
+        if (isDimmed) return false
+        val start = startDate.toLocalDateOrNull() ?: return false
+        val end = endDate.toLocalDateOrNull() ?: start
+        return todayLocalDate() <= end
+    }
+
+    private fun CafeEventManagementItem.resolveHomeEventStatusLabel(): String {
+        val today = todayLocalDate()
+        val start = startDate.toLocalDateOrNull()
+        val end = endDate.toLocalDateOrNull() ?: start
+        return when {
+            start != null && end != null && start <= today && today <= end -> "진행 중"
+            start != null && today < start -> "진행 예정"
+            else -> statusLabel
+        }
+    }
+
+    private fun HomeCafeEvent.homeEventSortGroup(): Int {
+        val start = normalizedStartDate()?.toLocalDateOrNull() ?: return 2
+        return if (start <= todayLocalDate()) 0 else 1
+    }
+
+    private fun HomeCafeEvent.normalizedStartDate(): String? {
+        return periodText.substringBefore(" - ", missingDelimiterValue = periodText).toLocalDateOrNull()?.toString()
+    }
+
+    private fun String.toLocalDateOrNull(): LocalDate? {
+        val normalized = trim().replace(".", "-").replace("/", "-")
+        val parts = normalized.split("-")
+        if (parts.size != 3) return null
+        val year = parts[0].toIntOrNull() ?: return null
+        val month = parts[1].toIntOrNull() ?: return null
+        val day = parts[2].toIntOrNull() ?: return null
+        return runCatching { LocalDate(year, month, day) }.getOrNull()
+    }
+
+    private fun todayLocalDate(): LocalDate {
+        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
 
     private fun isDisplayableCafeEvent(statusLabel: String): Boolean {
@@ -464,10 +525,12 @@ class HomeViewModel(
         observeCastEvent()
         observeCommunityPostEvents()
         loadHomeFeed()
+        loadHomeCafeEvents()
         loadCommunityPosts()
     }
 
     private enum class TaskKey {
+        HOME_CAFE_EVENTS,
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_EVENT_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,

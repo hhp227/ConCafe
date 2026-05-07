@@ -14,6 +14,8 @@ import KMPNativeCoroutinesAsync
 final class HomeViewModel: ObservableObject {
     private let getHomeFeedUseCase: GetHomeFeedUseCase
 
+    private let getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase
+
     private let getNearbyCafePageUseCase: GetNearbyCafePageUseCase
 
     private let getPopularCastPageUseCase: GetPopularCastPageUseCase
@@ -65,7 +67,7 @@ final class HomeViewModel: ObservableObject {
                             isLoadingMoreNearbyCafes: false,
                             birthdayCasts: feed.birthdayCasts,
                             notices: feed.notices,
-                            cafeEvents: Array(feed.cafeEvents.filter { isDisplayableCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents)),
+                            cafeEvents: uiState.cafeEvents,
                             communityPosts: uiState.communityPosts
                         )
                     } else {
@@ -84,7 +86,7 @@ final class HomeViewModel: ObservableObject {
                             isLoadingMoreNearbyCafes: false,
                             birthdayCasts: [],
                             notices: [],
-                            cafeEvents: [],
+                            cafeEvents: uiState.cafeEvents,
                             communityPosts: uiState.communityPosts
                         )
                     }
@@ -104,7 +106,7 @@ final class HomeViewModel: ObservableObject {
                         isLoadingMoreNearbyCafes: false,
                         birthdayCasts: [],
                         notices: [],
-                        cafeEvents: [],
+                        cafeEvents: uiState.cafeEvents,
                         communityPosts: uiState.communityPosts
                     )
                 }
@@ -124,7 +126,7 @@ final class HomeViewModel: ObservableObject {
                     isLoadingMoreNearbyCafes: false,
                     birthdayCasts: [],
                     notices: [],
-                    cafeEvents: [],
+                    cafeEvents: uiState.cafeEvents,
                     communityPosts: uiState.communityPosts
                 )
             }
@@ -161,6 +163,40 @@ final class HomeViewModel: ObservableObject {
                 }
             } catch {
                 // silently ignore - community posts section hidden when empty
+            }
+        }
+    }
+
+    private func loadHomeCafeEvents() {
+        tasks[.homeCafeEvents]?.cancel()
+        tasks[.homeCafeEvents] = Task {
+            do {
+                let result = try await getHomeCafeEventsUseCase.invoke(limit: Int32(maxHomeCafeEvents))
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let events = success.data as? [Shared.HomeCafeEvent] {
+                    uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices,
+                        cafeEvents: Array(events.filter { isDisplayableCafeEvent($0.statusLabel) }.prefix(maxHomeCafeEvents)),
+                        communityPosts: uiState.communityPosts
+                    )
+                }
+            } catch {
+                // Keep the rest of the home feed visible when the event feed fails.
             }
         }
     }
@@ -636,7 +672,16 @@ final class HomeViewModel: ObservableObject {
             return
         }
         let merged = (uiState.cafeEvents.filter { $0.id != homeEvent.id } + [homeEvent])
-            .sorted { $0.periodText > $1.periodText }
+            .sorted {
+                let lhsGroup = homeEventSortGroup($0)
+                let rhsGroup = homeEventSortGroup($1)
+                if lhsGroup != rhsGroup {
+                    return lhsGroup < rhsGroup
+                }
+                let lhsStart = normalizedStartDate($0.periodText) ?? "9999.12.31"
+                let rhsStart = normalizedStartDate($1.periodText) ?? "9999.12.31"
+                return lhsStart < rhsStart
+            }
         let limited = Array(merged.prefix(maxHomeCafeEvents))
         uiState = HomeUiState(
             isLoading: uiState.isLoading,
@@ -683,7 +728,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func toHomeCafeEvent(_ event: Shared.CafeEventManagementItem) -> Shared.HomeCafeEvent? {
-        if !isDisplayableCafeEvent(event.statusLabel) || event.isDimmed {
+        guard isDisplayableHomeEvent(event) else {
             return nil
         }
         let cafeName = uiState.nearbyCafes.first(where: { $0.id == event.cafeId })?.name
@@ -697,8 +742,60 @@ final class HomeViewModel: ObservableObject {
             content: event.content,
             imageUrl: event.imageUrl,
             periodText: event.periodText,
-            statusLabel: event.statusLabel
+            statusLabel: resolveHomeEventStatusLabel(event)
         )
+    }
+
+    private func isDisplayableHomeEvent(_ event: Shared.CafeEventManagementItem) -> Bool {
+        guard !event.isDimmed else { return false }
+        guard let start = normalizedEventDate(event.startDate) else { return false }
+        let end = normalizedEventDate(event.endDate) ?? start
+        return todayEventDateText() <= end
+    }
+
+    private func resolveHomeEventStatusLabel(_ event: Shared.CafeEventManagementItem) -> String {
+        let today = todayEventDateText()
+        let start = normalizedEventDate(event.startDate)
+        let end = normalizedEventDate(event.endDate) ?? start
+        if let start, let end, start <= today, today <= end {
+            return "진행 중"
+        }
+        if let start, today < start {
+            return "진행 예정"
+        }
+        return event.statusLabel
+    }
+
+    private func homeEventSortGroup(_ event: Shared.HomeCafeEvent) -> Int {
+        guard let start = normalizedStartDate(event.periodText) else { return 2 }
+        return start <= todayEventDateText() ? 0 : 1
+    }
+
+    private func normalizedStartDate(_ periodText: String) -> String? {
+        let value = periodText.components(separatedBy: " - ").first ?? periodText
+        return normalizedEventDate(value)
+    }
+
+    private func normalizedEventDate(_ value: String) -> String? {
+        let pattern = #"(\d{4})[-./](\d{1,2})[-./](\d{1,2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(value.startIndex..<value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, range: range),
+              let yearRange = Range(match.range(at: 1), in: value),
+              let monthRange = Range(match.range(at: 2), in: value),
+              let dayRange = Range(match.range(at: 3), in: value),
+              let month = Int(String(value[monthRange])),
+              let day = Int(String(value[dayRange])) else {
+            return nil
+        }
+        return "\(value[yearRange]).\(String(format: "%02d", month)).\(String(format: "%02d", day))"
+    }
+
+    private func todayEventDateText() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy.MM.dd"
+        return formatter.string(from: Date())
     }
 
     private func isDisplayableCafeEvent(_ statusLabel: String) -> Bool {
@@ -835,6 +932,7 @@ final class HomeViewModel: ObservableObject {
 
     init(
         getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase = KoinInitializerKt.resolveGetHomeCafeEventsUseCase(),
         getNearbyCafePageUseCase: GetNearbyCafePageUseCase = KoinInitializerKt.resolveGetNearbyCafePageUseCase(),
         getPopularCastPageUseCase: GetPopularCastPageUseCase = KoinInitializerKt.resolveGetPopularCastPageUseCase(),
         getCommunityPostPageUseCase: GetCommunityPostPageUseCase = KoinInitializerKt.resolveGetCommunityPostPageUseCase(),
@@ -847,6 +945,7 @@ final class HomeViewModel: ObservableObject {
         communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
         self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.getHomeCafeEventsUseCase = getHomeCafeEventsUseCase
         self.getNearbyCafePageUseCase = getNearbyCafePageUseCase
         self.getPopularCastPageUseCase = getPopularCastPageUseCase
         self.getCommunityPostPageUseCase = getCommunityPostPageUseCase
@@ -866,6 +965,7 @@ final class HomeViewModel: ObservableObject {
         observeCastEvent()
         observeCommunityPostEvents()
         loadHomeFeed()
+        loadHomeCafeEvents()
         loadCommunityPosts()
     }
 
@@ -886,6 +986,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case homeCafeEvents
         case session
         case bannerEvent
         case cafeEventEvent

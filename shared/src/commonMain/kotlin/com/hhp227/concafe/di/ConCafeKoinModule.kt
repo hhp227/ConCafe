@@ -99,6 +99,7 @@ val useCaseModule = module {
     factory { GetNearbyCafePageUseCase(get()) }
     factory { GetPopularCastPageUseCase(get(), get()) }
     factory { GetHomeFeedUseCase(get(), get(), get(), get(), get()) }
+    factory { GetHomeCafeEventsUseCase(get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetAdminReportPageUseCase(get(), get()) }

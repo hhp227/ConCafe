@@ -26,6 +26,11 @@ interface NoticeRemoteDataSource {
         pageSize: Int
     ): PagedResult<CafeEventManagementItem>
 
+    suspend fun fetchHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem>
+
     suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem
 
     suspend fun createCafeEvent(input: CafeEventCreate): CafeEventManagementItem

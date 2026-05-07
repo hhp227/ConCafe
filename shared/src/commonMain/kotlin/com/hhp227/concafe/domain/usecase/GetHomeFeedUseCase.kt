@@ -2,8 +2,6 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.model.CafeEventManagementItem
-import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.model.HomeFeed
 import com.hhp227.concafe.domain.model.HomePopularCastPage
 import com.hhp227.concafe.domain.repository.BannerRepository
@@ -104,37 +102,7 @@ class GetHomeFeedUseCase(
         }
         val nearbyCafePage = nearbyCafePageResult.getOrNull()
         val popularCastPage = popularCastPageResult.getOrNull()
-        val nearbyCafeNameById = nearbyCafePage
-            ?.items
-            ?.associate { cafe -> cafe.id to cafe.name }
-            ?: emptyMap()
         val popularCastCafeNames = popularCastPage?.cafeNames ?: emptyMap()
-        val popularCastCafeIds = popularCastPage?.casts
-            ?.map { cast -> cast.cafeId }
-            ?.distinct()
-            .orEmpty()
-        val cafeNameById = nearbyCafeNameById + popularCastCafeNames
-        val displayableCafeEvents = runCatching {
-            val candidateCafeIds = (
-                (nearbyCafePage?.items?.map { cafe -> cafe.id } ?: emptyList()) + popularCastCafeIds
-            ).distinct().take(HOME_EVENT_SOURCE_CAFE_LIMIT)
-
-            candidateCafeIds.flatMap { cafeId ->
-                noticeRepository.getCafeEventPage(
-                    cafeId = cafeId,
-                    query = "",
-                    cursor = null,
-                    pageSize = HOME_EVENT_PAGE_SIZE
-                ).items
-                    .filter { item -> item.isDisplayableHomeEvent() }
-                    .map { item ->
-                        item.toHomeCafeEvent(cafeNameById[cafeId] ?: cafeId)
-                    }
-            }
-                .sortedByDescending { event -> event.periodText }
-                .distinctBy { event -> event.id }
-                .take(HOME_EVENT_LIMIT)
-        }.getOrElse { emptyList() }
         return@coroutineScope AppResult.Success(
             HomeFeed(
                 banners = bannersResult.getOrElse { emptyList() },
@@ -147,39 +115,12 @@ class GetHomeFeedUseCase(
                 hasMoreNearbyCafes = nearbyCafePage?.hasNext == true,
                 birthdayCasts = birthdayCastsResult.getOrElse { emptyList() },
                 notices = noticesResult.getOrElse { emptyList() },
-                cafeEvents = displayableCafeEvents
+                cafeEvents = emptyList()
             )
         )
     }
 
     companion object {
         private const val HOME_FEED_LIMIT = 6
-        private const val HOME_EVENT_LIMIT = 3
-        private const val HOME_EVENT_SOURCE_CAFE_LIMIT = 8
-        private const val HOME_EVENT_PAGE_SIZE = 5
     }
-}
-
-private fun CafeEventManagementItem.toHomeCafeEvent(cafeName: String): HomeCafeEvent {
-    return HomeCafeEvent(
-        id = id,
-        cafeId = cafeId,
-        cafeName = cafeName,
-        title = title,
-        content = content,
-        imageUrl = imageUrl,
-        periodText = periodText,
-        statusLabel = statusLabel
-    )
-}
-
-private fun CafeEventManagementItem.isDisplayableHomeEvent(): Boolean {
-    val normalized = statusLabel.trim().lowercase()
-    val isVisibleStatusLabel = normalized.contains("진행 중") ||
-        normalized.contains("진행중") ||
-        normalized.contains("ongoing") ||
-        normalized.contains("예정") ||
-        normalized.contains("upcoming") ||
-        normalized.contains("scheduled")
-    return isVisibleStatusLabel && !isDimmed
 }

@@ -52,6 +52,7 @@ import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeCafeEventsUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
@@ -147,6 +148,13 @@ fun doInitKoin(extraModules: List<Module>): KoinApplication? {
 }
 
 fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetHomeCafeEventsUseCase(): GetHomeCafeEventsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
