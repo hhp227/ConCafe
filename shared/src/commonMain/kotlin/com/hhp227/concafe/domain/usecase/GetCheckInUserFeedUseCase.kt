@@ -64,10 +64,13 @@ class GetCheckInUserFeedUseCase(
                 )
             }
         } catch (e: NoSuchElementException) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: Exception) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }

@@ -47,6 +47,14 @@ class NoticeRepositoryImpl(
         )
     }
 
+    override suspend fun getHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        return noticeRemoteDataSource.fetchHomeCafeEventPage(cursor = cursor, pageSize = safePageSize)
+    }
+
     override suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem {
         if (input.cafeId.isBlank()) throw IllegalArgumentException("cafeId is required")
         if (input.title.isBlank()) throw IllegalArgumentException("notice title is required")

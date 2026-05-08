@@ -96,9 +96,9 @@ private struct HomeContentView: View {
                     cafeEventSection
                     popularCastSection
                     nearbyCafeSection
-                    if !uiState.communityPosts.isEmpty {
+                    /*if !uiState.communityPosts.isEmpty {
                         communitySection
-                    }
+                    }*/
                     if !uiState.birthdayCasts.isEmpty {
                         birthdaySection
                     }
@@ -285,7 +285,7 @@ private struct HomeContentView: View {
                     HStack(spacing: 12) {
                         ForEach(uiState.cafeEvents, id: \.id) { event in
                             HomeCafeEventCard(event: event)
-                                .frame(width: 276)
+                                .frame(width: 276, height: 236, alignment: .top)
                                 .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .onTapGesture {
                                     onAction(.cafeEventTapped(cafeId: event.cafeId, eventId: event.id))
@@ -296,6 +296,7 @@ private struct HomeContentView: View {
                     .compatScrollTargetLayout()
                 }
                 .compatViewAlignedScrollSnap()
+                .frame(height: 236)
             } else {
                 HomeSectionPlaceholderCard(
                     title: String(localized: String.LocalizationValue("home_ongoing_cafe_event_empty_title"), table: "Localizable"),
@@ -338,13 +339,17 @@ private struct HomeCafeEventCard: View {
                 Text(event.cafeName)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color(hex: "EF6797"))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 Text(event.title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
             .padding(.horizontal, 4)
         }
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {

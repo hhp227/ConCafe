@@ -196,6 +196,11 @@ abstract class FirestoreBaseDataSource(
         return fields.getFirestoreString("startDate")
     }
 
+    protected fun JsonObject.toHomeEventQueryCursor(): String? {
+        val fields = this["fields"]?.jsonObject ?: return null
+        return fields.getFirestoreString("endDate")
+    }
+
     protected fun String?.toStartAfterSection(latestSort: Boolean): String {
         val cursorValue = this
         if (cursorValue.isNullOrBlank()) return ""
@@ -498,6 +503,16 @@ abstract class FirestoreBaseDataSource(
         val cafeSegmentIndex = noticesIndex - 1
         val cafeCollectionIndex = noticesIndex - 2
         if (noticesIndex <= 1 || cafeCollectionIndex < 0 || cafeSegmentIndex < 0) return null
+        return if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) null
+        else segments[cafeSegmentIndex].takeIf { v -> v.isNotBlank() }
+    }
+
+    protected fun String.toCafeIdFromEventDocumentName(): String? {
+        val segments = split("/")
+        val eventsIndex = segments.indexOf(FirestorePaths.CAFE_EVENTS)
+        val cafeSegmentIndex = eventsIndex - 1
+        val cafeCollectionIndex = eventsIndex - 2
+        if (eventsIndex <= 1 || cafeCollectionIndex < 0 || cafeSegmentIndex < 0) return null
         return if (segments[cafeCollectionIndex] != FirestorePaths.CAFES) null
         else segments[cafeSegmentIndex].takeIf { v -> v.isNotBlank() }
     }
@@ -1540,6 +1555,50 @@ abstract class FirestoreBaseDataSource(
               "structuredQuery": {
                 "from": [{"collectionId": "${FirestorePaths.CAFE_NOTICES}","allDescendants": true}],
                 "orderBy": [{"field": {"fieldPath": "createdAt"},"direction": "DESCENDING"}],
+                "limit": $safeLimit
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
+    }
+
+    protected suspend fun runHomeCafeEventFeedQuery(
+        cursor: String?,
+        todayText: String,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val safeLimit = if (limit > 0) limit else 1
+        val startAfterSection = cursor.toStringFieldStartAfterSection()
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.CAFE_EVENTS}","allDescendants": true}],
+                "where": {
+                  "compositeFilter": {
+                    "op": "AND",
+                    "filters": [
+                      {
+                        "fieldFilter": {
+                          "field": {"fieldPath": "isDimmed"},
+                          "op": "EQUAL",
+                          "value": {"booleanValue": false}
+                        }
+                      },
+                      {
+                        "fieldFilter": {
+                          "field": {"fieldPath": "endDate"},
+                          "op": "GREATER_THAN_OR_EQUAL",
+                          "value": {"stringValue": "${escapeFirestoreQueryString(todayText)}"}
+                        }
+                      }
+                    ]
+                  }
+                },
+                "orderBy": [{"field": {"fieldPath": "endDate"},"direction": "ASCENDING"}]$startAfterSection,
                 "limit": $safeLimit
               }
             }

@@ -17,6 +17,10 @@ interface NoticeRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeEventManagementItem>
+    suspend fun getHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem>
     suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem
     suspend fun createCafeEvent(input: CafeEventCreate): CafeEventManagementItem
     suspend fun updateCafeNotice(input: CafeNoticeUpdate): CafeNoticeManagementItem

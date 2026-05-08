@@ -125,12 +125,12 @@ class CafeDashboardViewModel(
                     }
                 }
                 is AppResult.Failure -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoadingMoreCasts = false,
-                                infoMessage = "dashboard_info_cast_list_load_failed"
-                            )
-                        }
+                    _uiState.update {
+                        it.copy(
+                            isLoadingMoreCasts = false,
+                            infoMessage = "dashboard_info_cast_list_load_failed"
+                        )
+                    }
                 }
             }
         }

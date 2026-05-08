@@ -49,12 +49,15 @@ import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetBirthdayCastsUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
-import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeBannersUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeCafeEventsUseCase
 import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
+import com.hhp227.concafe.domain.usecase.GetRecentNoticesUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeBannerManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
@@ -146,7 +149,28 @@ fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     }
 }
 
-fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
+fun resolveGetHomeBannersUseCase(): GetHomeBannersUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetBirthdayCastsUseCase(): GetBirthdayCastsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetRecentNoticesUseCase(): GetRecentNoticesUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetHomeCafeEventsUseCase(): GetHomeCafeEventsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

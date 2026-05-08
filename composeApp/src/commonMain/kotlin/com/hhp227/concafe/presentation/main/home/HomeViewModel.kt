@@ -2,46 +2,27 @@ package com.hhp227.concafe.presentation.main.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.event.*
+import com.hhp227.concafe.domain.event.publisher.*
 import com.hhp227.concafe.domain.model.BannerLinkTargetType
-import com.hhp227.concafe.domain.event.BannerEvent
-import com.hhp227.concafe.domain.event.CafeEventEvent
 import com.hhp227.concafe.domain.model.Cafe
-import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
-import com.hhp227.concafe.domain.event.CafeDetailEvent
-import com.hhp227.concafe.domain.model.CafeEventManagementItem
-import com.hhp227.concafe.domain.model.Cast
-import com.hhp227.concafe.domain.event.CastEvent
-import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
-import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
-import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
-import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
-import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
-import com.hhp227.concafe.domain.event.CommunityPostEvent
-import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.model.HomeBanner
-import com.hhp227.concafe.domain.model.HomeCafeEvent
-import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
-import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
-import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
-import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
-import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.*
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val getHomeFeedUseCase: GetHomeFeedUseCase,
+    private val getHomeBannersUseCase: GetHomeBannersUseCase,
+    private val getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase,
     private val getNearbyCafePageUseCase: GetNearbyCafePageUseCase,
     private val getPopularCastPageUseCase: GetPopularCastPageUseCase,
+    private val getBirthdayCastsUseCase: GetBirthdayCastsUseCase,
+    private val getRecentNoticesUseCase: GetRecentNoticesUseCase,
     private val getCommunityPostPageUseCase: GetCommunityPostPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
@@ -59,46 +40,77 @@ class HomeViewModel(
 
     private val jobs = mutableMapOf<TaskKey, Job>()
 
-    private fun loadHomeFeed() {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+    private fun loadInitialHomeSections() {
+        jobs[TaskKey.INITIAL_HOME]?.cancel()
+        jobs[TaskKey.INITIAL_HOME] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
-            val result = getHomeFeedUseCase.invoke()
+            val bannersDeferred = async { getHomeBannersUseCase.invoke(HOME_FEED_LIMIT) }
+            val popularCastPageDeferred = async { getPopularCastPageUseCase.invoke(cursor = null) }
+            val nearbyCafePageDeferred = async { getNearbyCafePageUseCase.invoke(cursor = null) }
+            val birthdayCastsDeferred = async { getBirthdayCastsUseCase.invoke(HOME_FEED_LIMIT) }
+            val noticesDeferred = async { getRecentNoticesUseCase.invoke(HOME_FEED_LIMIT) }
+            val cafeEventsDeferred = async { getHomeCafeEventsUseCase.invoke(MAX_HOME_CAFE_EVENTS) }
+            val communityPostsDeferred = async {
+                getCommunityPostPageUseCase.invoke(cursor = null, pageSize = MAX_HOME_COMMUNITY_POSTS)
+            }
+            val bannersResult = bannersDeferred.await()
+            val popularCastPageResult = popularCastPageDeferred.await()
+            val nearbyCafePageResult = nearbyCafePageDeferred.await()
+            val birthdayCastsResult = birthdayCastsDeferred.await()
+            val noticesResult = noticesDeferred.await()
+            val cafeEventsResult = cafeEventsDeferred.await()
+            val communityPostsResult = communityPostsDeferred.await()
 
-            if (result is AppResult.Success) {
-                _uiState.update { prev ->
-                    prev.copy(
-                        isLoading = false,
-                        errorMessage = null,
-                        banners = result.data.banners,
-                        popularCasts = result.data.popularCasts,
-                        popularCastCafeNames = result.data.popularCastCafeNames,
-                        popularCastCursor = result.data.popularCastsNextCursor,
-                        canLoadMorePopularCasts = result.data.hasMorePopularCasts,
-                        nearbyCafes = result.data.nearbyCafes,
-                        nearbyCafeCursor = result.data.nearbyCafesNextCursor,
-                        canLoadMoreNearbyCafes = result.data.hasMoreNearbyCafes,
-                        birthdayCasts = result.data.birthdayCasts,
-                        notices = result.data.notices,
-                        cafeEvents = result.data.cafeEvents
-                            .filter { isDisplayableCafeEvent(it.statusLabel) }
-                            .take(MAX_HOME_CAFE_EVENTS)
-                    )
-                }
-            } else if (result is AppResult.Failure) {
-                _uiState.update { state ->
-                    state.copy(
-                        isLoading = false,
-                        errorMessage = result.error.toString()
-                    )
-                }
-            } else {
-                _uiState.update { state ->
-                    state.copy(
-                        isLoading = false,
-                        errorMessage = "unknown"
-                    )
-                }
+            _uiState.update { state ->
+                val popularCastPage = (popularCastPageResult as? AppResult.Success)?.data
+                val nearbyCafePage = (nearbyCafePageResult as? AppResult.Success)?.data
+                state.copy(
+                    isLoading = false,
+                    errorMessage = null,
+                    banners = (bannersResult as? AppResult.Success)?.data ?: state.banners,
+                    popularCasts = popularCastPage?.casts ?: state.popularCasts,
+                    popularCastCafeNames = popularCastPage?.cafeNames ?: state.popularCastCafeNames,
+                    popularCastCursor = popularCastPage?.nextCursor ?: state.popularCastCursor,
+                    canLoadMorePopularCasts = popularCastPage?.hasNext ?: state.canLoadMorePopularCasts,
+                    nearbyCafes = nearbyCafePage?.items ?: state.nearbyCafes,
+                    nearbyCafeCursor = nearbyCafePage?.nextCursor ?: state.nearbyCafeCursor,
+                    canLoadMoreNearbyCafes = nearbyCafePage?.hasNext ?: state.canLoadMoreNearbyCafes,
+                    birthdayCasts = (birthdayCastsResult as? AppResult.Success)?.data ?: state.birthdayCasts,
+                    notices = (noticesResult as? AppResult.Success)?.data ?: state.notices,
+                    cafeEvents = (cafeEventsResult as? AppResult.Success)?.data ?: state.cafeEvents,
+                    communityPosts = (communityPostsResult as? AppResult.Success)?.data?.items ?: state.communityPosts
+                )
+            }
+        }
+    }
+
+    private fun loadHomeBanners() {
+        jobs[TaskKey.HOME_BANNERS]?.cancel()
+        jobs[TaskKey.HOME_BANNERS] = viewModelScope.launch {
+            when (val result = getHomeBannersUseCase.invoke(HOME_FEED_LIMIT)) {
+                is AppResult.Success -> _uiState.update { it.copy(banners = result.data) }
+                is AppResult.Failure -> Unit
+            }
+        }
+    }
+
+    private fun loadBirthdayCasts() {
+        jobs[TaskKey.BIRTHDAY_CASTS]?.cancel()
+        jobs[TaskKey.BIRTHDAY_CASTS] = viewModelScope.launch {
+            when (val result = getBirthdayCastsUseCase.invoke(HOME_FEED_LIMIT)) {
+                is AppResult.Success -> _uiState.update { it.copy(birthdayCasts = result.data) }
+                is AppResult.Failure -> Unit
+            }
+        }
+    }
+
+    private fun loadRecentNotices() {
+        jobs[TaskKey.RECENT_NOTICES]?.cancel()
+        jobs[TaskKey.RECENT_NOTICES] = viewModelScope.launch {
+            when (val result = getRecentNoticesUseCase.invoke(HOME_FEED_LIMIT)) {
+                is AppResult.Success -> _uiState.update { it.copy(notices = result.data) }
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -109,6 +121,22 @@ class HomeViewModel(
             when (val result = getCommunityPostPageUseCase.invoke(cursor = null, pageSize = MAX_HOME_COMMUNITY_POSTS)) {
                 is AppResult.Success -> _uiState.update { it.copy(communityPosts = result.data.items) }
                 else -> Unit
+            }
+        }
+    }
+
+    private fun loadHomeCafeEvents() {
+        jobs[TaskKey.HOME_CAFE_EVENTS]?.cancel()
+        jobs[TaskKey.HOME_CAFE_EVENTS] = viewModelScope.launch {
+            when (val result = getHomeCafeEventsUseCase.invoke(MAX_HOME_CAFE_EVENTS)) {
+                is AppResult.Success -> _uiState.update { state ->
+                    state.copy(
+                        cafeEvents = result.data
+                            .filter { isDisplayableCafeEvent(it.statusLabel) }
+                            .take(MAX_HOME_CAFE_EVENTS)
+                    )
+                }
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -208,9 +236,9 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_BANNER_EVENT] = viewModelScope.launch {
             bannerEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is BannerEvent.Created -> loadHomeFeed()
-                    is BannerEvent.Updated -> patchBanner(event.banner)
-                    is BannerEvent.Deleted -> removeBanner(event.banner.id)
+                    is BannerEvent.Created -> loadHomeBanners()
+                    is BannerEvent.Updated -> loadHomeBanners()
+                    is BannerEvent.Deleted -> loadHomeBanners()
                 }
             }
         }
@@ -221,13 +249,7 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
                 if (event is CafeRegistrationClaimEvent.Approved) {
-                    val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
-                    val alreadyVisible = approvedCafeId.isNotEmpty() &&
-                        _uiState.value.nearbyCafes.any { cafe -> cafe.id == approvedCafeId }
-
-                    if (!alreadyVisible) {
-                        loadNearbyCafePage(cursor = null, append = false)
-                    }
+                    loadNearbyCafePage(cursor = null, append = false)
                 }
             }
         }
@@ -238,9 +260,18 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_CAST_EVENT] = viewModelScope.launch {
             castEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is CastEvent.Created -> loadPopularCastPage(cursor = null, append = false)
-                    is CastEvent.Updated -> patchCast(event.cast)
-                    is CastEvent.Deleted -> removeCast(event.castId)
+                    is CastEvent.Created -> {
+                        loadPopularCastPage(cursor = null, append = false)
+                        loadBirthdayCasts()
+                    }
+                    is CastEvent.Updated -> {
+                        loadPopularCastPage(cursor = null, append = false)
+                        loadBirthdayCasts()
+                    }
+                    is CastEvent.Deleted -> {
+                        loadPopularCastPage(cursor = null, append = false)
+                        loadBirthdayCasts()
+                    }
                 }
             }
         }
@@ -268,29 +299,11 @@ class HomeViewModel(
         jobs[TaskKey.OBSERVE_CAFE_EVENT_EVENT] = viewModelScope.launch {
             cafeEventEventPublisher.events.collectLatest { event ->
                 when (event) {
-                    is CafeEventEvent.Created -> upsertCafeEvent(event.event)
-                    is CafeEventEvent.Updated -> upsertCafeEvent(event.event)
-                    is CafeEventEvent.Deleted -> removeCafeEvent(event.eventId)
+                    is CafeEventEvent.Created -> loadHomeCafeEvents()
+                    is CafeEventEvent.Updated -> loadHomeCafeEvents()
+                    is CafeEventEvent.Deleted -> loadHomeCafeEvents()
                 }
             }
-        }
-    }
-
-    private fun patchBanner(updatedBanner: HomeBanner) {
-        _uiState.update { state ->
-            state.copy(
-                banners = state.banners.map { banner ->
-                    if (banner.id == updatedBanner.id) updatedBanner else banner
-                }
-            )
-        }
-    }
-
-    private fun removeBanner(bannerId: String) {
-        _uiState.update { state ->
-            state.copy(
-                banners = state.banners.filterNot { it.id == bannerId }
-            )
         }
     }
 
@@ -305,65 +318,6 @@ class HomeViewModel(
         }
     }
 
-    private fun patchCast(cast: Cast) {
-        _uiState.update { state ->
-            state.copy(
-                popularCasts = state.popularCasts.map { item ->
-                    if (item.id == cast.id) cast else item
-                },
-                birthdayCasts = state.birthdayCasts.map { item ->
-                    if (item.id == cast.id) cast else item
-                }
-            )
-        }
-    }
-
-    private fun removeCast(castId: String) {
-        _uiState.update { state ->
-            state.copy(
-                popularCasts = state.popularCasts.filterNot { it.id == castId },
-                birthdayCasts = state.birthdayCasts.filterNot { it.id == castId }
-            )
-        }
-    }
-
-    private fun upsertCafeEvent(event: CafeEventManagementItem) {
-        val homeEvent = toHomeCafeEvent(event, _uiState.value) ?: run {
-            removeCafeEvent(event.id)
-            return
-        }
-        _uiState.update { state ->
-            val merged = (state.cafeEvents.filterNot { it.id == homeEvent.id } + homeEvent)
-                .sortedByDescending { it.periodText }
-                .take(MAX_HOME_CAFE_EVENTS)
-            state.copy(cafeEvents = merged)
-        }
-    }
-
-    private fun removeCafeEvent(eventId: String) {
-        _uiState.update { state ->
-            state.copy(cafeEvents = state.cafeEvents.filterNot { it.id == eventId })
-        }
-    }
-
-    private fun toHomeCafeEvent(event: CafeEventManagementItem, currentState: HomeUiState): HomeCafeEvent? {
-        if (!isDisplayableCafeEvent(event.statusLabel) || event.isDimmed) {
-            return null
-        }
-        val cafeName = currentState.nearbyCafes.firstOrNull { it.id == event.cafeId }?.name
-            ?: currentState.popularCastCafeNames[event.cafeId]
-            ?: event.cafeId
-        return HomeCafeEvent(
-            id = event.id,
-            cafeId = event.cafeId,
-            cafeName = cafeName,
-            title = event.title,
-            content = event.content,
-            imageUrl = event.imageUrl,
-            periodText = event.periodText,
-            statusLabel = event.statusLabel
-        )
-    }
 
     private fun isDisplayableCafeEvent(statusLabel: String): Boolean {
         val normalized = statusLabel.trim().lowercase()
@@ -463,11 +417,15 @@ class HomeViewModel(
         observeCafeDetailEvent()
         observeCastEvent()
         observeCommunityPostEvents()
-        loadHomeFeed()
-        loadCommunityPosts()
+        loadInitialHomeSections()
     }
 
     private enum class TaskKey {
+        INITIAL_HOME,
+        HOME_BANNERS,
+        BIRTHDAY_CASTS,
+        RECENT_NOTICES,
+        HOME_CAFE_EVENTS,
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_EVENT_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
@@ -481,6 +439,7 @@ class HomeViewModel(
     }
 
     private companion object {
+        private const val HOME_FEED_LIMIT = 6
         private const val MAX_HOME_CAFE_EVENTS = 8
         private const val MAX_HOME_COMMUNITY_POSTS = 8
         private const val PAGINATION_DELAY_MILLIS = 1_000L
