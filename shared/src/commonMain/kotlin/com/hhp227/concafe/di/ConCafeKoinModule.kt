@@ -98,7 +98,9 @@ val useCaseModule = module {
     single { CafeReviewUserNicknameCache() }
     factory { GetNearbyCafePageUseCase(get()) }
     factory { GetPopularCastPageUseCase(get(), get()) }
-    factory { GetHomeFeedUseCase(get(), get(), get(), get(), get()) }
+    factory { GetHomeBannersUseCase(get()) }
+    factory { GetBirthdayCastsUseCase(get()) }
+    factory { GetRecentNoticesUseCase(get()) }
     factory { GetHomeCafeEventsUseCase(get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }

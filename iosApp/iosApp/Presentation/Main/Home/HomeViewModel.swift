@@ -12,13 +12,17 @@ import KMPNativeCoroutinesAsync
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    private let getHomeFeedUseCase: GetHomeFeedUseCase
+    private let getHomeBannersUseCase: GetHomeBannersUseCase
 
     private let getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase
 
     private let getNearbyCafePageUseCase: GetNearbyCafePageUseCase
 
     private let getPopularCastPageUseCase: GetPopularCastPageUseCase
+
+    private let getBirthdayCastsUseCase: GetBirthdayCastsUseCase
+
+    private let getRecentNoticesUseCase: GetRecentNoticesUseCase
 
     private let getCommunityPostPageUseCase: GetCommunityPostPageUseCase
 
@@ -42,94 +46,164 @@ final class HomeViewModel: ObservableObject {
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
-    private func loadHomeFeed() {
+    private func loadInitialHomeSections() {
         uiState.isLoading = true
 
         Task {
             do {
-                let result = try await getHomeFeedUseCase.invoke()
+                async let bannersResult = getHomeBannersUseCase.invoke(limit: maxHomeFeedItems)
+                async let popularCastPageResult = getPopularCastPageUseCase.invoke(cursor: nil)
+                async let nearbyCafePageResult = getNearbyCafePageUseCase.invoke(cursor: nil)
+                async let birthdayCastsResult = getBirthdayCastsUseCase.invoke(limit: maxHomeFeedItems)
+                async let noticesResult = getRecentNoticesUseCase.invoke(limit: maxHomeFeedItems)
+                async let cafeEventsResult = getHomeCafeEventsUseCase.invoke(limit: Int32(maxHomeCafeEvents))
+                async let communityPostsResult = getCommunityPostPageUseCase.invoke(cursor: nil, pageSize: maxHomeCommunityPosts)
 
-                if let success = result as? AppResultSuccess<AnyObject> {
-                    if let feed = success.data as? Shared.HomeFeed {
-                        uiState = HomeUiState(
-                            isLoading: false,
-                            isLoggedIn: uiState.isLoggedIn,
-                            isLoginPromptVisible: uiState.isLoginPromptVisible,
-                            banners: feed.banners,
-                            popularCasts: feed.popularCasts,
-                            popularCastCafeNames: Self.dictionary(from: feed.popularCastCafeNames),
-                            popularCastCursor: feed.popularCastsNextCursor,
-                            canLoadMorePopularCasts: feed.hasMorePopularCasts,
-                            isLoadingMorePopularCasts: false,
-                            nearbyCafes: feed.nearbyCafes,
-                            nearbyCafeCursor: feed.nearbyCafesNextCursor,
-                            canLoadMoreNearbyCafes: feed.hasMoreNearbyCafes,
-                            isLoadingMoreNearbyCafes: false,
-                            birthdayCasts: feed.birthdayCasts,
-                            notices: feed.notices,
-                            cafeEvents: uiState.cafeEvents,
-                            communityPosts: uiState.communityPosts
-                        )
-                    } else {
-                        uiState = HomeUiState(
-                            isLoggedIn: uiState.isLoggedIn,
-                            isLoginPromptVisible: uiState.isLoginPromptVisible,
-                            banners: [],
-                            popularCasts: [],
-                            popularCastCafeNames: [:],
-                            popularCastCursor: nil,
-                            canLoadMorePopularCasts: false,
-                            isLoadingMorePopularCasts: false,
-                            nearbyCafes: [],
-                            nearbyCafeCursor: nil,
-                            canLoadMoreNearbyCafes: false,
-                            isLoadingMoreNearbyCafes: false,
-                            birthdayCasts: [],
-                            notices: [],
-                            cafeEvents: uiState.cafeEvents,
-                            communityPosts: uiState.communityPosts
-                        )
-                    }
-                } else {
-                    uiState = HomeUiState(
-                        isLoggedIn: uiState.isLoggedIn,
-                        isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        banners: [],
-                        popularCasts: [],
-                        popularCastCafeNames: [:],
-                        popularCastCursor: nil,
-                        canLoadMorePopularCasts: false,
-                        isLoadingMorePopularCasts: false,
-                        nearbyCafes: [],
-                        nearbyCafeCursor: nil,
-                        canLoadMoreNearbyCafes: false,
-                        isLoadingMoreNearbyCafes: false,
-                        birthdayCasts: [],
-                        notices: [],
-                        cafeEvents: uiState.cafeEvents,
-                        communityPosts: uiState.communityPosts
-                    )
-                }
-            } catch {
+                let loaded = try await (
+                    bannersResult,
+                    popularCastPageResult,
+                    nearbyCafePageResult,
+                    birthdayCastsResult,
+                    noticesResult,
+                    cafeEventsResult,
+                    communityPostsResult
+                )
+                let popularCastPage = (loaded.1 as? AppResultSuccess<AnyObject>)?.data as? Shared.HomePopularCastPage
+                let nearbyCafePage = (loaded.2 as? AppResultSuccess<AnyObject>)?.data as? Shared.PagedResult<Shared.Cafe>
+                let communityPostPage = (loaded.6 as? AppResultSuccess<AnyObject>)?.data as? Shared.PagedResult<Shared.CommunityPost>
                 uiState = HomeUiState(
+                    isLoading: false,
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    banners: [],
-                    popularCasts: [],
-                    popularCastCafeNames: [:],
-                    popularCastCursor: nil,
-                    canLoadMorePopularCasts: false,
+                    banners: ((loaded.0 as? AppResultSuccess<AnyObject>)?.data as? [HomeBanner]) ?? uiState.banners,
+                    popularCasts: popularCastPage?.casts ?? uiState.popularCasts,
+                    popularCastCafeNames: popularCastPage.map { Self.dictionary(from: $0.cafeNames) } ?? uiState.popularCastCafeNames,
+                    popularCastCursor: popularCastPage?.nextCursor ?? uiState.popularCastCursor,
+                    canLoadMorePopularCasts: popularCastPage?.hasNext ?? uiState.canLoadMorePopularCasts,
                     isLoadingMorePopularCasts: false,
-                    nearbyCafes: [],
-                    nearbyCafeCursor: nil,
-                    canLoadMoreNearbyCafes: false,
+                    nearbyCafes: nearbyCafePage?.items as? [Cafe] ?? uiState.nearbyCafes,
+                    nearbyCafeCursor: nearbyCafePage?.nextCursor ?? uiState.nearbyCafeCursor,
+                    canLoadMoreNearbyCafes: nearbyCafePage?.hasNext ?? uiState.canLoadMoreNearbyCafes,
                     isLoadingMoreNearbyCafes: false,
-                    birthdayCasts: [],
-                    notices: [],
+                    birthdayCasts: ((loaded.3 as? AppResultSuccess<AnyObject>)?.data as? [Cast]) ?? uiState.birthdayCasts,
+                    notices: ((loaded.4 as? AppResultSuccess<AnyObject>)?.data as? [Notice]) ?? uiState.notices,
+                    cafeEvents: ((loaded.5 as? AppResultSuccess<AnyObject>)?.data as? [HomeCafeEvent]) ?? uiState.cafeEvents,
+                    communityPosts: communityPostPage?.items as? [CommunityPost] ?? uiState.communityPosts
+                )
+            } catch {
+                uiState = HomeUiState(
+                    isLoading: false,
+                    isLoggedIn: uiState.isLoggedIn,
+                    isLoginPromptVisible: uiState.isLoginPromptVisible,
+                    banners: uiState.banners,
+                    popularCasts: uiState.popularCasts,
+                    popularCastCafeNames: uiState.popularCastCafeNames,
+                    popularCastCursor: uiState.popularCastCursor,
+                    canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                    isLoadingMorePopularCasts: false,
+                    nearbyCafes: uiState.nearbyCafes,
+                    nearbyCafeCursor: uiState.nearbyCafeCursor,
+                    canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                    isLoadingMoreNearbyCafes: false,
+                    birthdayCasts: uiState.birthdayCasts,
+                    notices: uiState.notices,
                     cafeEvents: uiState.cafeEvents,
                     communityPosts: uiState.communityPosts
                 )
             }
+        }
+    }
+
+    private func loadHomeBanners() {
+        tasks[.homeBanners]?.cancel()
+        tasks[.homeBanners] = Task {
+            do {
+                let result = try await getHomeBannersUseCase.invoke(limit: maxHomeFeedItems)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let banners = success.data as? [HomeBanner] {
+                    uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: uiState.notices,
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
+                    )
+                }
+            } catch {}
+        }
+    }
+
+    private func loadBirthdayCasts() {
+        tasks[.birthdayCasts]?.cancel()
+        tasks[.birthdayCasts] = Task {
+            do {
+                let result = try await getBirthdayCastsUseCase.invoke(limit: maxHomeFeedItems)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let casts = success.data as? [Cast] {
+                    uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: casts,
+                        notices: uiState.notices,
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
+                    )
+                }
+            } catch {}
+        }
+    }
+
+    private func loadRecentNotices() {
+        tasks[.recentNotices]?.cancel()
+        tasks[.recentNotices] = Task {
+            do {
+                let result = try await getRecentNoticesUseCase.invoke(limit: maxHomeFeedItems)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let notices = success.data as? [Notice] {
+                    uiState = HomeUiState(
+                        isLoading: uiState.isLoading,
+                        isLoggedIn: uiState.isLoggedIn,
+                        isLoginPromptVisible: uiState.isLoginPromptVisible,
+                        banners: uiState.banners,
+                        popularCasts: uiState.popularCasts,
+                        popularCastCafeNames: uiState.popularCastCafeNames,
+                        popularCastCursor: uiState.popularCastCursor,
+                        canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
+                        isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
+                        nearbyCafes: uiState.nearbyCafes,
+                        nearbyCafeCursor: uiState.nearbyCafeCursor,
+                        canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
+                        isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
+                        birthdayCasts: uiState.birthdayCasts,
+                        notices: notices,
+                        cafeEvents: uiState.cafeEvents,
+                        communityPosts: uiState.communityPosts
+                    )
+                }
+            } catch {}
         }
     }
 
@@ -456,11 +530,11 @@ final class HomeViewModel: ObservableObject {
                 for try await event in asyncSequence(for: bannerEventPublisher.events) {
                     switch event {
                     case is Shared.BannerEvent.Created:
-                        self.loadHomeFeed()
-                    case let updated as Shared.BannerEvent.Updated:
-                        self.patchBanner(updated.banner)
-                    case let deleted as Shared.BannerEvent.Deleted:
-                        self.removeBanner(id: deleted.banner.id)
+                        self.loadHomeBanners()
+                    case is Shared.BannerEvent.Updated:
+                        self.loadHomeBanners()
+                    case is Shared.BannerEvent.Deleted:
+                        self.loadHomeBanners()
                     default:
                         break
                     }
@@ -476,14 +550,8 @@ final class HomeViewModel: ObservableObject {
         tasks[.cafeRegistrationClaimEvent] = Task {
             do {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
-                    if let approved = event as? CafeRegistrationClaimEvent.Approved {
-                        let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        let alreadyVisible = !approvedCafeId.isEmpty &&
-                            self.uiState.nearbyCafes.contains(where: { $0.id == approvedCafeId })
-
-                        if !alreadyVisible {
-                            self.loadNearbyCafePage(cursor: nil, append: false)
-                        }
+                    if event is CafeRegistrationClaimEvent.Approved {
+                        self.loadNearbyCafePage(cursor: nil, append: false)
                     }
                 }
             } catch {
@@ -500,10 +568,13 @@ final class HomeViewModel: ObservableObject {
                     switch event {
                     case is Shared.CastEvent.Created:
                         self.loadPopularCastPage(cursor: nil, append: false)
-                    case let updated as Shared.CastEvent.Updated:
-                        self.patchCast(updated.cast)
-                    case let deleted as Shared.CastEvent.Deleted:
-                        self.removeCast(deleted.castId)
+                        self.loadBirthdayCasts()
+                    case is Shared.CastEvent.Updated:
+                        self.loadPopularCastPage(cursor: nil, append: false)
+                        self.loadBirthdayCasts()
+                    case is Shared.CastEvent.Deleted:
+                        self.loadPopularCastPage(cursor: nil, append: false)
+                        self.loadBirthdayCasts()
                     default:
                         break
                     }
@@ -541,12 +612,12 @@ final class HomeViewModel: ObservableObject {
             do {
                 for try await event in asyncSequence(for: cafeEventEventPublisher.events) {
                     switch event {
-                    case let created as Shared.CafeEventEvent.Created:
-                        upsertCafeEvent(created.event)
-                    case let updated as Shared.CafeEventEvent.Updated:
-                        upsertCafeEvent(updated.event)
-                    case let deleted as Shared.CafeEventEvent.Deleted:
-                        removeCafeEvent(deleted.eventId)
+                    case is Shared.CafeEventEvent.Created:
+                        loadHomeCafeEvents()
+                    case is Shared.CafeEventEvent.Updated:
+                        loadHomeCafeEvents()
+                    case is Shared.CafeEventEvent.Deleted:
+                        loadHomeCafeEvents()
                     default:
                         break
                     }
@@ -555,50 +626,6 @@ final class HomeViewModel: ObservableObject {
                 print("Error: \(error)")
             }
         }
-    }
-
-    private func patchBanner(_ updatedBanner: HomeBanner) {
-        uiState = HomeUiState(
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners.map { banner in
-                banner.id == updatedBanner.id ? updatedBanner : banner
-            },
-            popularCasts: uiState.popularCasts,
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts,
-            notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents,
-            communityPosts: uiState.communityPosts
-        )
-    }
-
-    private func removeBanner(id: String) {
-        uiState = HomeUiState(
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners.filter { $0.id != id },
-            popularCasts: uiState.popularCasts,
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts,
-            notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents,
-            communityPosts: uiState.communityPosts
-        )
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {
@@ -622,180 +649,6 @@ final class HomeViewModel: ObservableObject {
             cafeEvents: uiState.cafeEvents,
             communityPosts: uiState.communityPosts
         )
-    }
-
-    private func patchCast(_ cast: Cast) {
-        uiState = HomeUiState(
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners,
-            popularCasts: uiState.popularCasts.map { $0.id == cast.id ? cast : $0 },
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts.map { $0.id == cast.id ? cast : $0 },
-            notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents,
-            communityPosts: uiState.communityPosts
-        )
-    }
-
-    private func removeCast(_ castId: String) {
-        uiState = HomeUiState(
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners,
-            popularCasts: uiState.popularCasts.filter { $0.id != castId },
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts.filter { $0.id != castId },
-            notices: uiState.notices,
-            cafeEvents: uiState.cafeEvents,
-            communityPosts: uiState.communityPosts
-        )
-    }
-
-    private func upsertCafeEvent(_ event: Shared.CafeEventManagementItem) {
-        guard let homeEvent = toHomeCafeEvent(event) else {
-            removeCafeEvent(event.id)
-            return
-        }
-        let merged = (uiState.cafeEvents.filter { $0.id != homeEvent.id } + [homeEvent])
-            .sorted {
-                let lhsGroup = homeEventSortGroup($0)
-                let rhsGroup = homeEventSortGroup($1)
-                if lhsGroup != rhsGroup {
-                    return lhsGroup < rhsGroup
-                }
-                let lhsStart = normalizedStartDate($0.periodText) ?? "9999.12.31"
-                let rhsStart = normalizedStartDate($1.periodText) ?? "9999.12.31"
-                return lhsStart < rhsStart
-            }
-        let limited = Array(merged.prefix(maxHomeCafeEvents))
-        uiState = HomeUiState(
-            isLoading: uiState.isLoading,
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners,
-            popularCasts: uiState.popularCasts,
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts,
-            notices: uiState.notices,
-            cafeEvents: limited,
-            communityPosts: uiState.communityPosts
-        )
-    }
-
-    private func removeCafeEvent(_ eventId: String) {
-        let filtered = uiState.cafeEvents.filter { $0.id != eventId }
-        uiState = HomeUiState(
-            isLoading: uiState.isLoading,
-            isLoggedIn: uiState.isLoggedIn,
-            isLoginPromptVisible: uiState.isLoginPromptVisible,
-            banners: uiState.banners,
-            popularCasts: uiState.popularCasts,
-            popularCastCafeNames: uiState.popularCastCafeNames,
-            popularCastCursor: uiState.popularCastCursor,
-            canLoadMorePopularCasts: uiState.canLoadMorePopularCasts,
-            isLoadingMorePopularCasts: uiState.isLoadingMorePopularCasts,
-            nearbyCafes: uiState.nearbyCafes,
-            nearbyCafeCursor: uiState.nearbyCafeCursor,
-            canLoadMoreNearbyCafes: uiState.canLoadMoreNearbyCafes,
-            isLoadingMoreNearbyCafes: uiState.isLoadingMoreNearbyCafes,
-            birthdayCasts: uiState.birthdayCasts,
-            notices: uiState.notices,
-            cafeEvents: filtered,
-            communityPosts: uiState.communityPosts
-        )
-    }
-
-    private func toHomeCafeEvent(_ event: Shared.CafeEventManagementItem) -> Shared.HomeCafeEvent? {
-        guard isDisplayableHomeEvent(event) else {
-            return nil
-        }
-        let cafeName = uiState.nearbyCafes.first(where: { $0.id == event.cafeId })?.name
-            ?? uiState.popularCastCafeNames[event.cafeId]
-            ?? event.cafeId
-        return Shared.HomeCafeEvent(
-            id: event.id,
-            cafeId: event.cafeId,
-            cafeName: cafeName,
-            title: event.title,
-            content: event.content,
-            imageUrl: event.imageUrl,
-            periodText: event.periodText,
-            statusLabel: resolveHomeEventStatusLabel(event)
-        )
-    }
-
-    private func isDisplayableHomeEvent(_ event: Shared.CafeEventManagementItem) -> Bool {
-        guard !event.isDimmed else { return false }
-        guard let start = normalizedEventDate(event.startDate) else { return false }
-        let end = normalizedEventDate(event.endDate) ?? start
-        return todayEventDateText() <= end
-    }
-
-    private func resolveHomeEventStatusLabel(_ event: Shared.CafeEventManagementItem) -> String {
-        let today = todayEventDateText()
-        let start = normalizedEventDate(event.startDate)
-        let end = normalizedEventDate(event.endDate) ?? start
-        if let start, let end, start <= today, today <= end {
-            return "진행 중"
-        }
-        if let start, today < start {
-            return "진행 예정"
-        }
-        return event.statusLabel
-    }
-
-    private func homeEventSortGroup(_ event: Shared.HomeCafeEvent) -> Int {
-        guard let start = normalizedStartDate(event.periodText) else { return 2 }
-        return start <= todayEventDateText() ? 0 : 1
-    }
-
-    private func normalizedStartDate(_ periodText: String) -> String? {
-        let value = periodText.components(separatedBy: " - ").first ?? periodText
-        return normalizedEventDate(value)
-    }
-
-    private func normalizedEventDate(_ value: String) -> String? {
-        let pattern = #"(\d{4})[-./](\d{1,2})[-./](\d{1,2})"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
-        let range = NSRange(value.startIndex..<value.endIndex, in: value)
-        guard let match = regex.firstMatch(in: value, range: range),
-              let yearRange = Range(match.range(at: 1), in: value),
-              let monthRange = Range(match.range(at: 2), in: value),
-              let dayRange = Range(match.range(at: 3), in: value),
-              let month = Int(String(value[monthRange])),
-              let day = Int(String(value[dayRange])) else {
-            return nil
-        }
-        return "\(value[yearRange]).\(String(format: "%02d", month)).\(String(format: "%02d", day))"
-    }
-
-    private func todayEventDateText() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy.MM.dd"
-        return formatter.string(from: Date())
     }
 
     private func isDisplayableCafeEvent(_ statusLabel: String) -> Bool {
@@ -931,10 +784,12 @@ final class HomeViewModel: ObservableObject {
     }
 
     init(
-        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        getHomeBannersUseCase: GetHomeBannersUseCase = KoinInitializerKt.resolveGetHomeBannersUseCase(),
         getHomeCafeEventsUseCase: GetHomeCafeEventsUseCase = KoinInitializerKt.resolveGetHomeCafeEventsUseCase(),
         getNearbyCafePageUseCase: GetNearbyCafePageUseCase = KoinInitializerKt.resolveGetNearbyCafePageUseCase(),
         getPopularCastPageUseCase: GetPopularCastPageUseCase = KoinInitializerKt.resolveGetPopularCastPageUseCase(),
+        getBirthdayCastsUseCase: GetBirthdayCastsUseCase = KoinInitializerKt.resolveGetBirthdayCastsUseCase(),
+        getRecentNoticesUseCase: GetRecentNoticesUseCase = KoinInitializerKt.resolveGetRecentNoticesUseCase(),
         getCommunityPostPageUseCase: GetCommunityPostPageUseCase = KoinInitializerKt.resolveGetCommunityPostPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
@@ -944,10 +799,12 @@ final class HomeViewModel: ObservableObject {
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
         communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
-        self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.getHomeBannersUseCase = getHomeBannersUseCase
         self.getHomeCafeEventsUseCase = getHomeCafeEventsUseCase
         self.getNearbyCafePageUseCase = getNearbyCafePageUseCase
         self.getPopularCastPageUseCase = getPopularCastPageUseCase
+        self.getBirthdayCastsUseCase = getBirthdayCastsUseCase
+        self.getRecentNoticesUseCase = getRecentNoticesUseCase
         self.getCommunityPostPageUseCase = getCommunityPostPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.bannerEventPublisher = bannerEventPublisher
@@ -964,9 +821,7 @@ final class HomeViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastEvent()
         observeCommunityPostEvents()
-        loadHomeFeed()
-        loadHomeCafeEvents()
-        loadCommunityPosts()
+        loadInitialHomeSections()
     }
 
     deinit {
@@ -974,6 +829,7 @@ final class HomeViewModel: ObservableObject {
         tasks.removeAll()
     }
 
+    private let maxHomeFeedItems: Int32 = 6
     private let maxHomeCafeEvents = 8
     private let maxHomeCommunityPosts: Int32 = 8
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
@@ -986,6 +842,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case homeBanners
+        case birthdayCasts
+        case recentNotices
         case homeCafeEvents
         case session
         case bannerEvent
