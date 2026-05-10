@@ -33,6 +33,7 @@ import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetReviewUseCase
 import com.hhp227.concafe.domain.usecase.UpdateReviewUseCase
 import com.hhp227.concafe.domain.usecase.ChangePasswordUseCase
+import com.hhp227.concafe.domain.usecase.CheckAppUpdateUseCase
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
@@ -402,6 +403,13 @@ fun resolveGetReviewUseCase(): GetReviewUseCase {
 }
 
 fun resolveChangePasswordUseCase(): ChangePasswordUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCheckAppUpdateUseCase(): CheckAppUpdateUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

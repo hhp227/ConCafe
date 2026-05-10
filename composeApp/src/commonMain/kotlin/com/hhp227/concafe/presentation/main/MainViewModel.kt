@@ -11,11 +11,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.CheckAppUpdateUseCase
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
 
 class MainViewModel(
+    private val checkAppUpdateUseCase: CheckAppUpdateUseCase,
     private val getMainNavigationUseCase: GetMainNavigationUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val restoreSessionUseCase: RestoreSessionUseCase
@@ -91,8 +93,29 @@ class MainViewModel(
         }
     }
 
+    private fun checkAppUpdate(storePlatform: String, storeId: String, currentVersion: String) {
+        jobs[JobKey.CHECK_APP_UPDATE]?.cancel()
+        jobs[JobKey.CHECK_APP_UPDATE] = viewModelScope.launch {
+            when (
+                val result = checkAppUpdateUseCase.invoke(
+                    storePlatform = storePlatform,
+                    storeId = storeId,
+                    currentVersion = currentVersion
+                )
+            ) {
+                is AppResult.Success -> result.data?.let { _event.emit(MainEvent.ShowAppUpdate(it)) }
+                is AppResult.Failure -> Unit
+            }
+        }
+    }
+
     fun onAction(action: MainAction) {
         when (action) {
+            is MainAction.CheckAppUpdate -> checkAppUpdate(
+                storePlatform = action.storePlatform,
+                storeId = action.storeId,
+                currentVersion = action.currentVersion
+            )
             is MainAction.Enter -> refreshNavigation(action.preferredRoute)
             is MainAction.RefreshNavigation -> refreshNavigation(action.preferredRoute)
             is MainAction.SelectTab -> selectTab(action.route)
@@ -111,6 +134,7 @@ class MainViewModel(
     }
 
     private enum class JobKey {
+        CHECK_APP_UPDATE,
         OBSERVE_SESSION,
         REFRESH_NAVIGATION
     }

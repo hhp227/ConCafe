@@ -26,10 +26,14 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.domain.model.AppUpdateInfo
+import com.hhp227.concafe.presentation.settings.currentAppVersion
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import java.awt.Desktop
+import java.net.URI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,17 +50,48 @@ fun MainScreen(
     onNavigationAction: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
 
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
+        viewModel.onAction(
+            MainAction.CheckAppUpdate(
+                storePlatform = STORE_PLATFORM_IOS,
+                storeId = APP_STORE_BUNDLE_ID,
+                currentVersion = currentAppVersion()
+            )
+        )
     }
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is MainEvent.ShowError -> Unit
+                is MainEvent.ShowAppUpdate -> availableUpdate = event.updateInfo
                 MainEvent.NavigateToSignUp -> onNavigationAction(NavigationAction.NavigateToSignUp)
             }
         }
+    }
+    availableUpdate?.let { update ->
+        AlertDialog(
+            onDismissRequest = { availableUpdate = null },
+            title = { Text("업데이트 안내") },
+            text = { Text("새 버전 ${update.latestVersion}이 출시되었습니다. 스토어에서 업데이트할 수 있습니다.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        availableUpdate = null
+                        openStorePage(update.storeUrl)
+                    }
+                ) {
+                    Text("업데이트")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { availableUpdate = null }) {
+                    Text(stringResource(Res.string.common_cancel))
+                }
+            }
+        )
     }
     LaunchedEffect(initialTab) {
         if (initialTab != null) {
@@ -143,6 +178,17 @@ fun MainScreen(
         }
     }
 }
+
+private fun openStorePage(storeUrl: String) {
+    runCatching {
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            Desktop.getDesktop().browse(URI(storeUrl))
+        }
+    }
+}
+
+private const val APP_STORE_BUNDLE_ID = "com.hhp227.ConCafe"
+private const val STORE_PLATFORM_IOS = "IOS"
 
 fun desktopMainTabs(uiState: MainUiState): List<Pair<MainNavigationTab, ImageVector>> {
     return uiState.tabs.map { tab ->
