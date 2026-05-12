@@ -3769,15 +3769,16 @@ export const onScheduleCreateBirthdayNotifications = onSchedule(
 
 export const onScheduleDeleteExpiredCastSchedules = onSchedule(
   {
-    schedule: "every monday 03:00",
+    schedule: "0 3 1 * *",
     timeZone: "Asia/Seoul",
   },
   async () => {
     const firestore = db();
     const now = kstNow();
-    // 지난 주 일요일(현재 주 시작 - 1일) 이전 데이터를 삭제한다
-    const cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const cutoffDateKey = kstDateKey(cutoffDate);
+    // 매월 1일에 이전 달까지의 스케줄 데이터를 삭제한다.
+    const year = now.getUTCFullYear();
+    const month = `${now.getUTCMonth() + 1}`.padStart(2, "0");
+    const cutoffDateKey = `${year}-${month}-01`;
 
     const snapshot = await firestore
       .collection("castSchedules")
