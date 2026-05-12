@@ -143,12 +143,7 @@ struct CafeMenuView: View {
                 }
             }
             .aspectRatio(1, contentMode: .fit)
-            .cornerRadiusCompat(
-                topLeft: 20,
-                topRight: 20,
-                bottomLeft: 0,
-                bottomRight: 0
-            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 4) {
                 Text(good.name)
                     .font(.caption.weight(.semibold))
@@ -176,11 +171,8 @@ struct CafeMenuView: View {
                     }
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 10)
+            .padding(.top, 10)
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func sectionTitle(_ text: String) -> some View {
