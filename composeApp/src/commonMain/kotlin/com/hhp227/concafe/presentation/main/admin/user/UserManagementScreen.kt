@@ -66,7 +66,6 @@ fun UserManagementScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { FilterRow(uiState = uiState, onAction = viewModel::onAction) }
-
             if (uiState.isLoading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
@@ -100,7 +99,6 @@ fun UserManagementScreen(
                     }
                 }
             }
-
             uiState.infoMessage?.let { message ->
                 item {
                     InfoMessage(message = message) {

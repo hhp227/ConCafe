@@ -293,6 +293,12 @@ private struct ExploreContentView: View {
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_doll"), table: "Localizable")
         case "COSPLAY":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_cosplay"), table: "Localizable")
+        case "NAMJANG":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_namjang"), table: "Localizable")
+        case "YOKAI":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_yokai"), table: "Localizable")
+        case "CAT":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cat"), table: "Localizable")
         case "OTHER":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_other"), table: "Localizable")
         default:

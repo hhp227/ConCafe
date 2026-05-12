@@ -154,6 +154,9 @@
     <string name="home_nearby_cafe_type_devil">悪魔</string>
     <string name="home_nearby_cafe_type_doll">人形</string>
     <string name="home_nearby_cafe_type_cosplay">コスプレ</string>
+    <string name="home_nearby_cafe_type_namjang">男装</string>
+    <string name="home_nearby_cafe_type_yokai">妖怪</string>
+    <string name="home_nearby_cafe_type_cat">猫</string>
     <string name="home_nearby_cafe_type_other">その他</string>
     <string name="home_notice_empty_title">最近のお知らせはありません</string>
     <string name="home_notice_empty_desc">新しいお知らせが登録されるとこの領域に表示されます。</string>
