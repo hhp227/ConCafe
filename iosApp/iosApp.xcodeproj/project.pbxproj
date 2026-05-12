@@ -201,11 +201,6 @@
 		0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */; };
 		0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */; };
 		0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */; };
-		0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000012FB1000000B10000 /* UserManagementView.swift */; };
-		0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000022FB1000000B10000 /* UserManagementViewModel.swift */; };
-		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
-		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
-		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
 		0A8ABA612F5C1C0B00265D4F /* CafeManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */; };
 		0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */; };
 		0A8ABA652F5C1C4D00265D4F /* CafeManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA642F5C1C4D00265D4F /* CafeManagementAction.swift */; };
@@ -255,6 +250,11 @@
 		0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */; };
 		0AFECA552F62CE5600C2C099 /* ReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */; };
 		0AFF00072F9B000000FF0007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */; };
+		0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000012FB1000000B10000 /* UserManagementView.swift */; };
+		0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000022FB1000000B10000 /* UserManagementViewModel.swift */; };
+		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
+		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
+		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
@@ -460,11 +460,6 @@
 		0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsUiState.swift; sourceTree = "<group>"; };
 		0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsAction.swift; sourceTree = "<group>"; };
 		0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsEvent.swift; sourceTree = "<group>"; };
-		0B1000012FB1000000B10000 /* UserManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementView.swift; sourceTree = "<group>"; };
-		0B1000022FB1000000B10000 /* UserManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementViewModel.swift; sourceTree = "<group>"; };
-		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
-		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
-		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
 		0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementViewModel.swift; sourceTree = "<group>"; };
 		0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementUiState.swift; sourceTree = "<group>"; };
 		0A8ABA642F5C1C4D00265D4F /* CafeManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementAction.swift; sourceTree = "<group>"; };
@@ -513,6 +508,11 @@
 		0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditEvent.swift; sourceTree = "<group>"; };
 		0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditView.swift; sourceTree = "<group>"; };
 		0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		0B1000012FB1000000B10000 /* UserManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementView.swift; sourceTree = "<group>"; };
+		0B1000022FB1000000B10000 /* UserManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementViewModel.swift; sourceTree = "<group>"; };
+		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
+		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
+		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -586,18 +586,6 @@
 				0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */,
 			);
 			path = Admin;
-			sourceTree = "<group>";
-		};
-		0B1000202FB1000000B10000 /* User */ = {
-			isa = PBXGroup;
-			children = (
-				0B1000012FB1000000B10000 /* UserManagementView.swift */,
-				0B1000022FB1000000B10000 /* UserManagementViewModel.swift */,
-				0B1000032FB1000000B10000 /* UserManagementUiState.swift */,
-				0B1000042FB1000000B10000 /* UserManagementAction.swift */,
-				0B1000052FB1000000B10000 /* UserManagementEvent.swift */,
-			);
-			path = User;
 			sourceTree = "<group>";
 		};
 		0A0C66962F5C0DCC00B0CDE4 /* Auth */ = {
@@ -1162,6 +1150,18 @@
 			path = Review;
 			sourceTree = "<group>";
 		};
+		0B1000202FB1000000B10000 /* User */ = {
+			isa = PBXGroup;
+			children = (
+				0B1000012FB1000000B10000 /* UserManagementView.swift */,
+				0B1000022FB1000000B10000 /* UserManagementViewModel.swift */,
+				0B1000032FB1000000B10000 /* UserManagementUiState.swift */,
+				0B1000042FB1000000B10000 /* UserManagementAction.swift */,
+				0B1000052FB1000000B10000 /* UserManagementEvent.swift */,
+			);
+			path = User;
+			sourceTree = "<group>";
+		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -1717,10 +1717,13 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ConCafe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSCameraUsageDescription = "QR 체크인을 위해 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1735,6 +1738,7 @@
 					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hhp227.ConCafe;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1761,10 +1765,13 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ConCafe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSCameraUsageDescription = "QR 체크인을 위해 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1779,6 +1786,7 @@
 					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hhp227.ConCafe;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
