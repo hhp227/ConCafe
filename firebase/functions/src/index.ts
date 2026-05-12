@@ -319,6 +319,7 @@ type CastScheduleLike = {
   status?: unknown;
   startTime?: unknown;
   endTime?: unknown;
+  createdBy?: unknown;
 };
 
 type NoticeLike = {
@@ -747,6 +748,8 @@ async function createUserNotification(
     | "CAFE_OWNER_REJECTED"
     | "CAST_CLAIM_REJECTED"
     | "CAFE_CHECK_IN"
+    | "CAST_SCHEDULE_ASSIGNED"
+    | "CAST_SCHEDULE_CREATED"
     | "CAFE_TABLE_COUNT_UPDATE"
     | "COMMUNITY_COMMENT"
     | "COMMUNITY_LIKE",
@@ -1625,6 +1628,151 @@ async function syncCastScheduleNotifications(
   });
 }
 
+async function syncCastScheduleCreatedOwnerNotifications(
+  scheduleId: string,
+  beforeData: CastScheduleLike | undefined,
+  afterData: CastScheduleLike | undefined
+): Promise<void> {
+  if (beforeData != null || afterData == null) {
+    return;
+  }
+  const castId = asNonBlankString(afterData.castId);
+  const cafeId = asNonBlankString(afterData.cafeId);
+  const scheduleDate = asNonBlankString(afterData.date);
+  const createdBy = asNonBlankString(afterData.createdBy);
+
+  if (castId == null || cafeId == null || scheduleDate == null || createdBy == null) {
+    return;
+  }
+  const [cafeSnapshot, castSnapshot] = await Promise.all([
+    db().collection("cafes").doc(cafeId).get(),
+    db().collection("cafes").doc(cafeId).collection("casts").doc(castId).get(),
+  ]);
+  const linkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+  if (linkedUserId == null || linkedUserId !== createdBy) {
+    return;
+  }
+  const ownerIds = [
+    ...asStringArray(cafeSnapshot.data()?.ownerIds),
+    ...await loadCafeOwnerUserIds(cafeId),
+  ];
+  const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+    ownerIds,
+    [createdBy]
+  );
+
+  if (recipientUserIds.length == 0) {
+    return;
+  }
+  const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "카페";
+  const castName = asNonBlankString(castSnapshot.data()?.name) ?? "캐스트";
+  const startTime = asNonBlankString(afterData.startTime) ?? "";
+  const endTime = asNonBlankString(afterData.endTime) ?? "";
+  const timeLabel = startTime.length > 0 && endTime.length > 0
+    ? ` ${startTime} - ${endTime}`
+    : "";
+  const createdAt = new Date().toISOString();
+
+  await processInBatches(recipientUserIds, async (ownerId) => {
+    await createUserNotification(
+      ownerId,
+      `cast_schedule_created_${scheduleId}_${ownerId}`,
+      "CAST_SCHEDULE_CREATED",
+      `${cafeName} 스케줄 등록`,
+      `${castName}님이 ${scheduleDate}${timeLabel} 스케줄을 등록했어요.`,
+      cafeId,
+      createdAt
+    );
+  });
+  logger.info("Sent cast schedule created notifications to cafe owners.", {
+    scheduleId: scheduleId,
+    cafeId: cafeId,
+    castId: castId,
+    createdBy: createdBy,
+    ownerCount: recipientUserIds.length,
+    droppedByCap: droppedByCap,
+  });
+}
+
+async function isCafeOwnerScheduleCreator(
+  cafeSnapshot: FirebaseFirestore.DocumentSnapshot,
+  cafeId: string,
+  createdBy: string
+): Promise<boolean> {
+  const ownerIds = asStringArray(cafeSnapshot.data()?.ownerIds);
+
+  if (ownerIds.includes(createdBy)) {
+    return true;
+  }
+  const userSnapshot = await db().collection("users").doc(createdBy).get();
+  const userData = userSnapshot.data();
+  const role = asNonBlankString(userData?.role);
+  const affiliatedCafeId = asNonBlankString(userData?.affiliatedCafeId);
+  const ownedCafeIds = asStringArray(userData?.ownedCafeIds);
+
+  return role === "CAFE_OWNER" && (
+    affiliatedCafeId === cafeId ||
+    ownedCafeIds.includes(cafeId)
+  );
+}
+
+async function syncOwnerCreatedCastScheduleNotification(
+  scheduleId: string,
+  beforeData: CastScheduleLike | undefined,
+  afterData: CastScheduleLike | undefined
+): Promise<void> {
+  if (beforeData != null || afterData == null) {
+    return;
+  }
+  const castId = asNonBlankString(afterData.castId);
+  const cafeId = asNonBlankString(afterData.cafeId);
+  const scheduleDate = asNonBlankString(afterData.date);
+  const createdBy = asNonBlankString(afterData.createdBy);
+
+  if (castId == null || cafeId == null || scheduleDate == null || createdBy == null) {
+    return;
+  }
+  const [cafeSnapshot, castSnapshot] = await Promise.all([
+    db().collection("cafes").doc(cafeId).get(),
+    db().collection("cafes").doc(cafeId).collection("casts").doc(castId).get(),
+  ]);
+  const linkedUserId = asNonBlankString(castSnapshot.data()?.linkedUserId);
+
+  if (linkedUserId == null || linkedUserId === createdBy) {
+    return;
+  }
+  const isCafeOwner = await isCafeOwnerScheduleCreator(cafeSnapshot, cafeId, createdBy);
+
+  if (!isCafeOwner) {
+    return;
+  }
+  const cafeName = asNonBlankString(cafeSnapshot.data()?.name) ?? "카페";
+  const startTime = asNonBlankString(afterData.startTime) ?? "";
+  const endTime = asNonBlankString(afterData.endTime) ?? "";
+  const timeLabel = startTime.length > 0 && endTime.length > 0
+    ? ` ${startTime} - ${endTime}`
+    : "";
+  const createdAt = new Date().toISOString();
+
+  await createUserNotification(
+    linkedUserId,
+    `cast_schedule_assigned_${scheduleId}_${linkedUserId}`,
+    "CAST_SCHEDULE_ASSIGNED",
+    `${cafeName} 스케줄 등록`,
+    `${scheduleDate}${timeLabel} 스케줄이 등록되었어요.`,
+    castId,
+    createdAt
+  );
+  logger.info("Sent owner-created cast schedule notification.", {
+    scheduleId: scheduleId,
+    cafeId: cafeId,
+    castId: castId,
+    createdBy: createdBy,
+    linkedUserId: linkedUserId,
+  });
+}
+
 async function syncFavoriteCafeNoticeNotifications(
   cafeId: string,
   noticeId: string,
@@ -2429,7 +2577,11 @@ export const onCastScheduleWrittenCreateShiftNotifications = onDocumentWritten(
     if (scheduleId == null) {
       return;
     }
-    await syncCastScheduleNotifications(scheduleId, beforeData, afterData);
+    await Promise.all([
+      syncCastScheduleNotifications(scheduleId, beforeData, afterData),
+      syncCastScheduleCreatedOwnerNotifications(scheduleId, beforeData, afterData),
+      syncOwnerCreatedCastScheduleNotification(scheduleId, beforeData, afterData),
+    ]);
     logger.info("Synced cast schedule notifications.", {
       scheduleId: scheduleId,
       status: asNonBlankString(afterData?.status),

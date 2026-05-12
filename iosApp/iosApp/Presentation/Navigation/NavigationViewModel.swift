@@ -68,6 +68,8 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.accountSettings))
         case .navigateToInquiry:
             event.send(.navigateTo(.inquiry))
+        case .navigateToUserManagement:
+            event.send(.navigateTo(.userManagement))
         case .navigateToChangePassword:
             event.send(.navigateTo(.changePassword))
         case .navigateToCommunity:

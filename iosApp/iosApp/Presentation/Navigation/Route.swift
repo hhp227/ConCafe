@@ -35,6 +35,7 @@ enum Route: Hashable {
     case notificationSettings
     case accountSettings
     case inquiry
+    case userManagement
     case changePassword
     case community
     case postEdit(postId: String?)

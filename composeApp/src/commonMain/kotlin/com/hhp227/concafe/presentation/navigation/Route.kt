@@ -99,6 +99,9 @@ sealed interface Route {
     data object Inquiry : Route
 
     @Serializable
+    data object UserManagement : Route
+
+    @Serializable
     data object ChangePassword : Route
 
     @Serializable

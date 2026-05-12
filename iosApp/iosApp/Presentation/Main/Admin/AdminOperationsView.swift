@@ -37,6 +37,8 @@ struct AdminOperationsView: View {
                 onNavigationAction(.navigateToBanner())
             case .navigateToBannerEdit:
                 onNavigationAction(.navigateToBannerEdit())
+            case .navigateToUserManagement:
+                onNavigationAction(.navigateToUserManagement)
             }
         }
     }
@@ -485,6 +487,7 @@ private extension MetricTrend {
 private extension QuickMenuIcon {
     var systemName: String {
         switch self {
+        case .users: return "person.2.fill"
         case .banner: return "rectangle.3.group.fill"
         case .moderation: return "hammer.fill"
         case .analytics: return "chart.bar.fill"

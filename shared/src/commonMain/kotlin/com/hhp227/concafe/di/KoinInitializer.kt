@@ -66,6 +66,7 @@ import com.hhp227.concafe.domain.usecase.GetMyRequestableCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminReportPageUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminUserPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
@@ -1048,6 +1049,13 @@ fun resolveCreateCommunityPostReportUseCase(): CreateCommunityPostReportUseCase 
 }
 
 fun resolveGetAdminReportPageUseCase(): GetAdminReportPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetAdminUserPageUseCase(): GetAdminUserPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

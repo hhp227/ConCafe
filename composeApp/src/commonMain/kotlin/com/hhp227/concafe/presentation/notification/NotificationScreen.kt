@@ -335,9 +335,11 @@ private data class NotificationVisual(
 private fun notificationVisual(type: String): NotificationVisual {
     return when (type) {
         "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, colorFromHex("E4F7EC"), colorFromHex("2E9E5B"))
+        "CAST_SCHEDULE_ASSIGNED" -> NotificationVisual(Icons.Filled.EventAvailable, colorFromHex("E4F7EC"), colorFromHex("2E9E5B"))
         "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, colorFromHex("FFE6F1"), colorFromHex("EB5F97"))
         "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, colorFromHex("E8F0FF"), colorFromHex("4A79E8"))
         "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, colorFromHex("FFF4E2"), colorFromHex("E29B35"))
+        "CAST_SCHEDULE_CREATED" -> NotificationVisual(Icons.Filled.EventAvailable, colorFromHex("F0F7FF"), colorFromHex("2D74C4"))
         "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, colorFromHex("ECFFF5"), colorFromHex("1F8B5F"))
         "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, colorFromHex("F1E8FF"), colorFromHex("8A52E2"))
         else -> NotificationVisual(Icons.Filled.Notifications, colorFromHex("F2F2F2"), colorFromHex("666666"))

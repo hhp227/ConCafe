@@ -704,6 +704,8 @@ class FirestoreCastRemoteDataSource(
     override suspend fun updateCastScheduleRemote(update: CastScheduleUpdate): CastSchedule? {
         require(update.castId.isNotBlank()) { "castId is required" }
         val idToken = tokenProvider.getIdToken()
+        val currentUserId = tokenProvider.getCurrentUserId()?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("signed-in user is required")
         val resolvedCafeId = resolveCafeIdByCastId(update.castId, idToken)
             ?: throw NoSuchElementException("cast detail not found")
         val documentId = "${update.castId}_${update.date}"
@@ -723,7 +725,8 @@ class FirestoreCastRemoteDataSource(
                         "date" to firestoreString(update.date),
                         "startTime" to firestoreString(startTime),
                         "endTime" to firestoreString(endTime),
-                        "status" to firestoreString(CastScheduleStatus.WORK.name)
+                        "status" to firestoreString(CastScheduleStatus.WORK.name),
+                        "createdBy" to firestoreString(currentUserId)
                     )
                 )
                 restApi.patch(schedulePath, scheduleBody, idToken)
@@ -736,7 +739,8 @@ class FirestoreCastRemoteDataSource(
                         "date" to firestoreString(update.date),
                         "startTime" to firestoreNullableString(null),
                         "endTime" to firestoreNullableString(null),
-                        "status" to firestoreString(update.status.name)
+                        "status" to firestoreString(update.status.name),
+                        "createdBy" to firestoreString(currentUserId)
                     )
                 )
                 restApi.patch(schedulePath, scheduleBody, idToken)

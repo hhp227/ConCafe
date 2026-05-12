@@ -99,7 +99,7 @@ class GetNotificationFeedUseCase(
             SectionSpec(
                 id = "work",
                 title = "출근 알림",
-                types = setOf("CAST_SHIFT")
+                types = setOf("CAST_SHIFT", "CAST_SCHEDULE_ASSIGNED", "CAST_SCHEDULE_CREATED")
             ),
             SectionSpec(
                 id = "birthday",

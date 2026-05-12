@@ -107,6 +107,7 @@ val useCaseModule = module {
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetAdminReportPageUseCase(get(), get()) }
+    factory { GetAdminUserPageUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }

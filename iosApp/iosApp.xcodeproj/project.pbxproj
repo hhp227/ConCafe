@@ -201,6 +201,11 @@
 		0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */; };
 		0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */; };
 		0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */; };
+		0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000012FB1000000B10000 /* UserManagementView.swift */; };
+		0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000022FB1000000B10000 /* UserManagementViewModel.swift */; };
+		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
+		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
+		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
 		0A8ABA612F5C1C0B00265D4F /* CafeManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */; };
 		0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */; };
 		0A8ABA652F5C1C4D00265D4F /* CafeManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA642F5C1C4D00265D4F /* CafeManagementAction.swift */; };
@@ -455,6 +460,11 @@
 		0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsUiState.swift; sourceTree = "<group>"; };
 		0A8ABA5C2F5C1BC400265D4F /* AdminOperationsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsAction.swift; sourceTree = "<group>"; };
 		0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOperationsEvent.swift; sourceTree = "<group>"; };
+		0B1000012FB1000000B10000 /* UserManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementView.swift; sourceTree = "<group>"; };
+		0B1000022FB1000000B10000 /* UserManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementViewModel.swift; sourceTree = "<group>"; };
+		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
+		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
+		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
 		0A8ABA602F5C1C0B00265D4F /* CafeManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementViewModel.swift; sourceTree = "<group>"; };
 		0A8ABA622F5C1C3000265D4F /* CafeManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementUiState.swift; sourceTree = "<group>"; };
 		0A8ABA642F5C1C4D00265D4F /* CafeManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeManagementAction.swift; sourceTree = "<group>"; };
@@ -568,6 +578,7 @@
 		0A0C66912F5C055500B0CDE4 /* Admin */ = {
 			isa = PBXGroup;
 			children = (
+				0B1000202FB1000000B10000 /* User */,
 				0A0C66922F5C055F00B0CDE4 /* AdminOperationsView.swift */,
 				0A8ABA582F5C1B8300265D4F /* AdminOperationsViewModel.swift */,
 				0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */,
@@ -575,6 +586,18 @@
 				0A8ABA5E2F5C1BDB00265D4F /* AdminOperationsEvent.swift */,
 			);
 			path = Admin;
+			sourceTree = "<group>";
+		};
+		0B1000202FB1000000B10000 /* User */ = {
+			isa = PBXGroup;
+			children = (
+				0B1000012FB1000000B10000 /* UserManagementView.swift */,
+				0B1000022FB1000000B10000 /* UserManagementViewModel.swift */,
+				0B1000032FB1000000B10000 /* UserManagementUiState.swift */,
+				0B1000042FB1000000B10000 /* UserManagementAction.swift */,
+				0B1000052FB1000000B10000 /* UserManagementEvent.swift */,
+			);
+			path = User;
 			sourceTree = "<group>";
 		};
 		0A0C66962F5C0DCC00B0CDE4 /* Auth */ = {
@@ -1309,8 +1332,10 @@
 				0A0C66882F5C03BD00B0CDE4 /* MainEvent.swift in Sources */,
 				0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */,
 				0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */,
+				0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */,
 				0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
+				0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
 				0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */,
 				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
@@ -1384,6 +1409,7 @@
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
 				0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */,
 				0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */,
+				0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */,
 				0A785C9F2F5A7B76004037A8 /* ExploreViewModel.swift in Sources */,
 				0A580DB72F59711000390F67 /* CheckInView.swift in Sources */,
 				0A0C66A02F5C0E4F00B0CDE4 /* SignInViewModel.swift in Sources */,
@@ -1502,6 +1528,7 @@
 				0A785CCB2F5A7F00004037A8 /* CafeAction.swift in Sources */,
 				0A0C66952F5C05FF00B0CDE4 /* Color.swift in Sources */,
 				0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */,
+				0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */,
 				0A7E616F2FA09787005E1311 /* PostDetailAction.swift in Sources */,
 				0A785CC32F5A7E80004037A8 /* CafeUiState.swift in Sources */,
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
@@ -1513,6 +1540,7 @@
 				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
 				0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
+				0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */,
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,

@@ -96,6 +96,7 @@ enum AdminMetricIcon {
 }
 
 enum QuickMenuIcon {
+    case users
     case banner
     case moderation
     case analytics
@@ -122,6 +123,7 @@ func buildAdminMetrics(
 }
 
 private let defaultQuickMenus: [AdminQuickMenu] = [
+    AdminQuickMenu(id: "users", title: "유저 관리", description: "카페 운영자 및 차단 사용자 조회", icon: .users, accent: .blue),
     AdminQuickMenu(id: "banner", title: "홈 배너 관리", description: "이벤트 및 공지 배너 수정", icon: .banner, accent: .primary),
     AdminQuickMenu(id: "moderation", title: "신고 및 제재", description: "부적절한 컨텐츠 및 유저 차단", icon: .moderation, accent: .rose),
     AdminQuickMenu(id: "analytics", title: "시스템 통계", description: "유입 분석 및 매출 리포트", icon: .analytics, accent: .blue)
