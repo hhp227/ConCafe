@@ -18,6 +18,13 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onOpenURL { url in
+                    AppUrlHandler.handle(url)
+                }
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                    guard let url = userActivity.webpageURL else { return }
+                    AppUrlHandler.handle(url)
+                }
         }
     }
 
@@ -53,13 +60,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         open url: URL,
         options: [UIApplication.OpenURLOptionsKey : Any] = [:]
     ) -> Bool {
-        if Auth.auth().canHandle(url) {
-            return true
-        } else if AuthApi.isKakaoTalkLoginUrl(url) {
-            return AuthController.handleOpenUrl(url: url)
-        } else {
-            return false
-        }
+        return AppUrlHandler.handle(url)
     }
 
     func application(
@@ -67,15 +68,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         continue userActivity: NSUserActivity,
         restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
     ) -> Bool {
-        let callbackUrl = userActivity.webpageURL
-
-        if let callbackUrl, Auth.auth().canHandle(callbackUrl) {
-            return true
-        } else if let callbackUrl, AuthApi.isKakaoTalkLoginUrl(callbackUrl) {
-            return AuthController.handleOpenUrl(url: callbackUrl)
-        } else {
-            return false
-        }
+        guard let callbackUrl = userActivity.webpageURL else { return false }
+        return AppUrlHandler.handle(callbackUrl)
     }
 
     func application(
@@ -135,6 +129,19 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         completionHandler()
+    }
+}
+
+enum AppUrlHandler {
+    @discardableResult
+    static func handle(_ url: URL) -> Bool {
+        if Auth.auth().canHandle(url) {
+            return true
+        } else if AuthApi.isKakaoTalkLoginUrl(url) {
+            return AuthController.handleOpenUrl(url: url)
+        } else {
+            return false
+        }
     }
 }
 
