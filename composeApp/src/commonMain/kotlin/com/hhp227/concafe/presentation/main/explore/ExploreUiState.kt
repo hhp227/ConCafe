@@ -33,7 +33,7 @@ data class ExploreUiState(
         DAEGU("대구", "daegu"),
         TOKYO("도쿄", "tokyo"),
         OSAKA("오사카", "osaka"),
-        YOKOHAMA("요코하마", "yokohama")
+        ETC("그 외지역", "etc")
     }
 
     enum class SortFilter(val label: String, val key: String) {

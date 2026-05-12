@@ -205,7 +205,7 @@ struct MapView: View {
             return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.6762, longitude: 139.6503), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
         case .osaka:
             return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 34.6937, longitude: 135.5023), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
-        case .yokohama:
+        case .etc:
             return MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.4437, longitude: 139.6380), span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12))
         }
     }
@@ -224,7 +224,7 @@ private extension CheckInCafeSummary {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(),
               !normalizedCityKey.isEmpty,
-              let nearbyRegion = ExploreUiState.RegionFilter.allCases.first(where: { $0.rawValue == normalizedCityKey }) else {
+              let nearbyRegion = ExploreUiState.RegionFilter.allCases.first(where: { $0.rawValue == normalizedCityKey || (normalizedCityKey == "yokohama" && $0 == .etc) }) else {
             return true
         }
         return matchesRegion(nearbyRegion)
@@ -242,7 +242,7 @@ private extension GeoPoint {
             return (35.0...35.4).contains(latitude) && (128.8...129.3).contains(longitude)
         case .daegu:
             return (35.7...36.0).contains(latitude) && (128.4...128.8).contains(longitude)
-        case .yokohama:
+        case .etc:
             return (35.35...35.60).contains(latitude) && (139.50...139.75).contains(longitude)
         case .tokyo:
             return (35.5...35.9).contains(latitude) && (139.3...139.9).contains(longitude)

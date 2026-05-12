@@ -57,7 +57,7 @@ struct ExploreUiState {
         case daegu = "daegu"
         case tokyo = "tokyo"
         case osaka = "osaka"
-        case yokohama = "yokohama"
+        case etc = "etc"
 
         var label: String {
             switch self {
@@ -67,7 +67,7 @@ struct ExploreUiState {
             case .daegu: return "대구"
             case .tokyo: return "도쿄"
             case .osaka: return "오사카"
-            case .yokohama: return "요코하마"
+            case .etc: return "그 외지역"
             }
         }
     }
