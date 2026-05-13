@@ -66,7 +66,6 @@ enum AppBarAppearance {
             applyNavigationBarStyle(.opaque, to: navigationBar)
         case .transparentScrollEdge:
             let transparentAppearance = makeTransparentNavigationBarAppearance()
-            navigationBar.isTranslucent = true
             navigationBar.standardAppearance = transparentAppearance
             navigationBar.scrollEdgeAppearance = transparentAppearance
             navigationBar.compactAppearance = transparentAppearance
@@ -108,7 +107,6 @@ enum AppBarAppearance {
     static func applyNavigationBarStyleToVisibleNavigationBars(_ style: CompatNavigationBarStyle) {
         let scenes = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
-        let scrollViewOffsets = captureVisibleScrollViewOffsets(in: scenes)
 
         UIView.performWithoutAnimation {
             scenes
@@ -116,39 +114,6 @@ enum AppBarAppearance {
                 .forEach { window in
                     applyNavigationBarTransitionStyle(style, in: window.rootViewController)
                 }
-            restoreScrollViewOffsets(scrollViewOffsets)
-        }
-
-        DispatchQueue.main.async {
-            restoreScrollViewOffsets(scrollViewOffsets)
-        }
-    }
-
-    private static func captureVisibleScrollViewOffsets(in scenes: [UIWindowScene]) -> [(UIScrollView, CGPoint)] {
-        scenes
-            .flatMap(\.windows)
-            .filter { !$0.isHidden }
-            .flatMap { collectScrollViewOffsets(in: $0) }
-    }
-
-    private static func collectScrollViewOffsets(in view: UIView) -> [(UIScrollView, CGPoint)] {
-        var result: [(UIScrollView, CGPoint)] = []
-
-        if let scrollView = view as? UIScrollView {
-            result.append((scrollView, scrollView.contentOffset))
-        }
-
-        view.subviews.forEach { subview in
-            result.append(contentsOf: collectScrollViewOffsets(in: subview))
-        }
-
-        return result
-    }
-
-    private static func restoreScrollViewOffsets(_ offsets: [(UIScrollView, CGPoint)]) {
-        offsets.forEach { scrollView, contentOffset in
-            guard scrollView.window != nil else { return }
-            scrollView.setContentOffset(contentOffset, animated: false)
         }
     }
 
