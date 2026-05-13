@@ -311,12 +311,11 @@ private struct ExploreContentView: View {
             GeometryReader { proxy in
                 ZStack {
                     placeholderMaidImage
-                    if let rawImageUrl = maid.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                       !rawImageUrl.isEmpty,
-                       let imageUrl = URL(string: rawImageUrl) {
+                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage) {
                         CachedAsyncImage(
                             url: imageUrl,
-                            placeholder: Color.clear
+                            placeholder: Color.clear,
+                            displaySize: .thumbnail
                         )
                     }
                 }
