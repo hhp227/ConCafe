@@ -156,6 +156,7 @@ private struct CafeContentView: View {
                     content(topSafeArea: proxy.safeAreaInsets.top)
                 }
                 .coordinateSpace(name: "cafeScroll")
+                .ignoresSafeArea(edges: .top)
                 .background(Color(hex: "FFF9FC"))
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
@@ -216,7 +217,6 @@ private struct CafeContentView: View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
-                    .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
                 Section {
                     tabContent(detail: detail)
