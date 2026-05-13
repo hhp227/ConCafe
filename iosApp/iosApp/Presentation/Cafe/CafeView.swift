@@ -157,6 +157,7 @@ private struct CafeContentView: View {
                 }
                 .coordinateSpace(name: "cafeScroll")
                 .ignoresSafeArea(edges: .top)
+                .compatScrollContentInsetAdjustmentNever()
                 .background(Color(hex: "FFF9FC"))
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value

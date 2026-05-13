@@ -94,6 +94,7 @@ private struct CastContentView: View {
             }
             .coordinateSpace(name: "castScroll")
             .ignoresSafeArea(edges: .top)
+            .compatScrollContentInsetAdjustmentNever()
             .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
                 summarySectionMinY = value
             }
