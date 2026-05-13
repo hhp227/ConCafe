@@ -54,15 +54,31 @@ enum AppBarAppearance {
     }
 
     static func applyNavigationBarStyle(_ style: CompatNavigationBarStyle, to navigationBar: UINavigationBar) {
+        applyNavigationBarStyle(style, to: navigationBar, updatesTranslucency: true)
+    }
+
+    static func applyNavigationBarAppearance(_ style: CompatNavigationBarStyle, to navigationBar: UINavigationBar) {
+        applyNavigationBarStyle(style, to: navigationBar, updatesTranslucency: false)
+    }
+
+    private static func applyNavigationBarStyle(
+        _ style: CompatNavigationBarStyle,
+        to navigationBar: UINavigationBar,
+        updatesTranslucency: Bool
+    ) {
         let standardAppearance = makeOpaqueNavigationBarAppearance()
         let scrollEdgeAppearance: UINavigationBarAppearance
 
         switch style {
         case .opaque:
-            navigationBar.isTranslucent = false
+            if updatesTranslucency {
+                navigationBar.isTranslucent = false
+            }
             scrollEdgeAppearance = standardAppearance
         case .transparentScrollEdge:
-            navigationBar.isTranslucent = true
+            if updatesTranslucency {
+                navigationBar.isTranslucent = true
+            }
             scrollEdgeAppearance = makeTransparentNavigationBarAppearance()
         }
 
@@ -81,7 +97,7 @@ enum AppBarAppearance {
         scenes
             .flatMap(\.windows)
             .forEach { window in
-                applyNavigationBarStyle(style, in: window.rootViewController)
+                applyNavigationBarAppearance(style, in: window.rootViewController)
             }
     }
 
@@ -93,21 +109,21 @@ enum AppBarAppearance {
         return appearance
     }
 
-    private static func applyNavigationBarStyle(
+    private static func applyNavigationBarAppearance(
         _ style: CompatNavigationBarStyle,
         in viewController: UIViewController?
     ) {
         guard let viewController else { return }
 
         if let navigationController = viewController as? UINavigationController {
-            applyNavigationBarStyle(style, to: navigationController.navigationBar)
+            applyNavigationBarAppearance(style, to: navigationController.navigationBar)
         }
 
         viewController.children.forEach {
-            applyNavigationBarStyle(style, in: $0)
+            applyNavigationBarAppearance(style, in: $0)
         }
 
-        applyNavigationBarStyle(style, in: viewController.presentedViewController)
+        applyNavigationBarAppearance(style, in: viewController.presentedViewController)
     }
 }
 
@@ -349,7 +365,7 @@ final class NavigationBarAppearanceHostingController: UIViewController {
         super.viewWillDisappear(animated)
         if let transitionStyle = Self.transitionStyle {
             if let navigationBar = navigationController?.navigationBar {
-                AppBarAppearance.applyNavigationBarStyle(transitionStyle, to: navigationBar)
+                AppBarAppearance.applyNavigationBarAppearance(transitionStyle, to: navigationBar)
             }
             Self.transitionStyle = nil
         } else {
