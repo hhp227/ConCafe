@@ -62,7 +62,7 @@ enum AppBarAppearance {
             navigationBar.isTranslucent = false
             scrollEdgeAppearance = standardAppearance
         case .transparentScrollEdge:
-            navigationBar.isTranslucent = true
+            navigationBar.isTranslucent = false
             scrollEdgeAppearance = makeTransparentNavigationBarAppearance()
         }
 

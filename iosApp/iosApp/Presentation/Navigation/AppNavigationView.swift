@@ -21,6 +21,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
+                .compatNavigationBarStyle(.opaque)
                 .compatNavigationBarTransition(hideOnDisappear: shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
