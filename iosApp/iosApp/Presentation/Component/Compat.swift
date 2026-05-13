@@ -272,23 +272,32 @@ final class NavigationBarAppearanceHostingController: UIViewController {
 
         switch style {
         case .opaque:
+            navigationBar.isTranslucent = false
             scrollEdgeAppearance = standardAppearance
         case .transparentScrollEdge:
+            navigationBar.isTranslucent = true
             scrollEdgeAppearance = AppBarAppearance.makeTransparentNavigationBarAppearance()
         }
 
         navigationBar.standardAppearance = standardAppearance
         navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
         navigationBar.compactAppearance = standardAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
+        }
     }
 
     private func restoreOpaqueAppearance() {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
         let opaqueAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
+        navigationBar.isTranslucent = false
         navigationBar.standardAppearance = opaqueAppearance
         navigationBar.scrollEdgeAppearance = opaqueAppearance
         navigationBar.compactAppearance = opaqueAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = opaqueAppearance
+        }
     }
 }
 
