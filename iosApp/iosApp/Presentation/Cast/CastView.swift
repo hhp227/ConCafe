@@ -20,7 +20,6 @@ struct CastView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .compatNavigationBarStyle(.transparentScrollEdge)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -58,6 +57,7 @@ private struct CastContentView: View {
             ZStack(alignment: .top) {
                 content(topSafeArea: proxy.safeAreaInsets.top)
                     .background(Color(hex: "FFF9FC"))
+                overlayTopBar(topSafeArea: proxy.safeAreaInsets.top)
             }
             .ignoresSafeArea(edges: .top)
         }
@@ -65,6 +65,39 @@ private struct CastContentView: View {
 
     private var navBarVisible: Bool {
         uiState.detail != nil && summarySectionMinY <= castSummaryTitleTriggerOffset
+    }
+
+    private func overlayTopBar(topSafeArea: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: topSafeArea)
+            ZStack {
+                HStack {
+                    Button {
+                        onAction(.backTapped)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.headline)
+                            .frame(width: 44, height: 44)
+                    }
+                    .foregroundStyle(navBarVisible ? Color.primary : Color.white)
+                    Spacer()
+                }
+                Text(navBarVisible ? (uiState.detail?.cast.name ?? "") : "")
+                    .font(.headline)
+                    .lineLimit(1)
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 56)
+            }
+            .frame(height: 44)
+        }
+        .frame(maxWidth: .infinity)
+        .background(navBarVisible ? Color(uiColor: .systemBackground) : Color.clear)
+        .overlay(alignment: .bottom) {
+            if navBarVisible {
+                Divider()
+            }
+        }
+        .zIndex(2)
     }
 
     @ViewBuilder

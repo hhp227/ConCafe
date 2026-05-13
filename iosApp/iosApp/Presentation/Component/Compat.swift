@@ -128,6 +128,8 @@ struct ScrollViewContentInsetAdjustmentConfigurator: UIViewRepresentable {
         while let unwrappedView = currentView {
             if let scrollView = unwrappedView as? UIScrollView {
                 scrollView.contentInsetAdjustmentBehavior = behavior
+                scrollView.contentInset.top = 0
+                scrollView.scrollIndicatorInsets.top = 0
                 break
             } else {
                 currentView = unwrappedView.superview
@@ -294,10 +296,6 @@ final class NavigationBarAppearanceHostingController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if let nextStyle = navigationBarStyleForTransitionDestination() {
-            applyAppearance(style: nextStyle)
-            return
-        }
         restoreOpaqueAppearance()
     }
 
@@ -308,6 +306,10 @@ final class NavigationBarAppearanceHostingController: UIViewController {
     private func applyAppearance(style: CompatNavigationBarStyle) {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
+        applyAppearance(style: style, to: navigationBar)
+    }
+
+    private func applyAppearance(style: CompatNavigationBarStyle, to navigationBar: UINavigationBar) {
         let standardAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
         let scrollEdgeAppearance: UINavigationBarAppearance
 
@@ -339,28 +341,6 @@ final class NavigationBarAppearanceHostingController: UIViewController {
         if #available(iOS 15.0, *) {
             navigationBar.compactScrollEdgeAppearance = opaqueAppearance
         }
-    }
-
-    private func navigationBarStyleForTransitionDestination() -> CompatNavigationBarStyle? {
-        guard let destination = transitionCoordinator?.viewController(forKey: .to) else {
-            return nil
-        }
-
-        return Self.findNavigationBarStyle(in: destination)
-    }
-
-    private static func findNavigationBarStyle(in viewController: UIViewController) -> CompatNavigationBarStyle? {
-        if let configurator = viewController as? NavigationBarAppearanceHostingController {
-            return configurator.style
-        }
-
-        for child in viewController.children {
-            if let style = findNavigationBarStyle(in: child) {
-                return style
-            }
-        }
-
-        return nil
     }
 }
 

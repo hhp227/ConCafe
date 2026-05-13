@@ -164,7 +164,7 @@ struct AppNavigationView: View {
         guard let lastRoute = path.last else { return false }
 
         switch lastRoute {
-        case .picture, .signIn, .signUp, .resetPassword:
+        case .cafe, .cast, .picture, .signIn, .signUp, .resetPassword:
             return true
         default:
             return false
