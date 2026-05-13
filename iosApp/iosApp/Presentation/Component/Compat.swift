@@ -53,6 +53,93 @@ enum AppBarAppearance {
         return appearance
     }
 
+    static func applyNavigationBarStyle(_ style: CompatNavigationBarStyle, to navigationBar: UINavigationBar) {
+        applyNavigationBarStyle(style, to: navigationBar, updatesTranslucency: true)
+    }
+
+    fileprivate static func applyNavigationBarTransitionStyle(
+        _ style: CompatNavigationBarStyle,
+        to navigationBar: UINavigationBar
+    ) {
+        switch style {
+        case .opaque:
+            applyNavigationBarStyle(.opaque, to: navigationBar)
+        case .transparentScrollEdge:
+            let transparentAppearance = makeTransparentNavigationBarAppearance()
+            navigationBar.isTranslucent = true
+            navigationBar.standardAppearance = transparentAppearance
+            navigationBar.scrollEdgeAppearance = transparentAppearance
+            navigationBar.compactAppearance = transparentAppearance
+            if #available(iOS 15.0, *) {
+                navigationBar.compactScrollEdgeAppearance = transparentAppearance
+            }
+        }
+    }
+
+    private static func applyNavigationBarStyle(
+        _ style: CompatNavigationBarStyle,
+        to navigationBar: UINavigationBar,
+        updatesTranslucency: Bool
+    ) {
+        let standardAppearance = makeOpaqueNavigationBarAppearance()
+        let scrollEdgeAppearance: UINavigationBarAppearance
+
+        switch style {
+        case .opaque:
+            if updatesTranslucency {
+                navigationBar.isTranslucent = false
+            }
+            scrollEdgeAppearance = standardAppearance
+        case .transparentScrollEdge:
+            if updatesTranslucency {
+                navigationBar.isTranslucent = true
+            }
+            scrollEdgeAppearance = makeTransparentNavigationBarAppearance()
+        }
+
+        navigationBar.standardAppearance = standardAppearance
+        navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
+        navigationBar.compactAppearance = standardAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
+        }
+    }
+
+    private static func applyNavigationBarStyle(
+        _ style: CompatNavigationBarStyle,
+        in viewController: UIViewController?
+    ) {
+        guard let viewController else { return }
+
+        if let navigationController = viewController as? UINavigationController {
+            applyNavigationBarStyle(style, to: navigationController.navigationBar)
+        }
+
+        viewController.children.forEach {
+            applyNavigationBarStyle(style, in: $0)
+        }
+
+        applyNavigationBarStyle(style, in: viewController.presentedViewController)
+    }
+
+    fileprivate static func updateScrollContentInsetAdjustmentBehavior(
+        from view: UIView,
+        behavior: UIScrollView.ContentInsetAdjustmentBehavior
+    ) {
+        var currentView = view.superview
+
+        while let unwrappedView = currentView {
+            if let scrollView = unwrappedView as? UIScrollView {
+                scrollView.contentInsetAdjustmentBehavior = behavior
+                scrollView.contentInset.top = 0
+                scrollView.scrollIndicatorInsets.top = 0
+                break
+            } else {
+                currentView = unwrappedView.superview
+            }
+        }
+    }
+
     private static func makeOpaqueTabBarAppearance() -> UITabBarAppearance {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -60,6 +147,7 @@ enum AppBarAppearance {
         appearance.shadowColor = UIColor.separator
         return appearance
     }
+
 }
 
 struct ExploreKeyboardDismissModifier: ViewModifier {
@@ -106,32 +194,51 @@ struct ScrollViewKeyboardDismissConfigurator: UIViewRepresentable {
 struct ScrollViewContentInsetAdjustmentConfigurator: UIViewRepresentable {
     let behavior: UIScrollView.ContentInsetAdjustmentBehavior
 
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
-
-        DispatchQueue.main.async {
-            updateContentInsetAdjustmentBehavior(from: view)
-        }
-
-        return view
+    func makeUIView(context: Context) -> ContentInsetAdjustmentView {
+        ContentInsetAdjustmentView(behavior: behavior)
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            updateContentInsetAdjustmentBehavior(from: uiView)
-        }
+    func updateUIView(_ uiView: ContentInsetAdjustmentView, context: Context) {
+        uiView.behavior = behavior
+        uiView.updateContentInsetAdjustmentBehavior()
     }
 
-    private func updateContentInsetAdjustmentBehavior(from view: UIView) {
-        var currentView: UIView? = view.superview
-
-        while let unwrappedView = currentView {
-            if let scrollView = unwrappedView as? UIScrollView {
-                scrollView.contentInsetAdjustmentBehavior = behavior
-                break
-            } else {
-                currentView = unwrappedView.superview
+    final class ContentInsetAdjustmentView: UIView {
+        var behavior: UIScrollView.ContentInsetAdjustmentBehavior {
+            didSet {
+                updateContentInsetAdjustmentBehavior()
             }
+        }
+
+        init(behavior: UIScrollView.ContentInsetAdjustmentBehavior) {
+            self.behavior = behavior
+            super.init(frame: .zero)
+            isHidden = true
+            isUserInteractionEnabled = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        override func didMoveToSuperview() {
+            super.didMoveToSuperview()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        func updateContentInsetAdjustmentBehavior() {
+            AppBarAppearance.updateScrollContentInsetAdjustmentBehavior(from: self, behavior: behavior)
         }
     }
 }
@@ -279,53 +386,33 @@ struct CompatVerticalTextField: View {
     }
 }
 
-final class NavigationBarAppearanceHostingController: UIViewController {
+final class NavigationBarAppearanceHostingController: UIViewController, UINavigationControllerDelegate {
+    private static var transitionStyle: CompatNavigationBarStyle?
+
     var style: CompatNavigationBarStyle = .opaque
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if let nextStyle = navigationBarStyleForTransitionDestination() {
-            applyAppearance(style: nextStyle)
-            return
-        }
+        guard Self.transitionStyle == nil else { return }
         restoreOpaqueAppearance()
     }
 
     func applyAppearanceIfNeeded() {
-        applyAppearance(style: style)
-    }
-
-    private func applyAppearance(style: CompatNavigationBarStyle) {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
-        let standardAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
-        let scrollEdgeAppearance: UINavigationBarAppearance
-
-        switch style {
-        case .opaque:
-            navigationBar.isTranslucent = false
-            scrollEdgeAppearance = standardAppearance
-        case .transparentScrollEdge:
-            navigationBar.isTranslucent = true
-            scrollEdgeAppearance = AppBarAppearance.makeTransparentNavigationBarAppearance()
-        }
-
-        navigationBar.standardAppearance = standardAppearance
-        navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
-        navigationBar.compactAppearance = standardAppearance
-        if #available(iOS 15.0, *) {
-            navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
-        }
+        AppBarAppearance.applyNavigationBarStyle(style, to: navigationBar)
     }
 
     private func restoreOpaqueAppearance() {
@@ -341,26 +428,43 @@ final class NavigationBarAppearanceHostingController: UIViewController {
         }
     }
 
-    private func navigationBarStyleForTransitionDestination() -> CompatNavigationBarStyle? {
-        guard let destination = transitionCoordinator?.viewController(forKey: .to) else {
-            return nil
-        }
-
-        return Self.findNavigationBarStyle(in: destination)
+    static func prepareTransition(to style: CompatNavigationBarStyle) {
+        transitionStyle = style
     }
 
-    private static func findNavigationBarStyle(in viewController: UIViewController) -> CompatNavigationBarStyle? {
-        if let configurator = viewController as? NavigationBarAppearanceHostingController {
-            return configurator.style
-        }
+    private func installNavigationControllerDelegate() {
+        guard let navigationController else { return }
+        guard navigationController.delegate !== self else { return }
+        navigationController.delegate = self
+    }
 
-        for child in viewController.children {
-            if let style = findNavigationBarStyle(in: child) {
-                return style
-            }
-        }
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
 
-        return nil
+        UIView.performWithoutAnimation {
+            AppBarAppearance.applyNavigationBarTransitionStyle(
+                transitionStyle,
+                to: navigationController.navigationBar
+            )
+        }
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        didShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
+
+        AppBarAppearance.applyNavigationBarStyle(
+            transitionStyle,
+            to: navigationController.navigationBar
+        )
+        Self.transitionStyle = nil
     }
 }
 

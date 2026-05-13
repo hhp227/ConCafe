@@ -21,7 +21,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
-                .compatNavigationBarStyle(currentNavigationBarStyle)
+                .compatNavigationBarStyle(.opaque)
                 .compatNavigationBarTransition(hideOnDisappear: shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
@@ -116,6 +116,7 @@ struct AppNavigationView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateTo(let route):
+                NavigationBarAppearanceHostingController.prepareTransition(to: navigationBarStyle(for: route))
                 switch route {
                 case .main(let initialTab):
                     currentRoute = .main(initialTab: initialTab)
@@ -127,9 +128,17 @@ struct AppNavigationView: View {
                 }
             case .navigateBack:
                 if !path.isEmpty {
+                    let nextStyle: CompatNavigationBarStyle
+                    if path.count > 1, let previousRoute = path.dropLast().last {
+                        nextStyle = navigationBarStyle(for: previousRoute)
+                    } else {
+                        nextStyle = .opaque
+                    }
+                    NavigationBarAppearanceHostingController.prepareTransition(to: nextStyle)
                     path.removeLast()
                 }
             case .replaceCurrent(let route):
+                NavigationBarAppearanceHostingController.prepareTransition(to: navigationBarStyle(for: route))
                 if !path.isEmpty {
                     path.removeLast()
                 }
@@ -171,11 +180,9 @@ struct AppNavigationView: View {
         }
     }
 
-    private var currentNavigationBarStyle: CompatNavigationBarStyle {
-        guard let lastRoute = path.last else { return .opaque }
-
-        switch lastRoute {
-        case .cafe, .cast:
+    private func navigationBarStyle(for route: Route) -> CompatNavigationBarStyle {
+        switch route {
+        case .cafe, .cast, .cafeEvent:
             return .transparentScrollEdge
         default:
             return .opaque
