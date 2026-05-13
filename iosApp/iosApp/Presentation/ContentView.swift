@@ -87,6 +87,10 @@ struct ContentView: View {
     private var storePlatformIos: String {
         "IOS"
     }
+
+    init() {
+        AppBarAppearance.configureDefaultAppearance()
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {

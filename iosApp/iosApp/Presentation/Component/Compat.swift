@@ -17,6 +17,51 @@ enum CompatNavigationBarStyle {
     case transparentScrollEdge
 }
 
+enum AppBarAppearance {
+    static func configureDefaultAppearance() {
+        let navigationBarAppearance = makeOpaqueNavigationBarAppearance()
+        let navigationBar = UINavigationBar.appearance()
+        navigationBar.isTranslucent = false
+        navigationBar.standardAppearance = navigationBarAppearance
+        navigationBar.scrollEdgeAppearance = navigationBarAppearance
+        navigationBar.compactAppearance = navigationBarAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = navigationBarAppearance
+        }
+
+        let tabBarAppearance = makeOpaqueTabBarAppearance()
+        let tabBar = UITabBar.appearance()
+        tabBar.standardAppearance = tabBarAppearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = tabBarAppearance
+        }
+    }
+
+    static func makeOpaqueNavigationBarAppearance() -> UINavigationBarAppearance {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = UIColor.separator
+        return appearance
+    }
+
+    static func makeTransparentNavigationBarAppearance() -> UINavigationBarAppearance {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
+        return appearance
+    }
+
+    private static func makeOpaqueTabBarAppearance() -> UITabBarAppearance {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = UIColor.separator
+        return appearance
+    }
+}
+
 struct ExploreKeyboardDismissModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 16.0, *) {
@@ -222,14 +267,14 @@ final class NavigationBarAppearanceHostingController: UIViewController {
     func applyAppearanceIfNeeded() {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
-        let standardAppearance = Self.makeOpaqueAppearance()
+        let standardAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
         let scrollEdgeAppearance: UINavigationBarAppearance
 
         switch style {
         case .opaque:
             scrollEdgeAppearance = standardAppearance
         case .transparentScrollEdge:
-            scrollEdgeAppearance = Self.makeTransparentAppearance()
+            scrollEdgeAppearance = AppBarAppearance.makeTransparentNavigationBarAppearance()
         }
 
         navigationBar.standardAppearance = standardAppearance
@@ -240,26 +285,10 @@ final class NavigationBarAppearanceHostingController: UIViewController {
     private func restoreOpaqueAppearance() {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
-        let opaqueAppearance = Self.makeOpaqueAppearance()
+        let opaqueAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
         navigationBar.standardAppearance = opaqueAppearance
         navigationBar.scrollEdgeAppearance = opaqueAppearance
         navigationBar.compactAppearance = opaqueAppearance
-    }
-
-    private static func makeOpaqueAppearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground
-        appearance.shadowColor = UIColor.separator
-        return appearance
-    }
-
-    private static func makeTransparentAppearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.shadowColor = .clear
-        return appearance
     }
 }
 
