@@ -209,12 +209,16 @@ private struct NotificationSectionsView: View {
     private func notificationVisual(type: String) -> (symbol: String, background: Color, foreground: Color) {
         if type == "CAST_SHIFT" {
             return ("figure.walk.motion", Color(hex: "E4F7EC"), Color(hex: "2E9E5B"))
+        } else if type == "CAST_SCHEDULE_ASSIGNED" {
+            return ("calendar.badge.plus", Color(hex: "E4F7EC"), Color(hex: "2E9E5B"))
         } else if type == "BIRTHDAY" {
             return ("birthday.cake.fill", Color(hex: "FFE6F1"), Color(hex: "EB5F97"))
         } else if type == "CAFE_NOTICE" {
             return ("megaphone.fill", Color(hex: "E8F0FF"), Color(hex: "4A79E8"))
         } else if type == "CAFE_EVENT" {
             return ("party.popper.fill", Color(hex: "FFF4E2"), Color(hex: "E29B35"))
+        } else if type == "CAST_SCHEDULE_CREATED" {
+            return ("calendar.badge.plus", Color(hex: "F0F7FF"), Color(hex: "2D74C4"))
         } else if type == "CAFE_TABLE_COUNT_UPDATE" {
             return ("tablecells.fill", Color(hex: "ECFFF5"), Color(hex: "1F8B5F"))
         } else if type == "FOLLOW_UPDATE" {

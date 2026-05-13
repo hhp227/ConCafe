@@ -127,6 +127,9 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToInquiry -> {
                     _event.emit(NavigateTo(Route.Inquiry))
                 }
+                NavigationAction.NavigateToUserManagement -> {
+                    _event.emit(NavigateTo(Route.UserManagement))
+                }
                 NavigationAction.NavigateToChangePassword -> {
                     _event.emit(NavigateTo(Route.ChangePassword))
                 }

@@ -380,7 +380,10 @@ private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter
 private fun CheckInCafeSummary.matchesNearbyCity(cityKey: String?): Boolean {
     if (cityKey.isNullOrBlank()) return true
     val nearbyRegion = ExploreUiState.RegionFilter.entries
-        .firstOrNull { it.key == cityKey.trim().lowercase() }
+        .firstOrNull {
+            val normalizedCityKey = cityKey.trim().lowercase()
+            it.key == normalizedCityKey || (normalizedCityKey == "yokohama" && it == ExploreUiState.RegionFilter.ETC)
+        }
         ?: return true
     return matchesRegion(nearbyRegion)
 }
@@ -391,7 +394,7 @@ private fun GeoPoint.matchesRegion(region: ExploreUiState.RegionFilter): Boolean
         ExploreUiState.RegionFilter.SEOUL -> latitude in 37.4..37.7 && longitude in 126.7..127.2
         ExploreUiState.RegionFilter.BUSAN -> latitude in 35.0..35.4 && longitude in 128.8..129.3
         ExploreUiState.RegionFilter.DAEGU -> latitude in 35.7..36.0 && longitude in 128.4..128.8
-        ExploreUiState.RegionFilter.YOKOHAMA -> latitude in 35.35..35.60 && longitude in 139.50..139.75
+        ExploreUiState.RegionFilter.ETC -> latitude in 35.35..35.60 && longitude in 139.50..139.75
         ExploreUiState.RegionFilter.TOKYO -> latitude in 35.5..35.9 && longitude in 139.3..139.9
         ExploreUiState.RegionFilter.OSAKA -> latitude in 34.5..34.9 && longitude in 135.3..135.7
     }
@@ -405,6 +408,6 @@ private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): 
         ExploreUiState.RegionFilter.DAEGU -> CheckInMapCameraTarget(35.8714, 128.6014, 12.0f)
         ExploreUiState.RegionFilter.TOKYO -> CheckInMapCameraTarget(35.6762, 139.6503, 12.0f)
         ExploreUiState.RegionFilter.OSAKA -> CheckInMapCameraTarget(34.6937, 135.5023, 12.0f)
-        ExploreUiState.RegionFilter.YOKOHAMA -> CheckInMapCameraTarget(35.4437, 139.6380, 12.0f)
+        ExploreUiState.RegionFilter.ETC -> CheckInMapCameraTarget(35.4437, 139.6380, 12.0f)
     }
 }

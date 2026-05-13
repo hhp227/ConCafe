@@ -8,6 +8,7 @@
 import Foundation
 
 enum ContentAction {
+    case checkAppUpdate(storePlatform: String, storeId: String, currentVersion: String)
     case syncPushToken(token: String)
     case refreshUnreadNotificationCount
 }

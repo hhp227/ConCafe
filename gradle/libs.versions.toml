@@ -36,6 +36,7 @@ firebase-auth = "23.1.0"
 firebase-messaging = "24.1.0"
 kakao-user = "2.21.5"
 javafx = "21.0.6"
+jna = "5.14.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -78,6 +79,7 @@ javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javaf
 javafx-swing = { module = "org.openjfx:javafx-swing", version.ref = "javafx" }
 javafx-web = { module = "org.openjfx:javafx-web", version.ref = "javafx" }
 javafx-media = { module = "org.openjfx:javafx-media", version.ref = "javafx" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }

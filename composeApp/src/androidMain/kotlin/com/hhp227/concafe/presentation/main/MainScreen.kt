@@ -1,5 +1,8 @@
 package com.hhp227.concafe.presentation.main
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -13,15 +16,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.BuildConfig
+import com.hhp227.concafe.domain.model.AppUpdateInfo
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -39,6 +48,7 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.security.ScreenCaptureProtectionEffect
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
@@ -62,17 +72,50 @@ fun MainScreen(
     val currentBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
 
+    ScreenCaptureProtectionEffect()
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
+        viewModel.onAction(
+            MainAction.CheckAppUpdate(
+                storePlatform = STORE_PLATFORM_ANDROID,
+                storeId = BuildConfig.APPLICATION_ID,
+                currentVersion = BuildConfig.VERSION_NAME
+            )
+        )
     }
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is MainEvent.ShowError -> Unit
+                is MainEvent.ShowAppUpdate -> availableUpdate = event.updateInfo
                 MainEvent.NavigateToSignUp -> onNavigationAction(NavigationAction.NavigateToSignUp)
             }
         }
+    }
+    availableUpdate?.let { update ->
+        AlertDialog(
+            onDismissRequest = { availableUpdate = null },
+            title = { Text("업데이트 안내") },
+            text = { Text("새 버전 ${update.latestVersion}이 출시되었습니다. 스토어에서 업데이트할 수 있습니다.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        availableUpdate = null
+                        openPlayStore(context, update.storeUrl)
+                    }
+                ) {
+                    Text("업데이트")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { availableUpdate = null }) {
+                    Text(stringResource(Res.string.common_cancel))
+                }
+            }
+        )
     }
     // Sync ViewModel when the NavController's current route changes (e.g. system Back press
     // pops a tab — without this, selectedTab stays stale and the next tap on that tab
@@ -197,6 +240,21 @@ fun MainScreen(
         }
     }
 }
+
+private fun openPlayStore(context: android.content.Context, storeUrl: String) {
+    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${BuildConfig.APPLICATION_ID}"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    try {
+        context.startActivity(marketIntent)
+    } catch (_: ActivityNotFoundException) {
+        context.startActivity(browserIntent)
+    }
+}
+
+private const val STORE_PLATFORM_ANDROID = "ANDROID"
 
 private fun MainNavigationTab.icon(): ImageVector {
     return when (this) {

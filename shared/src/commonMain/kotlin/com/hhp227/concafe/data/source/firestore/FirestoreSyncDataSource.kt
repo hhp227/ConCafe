@@ -4,6 +4,8 @@ import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.AdminOperationsMetrics
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.AdminUserFilter
 import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
@@ -11,6 +13,12 @@ import com.hhp227.concafe.domain.model.User
 
 interface FirestoreSyncDataSource {
     suspend fun fetchUser(userId: String): User?
+
+    suspend fun fetchAdminUserPage(
+        filter: AdminUserFilter,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<User>
 
     suspend fun fetchMyPageSummary(userId: String): MyPageSummary?
 

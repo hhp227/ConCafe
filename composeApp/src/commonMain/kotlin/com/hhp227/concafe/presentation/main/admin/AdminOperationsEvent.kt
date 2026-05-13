@@ -4,4 +4,6 @@ sealed interface AdminOperationsEvent {
     data object NavigateToBanner : AdminOperationsEvent
 
     data object NavigateToBannerEdit : AdminOperationsEvent
+
+    data object NavigateToUserManagement : AdminOperationsEvent
 }

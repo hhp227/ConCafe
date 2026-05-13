@@ -67,12 +67,15 @@ import concafe.composeapp.generated.resources.home_cast_followers
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_desc
 import concafe.composeapp.generated.resources.home_nearby_cafe_empty_title
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_cat
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_cosplay
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_doll
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_namjang
 import concafe.composeapp.generated.resources.home_nearby_cafe_type_other
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_yokai
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_desc
 import concafe.composeapp.generated.resources.home_ongoing_cafe_event_empty_title
 import concafe.composeapp.generated.resources.home_popular_cast_empty_desc
@@ -964,6 +967,9 @@ private fun nearbyCafeConceptLabel(rawConceptType: String): String {
         "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
         "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
         "COSPLAY" -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        "NAMJANG" -> stringResource(Res.string.home_nearby_cafe_type_namjang)
+        "YOKAI" -> stringResource(Res.string.home_nearby_cafe_type_yokai)
+        "CAT" -> stringResource(Res.string.home_nearby_cafe_type_cat)
         "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
         else -> normalized
     }

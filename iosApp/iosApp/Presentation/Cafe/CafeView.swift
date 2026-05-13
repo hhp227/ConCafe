@@ -156,6 +156,8 @@ private struct CafeContentView: View {
                     content(topSafeArea: proxy.safeAreaInsets.top)
                 }
                 .coordinateSpace(name: "cafeScroll")
+                .ignoresSafeArea(edges: .top)
+                .compatScrollContentInsetAdjustmentNever()
                 .background(Color(hex: "FFF9FC"))
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
@@ -216,7 +218,6 @@ private struct CafeContentView: View {
         if let detail = uiState.detail {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
-                    .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
                 Section {
                     tabContent(detail: detail)
@@ -363,6 +364,12 @@ private struct CafeContentView: View {
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_doll"), table: "Localizable")
         case "COSPLAY":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_cosplay"), table: "Localizable")
+        case "NAMJANG":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_namjang"), table: "Localizable")
+        case "YOKAI":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_yokai"), table: "Localizable")
+        case "CAT":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cat"), table: "Localizable")
         case "OTHER":
             return String(localized: String.LocalizationValue("home_nearby_cafe_type_other"), table: "Localizable")
         default:

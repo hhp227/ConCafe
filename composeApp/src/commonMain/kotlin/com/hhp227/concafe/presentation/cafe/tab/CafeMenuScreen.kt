@@ -89,7 +89,8 @@ private fun MenuSection(menus: List<CafeMenu>) {
                         if (!menu.image.isNullOrBlank()) {
                             CompatImageDisplay(
                                 imageUrl = menu.image,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                applyRoundedClip = false
                             )
                             Box(
                                 modifier = Modifier
@@ -153,91 +154,87 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
     val soldOutLabel = stringResource(Res.string.menugoods_sold_out)
     val inStockLabel = stringResource(Res.string.cafe_goods_in_stock)
 
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = if (!good.image.isNullOrBlank()) {
-                                listOf(colorFromHex("FFD8E8"), colorFromHex("F5AFCC"))
-                            } else {
-                                listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
-                            }
-                        )
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = if (!good.image.isNullOrBlank()) {
+                            listOf(colorFromHex("FFD8E8"), colorFromHex("F5AFCC"))
+                        } else {
+                            listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
+                        }
                     )
-            ) {
-                if (!good.image.isNullOrBlank()) {
-                    CompatImageDisplay(
-                        imageUrl = good.image,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                if (!isInStock) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = soldOutLabel,
-                            color = colorFromHex("2B2330"),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(Color.White)
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-            }
-            Column(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = good.name,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (!good.image.isNullOrBlank()) {
+                CompatImageDisplay(
+                    imageUrl = good.image,
+                    modifier = Modifier.fillMaxSize(),
+                    applyRoundedClip = false
+                )
+            }
+            if (!isInStock) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(Res.string.cafe_menu_price, good.price),
-                        color = colorFromHex("EF6797"),
+                        text = soldOutLabel,
+                        color = colorFromHex("2B2330"),
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.bodySmall
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.White)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     )
-                    if (isInStock) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingBag,
-                                contentDescription = null,
-                                tint = colorFromHex("16A34A"),
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Text(
-                                text = inStockLabel,
-                                color = colorFromHex("16A34A"),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                }
+            }
+        }
+        Column(
+            modifier = Modifier.padding(top = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = good.name,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(Res.string.cafe_menu_price, good.price),
+                    color = colorFromHex("EF6797"),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (isInStock) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingBag,
+                            contentDescription = null,
+                            tint = colorFromHex("16A34A"),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = inStockLabel,
+                            color = colorFromHex("16A34A"),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

@@ -160,7 +160,7 @@ final class MapViewModel: ObservableObject {
     func initializeRegion(_ regionKey: String?) {
         guard uiState.selectedRegion == .all,
               let regionKey,
-              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.label == regionKey || $0.rawValue == regionKey }) else { return }
+              let region = ExploreUiState.RegionFilter.allCases.first(where: { $0.label == regionKey || $0.rawValue == regionKey || (regionKey == "yokohama" && $0 == .etc) }) else { return }
         uiState.selectedRegion = region
         loadMapCafesForRegion(region.rawValue)
     }
@@ -228,7 +228,7 @@ final class MapViewModel: ObservableObject {
         if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }
         if (35.0...35.4).contains(lat) && (128.8...129.3).contains(lng) { return "busan" }
         if (35.7...36.0).contains(lat) && (128.4...128.8).contains(lng) { return "daegu" }
-        if (35.35...35.60).contains(lat) && (139.50...139.75).contains(lng) { return "yokohama" }
+        if (35.35...35.60).contains(lat) && (139.50...139.75).contains(lng) { return "etc" }
         if (35.5...35.9).contains(lat) && (139.3...139.9).contains(lng) { return "tokyo" }
         if (34.5...34.9).contains(lat) && (135.3...135.7).contains(lng) { return "osaka" }
         return nil

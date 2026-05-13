@@ -74,6 +74,9 @@ fun AdminOperationsScreen(
                 AdminOperationsEvent.NavigateToBannerEdit -> {
                     onNavigationAction(NavigationAction.NavigateToBannerEdit())
                 }
+                AdminOperationsEvent.NavigateToUserManagement -> {
+                    onNavigationAction(NavigationAction.NavigateToUserManagement)
+                }
             }
         }
     }
@@ -612,6 +615,7 @@ private fun AdminMetricIcon.toImageVector() = when (this) {
 }
 
 private fun QuickMenuIcon.toImageVector() = when (this) {
+    QuickMenuIcon.USERS -> Icons.Default.Groups
     QuickMenuIcon.BANNER -> Icons.Default.ViewCarousel
     QuickMenuIcon.MODERATION -> Icons.Default.Gavel
     QuickMenuIcon.ANALYTICS -> Icons.Default.BarChart

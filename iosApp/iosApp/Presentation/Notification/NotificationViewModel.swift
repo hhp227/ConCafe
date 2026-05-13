@@ -106,9 +106,9 @@ final class NotificationViewModel: ObservableObject {
                     uiState.unreadCount = unreadCount
 
                     if let targetId {
-                        if type == "CAST_SHIFT" || type == "BIRTHDAY" {
+                        if type == "CAST_SHIFT" || type == "BIRTHDAY" || type == "CAST_SCHEDULE_ASSIGNED" {
                             event.send(.navigateToCast(id: targetId))
-                        } else if type == "CAFE_NOTICE" || type == "CAFE_EVENT" || type == "CAFE_TABLE_COUNT_UPDATE" {
+                        } else if type == "CAFE_NOTICE" || type == "CAFE_EVENT" || type == "CAFE_TABLE_COUNT_UPDATE" || type == "CAST_SCHEDULE_CREATED" {
                             event.send(.navigateToCafe(id: targetId))
                         }
                     }

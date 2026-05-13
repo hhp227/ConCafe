@@ -12,6 +12,8 @@ import KMPNativeCoroutinesAsync
 
 @MainActor
 final class ContentViewModel: ObservableObject {
+    private let checkAppUpdateUseCase: CheckAppUpdateUseCase
+
     private let observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
@@ -101,6 +103,24 @@ final class ContentViewModel: ObservableObject {
         tasks.removeValue(forKey: .unreadNotificationPoll)
     }
 
+    private func checkAppUpdate(storePlatform: String, storeId: String, currentVersion: String) {
+        tasks[.checkAppUpdate]?.cancel()
+        tasks[.checkAppUpdate] = Task {
+            do {
+                let result = try await checkAppUpdateUseCase.invoke(
+                    storePlatform: storePlatform,
+                    storeId: storeId,
+                    currentVersion: currentVersion
+                )
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let updateInfo = success.data as? AppUpdateInfo {
+                    event.send(.showAppUpdate(updateInfo))
+                }
+            } catch {}
+        }
+    }
+
     private func syncPushToken(_ token: String) {
         let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
         if normalizedToken.isEmpty { return }
@@ -111,6 +131,8 @@ final class ContentViewModel: ObservableObject {
 
     func onAction(_ action: ContentAction) {
         switch action {
+        case .checkAppUpdate(let storePlatform, let storeId, let currentVersion):
+            checkAppUpdate(storePlatform: storePlatform, storeId: storeId, currentVersion: currentVersion)
         case .syncPushToken(let token):
             syncPushToken(token)
         case .refreshUnreadNotificationCount:
@@ -119,12 +141,14 @@ final class ContentViewModel: ObservableObject {
     }
 
     init(
+        checkAppUpdateUseCase: CheckAppUpdateUseCase = KoinInitializerKt.resolveCheckAppUpdateUseCase(),
         observeNetworkAlertStateUseCase: ObserveNetworkAlertStateUseCase = KoinInitializerKt.resolveObserveNetworkAlertStateUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase(),
         getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase(),
         themePreferences: AppThemePreferences = .shared
     ) {
+        self.checkAppUpdateUseCase = checkAppUpdateUseCase
         self.observeNetworkAlertStateUseCase = observeNetworkAlertStateUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.registerPushTokenUseCase = registerPushTokenUseCase
@@ -142,6 +166,7 @@ final class ContentViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case checkAppUpdate
         case observeNetworkAlert
         case observeTheme
         case observeCurrentUser

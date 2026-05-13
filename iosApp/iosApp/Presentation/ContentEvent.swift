@@ -6,7 +6,9 @@
 //
 
 import Foundation
+import Shared
 
 enum ContentEvent {
+    case showAppUpdate(AppUpdateInfo)
     case syncPushToken
 }

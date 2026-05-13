@@ -4,6 +4,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.desktop_icon
+import com.hhp227.concafe.data.source.DesktopScreenCaptureProtectionWindowHolder
 import com.hhp227.concafe.di.doInitConCafeAppKoin
 import com.hhp227.concafe.di.jvmPlatformModules
 import com.hhp227.concafe.presentation.App
@@ -20,6 +21,7 @@ fun main() {
             title = "콘카(ConCafe)",
             icon = painterResource(Res.drawable.desktop_icon),
         ) {
+            DesktopScreenCaptureProtectionWindowHolder.currentWindow = window
             App()
         }
         doInitConCafeAppKoin(jvmPlatformModules())

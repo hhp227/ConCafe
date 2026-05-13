@@ -53,6 +53,7 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
+            implementation(libs.jna)
         }
     }
     targets.all {

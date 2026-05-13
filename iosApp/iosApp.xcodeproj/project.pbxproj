@@ -250,6 +250,13 @@
 		0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */; };
 		0AFECA552F62CE5600C2C099 /* ReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */; };
 		0AFF00072F9B000000FF0007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */; };
+		0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000012FB1000000B10000 /* UserManagementView.swift */; };
+		0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000022FB1000000B10000 /* UserManagementViewModel.swift */; };
+		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
+		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
+		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
+		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
+		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
@@ -503,6 +510,13 @@
 		0AFECA522F62CE3300C2C099 /* ReviewEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditEvent.swift; sourceTree = "<group>"; };
 		0AFECA542F62CE5600C2C099 /* ReviewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewEditView.swift; sourceTree = "<group>"; };
 		0AFF00062F9B000000FF0006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		0B1000012FB1000000B10000 /* UserManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementView.swift; sourceTree = "<group>"; };
+		0B1000022FB1000000B10000 /* UserManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementViewModel.swift; sourceTree = "<group>"; };
+		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
+		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
+		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
+		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
+		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -568,6 +582,7 @@
 		0A0C66912F5C055500B0CDE4 /* Admin */ = {
 			isa = PBXGroup;
 			children = (
+				0B1000202FB1000000B10000 /* User */,
 				0A0C66922F5C055F00B0CDE4 /* AdminOperationsView.swift */,
 				0A8ABA582F5C1B8300265D4F /* AdminOperationsViewModel.swift */,
 				0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */,
@@ -817,6 +832,7 @@
 				0A580DC02F59732000390F67 /* Notification */,
 				0A4C9E162F7BB079001F94DC /* Picture */,
 				0AFECA4B2F62CD8C00C2C099 /* Review */,
+				0B2000222FB2000000B20000 /* Security */,
 				0A8ABA702F5C1D0B00265D4F /* Settings */,
 				0A3C35712FAB277A00CB6B11 /* Theme */,
 				0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */,
@@ -1139,6 +1155,27 @@
 			path = Review;
 			sourceTree = "<group>";
 		};
+		0B1000202FB1000000B10000 /* User */ = {
+			isa = PBXGroup;
+			children = (
+				0B1000012FB1000000B10000 /* UserManagementView.swift */,
+				0B1000022FB1000000B10000 /* UserManagementViewModel.swift */,
+				0B1000032FB1000000B10000 /* UserManagementUiState.swift */,
+				0B1000042FB1000000B10000 /* UserManagementAction.swift */,
+				0B1000052FB1000000B10000 /* UserManagementEvent.swift */,
+			);
+			path = User;
+			sourceTree = "<group>";
+		};
+		0B2000222FB2000000B20000 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */,
+				0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -1309,8 +1346,10 @@
 				0A0C66882F5C03BD00B0CDE4 /* MainEvent.swift in Sources */,
 				0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */,
 				0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */,
+				0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */,
 				0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
+				0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
 				0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */,
 				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
@@ -1384,6 +1423,7 @@
 				A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */,
 				0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */,
 				0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */,
+				0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */,
 				0A785C9F2F5A7B76004037A8 /* ExploreViewModel.swift in Sources */,
 				0A580DB72F59711000390F67 /* CheckInView.swift in Sources */,
 				0A0C66A02F5C0E4F00B0CDE4 /* SignInViewModel.swift in Sources */,
@@ -1416,6 +1456,8 @@
 				0A45CA302F7DA44C00A7F8F7 /* ContentEvent.swift in Sources */,
 				0A45CA312F7DA44C00A7F8F7 /* ContentView.swift in Sources */,
 				0A45CA322F7DA44C00A7F8F7 /* ContentUiState.swift in Sources */,
+				0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */,
+				0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */,
 				0AFA20022FA2001000FA2001 /* AppThemePreferences.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,
@@ -1502,6 +1544,7 @@
 				0A785CCB2F5A7F00004037A8 /* CafeAction.swift in Sources */,
 				0A0C66952F5C05FF00B0CDE4 /* Color.swift in Sources */,
 				0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */,
+				0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */,
 				0A7E616F2FA09787005E1311 /* PostDetailAction.swift in Sources */,
 				0A785CC32F5A7E80004037A8 /* CafeUiState.swift in Sources */,
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
@@ -1513,6 +1556,7 @@
 				0A48CF172F66A2B700ED21AA /* ChangePasswordViewModel.swift in Sources */,
 				0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
+				0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */,
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,
@@ -1678,7 +1722,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1689,10 +1733,13 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ConCafe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSCameraUsageDescription = "QR 체크인을 위해 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1700,13 +1747,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
 					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hhp227.ConCafe;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1722,7 +1770,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1733,10 +1781,13 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ConCafe;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSCameraUsageDescription = "QR 체크인을 위해 카메라 권한이 필요합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "체크인 시 현재 위치를 확인하기 위해 위치 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "QR 코드를 사진 앱에 저장하기 위해 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1744,13 +1795,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
 					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hhp227.ConCafe;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

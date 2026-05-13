@@ -161,26 +161,7 @@ struct MainView: View {
         self.hasUnreadNotifications = hasUnreadNotifications
         self.onNavigationAction = onNavigationAction
 
-        Self.configureBarAppearance()
-    }
-
-    private static func configureBarAppearance() {
-        let backgroundColor = UIColor.systemBackground
-        let navigationBarAppearance = UINavigationBarAppearance()
-        navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = backgroundColor
-        navigationBarAppearance.shadowColor = UIColor.separator
-        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
-        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = backgroundColor
-        tabBarAppearance.shadowColor = UIColor.separator
-        UITabBar.appearance().standardAppearance = tabBarAppearance
-        if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-        }
+        AppBarAppearance.configureDefaultAppearance()
     }
 }
 

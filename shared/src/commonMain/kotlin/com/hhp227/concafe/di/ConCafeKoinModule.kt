@@ -50,6 +50,7 @@ val dataSourceModule = module {
     single<FirestoreSyncDataSource> { FirestoreSyncRemoteDataSource(get(), get(), get()) }
     single<NetworkStatusDataSource> { PlatformNetworkStatusDataSource() }
     single<CommunityPostRemoteDataSource> { FirestoreCommunityPostRemoteDataSource(get(), get(), get()) }
+    single<AppUpdateRemoteDataSource> { KtorAppUpdateRemoteDataSource(get()) }
 }
 
 val repositoryModule = module {
@@ -76,6 +77,7 @@ val repositoryModule = module {
     single<NetworkStatusRepository> { DefaultNetworkStatusRepository(get()) }
     single<NativeAdRepository> { NativeAdRepositoryImpl(get()) }
     single<CommunityPostRepository> { CommunityPostRepositoryImpl(get()) }
+    single<AppUpdateRepository> { AppUpdateRepositoryImpl(get()) }
 }
 
 val eventModule = module {
@@ -105,6 +107,7 @@ val useCaseModule = module {
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
     factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetAdminReportPageUseCase(get(), get()) }
+    factory { GetAdminUserPageUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }
@@ -201,6 +204,7 @@ val useCaseModule = module {
     factory { DeleteImageUseCase(get()) }
     factory { LoadNativeAdUseCase(get()) }
     factory { ClearNativeAdUseCase(get()) }
+    factory { CheckAppUpdateUseCase(get()) }
     factory { GetCommunityPostPageUseCase(get()) }
     factory { CreateCommunityPostUseCase(get(), get(), get()) }
     factory { UpdateCommunityPostUseCase(get(), get(), get()) }

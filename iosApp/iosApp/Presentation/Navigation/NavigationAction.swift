@@ -35,6 +35,7 @@ enum NavigationAction {
     case navigateToNotificationSettings
     case navigateToAccountSettings
     case navigateToInquiry
+    case navigateToUserManagement
     case navigateToChangePassword
     case navigateToCommunity
     case navigateToPostEdit(postId: String? = nil)

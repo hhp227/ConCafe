@@ -25,6 +25,7 @@ import com.hhp227.concafe.presentation.community.CommunityScreen
 import com.hhp227.concafe.presentation.community.detail.PostDetailScreen
 import com.hhp227.concafe.presentation.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
+import com.hhp227.concafe.presentation.main.admin.user.UserManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
@@ -274,6 +275,9 @@ fun NavigationScreen(
         }
         composable<Route.Inquiry> {
             InquiryLinkScreen(onNavigationAction = viewModel::onAction)
+        }
+        composable<Route.UserManagement> {
+            UserManagementScreen(onNavigationAction = viewModel::onAction)
         }
         composable<Route.ChangePassword> {
             ChangePasswordScreen(onNavigationAction = viewModel::onAction)

@@ -1,6 +1,7 @@
 package com.hhp227.concafe.data.source.firestore
 
 import com.hhp227.concafe.domain.model.*
+import com.hhp227.concafe.domain.common.PagedResult
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 
@@ -12,6 +13,29 @@ class FirestoreSyncRemoteDataSource(
     override suspend fun fetchUser(userId: String): User? {
         val document = loadUserDocument(userId = userId, idToken = tokenProvider.getIdToken()) ?: return null
         return parseUserDocument(document)
+    }
+
+    override suspend fun fetchAdminUserPage(
+        filter: AdminUserFilter,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<User> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val idToken = tokenProvider.getIdToken()
+        val documents = runAdminUserPageQuery(filter, cursor, safePageSize + 1, idToken)
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()?.get("fields")?.jsonObject?.getFirestoreString("createdAt")
+        } else {
+            null
+        }
+
+        return PagedResult(
+            items = pageDocuments.mapNotNull { parseUserDocument(it) },
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
     }
 
     override suspend fun fetchMyPageSummary(userId: String): MyPageSummary? {
@@ -352,6 +376,45 @@ class FirestoreSyncRemoteDataSource(
             val response = restApi.post(path = path, body = body, idToken = idToken)
             Json.parseToJsonElement(response).jsonArray.mapNotNull { it.jsonObject["document"]?.jsonObject }
         }
+    }
+
+    private suspend fun runAdminUserPageQuery(
+        filter: AdminUserFilter,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val filterSection = when (filter) {
+            AdminUserFilter.CAFE_OWNER -> """
+                "fieldFilter": {
+                  "field": { "fieldPath": "role" },
+                  "op": "EQUAL",
+                  "value": { "stringValue": "${UserRole.CAFE_OWNER.name}" }
+                }
+            """.trimIndent()
+            AdminUserFilter.BANNED -> """
+                "fieldFilter": {
+                  "field": { "fieldPath": "banned" },
+                  "op": "EQUAL",
+                  "value": { "booleanValue": true }
+                }
+            """.trimIndent()
+        }
+        val startAfterSection = cursor.toCreatedAtStartAfterSection()
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{ "collectionId": "${FirestorePaths.USERS}" }],
+                "where": {
+                  $filterSection
+                },
+                "orderBy": [{ "field": { "fieldPath": "createdAt" }, "direction": "DESCENDING" }]$startAfterSection,
+                "limit": ${limit.coerceAtLeast(1)}
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = "${config.documentBasePath()}:runQuery", body = body, idToken = idToken)
+        return Json.parseToJsonElement(response).jsonArray.mapNotNull { it.jsonObject["document"]?.jsonObject }
     }
 
     private suspend fun loadCafeRegistrationClaimDocument(claimId: String, idToken: String?): JsonObject {
@@ -732,6 +795,18 @@ class FirestoreSyncRemoteDataSource(
 
     private fun escapeFirestoreQueryString(value: String): String {
         return value.replace("\\", "\\\\").replace("\"", "\\\"")
+    }
+
+    private fun String?.toCreatedAtStartAfterSection(): String {
+        val cursorValue = this?.trim().orEmpty()
+        if (cursorValue.isEmpty()) return ""
+        return """,
+                "startAt": {
+                  "values": [
+                    { "stringValue": "${escapeFirestoreQueryString(cursorValue)}" }
+                  ],
+                  "before": false
+                }"""
     }
 
     private fun String.isPendingClaimStatus(): Boolean {

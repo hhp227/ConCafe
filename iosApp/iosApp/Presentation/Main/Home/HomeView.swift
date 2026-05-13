@@ -699,6 +699,12 @@ private struct NearByCafeItem: View {
             key = "home_nearby_cafe_type_doll"
         } else if lower == "cosplay" || lower == "home_nearby_cafe_type_cosplay" || lower.contains("cosplay") {
             key = "home_nearby_cafe_type_cosplay"
+        } else if lower == "namjang" || lower == "home_nearby_cafe_type_namjang" || lower.contains("namjang") || lower.contains("남장") {
+            key = "home_nearby_cafe_type_namjang"
+        } else if lower == "yokai" || lower == "home_nearby_cafe_type_yokai" || lower.contains("yokai") || lower.contains("요괴") {
+            key = "home_nearby_cafe_type_yokai"
+        } else if lower == "cat" || lower == "home_nearby_cafe_type_cat" || lower.contains("cat") || lower.contains("고양이") {
+            key = "home_nearby_cafe_type_cat"
         } else if lower == "other" || lower == "home_nearby_cafe_type_other" || lower.contains("other") {
             key = "home_nearby_cafe_type_other"
         } else {
