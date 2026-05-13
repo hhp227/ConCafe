@@ -124,6 +124,7 @@ private struct CafeEventContentView: View {
                 .padding(.bottom, 32)
             }
             .coordinateSpace(name: "cafeEventScroll")
+            .compatScrollContentInsetAdjustmentNever()
             .onPreferenceChange(CafeEventScrollOffsetPreferenceKey.self) { value in
                 scrollOffset = value
             }
