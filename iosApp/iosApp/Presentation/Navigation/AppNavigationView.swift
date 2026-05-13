@@ -21,7 +21,6 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
-                .compatNavigationBarStyle(currentNavigationBarStyle)
                 .compatNavigationBarTransition(hideOnDisappear: shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
@@ -116,24 +115,13 @@ struct AppNavigationView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateTo(let route):
-                switch route {
-                case .main(let initialTab):
-                    currentRoute = .main(initialTab: initialTab)
-                    path.removeAll()
-                case .entry:
-                    currentRoute = .entry
-                default:
-                    path.append(route)
-                }
+                navigate(to: route)
             case .navigateBack:
                 if !path.isEmpty {
-                    path.removeLast()
+                    navigateBack()
                 }
             case .replaceCurrent(let route):
-                if !path.isEmpty {
-                    path.removeLast()
-                }
-                path.append(route)
+                replaceCurrent(with: route)
             case .refreshUnreadNotificationCount:
                 onRefreshUnreadNotificationCount()
             }
@@ -164,17 +152,52 @@ struct AppNavigationView: View {
         guard let lastRoute = path.last else { return false }
 
         switch lastRoute {
-        case .cafe, .cast, .picture, .signIn, .signUp, .resetPassword:
+        case .picture, .signIn, .signUp, .resetPassword:
             return true
         default:
             return false
         }
     }
 
-    private var currentNavigationBarStyle: CompatNavigationBarStyle {
-        guard let lastRoute = path.last else { return .opaque }
+    private func navigate(to route: Route) {
+        prepareNavigationBar(for: route)
 
-        switch lastRoute {
+        switch route {
+        case .main(let initialTab):
+            currentRoute = .main(initialTab: initialTab)
+            path.removeAll()
+        case .entry:
+            currentRoute = .entry
+        default:
+            path.append(route)
+        }
+    }
+
+    private func navigateBack() {
+        let nextStyle: CompatNavigationBarStyle
+        if path.count > 1, let previousRoute = path.dropLast().last {
+            nextStyle = navigationBarStyle(for: previousRoute)
+        } else {
+            nextStyle = .opaque
+        }
+        NavigationBarAppearanceHostingController.prepareTransition(to: nextStyle)
+        path.removeLast()
+    }
+
+    private func replaceCurrent(with route: Route) {
+        prepareNavigationBar(for: route)
+        if !path.isEmpty {
+            path.removeLast()
+        }
+        path.append(route)
+    }
+
+    private func prepareNavigationBar(for route: Route) {
+        NavigationBarAppearanceHostingController.prepareTransition(to: navigationBarStyle(for: route))
+    }
+
+    private func navigationBarStyle(for route: Route) -> CompatNavigationBarStyle {
+        switch route {
         case .cafe, .cast:
             return .transparentScrollEdge
         default:

@@ -53,6 +53,7 @@ struct CafeView: View {
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
+            .compatNavigationBarStyle(.transparentScrollEdge)
             .onReceive(viewModel.event) { event in
                 switch event {
                 case .navigateBack:
@@ -147,11 +148,9 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
-    @State private var summarySectionMinY: CGFloat = .greatestFiniteMagnitude
-
     var body: some View {
         GeometryReader { proxy in
-            ZStack(alignment: .top) {
+            ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     offsetReader
                     content(topSafeArea: proxy.safeAreaInsets.top)
@@ -163,63 +162,24 @@ private struct CafeContentView: View {
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
                 }
-                .onPreferenceChange(CafeSummaryOffsetPreferenceKey.self) { value in
-                    summarySectionMinY = value
-                }
-                overlayTopBar(topSafeArea: proxy.safeAreaInsets.top)
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 24)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 24)
                 }
             }
-        }
-    }
-
-    private var topBarVisible: Bool {
-        uiState.detail != nil && summarySectionMinY <= 16
-    }
-
-    private func overlayTopBar(topSafeArea: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            Color.clear.frame(height: topSafeArea)
-            ZStack {
-                HStack {
-                    Button {
-                        onAction(.backTapped)
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.headline)
-                            .frame(width: 44, height: 44)
-                    }
-                    .foregroundStyle(topBarVisible ? Color.primary : Color.white)
-                    Spacer()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         onAction(.favoriteTapped)
                     } label: {
                         Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
-                            .font(.headline)
-                            .frame(width: 44, height: 44)
+                        .font(.headline)
+                        .frame(width: 36, height: 36)
                     }
-                    .foregroundStyle(uiState.isFavorite ? Color(hex: "EF6797") : (topBarVisible ? Color.primary : Color.white))
                 }
-                Text(topBarVisible ? (uiState.detail?.cafe.name ?? "") : "")
-                    .font(.headline)
-                    .lineLimit(1)
-                    .foregroundStyle(Color.primary)
-                    .padding(.horizontal, 56)
-            }
-            .frame(height: 44)
-        }
-        .frame(maxWidth: .infinity)
-        .background(topBarVisible ? Color(uiColor: .systemBackground) : Color.clear)
-        .overlay(alignment: .bottom) {
-            if topBarVisible {
-                Divider()
             }
         }
-        .zIndex(2)
     }
 
     private var writeReviewButton: some View {
@@ -259,7 +219,6 @@ private struct CafeContentView: View {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
                 summarySection(detail: detail)
-                    .background(summaryOffsetReader)
                 Section {
                     tabContent(detail: detail)
                     .padding(.horizontal, 16)
@@ -284,16 +243,6 @@ private struct CafeContentView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
-        }
-    }
-
-    private var summaryOffsetReader: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .preference(
-                    key: CafeSummaryOffsetPreferenceKey.self,
-                    value: proxy.frame(in: .named("cafeScroll")).minY
-                )
         }
     }
 
@@ -509,14 +458,6 @@ private struct CafeContentView: View {
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
-private struct CafeSummaryOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = .greatestFiniteMagnitude
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
