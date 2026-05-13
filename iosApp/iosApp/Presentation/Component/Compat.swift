@@ -64,7 +64,7 @@ enum AppBarAppearance {
         case .opaque:
             appearance = makeOpaqueNavigationBarAppearance()
         case .transparentScrollEdge:
-            appearance = makeTransparentNavigationBarAppearance()
+            appearance = makeTransitionNavigationBarAppearance()
         }
 
         navigationBar.standardAppearance = appearance
@@ -73,6 +73,14 @@ enum AppBarAppearance {
         if #available(iOS 15.0, *) {
             navigationBar.compactScrollEdgeAppearance = appearance
         }
+    }
+
+    private static func makeTransitionNavigationBarAppearance() -> UINavigationBarAppearance {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = .clear
+        return appearance
     }
 
     private static func applyNavigationBarStyle(
