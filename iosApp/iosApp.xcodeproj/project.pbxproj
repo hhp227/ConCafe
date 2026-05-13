@@ -95,6 +95,8 @@
 		0A45CA302F7DA44C00A7F8F7 /* ContentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2A2F7DA44C00A7F8F7 /* ContentEvent.swift */; };
 		0A45CA312F7DA44C00A7F8F7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2C2F7DA44C00A7F8F7 /* ContentView.swift */; };
 		0A45CA322F7DA44C00A7F8F7 /* ContentUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */; };
+		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
+		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		0A47F5962F6D684F00EA453E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */; };
 		0A48CF112F66A25E00ED21AA /* ChangePasswordUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */; };
 		0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */; };
@@ -353,6 +355,8 @@
 		0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentUiState.swift; sourceTree = "<group>"; };
 		0A45CA2C2F7DA44C00A7F8F7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0A45CA2D2F7DA44C00A7F8F7 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
+		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
+		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordUiState.swift; sourceTree = "<group>"; };
 		0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordAction.swift; sourceTree = "<group>"; };
@@ -828,6 +832,7 @@
 				0A580DC02F59732000390F67 /* Notification */,
 				0A4C9E162F7BB079001F94DC /* Picture */,
 				0AFECA4B2F62CD8C00C2C099 /* Review */,
+				0B2000222FB2000000B20000 /* Security */,
 				0A8ABA702F5C1D0B00265D4F /* Settings */,
 				0A3C35712FAB277A00CB6B11 /* Theme */,
 				0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */,
@@ -850,6 +855,15 @@
 				0A580DB32F596D7F00390F67 /* AppNavigationView.swift */,
 			);
 			path = Navigation;
+			sourceTree = "<group>";
+		};
+		0B2000222FB2000000B20000 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */,
+				0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */,
+			);
+			path = Security;
 			sourceTree = "<group>";
 		};
 		0A580D9D2F5965DB00390F67 /* Main */ = {
@@ -1442,6 +1456,8 @@
 				0A45CA302F7DA44C00A7F8F7 /* ContentEvent.swift in Sources */,
 				0A45CA312F7DA44C00A7F8F7 /* ContentView.swift in Sources */,
 				0A45CA322F7DA44C00A7F8F7 /* ContentUiState.swift in Sources */,
+				0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */,
+				0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */,
 				0AFA20022FA2001000FA2001 /* AppThemePreferences.swift in Sources */,
 				0A0C66A62F5C0E9B00B0CDE4 /* SignUpViewModel.swift in Sources */,
 				0A3470752F611AED005F9A8C /* ExternalLinkUiState.swift in Sources */,

@@ -14,10 +14,9 @@ import com.hhp227.concafe.presentation.navigation.NavigationScreen
 import com.hhp227.concafe.presentation.theme.AppThemeMode
 import kotlinx.coroutines.delay
 import org.koin.core.context.GlobalContext
-import java.awt.Window
 
 @Composable
-fun App(screenCaptureProtectionWindow: Window? = null) {
+fun App() {
     var isLaunchScreenVisible by remember { mutableStateOf(true) }
     val appViewModel: AppViewModel = viewModel(
         factory = viewModelFactory {
@@ -41,7 +40,6 @@ fun App(screenCaptureProtectionWindow: Window? = null) {
             ) {
                 NavigationScreen(
                     hasUnreadNotifications = uiState.hasUnreadNotifications,
-                    screenCaptureProtectionWindow = screenCaptureProtectionWindow,
                     onRefreshUnreadNotificationCount = {
                         appViewModel.onAction(AppAction.RefreshUnreadNotificationCount)
                     }

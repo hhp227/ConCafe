@@ -1,11 +1,8 @@
 package com.hhp227.concafe.presentation.main
 
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.view.Window
-import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -16,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +48,7 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.security.ScreenCaptureProtectionEffect
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
@@ -77,22 +74,8 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
-    val screenCaptureProtectionRepository = remember {
-        DefaultScreenCaptureProtectionRepository(AndroidScreenCaptureProtectionDataSource())
-    }
 
-    DisposableEffect(context) {
-        val window = (context as? Activity)?.window
-
-        if (window != null) {
-            screenCaptureProtectionRepository.enable(window)
-        }
-        onDispose {
-            if (window != null) {
-                screenCaptureProtectionRepository.disable(window)
-            }
-        }
-    }
+    ScreenCaptureProtectionEffect()
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
         viewModel.onAction(
@@ -255,41 +238,6 @@ fun MainScreen(
                 MyInfoScreen(onNavigate = onNavigationAction)
             }
         }
-    }
-}
-
-private interface ScreenCaptureProtectionRepository {
-    fun enable(window: Window)
-    fun disable(window: Window)
-}
-
-private class DefaultScreenCaptureProtectionRepository(
-    private val dataSource: ScreenCaptureProtectionDataSource
-) : ScreenCaptureProtectionRepository {
-    override fun enable(window: Window) {
-        dataSource.enable(window)
-    }
-
-    override fun disable(window: Window) {
-        dataSource.disable(window)
-    }
-}
-
-private interface ScreenCaptureProtectionDataSource {
-    fun enable(window: Window)
-    fun disable(window: Window)
-}
-
-private class AndroidScreenCaptureProtectionDataSource : ScreenCaptureProtectionDataSource {
-    override fun enable(window: Window) {
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE
-        )
-    }
-
-    override fun disable(window: Window) {
-        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 }
 

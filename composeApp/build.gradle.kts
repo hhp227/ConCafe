@@ -117,7 +117,6 @@ kotlin {
                 implementation("${libs.javafx.swing.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
                 implementation("${libs.javafx.web.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
                 implementation("${libs.javafx.media.get().module}:${libs.versions.javafx.get()}:$javafxPlatform")
-                implementation(libs.jna)
             }
         }
     }
