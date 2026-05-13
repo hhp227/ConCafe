@@ -66,6 +66,7 @@ enum AppBarAppearance {
             applyNavigationBarStyle(.opaque, to: navigationBar)
         case .transparentScrollEdge:
             let transparentAppearance = makeTransparentNavigationBarAppearance()
+            navigationBar.isTranslucent = true
             navigationBar.standardAppearance = transparentAppearance
             navigationBar.scrollEdgeAppearance = transparentAppearance
             navigationBar.compactAppearance = transparentAppearance
@@ -104,19 +105,6 @@ enum AppBarAppearance {
         }
     }
 
-    static func applyNavigationBarStyleToVisibleNavigationBars(_ style: CompatNavigationBarStyle) {
-        let scenes = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-
-        UIView.performWithoutAnimation {
-            scenes
-                .flatMap(\.windows)
-                .forEach { window in
-                    applyNavigationBarTransitionStyle(style, in: window.rootViewController)
-                }
-        }
-    }
-
     private static func applyNavigationBarStyle(
         _ style: CompatNavigationBarStyle,
         in viewController: UIViewController?
@@ -132,23 +120,6 @@ enum AppBarAppearance {
         }
 
         applyNavigationBarStyle(style, in: viewController.presentedViewController)
-    }
-
-    private static func applyNavigationBarTransitionStyle(
-        _ style: CompatNavigationBarStyle,
-        in viewController: UIViewController?
-    ) {
-        guard let viewController else { return }
-
-        if let navigationController = viewController as? UINavigationController {
-            applyNavigationBarTransitionStyle(style, to: navigationController.navigationBar)
-        }
-
-        viewController.children.forEach {
-            applyNavigationBarTransitionStyle(style, in: $0)
-        }
-
-        applyNavigationBarTransitionStyle(style, in: viewController.presentedViewController)
     }
 
     fileprivate static func updateScrollContentInsetAdjustmentBehavior(
@@ -415,31 +386,27 @@ struct CompatVerticalTextField: View {
     }
 }
 
-final class NavigationBarAppearanceHostingController: UIViewController {
+final class NavigationBarAppearanceHostingController: UIViewController, UINavigationControllerDelegate {
     private static var transitionStyle: CompatNavigationBarStyle?
 
     var style: CompatNavigationBarStyle = .opaque
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if let transitionStyle = Self.transitionStyle {
-            if let navigationBar = navigationController?.navigationBar {
-                AppBarAppearance.applyNavigationBarTransitionStyle(transitionStyle, to: navigationBar)
-            }
-            Self.transitionStyle = nil
-        } else {
-            restoreOpaqueAppearance()
-        }
+        guard Self.transitionStyle == nil else { return }
+        restoreOpaqueAppearance()
     }
 
     func applyAppearanceIfNeeded() {
@@ -463,7 +430,41 @@ final class NavigationBarAppearanceHostingController: UIViewController {
 
     static func prepareTransition(to style: CompatNavigationBarStyle) {
         transitionStyle = style
-        AppBarAppearance.applyNavigationBarStyleToVisibleNavigationBars(style)
+    }
+
+    private func installNavigationControllerDelegate() {
+        guard let navigationController else { return }
+        guard navigationController.delegate !== self else { return }
+        navigationController.delegate = self
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
+
+        UIView.performWithoutAnimation {
+            AppBarAppearance.applyNavigationBarTransitionStyle(
+                transitionStyle,
+                to: navigationController.navigationBar
+            )
+        }
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        didShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
+
+        AppBarAppearance.applyNavigationBarStyle(
+            transitionStyle,
+            to: navigationController.navigationBar
+        )
+        Self.transitionStyle = nil
     }
 }
 
