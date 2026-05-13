@@ -45,10 +45,9 @@ struct ConCafeCastCard: View {
         VStack(alignment: .leading, spacing: 0) {
             GeometryReader { proxy in
                 ZStack {
-                    if let raw = imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty,
-                       let url = URL(string: raw) {
+                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: imageUrl) {
                         CachedAsyncImage(
-                            url: url,
+                            url: imageUrl,
                             placeholder: Color.clear,
                             displaySize: .thumbnail
                         )
