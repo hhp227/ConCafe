@@ -95,8 +95,6 @@
 		0A45CA302F7DA44C00A7F8F7 /* ContentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2A2F7DA44C00A7F8F7 /* ContentEvent.swift */; };
 		0A45CA312F7DA44C00A7F8F7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2C2F7DA44C00A7F8F7 /* ContentView.swift */; };
 		0A45CA322F7DA44C00A7F8F7 /* ContentUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */; };
-		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
-		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		0A47F5962F6D684F00EA453E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */; };
 		0A48CF112F66A25E00ED21AA /* ChangePasswordUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */; };
 		0A48CF132F66A28600ED21AA /* ChangePasswordAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */; };
@@ -257,6 +255,8 @@
 		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
 		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
 		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
+		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
+		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
@@ -355,8 +355,6 @@
 		0A45CA2B2F7DA44C00A7F8F7 /* ContentUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentUiState.swift; sourceTree = "<group>"; };
 		0A45CA2C2F7DA44C00A7F8F7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0A45CA2D2F7DA44C00A7F8F7 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
-		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
-		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		0A47F5952F6D684E00EA453E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0A48CF102F66A25E00ED21AA /* ChangePasswordUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordUiState.swift; sourceTree = "<group>"; };
 		0A48CF122F66A28600ED21AA /* ChangePasswordAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordAction.swift; sourceTree = "<group>"; };
@@ -517,6 +515,8 @@
 		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
 		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
 		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
+		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
+		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -857,15 +857,6 @@
 			path = Navigation;
 			sourceTree = "<group>";
 		};
-		0B2000222FB2000000B20000 /* Security */ = {
-			isa = PBXGroup;
-			children = (
-				0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */,
-				0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */,
-			);
-			path = Security;
-			sourceTree = "<group>";
-		};
 		0A580D9D2F5965DB00390F67 /* Main */ = {
 			isa = PBXGroup;
 			children = (
@@ -1174,6 +1165,15 @@
 				0B1000052FB1000000B10000 /* UserManagementEvent.swift */,
 			);
 			path = User;
+			sourceTree = "<group>";
+		};
+		0B2000222FB2000000B20000 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */,
+				0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */,
+			);
+			path = Security;
 			sourceTree = "<group>";
 		};
 		1030E2EB8EFBD5F27A20D64D /* iosApp */ = {
@@ -1722,7 +1722,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1747,7 +1747,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -1770,7 +1770,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1795,7 +1795,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",

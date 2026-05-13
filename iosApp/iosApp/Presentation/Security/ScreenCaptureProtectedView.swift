@@ -20,7 +20,7 @@ struct ScreenCaptureProtectedView<Content: View>: UIViewControllerRepresentable 
     }
 }
 
-private final class ScreenCaptureProtectedHostingController<Content: View>: UIViewController {
+final class ScreenCaptureProtectedHostingController<Content: View>: UIViewController {
     private let secureTextField = UITextField()
 
     private let hostingController: UIHostingController<Content>
