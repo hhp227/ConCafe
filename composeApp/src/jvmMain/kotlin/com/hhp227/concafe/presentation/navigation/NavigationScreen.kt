@@ -41,6 +41,7 @@ import com.hhp227.concafe.presentation.settings.changepassword.ChangePasswordScr
 import com.hhp227.concafe.presentation.settings.inquiry.InquiryLinkScreen
 import com.hhp227.concafe.presentation.settings.notification.NotificationSettingsScreen
 import kotlinx.coroutines.flow.collectLatest
+import java.awt.Window
 
 private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 
@@ -48,6 +49,7 @@ private const val DESKTOP_TWO_PANE_MIN_WIDTH_DP = 800
 fun NavigationScreen(
     viewModel: NavigationViewModel = viewModel(),
     hasUnreadNotifications: Boolean = false,
+    screenCaptureProtectionWindow: Window? = null,
     onRefreshUnreadNotificationCount: () -> Unit = {}
 ) {
     var currentMainTab by remember { mutableStateOf("home") }
@@ -108,6 +110,7 @@ fun NavigationScreen(
                 MainScreen(
                     initialTab = currentMainTab,
                     hasUnreadNotifications = hasUnreadNotifications,
+                    screenCaptureProtectionWindow = screenCaptureProtectionWindow,
                     onNavigationAction = viewModel::onAction
                 )
             }

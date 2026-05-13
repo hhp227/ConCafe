@@ -20,7 +20,7 @@ fun main() {
             title = "콘카(ConCafe)",
             icon = painterResource(Res.drawable.desktop_icon),
         ) {
-            App()
+            App(screenCaptureProtectionWindow = window)
         }
         doInitConCafeAppKoin(jvmPlatformModules())
     }

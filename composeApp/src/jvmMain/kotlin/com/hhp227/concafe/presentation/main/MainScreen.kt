@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
 import com.hhp227.concafe.domain.model.MainNavigationTab
 import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
@@ -33,6 +36,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import java.awt.Desktop
+import java.awt.Window
 import java.net.URI
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +44,7 @@ import java.net.URI
 fun MainScreen(
     initialTab: String? = null,
     hasUnreadNotifications: Boolean = false,
+    screenCaptureProtectionWindow: Window? = null,
     viewModel: MainViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -51,7 +56,20 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    val screenCaptureProtectionRepository = remember {
+        DefaultScreenCaptureProtectionRepository(AwtScreenCaptureProtectionDataSource())
+    }
 
+    DisposableEffect(screenCaptureProtectionWindow) {
+        if (screenCaptureProtectionWindow != null) {
+            screenCaptureProtectionRepository.enable(screenCaptureProtectionWindow)
+        }
+        onDispose {
+            if (screenCaptureProtectionWindow != null) {
+                screenCaptureProtectionRepository.disable(screenCaptureProtectionWindow)
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
         viewModel.onAction(
@@ -178,6 +196,65 @@ fun MainScreen(
         }
     }
 }
+
+private interface ScreenCaptureProtectionRepository {
+    fun enable(window: Window)
+    fun disable(window: Window)
+}
+
+private class DefaultScreenCaptureProtectionRepository(
+    private val dataSource: ScreenCaptureProtectionDataSource
+) : ScreenCaptureProtectionRepository {
+    override fun enable(window: Window) {
+        dataSource.enable(window)
+    }
+
+    override fun disable(window: Window) {
+        dataSource.disable(window)
+    }
+}
+
+private interface ScreenCaptureProtectionDataSource {
+    fun enable(window: Window)
+    fun disable(window: Window)
+}
+
+private class AwtScreenCaptureProtectionDataSource : ScreenCaptureProtectionDataSource {
+    override fun enable(window: Window) {
+        setWindowsDisplayAffinity(window, WDA_EXCLUDEFROMCAPTURE)
+    }
+
+    override fun disable(window: Window) {
+        setWindowsDisplayAffinity(window, WDA_NONE)
+    }
+
+    private fun setWindowsDisplayAffinity(window: Window, affinity: Int) {
+        if (!isWindows()) {
+            return
+        }
+
+        runCatching {
+            val hwnd = Native.getWindowPointer(window)
+            WindowsUser32.INSTANCE.SetWindowDisplayAffinity(hwnd, affinity)
+        }
+    }
+
+    private fun isWindows(): Boolean {
+        return System.getProperty("os.name")
+            ?.contains("Windows", ignoreCase = true) == true
+    }
+}
+
+private interface WindowsUser32 : Library {
+    fun SetWindowDisplayAffinity(windowHandle: Pointer, displayAffinity: Int): Boolean
+
+    companion object {
+        val INSTANCE: WindowsUser32 = Native.load("user32", WindowsUser32::class.java)
+    }
+}
+
+private const val WDA_NONE = 0x00000000
+private const val WDA_EXCLUDEFROMCAPTURE = 0x00000011
 
 private fun openStorePage(storeUrl: String) {
     runCatching {
