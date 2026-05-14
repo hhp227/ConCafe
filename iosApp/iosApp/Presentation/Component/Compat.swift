@@ -517,6 +517,24 @@ struct NavigationBarVisibilityConfigurator: UIViewControllerRepresentable {
 
 extension View {
     @ViewBuilder
+    func compatOpaqueNavigationBarBackground() -> some View {
+        if #available(iOS 16.0, *) {
+            self
+                .toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .background(
+                    NavigationBarAppearanceConfigurator(style: .opaque)
+                        .frame(width: 0, height: 0)
+                )
+        } else {
+            self.background(
+                NavigationBarAppearanceConfigurator(style: .opaque)
+                    .frame(width: 0, height: 0)
+            )
+        }
+    }
+
+    @ViewBuilder
     func compatMapNavigationBarAppearance() -> some View {
         if #available(iOS 16.0, *) {
             self

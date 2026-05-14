@@ -40,6 +40,7 @@ struct MainView: View {
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .compatOpaqueNavigationBarBackground()
         .toolbar {
             ToolbarItem(placement: .principal) {
                 ConCafeLogo()
