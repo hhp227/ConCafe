@@ -34,7 +34,7 @@ struct ScheduleView: View {
                 }
             }
         }
-        .sheet(isPresented: Binding(
+        .fullScreenCover(isPresented: Binding(
             get: { viewModel.uiState.isEditSheetVisible },
             set: { isPresented in
                 if !isPresented {
@@ -46,7 +46,7 @@ struct ScheduleView: View {
                 uiState: viewModel.uiState,
                 onAction: viewModel.onAction
             )
-            .background(Color.clear)
+            .background(TransparentPresentationBackground())
         }
         .onReceive(viewModel.event) { event in
             switch event {
@@ -135,7 +135,7 @@ struct ScheduleView: View {
 
 private struct ScheduleEditModal: View {
     let uiState: ScheduleUiState
-    
+
     let onAction: (ScheduleAction) -> Void
 
     var body: some View {
@@ -245,11 +245,51 @@ private struct ScheduleEditModal: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 20)
+                .compatSafeAreaBottomPadding()
             }
             .frame(maxWidth: .infinity)
             .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .clipShape(TopRoundedRectangle(radius: 24))
             .ignoresSafeArea(edges: .bottom)
+        }
+        .background(TransparentPresentationBackground())
+    }
+}
+
+private struct TopRoundedRectangle: Shape {
+    let radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: [.topLeft, .topRight],
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
+    }
+}
+
+private struct TransparentPresentationBackground: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        DispatchQueue.main.async {
+            clearPresentationBackground(from: view)
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            clearPresentationBackground(from: uiView)
+        }
+    }
+
+    private func clearPresentationBackground(from view: UIView) {
+        var currentView: UIView? = view
+        while let parent = currentView?.superview, !(parent is UIWindow) {
+            parent.backgroundColor = .clear
+            currentView = parent
         }
     }
 }
@@ -348,9 +388,11 @@ private struct ScheduleContentView: View {
                         guard isScheduleScrollRequestPending else { return }
                         isScheduleScrollRequestPending = false
                         guard let dayId = scheduleScrollTargetId,
-                              uiState.schedules.contains(where: { $0.id == dayId }) else { return }
-                        withAnimation(.easeInOut(duration: 0.28)) {
-                            scrollProxy.scrollTo(dayId, anchor: .top)
+                              let targetId = resolveScheduleScrollTargetId(for: dayId) else { return }
+                        DispatchQueue.main.async {
+                            withAnimation(.easeInOut(duration: 0.28)) {
+                                scrollProxy.scrollTo(targetId, anchor: .top)
+                            }
                         }
                     }
                 }
@@ -435,10 +477,8 @@ private struct ScheduleContentView: View {
                     ForEach(uiState.weekDays, id: \.id) { day in
                         let isSelected = day.id == uiState.selectedDayId
                         Button {
-                            scheduleScrollTargetId = day.id
-                            isScheduleScrollRequestPending = true
-                            scheduleScrollRequestToken += 1
                             onAction(.selectDay(id: day.id))
+                            requestScheduleScroll(to: day.id)
                         } label: {
                             VStack(spacing: 4) {
                                 Text(day.label)
@@ -463,6 +503,26 @@ private struct ScheduleContentView: View {
                 }
             }
         }
+    }
+
+    private func requestScheduleScroll(to dayId: String) {
+        scheduleScrollTargetId = dayId
+        isScheduleScrollRequestPending = true
+        scheduleScrollRequestToken += 1
+    }
+
+    private func resolveScheduleScrollTargetId(for dayId: String) -> String? {
+        if uiState.schedules.contains(where: { $0.id == dayId }) {
+            return dayId
+        }
+        let normalizedDayId = normalizedScheduleDateId(dayId)
+        return uiState.schedules.first { schedule in
+            normalizedScheduleDateId(schedule.id) == normalizedDayId
+        }?.id
+    }
+
+    private func normalizedScheduleDateId(_ value: String) -> String {
+        String(value.prefix(10))
     }
 
     private var schedulePeriodTabs: some View {
