@@ -18,10 +18,12 @@ struct ExploreUiState {
     var selectedRegion: RegionFilter
     var selectedSort: SortFilter
     var cafes: [Cafe]
+    var hasLoadedCafes: Bool
     var cafesNextCursor: String?
     var canLoadMoreCafes: Bool
     var isLoadingMoreCafes: Bool
     var maids: [Cast]
+    var hasLoadedMaids: Bool
     var maidsNextCursor: String?
     var canLoadMoreMaids: Bool
     var isLoadingMoreMaids: Bool
@@ -36,10 +38,12 @@ struct ExploreUiState {
         selectedRegion: .all,
         selectedSort: .popular,
         cafes: [],
+        hasLoadedCafes: false,
         cafesNextCursor: nil,
         canLoadMoreCafes: false,
         isLoadingMoreCafes: false,
         maids: [],
+        hasLoadedMaids: false,
         maidsNextCursor: nil,
         canLoadMoreMaids: false,
         isLoadingMoreMaids: false
