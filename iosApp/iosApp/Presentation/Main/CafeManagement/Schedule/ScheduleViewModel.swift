@@ -130,6 +130,8 @@ final class ScheduleViewModel: ObservableObject {
 
     private func loadSchedule(showLoading: Bool = true) {
         tasks[.load]?.cancel()
+        let currentPeriod = uiState.schedulePeriod
+        let currentSelectedDayId = uiState.selectedDayId
         uiState.isLoading = showLoading
         uiState.isSaving = false
         uiState.errorMessage = nil
@@ -171,9 +173,9 @@ final class ScheduleViewModel: ObservableObject {
                         ),
                         allWeekDays: data.weekDays,
                         allSchedules: data.daySchedules,
-                        selectedDayId: data.selectedDayId,
+                        selectedDayId: currentSelectedDayId.isEmpty ? data.selectedDayId : currentSelectedDayId,
                         infoMessage: nil
-                    ).applyingSchedulePeriod(.oneWeek)
+                    ).applyingSchedulePeriod(currentPeriod)
                 } else {
                     unbindCastEvent()
                     tasks.removeValue(forKey: .scheduleEvent)?.cancel()
@@ -336,7 +338,10 @@ final class ScheduleViewModel: ObservableObject {
                             return
                         }
                     }
-                    self.loadSchedule(showLoading: false)
+                    uiState.isSaving = false
+                    uiState.errorMessage = nil
+                    uiState.infoMessage = nil
+                    uiState.pendingUpdates = []
                     self.event.send(.showMessage("schedule_event_week_saved"))
                 } catch {
                     if Task.isCancelled { return }

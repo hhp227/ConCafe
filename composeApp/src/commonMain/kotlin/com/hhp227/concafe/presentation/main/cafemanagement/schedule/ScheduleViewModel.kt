@@ -110,6 +110,9 @@ class ScheduleViewModel(
     }
 
     private fun loadSchedule(showLoading: Boolean = true) {
+        val currentPeriod = _uiState.value.schedulePeriod
+        val currentSelectedDayId = _uiState.value.selectedDayId
+
         _uiState.update {
             it.copy(
                 isLoading = showLoading,
@@ -147,9 +150,9 @@ class ScheduleViewModel(
                         ),
                         allWeekDays = data.weekDays,
                         allSchedules = data.daySchedules,
-                        selectedDayId = data.selectedDayId,
+                        selectedDayId = currentSelectedDayId.ifBlank { data.selectedDayId },
                         infoMessage = null
-                    ).withSchedulePeriod(SchedulePeriod.ONE_WEEK)
+                    ).withSchedulePeriod(currentPeriod)
                 }
                 is AppResult.Failure -> {
                     unbindCastEvent()
@@ -327,7 +330,14 @@ class ScheduleViewModel(
                             }
                         }
                     }
-                    loadSchedule(showLoading = false)
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = null,
+                            infoMessage = null,
+                            pendingUpdates = emptyList()
+                        )
+                    }
                     _event.emit(ScheduleEvent.ShowMessage("schedule_event_week_saved"))
                 }
             }
