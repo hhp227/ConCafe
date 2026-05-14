@@ -656,6 +656,9 @@
     <string name="schedule_total_prefix">총</string>
     <string name="schedule_apply_edit">편집 내용 반영하기</string>
     <string name="schedule_calendar">달력보기</string>
+    <string name="schedule_period_week">1주</string>
+    <string name="schedule_period_two_weeks">2주</string>
+    <string name="schedule_period_month">1달</string>
     <string name="schedule_status_work">근무</string>
     <string name="schedule_status_off">휴무</string>
     <string name="schedule_status_vacation">휴가</string>

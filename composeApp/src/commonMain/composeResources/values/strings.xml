@@ -659,6 +659,9 @@
     <string name="schedule_total_prefix">Total</string>
     <string name="schedule_apply_edit">Apply Edited Content</string>
     <string name="schedule_calendar">Calendar</string>
+    <string name="schedule_period_week">1 week</string>
+    <string name="schedule_period_two_weeks">2 weeks</string>
+    <string name="schedule_period_month">1 month</string>
     <string name="schedule_status_work">Work</string>
     <string name="schedule_status_off">Off</string>
     <string name="schedule_status_vacation">Vacation</string>

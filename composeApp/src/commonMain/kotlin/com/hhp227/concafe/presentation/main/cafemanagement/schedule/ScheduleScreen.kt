@@ -2,8 +2,11 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +30,8 @@ import concafe.composeapp.generated.resources.Res
 import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -60,6 +65,9 @@ import concafe.composeapp.generated.resources.schedule_info_saved_vacation
 import concafe.composeapp.generated.resources.schedule_info_saved_work
 import concafe.composeapp.generated.resources.schedule_label_end_time
 import concafe.composeapp.generated.resources.schedule_label_start_time
+import concafe.composeapp.generated.resources.schedule_period_month
+import concafe.composeapp.generated.resources.schedule_period_two_weeks
+import concafe.composeapp.generated.resources.schedule_period_week
 import concafe.composeapp.generated.resources.schedule_save
 import concafe.composeapp.generated.resources.schedule_save_in_progress
 import concafe.composeapp.generated.resources.schedule_status_off
@@ -422,6 +430,8 @@ private fun ScheduleContentScreen(
                 .padding(innerPadding)
         ) {
             if (!uiState.isLoading) {
+                var scheduleScrollRequest by remember { mutableStateOf<Pair<String, Int>?>(null) }
+                var scheduleScrollRequestToken by remember { mutableStateOf(0) }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -430,7 +440,15 @@ private fun ScheduleContentScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ScheduleCastSummaryCard(uiState.castSummary)
-                    WeekSelectorSection(uiState = uiState, onAction = onAction)
+                    WeekSelectorSection(
+                        uiState = uiState,
+                        onAction = onAction,
+                        onDaySelected = { dayId ->
+                            scheduleScrollRequestToken += 1
+                            scheduleScrollRequest = dayId to scheduleScrollRequestToken
+                            onAction(ScheduleAction.SelectDay(dayId))
+                        }
+                    )
                     if (uiState.errorMessage != null) {
                         ScheduleInfoBanner(
                             message = uiState.errorMessage,
@@ -445,6 +463,7 @@ private fun ScheduleContentScreen(
                     }
                     ScheduleDayList(
                         schedules = uiState.schedules,
+                        scrollRequest = scheduleScrollRequest,
                         onAction = onAction
                     )
                 }
@@ -511,12 +530,22 @@ private fun ScheduleCastSummaryCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = castSummary.initials,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = colorFromHex("7C3F67")
-                )
+                val profileImageUrl = castSummary.profileImageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+                if (profileImageUrl != null) {
+                    CompatImageDisplay(
+                        imageUrl = profileImageUrl,
+                        modifier = Modifier.matchParentSize(),
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.THUMBNAIL
+                    )
+                } else {
+                    Text(
+                        text = castSummary.initials,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = colorFromHex("7C3F67")
+                    )
+                }
             }
         }
     }
@@ -525,7 +554,8 @@ private fun ScheduleCastSummaryCard(
 @Composable
 private fun WeekSelectorSection(
     uiState: ScheduleUiState,
-    onAction: (ScheduleAction) -> Unit
+    onAction: (ScheduleAction) -> Unit,
+    onDaySelected: (String) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -560,6 +590,10 @@ private fun WeekSelectorSection(
                 )
             }
         }
+        SchedulePeriodTabs(
+            selectedPeriod = uiState.schedulePeriod,
+            onSelect = { onAction(ScheduleAction.SelectPeriod(it)) }
+        )
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -568,8 +602,53 @@ private fun WeekSelectorSection(
                 WeekDayChip(
                     day = day,
                     isSelected = day.id == uiState.selectedDayId,
-                    onClick = { onAction(ScheduleAction.SelectDay(day.id)) }
+                    onClick = { onDaySelected(day.id) }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SchedulePeriodTabs(
+    selectedPeriod: SchedulePeriod,
+    onSelect: (SchedulePeriod) -> Unit
+) {
+    val periods = listOf(
+        SchedulePeriod.ONE_WEEK to stringResource(Res.string.schedule_period_week),
+        SchedulePeriod.TWO_WEEKS to stringResource(Res.string.schedule_period_two_weeks),
+        SchedulePeriod.ONE_MONTH to stringResource(Res.string.schedule_period_month)
+    )
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            periods.forEach { (period, label) ->
+                val selected = period == selectedPeriod
+
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onSelect(period) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    shadowElevation = if (selected) 1.dp else 0.dp
+                ) {
+                    Text(
+                        text = label,
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selected) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -584,7 +663,7 @@ private fun WeekDayChip(
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface,
+        color = if (isSelected) colorFromHex("EF6797") else MaterialTheme.colorScheme.surface,
         shadowElevation = if (isSelected) 4.dp else 0.dp,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
     ) {
@@ -599,13 +678,13 @@ private fun WeekDayChip(
                 text = day.label,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isSelected) Color.White.copy(alpha = 0.82f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = day.number,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -645,16 +724,30 @@ private fun ScheduleInfoBanner(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ScheduleDayList(
     schedules: List<ScheduleManagementDaySchedule>,
+    scrollRequest: Pair<String, Int>?,
     onAction: (ScheduleAction) -> Unit
 ) {
+    val scheduleIds = remember(schedules) { schedules.map { it.id } }
+    val bringIntoViewRequesters = remember(scheduleIds) {
+        scheduleIds.associateWith { BringIntoViewRequester() }
+    }
+    LaunchedEffect(scrollRequest?.second) {
+        val targetDayId = scrollRequest?.first ?: return@LaunchedEffect
+        bringIntoViewRequesters[targetDayId]?.bringIntoView()
+    }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         schedules.forEach { day ->
             DayScheduleCard(
+                modifier = Modifier.bringIntoViewRequester(
+                    bringIntoViewRequesters.getValue(day.id)
+                ),
                 schedule = day,
                 onEditClick = { onAction(ScheduleAction.ClickEditDay(day.id)) }
             )
@@ -664,26 +757,28 @@ private fun ScheduleDayList(
 
 @Composable
 private fun DayScheduleCard(
+    modifier: Modifier = Modifier,
     schedule: ScheduleManagementDaySchedule,
     onEditClick: () -> Unit
 ) {
+    val workingBackground = colorFromHex("EF6797")
+    val primaryContentColor = if (schedule.isWorking) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryContentColor = if (schedule.isWorking) Color.White.copy(alpha = 0.82f) else MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
+        modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = if (schedule.isWorking) workingBackground else MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    if (schedule.isWorking) colorFromHex("FFD1DC").copy(alpha = 0.12f) else Color.Transparent
-                )
                 .padding(start = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .background(if (schedule.isWorking) colorFromHex("FFD1DC") else colorFromHex("E9E0E5"))
+                    .background(if (schedule.isWorking) Color.White.copy(alpha = 0.38f) else colorFromHex("E9E0E5"))
             )
             Row(
                 modifier = Modifier
@@ -697,14 +792,14 @@ private fun DayScheduleCard(
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (schedule.isWorking) Color(0x14FFD1DC) else colorFromHex("F2EDF0")
+                            if (schedule.isWorking) Color.White.copy(alpha = 0.18f) else colorFromHex("F2EDF0")
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (schedule.isWorking) Icons.Default.Schedule else Icons.Default.Hotel,
                         contentDescription = null,
-                        tint = if (schedule.isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (schedule.isWorking) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Column(
@@ -719,31 +814,31 @@ private fun DayScheduleCard(
                             text = schedule.title,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = primaryContentColor
                         )
                         Surface(
                             shape = RoundedCornerShape(999.dp),
-                            color = if (schedule.isWorking) Color(0x4DFFD1DC) else colorFromHex("F2EDF0")
+                            color = if (schedule.isWorking) Color.White.copy(alpha = 0.22f) else colorFromHex("F2EDF0")
                         ) {
                             Text(
                                 text = resolveScheduleStatusLabel(schedule.statusLabel, schedule.status),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (schedule.isWorking) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = secondaryContentColor
                             )
                         }
                     }
                     Text(
                         text = resolveScheduleTimeLabel(schedule.timeLabel, schedule.status),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = secondaryContentColor
                     )
                 }
                 Surface(
                     modifier = Modifier.clickable(onClick = onEditClick),
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    color = if (schedule.isWorking) Color.White.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                 ) {
                     Box(
                         modifier = Modifier
@@ -753,7 +848,7 @@ private fun DayScheduleCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(Res.string.schedule_content_edit),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (schedule.isWorking) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

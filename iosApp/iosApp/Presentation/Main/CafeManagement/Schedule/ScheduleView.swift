@@ -304,6 +304,12 @@ private struct ScheduleContentView: View {
 
     let onAction: (ScheduleAction) -> Void
 
+    @State private var scheduleScrollTargetId: String?
+
+    @State private var scheduleScrollRequestToken = 0
+
+    @State private var isScheduleScrollRequestPending = false
+
     var body: some View {
         ZStack {
             Group {
@@ -319,24 +325,35 @@ private struct ScheduleContentView: View {
             }
             .ignoresSafeArea()
             if !uiState.isLoading {
-                ScrollView(.vertical, showsIndicators: true) {
-                    VStack(spacing: 12) {
-                        castSummaryCard
-                        weekSelectorSection
-                        if let errorMessage = uiState.errorMessage {
-                            infoBanner(message: errorMessage)
+                ScrollViewReader { scrollProxy in
+                    ScrollView(.vertical, showsIndicators: true) {
+                        VStack(spacing: 12) {
+                            castSummaryCard
+                            weekSelectorSection
+                            if let errorMessage = uiState.errorMessage {
+                                infoBanner(message: errorMessage)
+                            }
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(message: infoMessage)
+                            }
+                            scheduleListSection
                         }
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
-                        }
-                        scheduleListSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 24)
+                        .frame(maxWidth: .infinity, alignment: .top)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
-                    .frame(maxWidth: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .onChange(of: scheduleScrollRequestToken) { _ in
+                        guard isScheduleScrollRequestPending else { return }
+                        isScheduleScrollRequestPending = false
+                        guard let dayId = scheduleScrollTargetId,
+                              uiState.schedules.contains(where: { $0.id == dayId }) else { return }
+                        withAnimation(.easeInOut(duration: 0.28)) {
+                            scrollProxy.scrollTo(dayId, anchor: .top)
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 ProgressView()
                     .progressViewStyle(.circular)
@@ -370,9 +387,16 @@ private struct ScheduleContentView: View {
                 )
                 .frame(width: 80, height: 80)
                 .overlay {
-                    Text(uiState.castSummary.initials)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(Color(hex: "7C3F67"))
+                    let trimmedImageUrl = uiState.castSummary.profileImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: trimmedImageUrl) {
+                        CachedAsyncImage(url: imageUrl, displaySize: .thumbnail)
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    } else {
+                        Text(uiState.castSummary.initials)
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(Color(hex: "7C3F67"))
+                    }
                 }
         }
         .padding(16)
@@ -405,36 +429,64 @@ private struct ScheduleContentView: View {
                 }
                 .buttonStyle(.plain)
             }
+            schedulePeriodTabs
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(uiState.weekDays, id: \.id) { day in
                         let isSelected = day.id == uiState.selectedDayId
                         Button {
+                            scheduleScrollTargetId = day.id
+                            isScheduleScrollRequestPending = true
+                            scheduleScrollRequestToken += 1
                             onAction(.selectDay(id: day.id))
                         } label: {
                             VStack(spacing: 4) {
                                 Text(day.label)
                                     .font(.caption2.weight(.bold))
-                                    .foregroundStyle(isSelected ? Color.primary.opacity(0.6) : Color.secondary)
+                                    .foregroundStyle(isSelected ? Color.white.opacity(0.82) : Color.secondary)
                                 Text(day.number)
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(isSelected ? Color.white : Color.primary)
                             }
                             .frame(width: 56)
                             .padding(.vertical, 10)
-                            .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+                            .background(isSelected ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .stroke(isSelected ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
                             )
-                            .shadow(color: isSelected ? Color(hex: "FFD1DC").opacity(0.5) : .clear, radius: 4, x: 0, y: 2)
+                            .shadow(color: isSelected ? Color(hex: "EF6797").opacity(0.35) : .clear, radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
         }
+    }
+
+    private var schedulePeriodTabs: some View {
+        HStack(spacing: 4) {
+            ForEach(SchedulePeriod.allCases, id: \.self) { period in
+                let isSelected = uiState.schedulePeriod == period
+
+                Button {
+                    onAction(.selectPeriod(period))
+                } label: {
+                    Text(String(localized: String.LocalizationValue(period.localizationKey), table: "Localizable"))
+                        .font(.caption.weight(isSelected ? .bold : .medium))
+                        .foregroundStyle(isSelected ? Color(hex: "EF6797") : .secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(isSelected ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .secondarySystemGroupedBackground }).opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func infoBanner(message: String) -> some View {
@@ -486,50 +538,51 @@ private struct ScheduleContentView: View {
             ForEach(uiState.schedules, id: \.id) { schedule in
                 HStack(spacing: 14) {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(schedule.isWorking ? Color(hex: "FFD1DC").opacity(0.14) : Color(hex: "F2EDF0"))
+                        .fill(schedule.isWorking ? Color.white.opacity(0.18) : Color(hex: "F2EDF0"))
                         .frame(width: 48, height: 48)
                         .overlay {
                             Image(systemName: schedule.isWorking ? "clock" : "bed.double")
-                                .foregroundStyle(schedule.isWorking ? Color(hex: "EF6797") : .secondary)
+                                .foregroundStyle(schedule.isWorking ? Color.white : .secondary)
                         }
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
                             Text(schedule.title)
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(schedule.isWorking ? Color.white : .primary)
                             Text(resolveScheduleStatusLabel(schedule.statusLabel, status: schedule.status))
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(schedule.isWorking ? .primary : .secondary)
+                                .foregroundStyle(schedule.isWorking ? Color.white.opacity(0.86) : .secondary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(schedule.isWorking ? Color(hex: "FFD1DC").opacity(0.30) : Color(hex: "F2EDF0"))
+                                .background(schedule.isWorking ? Color.white.opacity(0.22) : Color(hex: "F2EDF0"))
                                 .clipShape(Capsule())
                         }
                         Text(resolveScheduleTimeLabel(schedule.timeLabel, status: schedule.status))
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(schedule.isWorking ? Color.white.opacity(0.82) : .secondary)
                     }
                     Spacer()
                     Button {
                         onAction(.clickEditDay(id: schedule.id))
                     } label: {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+                            .fill(schedule.isWorking ? Color.white.opacity(0.18) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                             .frame(width: 40, height: 40)
                             .overlay {
                                 Image(systemName: "pencil")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(schedule.isWorking ? Color.white : .secondary)
                             }
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 14)
-                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(schedule.isWorking ? 0.96 : 0.88))
+                .id(schedule.id)
+                .background(schedule.isWorking ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(schedule.isWorking ? Color(hex: "FFD1DC") : Color(hex: "E9E0E5"))
+                        .fill(schedule.isWorking ? Color.white.opacity(0.38) : Color(hex: "E9E0E5"))
                         .frame(width: 4)
                 }
                 .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)

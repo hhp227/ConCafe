@@ -65,7 +65,8 @@ class ScheduleViewModel(
                                 castSummary = state.castSummary.copy(
                                     title = event.cast.name,
                                     subtitle = "$conceptRole / $cafeName",
-                                    initials = event.cast.name.take(2).uppercase()
+                                    initials = event.cast.name.take(2).uppercase(),
+                                    profileImageUrl = event.cast.profileImage
                                 )
                             )
                         }
@@ -141,14 +142,14 @@ class ScheduleViewModel(
                             title = data.detail.cast.name,
                             subtitle = "$conceptRole / ${data.detail.cafe.name}",
                             badge = "schedule_badge_cast_member",
-                            initials = data.detail.cast.name.take(2).uppercase()
+                            initials = data.detail.cast.name.take(2).uppercase(),
+                            profileImageUrl = data.detail.cast.profileImage
                         ),
-                        weekRangeLabel = data.weekRangeLabel,
-                        weekDays = data.weekDays,
-                        schedules = data.daySchedules,
+                        allWeekDays = data.weekDays,
+                        allSchedules = data.daySchedules,
                         selectedDayId = data.selectedDayId,
                         infoMessage = null
-                    )
+                    ).withSchedulePeriod(SchedulePeriod.ONE_WEEK)
                 }
                 is AppResult.Failure -> {
                     unbindCastEvent()
@@ -182,6 +183,9 @@ class ScheduleViewModel(
                     }
                 }
             }
+            is ScheduleAction.SelectPeriod -> {
+                _uiState.update { state -> state.withSchedulePeriod(action.period) }
+            }
             is ScheduleAction.SelectDay -> {
                 _uiState.update { state ->
                     state.copy(
@@ -197,8 +201,8 @@ class ScheduleViewModel(
                         editingScheduleId = selected.id,
                         editingScheduleTitle = selected.title,
                         editStatus = selected.status,
-                        editStartTime = selected.timeLabel.substringBefore(" - ").takeIf { time -> ":" in time } ?: "10:00",
-                        editEndTime = selected.timeLabel.substringAfter(" - ", "19:00").takeIf { time -> ":" in time } ?: "19:00",
+                        editStartTime = selected.timeLabel.substringBefore(" - ").takeIf { time -> ":" in time } ?: ScheduleUiState.DEFAULT_START_TIME,
+                        editEndTime = selected.timeLabel.substringAfter(" - ", ScheduleUiState.DEFAULT_END_TIME).substringBefore(" ").takeIf { time -> ":" in time } ?: ScheduleUiState.DEFAULT_END_TIME,
                         infoMessage = null
                     )
                 }
@@ -239,11 +243,11 @@ class ScheduleViewModel(
                         editingScheduleId = null,
                         errorMessage = null,
                         infoMessage = "schedule_info_edit_applied",
-                        schedules = state.schedules.map { schedule ->
+                        allSchedules = state.allSchedules.map { schedule ->
                             if (schedule.id == editingId) {
                                 val isWorking = pendingUpdate.status == CastScheduleStatus.WORK
                                 val timeLabel = when (pendingUpdate.status) {
-                                    CastScheduleStatus.WORK -> "${pendingUpdate.startTime ?: "10:00"} - ${pendingUpdate.endTime ?: "19:00"}"
+                                    CastScheduleStatus.WORK -> "${pendingUpdate.startTime ?: ScheduleUiState.DEFAULT_START_TIME} - ${pendingUpdate.endTime ?: ScheduleUiState.DEFAULT_END_TIME}"
                                     CastScheduleStatus.OFF -> "schedule_status_off"
                                     CastScheduleStatus.VACATION -> "schedule_status_vacation"
                                 }
@@ -264,7 +268,7 @@ class ScheduleViewModel(
                                 schedule
                             }
                         },
-                        weekDays = state.weekDays.map { day ->
+                        allWeekDays = state.allWeekDays.map { day ->
                             if (day.id == editingId) {
                                 day.copy(isWorking = pendingUpdate.status == CastScheduleStatus.WORK)
                             } else {
@@ -273,7 +277,7 @@ class ScheduleViewModel(
                         },
                         pendingUpdates = state.pendingUpdates
                             .filterNot { it.date == editingId } + pendingUpdate
-                    )
+                    ).withSchedulePeriod(state.schedulePeriod)
                 }
             }
             ScheduleAction.ClickMore -> {
