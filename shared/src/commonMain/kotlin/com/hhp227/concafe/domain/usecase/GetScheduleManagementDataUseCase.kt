@@ -41,7 +41,7 @@ class GetScheduleManagementDataUseCase(
             val nowDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val today = nowDateTime.date
             val weekStart = today.toWeekStart()
-            val weekEnd = weekStart.plus(DatePeriod(days = 6))
+            val scheduleEnd = weekStart.plus(DatePeriod(days = 29))
             val loaded = coroutineScope {
                 val detailDeferred = async {
                     castRepository.getCastDetail(resolvedCastId)
@@ -50,14 +50,14 @@ class GetScheduleManagementDataUseCase(
                     castRepository.getCastSchedules(
                         castId = resolvedCastId,
                         fromDate = weekStart.toString(),
-                        toDate = weekEnd.toString()
+                        toDate = scheduleEnd.toString()
                     )
                 }
                 val scheduleStatusesDeferred = async {
                     castRepository.getCastScheduleStatuses(
                         castId = resolvedCastId,
                         fromDate = weekStart.toString(),
-                        toDate = weekEnd.toString()
+                        toDate = scheduleEnd.toString()
                     )
                 }
 
@@ -70,14 +70,15 @@ class GetScheduleManagementDataUseCase(
             val detail = loaded.first
             val scheduleByDate = loaded.second
             val scheduleStatusByDate = loaded.third
-            val weekDates = (0..6).map { weekStart.plus(DatePeriod(days = it)) }
+            val scheduleDates = (0..29).map { weekStart.plus(DatePeriod(days = it)) }
+            val weekEnd = weekStart.plus(DatePeriod(days = 6))
 
             AppResult.Success(
                 ScheduleManagementData(
                     detail = detail,
                     weekRangeLabel = "${weekStart.year}년 ${weekStart.monthNumber}월 ${weekStart.dayOfMonth}일 - ${weekEnd.monthNumber}월 ${weekEnd.dayOfMonth}일",
                     selectedDayId = today.toString(),
-                    weekDays = weekDates.map { date ->
+                    weekDays = scheduleDates.map { date ->
                         val status = scheduleStatusByDate[date.toString()]
                             ?: if (scheduleByDate.containsKey(date.toString())) CastScheduleStatus.WORK else CastScheduleStatus.OFF
                         ScheduleManagementWeekDay(
@@ -87,7 +88,7 @@ class GetScheduleManagementDataUseCase(
                             isWorking = status == CastScheduleStatus.WORK
                         )
                     },
-                    daySchedules = weekDates.map { date ->
+                    daySchedules = scheduleDates.map { date ->
                         val schedule = scheduleByDate[date.toString()]
                         val status = scheduleStatusByDate[date.toString()]
                             ?: if (schedule != null) CastScheduleStatus.WORK else CastScheduleStatus.OFF

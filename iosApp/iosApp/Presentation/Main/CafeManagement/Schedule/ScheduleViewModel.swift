@@ -72,7 +72,8 @@ final class ScheduleViewModel: ObservableObject {
                                 title: event.cast.name,
                                 subtitle: "\(conceptRole) / \(cafeName)",
                                 badge: self.uiState.castSummary.badge,
-                                initials: String(event.cast.name.prefix(2)).uppercased()
+                                initials: String(event.cast.name.prefix(2)).uppercased(),
+                                profileImageUrl: event.cast.profileImage
                             )
                         }
                     case let event as Shared.CastEvent.Deleted:
@@ -165,14 +166,14 @@ final class ScheduleViewModel: ObservableObject {
                             title: data.detail.cast.name,
                             subtitle: "\(conceptRole) / \(data.detail.cafe.name)",
                             badge: "schedule_badge_cast_member",
-                            initials: String(data.detail.cast.name.prefix(2)).uppercased()
+                            initials: String(data.detail.cast.name.prefix(2)).uppercased(),
+                            profileImageUrl: data.detail.cast.profileImage
                         ),
-                        weekRangeLabel: data.weekRangeLabel,
-                        weekDays: data.weekDays,
-                        schedules: data.daySchedules,
+                        allWeekDays: data.weekDays,
+                        allSchedules: data.daySchedules,
                         selectedDayId: data.selectedDayId,
                         infoMessage: nil
-                    )
+                    ).applyingSchedulePeriod(.oneWeek)
                 } else {
                     unbindCastEvent()
                     tasks.removeValue(forKey: .scheduleEvent)?.cancel()
@@ -209,6 +210,8 @@ final class ScheduleViewModel: ObservableObject {
             } else {
                 event.send(.navigateToCastManagement(cafeId: cafeId, cafeName: cafeName))
             }
+        case .selectPeriod(let period):
+            uiState = uiState.applyingSchedulePeriod(period)
         case .selectDay(let id):
             uiState.selectedDayId = id
         case .clickEditDay(let id):
@@ -217,8 +220,8 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editingScheduleId = selected.id
             uiState.editingScheduleTitle = selected.title
             uiState.editStatus = selected.status
-            uiState.editStartTime = selected.timeLabel.components(separatedBy: " - ").first.flatMap { $0.contains(":") ? $0 : nil } ?? "10:00"
-            uiState.editEndTime = selected.timeLabel.components(separatedBy: " - ").last.flatMap { $0.contains(":") ? $0 : nil } ?? "19:00"
+            uiState.editStartTime = selected.timeLabel.components(separatedBy: " - ").first.flatMap { $0.contains(":") ? $0 : nil } ?? ScheduleUiState.defaultStartTime
+            uiState.editEndTime = selected.timeLabel.components(separatedBy: " - ").last?.components(separatedBy: " ").first.flatMap { $0.contains(":") ? $0 : nil } ?? ScheduleUiState.defaultEndTime
             uiState.infoMessage = nil
         case .dismissEditSheet:
             uiState.isEditSheetVisible = false
@@ -245,12 +248,12 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editingScheduleId = nil
             uiState.errorMessage = nil
             uiState.infoMessage = "schedule_info_edit_applied"
-            uiState.schedules = uiState.schedules.map { schedule in
+            uiState.allSchedules = uiState.allSchedules.map { schedule in
                 guard schedule.id == editingId else { return schedule }
                 let timeLabel: String
                 switch pendingUpdate.status {
                 case .work:
-                    timeLabel = "\(pendingUpdate.startTime ?? "10:00") - \(pendingUpdate.endTime ?? "19:00")"
+                    timeLabel = "\(pendingUpdate.startTime ?? ScheduleUiState.defaultStartTime) - \(pendingUpdate.endTime ?? ScheduleUiState.defaultEndTime)"
                 case .off:
                     timeLabel = "schedule_status_off"
                 default:
@@ -274,7 +277,7 @@ final class ScheduleViewModel: ObservableObject {
                     status: pendingUpdate.status
                 )
             }
-            uiState.weekDays = uiState.weekDays.map { day in
+            uiState.allWeekDays = uiState.allWeekDays.map { day in
                 guard day.id == editingId else { return day }
                 return ScheduleManagementWeekDay(
                     id: day.id,
@@ -285,6 +288,7 @@ final class ScheduleViewModel: ObservableObject {
             }
             uiState.pendingUpdates.removeAll { $0.date == editingId }
             uiState.pendingUpdates.append(pendingUpdate)
+            uiState = uiState.applyingSchedulePeriod(uiState.schedulePeriod)
         case .clickSave:
             guard !uiState.managedCastId.isEmpty else { return }
             if uiState.pendingUpdates.isEmpty {
@@ -377,3 +381,4 @@ final class ScheduleViewModel: ObservableObject {
         case submit
     }
 }
+

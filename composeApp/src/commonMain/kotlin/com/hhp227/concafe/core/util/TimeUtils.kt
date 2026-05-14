@@ -165,7 +165,7 @@ object TimeUtils {
         return "${now.monthNumber}월 ${now.dayOfMonth}일"
     }
 
-    fun defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 23): List<String> {
+    fun defaultHalfHourTimeOptions(startHour: Int = 8, endHour: Int = 24): List<String> {
         val options = mutableListOf<String>()
 
         for (hour in startHour..endHour) {
