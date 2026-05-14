@@ -3,6 +3,9 @@ package com.hhp227.concafe.di
 import com.hhp227.concafe.data.repository.*
 import com.hhp227.concafe.data.source.CommunityPostRemoteDataSource
 import com.hhp227.concafe.data.source.*
+import com.hhp227.concafe.data.source.cache.DefaultRemoteMemoryCache
+import com.hhp227.concafe.data.source.cache.RemoteMemoryCache
+import com.hhp227.concafe.data.source.cache.withLocalCache
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreBannerRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreCafeRemoteDataSource
@@ -34,13 +37,14 @@ private const val FIRESTORE_PROJECT_ID = "concafe-5f7fd"
 
 val dataSourceModule = module {
     single { FirestoreConfig(projectId = FIRESTORE_PROJECT_ID) }
+    single<RemoteMemoryCache> { DefaultRemoteMemoryCache() }
     single<BannerRemoteDataSource> { FirestoreBannerRemoteDataSource(get(), get(), get()) }
-    single<CafeRemoteDataSource> { FirestoreCafeRemoteDataSource(get(), get(), get()) }
-    single<CastRemoteDataSource> { FirestoreCastRemoteDataSource(get(), get(), get()) }
+    single<CafeRemoteDataSource> { FirestoreCafeRemoteDataSource(get(), get(), get()).withLocalCache(get()) }
+    single<CastRemoteDataSource> { FirestoreCastRemoteDataSource(get(), get(), get()).withLocalCache(get()) }
     single<CastClaimRemoteDataSource> { FirestoreCastClaimRemoteDataSource(get(), get(), get()) }
     single<InquiryRemoteDataSource> { FirestoreInquiryRemoteDataSource(get(), get(), get()) }
     single<ReportRemoteDataSource> { FirestoreReportRemoteDataSource(get(), get(), get()) }
-    single<NoticeRemoteDataSource> { FirestoreNoticeRemoteDataSource(get(), get(), get()) }
+    single<NoticeRemoteDataSource> { FirestoreNoticeRemoteDataSource(get(), get(), get()).withLocalCache(get()) }
     single<AuthDataSource> { FirestoreAuthDataSource() }
     single<RankingDataSource> { FirestoreRankingDataSource(get(), get(), get()) }
     single<ReviewRemoteDataSource> { FirestoreReviewRemoteDataSource(get(), get(), get()) }
