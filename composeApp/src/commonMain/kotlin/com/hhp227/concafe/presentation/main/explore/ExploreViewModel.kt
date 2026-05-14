@@ -80,10 +80,12 @@ class ExploreViewModel(
                 isLoading = true,
                 errorMessage = null,
                 cafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) emptyList() else it.cafes,
+                hasLoadedCafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) false else it.hasLoadedCafes,
                 cafesNextCursor = if (it.selectedTab == ExploreUiState.TabType.CAFE) null else it.cafesNextCursor,
                 canLoadMoreCafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) false else it.canLoadMoreCafes,
                 isLoadingMoreCafes = false,
                 maids = if (it.selectedTab == ExploreUiState.TabType.MAID) emptyList() else it.maids,
+                hasLoadedMaids = if (it.selectedTab == ExploreUiState.TabType.MAID) false else it.hasLoadedMaids,
                 maidsNextCursor = if (it.selectedTab == ExploreUiState.TabType.MAID) null else it.maidsNextCursor,
                 canLoadMoreMaids = if (it.selectedTab == ExploreUiState.TabType.MAID) false else it.canLoadMoreMaids,
                 isLoadingMoreMaids = false
@@ -117,6 +119,7 @@ class ExploreViewModel(
                             isLoading = false,
                             errorMessage = null,
                             cafes = if (append) it.cafes + result.data.items else result.data.items,
+                            hasLoadedCafes = true,
                             cafesNextCursor = result.data.nextCursor,
                             canLoadMoreCafes = result.data.hasNext,
                             isLoadingMoreCafes = false
@@ -164,6 +167,7 @@ class ExploreViewModel(
                             isLoading = false,
                             errorMessage = null,
                             maids = if (append) it.maids + result.data.items else result.data.items,
+                            hasLoadedMaids = true,
                             maidsNextCursor = result.data.nextCursor,
                             canLoadMoreMaids = result.data.hasNext,
                             isLoadingMoreMaids = false
@@ -235,7 +239,7 @@ class ExploreViewModel(
 
     private fun addCastIfVisible(cast: Cast) {
         _uiState.update { state ->
-            if (state.maids.any { it.id == cast.id } || !matchesCastFilters(state, cast)) {
+            if (!state.hasLoadedMaids || state.maids.any { it.id == cast.id } || !matchesCastFilters(state, cast)) {
                 state
             } else {
                 state.copy(maids = (state.maids + cast).sortedCasts(state))
@@ -245,20 +249,24 @@ class ExploreViewModel(
 
     private fun patchCast(cast: Cast) {
         _uiState.update { state ->
-            val nextMaids = state.maids.mapNotNull { item ->
-                when {
-                    item.id != cast.id -> item
-                    matchesCastFilters(state, cast) -> cast
-                    else -> null
-                }
-            }.sortedCasts(state)
-            state.copy(maids = nextMaids)
+            if (!state.hasLoadedMaids) {
+                state
+            } else {
+                val nextMaids = state.maids.mapNotNull { item ->
+                    when {
+                        item.id != cast.id -> item
+                        matchesCastFilters(state, cast) -> cast
+                        else -> null
+                    }
+                }.sortedCasts(state)
+                state.copy(maids = nextMaids)
+            }
         }
     }
 
     private fun removeCast(castId: String) {
         _uiState.update { state ->
-            state.copy(maids = state.maids.filterNot { it.id == castId })
+            if (!state.hasLoadedMaids) state else state.copy(maids = state.maids.filterNot { it.id == castId })
         }
     }
 
@@ -279,9 +287,9 @@ class ExploreViewModel(
             is ExploreAction.TabChanged -> {
                 _uiState.update { it.copy(selectedTab = action.tab) }
                 val nextState = _uiState.value
-                if (action.tab == ExploreUiState.TabType.CAFE && nextState.cafes.isEmpty()) {
+                if (action.tab == ExploreUiState.TabType.CAFE && !nextState.hasLoadedCafes) {
                     refreshCurrentTab()
-                } else if (action.tab == ExploreUiState.TabType.MAID && nextState.maids.isEmpty()) {
+                } else if (action.tab == ExploreUiState.TabType.MAID && !nextState.hasLoadedMaids) {
                     refreshCurrentTab()
                 }
             }

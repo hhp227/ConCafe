@@ -13,10 +13,12 @@ data class ExploreUiState(
     val selectedRegion: RegionFilter = RegionFilter.ALL,
     val selectedSort: SortFilter = SortFilter.POPULAR,
     val cafes: List<Cafe> = emptyList(),
+    val hasLoadedCafes: Boolean = false,
     val cafesNextCursor: String? = null,
     val canLoadMoreCafes: Boolean = false,
     val isLoadingMoreCafes: Boolean = false,
     val maids: List<Cast> = emptyList(),
+    val hasLoadedMaids: Boolean = false,
     val maidsNextCursor: String? = null,
     val canLoadMoreMaids: Boolean = false,
     val isLoadingMoreMaids: Boolean = false
