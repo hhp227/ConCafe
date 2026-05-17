@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeTheme
 import com.hhp227.concafe.presentation.component.NetworkStatusBanner
 import com.hhp227.concafe.presentation.navigation.NavigationScreen
+import com.hhp227.concafe.presentation.security.ScreenCaptureProtectionEffect
 import com.hhp227.concafe.presentation.theme.AppThemeMode
 import com.hhp227.concafe.push.resolveAndroidPushTokenClient
 import kotlinx.coroutines.flow.collectLatest
@@ -38,6 +39,7 @@ fun App() {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
+            ScreenCaptureProtectionEffect()
             PushRegistrationEffect(appViewModel = appViewModel)
             NavigationScreen(
                 hasUnreadNotifications = uiState.hasUnreadNotifications,

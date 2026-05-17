@@ -27,7 +27,6 @@ import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import com.hhp227.concafe.domain.model.AppUpdateInfo
-import com.hhp227.concafe.presentation.security.ScreenCaptureProtectionEffect
 import com.hhp227.concafe.presentation.settings.currentAppVersion
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
@@ -53,7 +52,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
 
-    ScreenCaptureProtectionEffect()
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
         viewModel.onAction(
