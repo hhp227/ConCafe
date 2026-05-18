@@ -32,6 +32,8 @@ final class PostDetailViewModel: ObservableObject {
 
     private let createCommunityPostReportUseCase: CreateCommunityPostReportUseCase
 
+    private let createUserBlockUseCase: CreateUserBlockUseCase
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let communityPostEventPublisher: CommunityPostEventPublisher
@@ -105,7 +107,8 @@ final class PostDetailViewModel: ObservableObject {
                 let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: nil, pageSize: 5)
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<Comment> {
-                    uiState.comments = page.items as! [Comment]
+                    let comments = page.items as! [Comment]
+                    uiState.comments = comments.filter { !uiState.blockedUserIds.contains($0.userId) }
                     uiState.hasMoreComments = page.hasNext
                     uiState.oldestCommentCursor = page.nextCursor
                 }
@@ -124,7 +127,7 @@ final class PostDetailViewModel: ObservableObject {
                 let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: cursor, pageSize: 5)
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<Comment> {
-                    let newComments = page.items as! [Comment]
+                    let newComments = (page.items as! [Comment]).filter { !uiState.blockedUserIds.contains($0.userId) }
                     uiState.comments = newComments + uiState.comments
                     uiState.hasMoreComments = page.hasNext
                     uiState.oldestCommentCursor = page.nextCursor
@@ -332,6 +335,40 @@ final class PostDetailViewModel: ObservableObject {
         }
     }
 
+    private func blockUser(blockedUserId: String, blockedNickname: String, closeAfterSuccess: Bool) {
+        guard !blockedUserId.isEmpty, !uiState.isBlockingUser else { return }
+
+        uiState.isMenuVisible = false
+        uiState.isBlockingUser = true
+        tasks[.blockUser]?.cancel()
+        tasks[.blockUser] = Task {
+            do {
+                let result = try await createUserBlockUseCase.invoke(
+                    blockedUserId: blockedUserId,
+                    blockedNickname: blockedNickname
+                )
+
+                if result is AppResultSuccess<AnyObject> {
+                    if closeAfterSuccess {
+                        eventSubject.send(.navigateBack)
+                    } else {
+                        uiState.isBlockingUser = false
+                        uiState.blockedUserIds.insert(blockedUserId)
+                        uiState.comments = uiState.comments.filter { $0.userId != blockedUserId }
+                        uiState.errorMessage = "사용자를 차단했습니다."
+                    }
+                } else {
+                    uiState.isBlockingUser = false
+                    uiState.errorMessage = "사용자를 차단하지 못했습니다."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isBlockingUser = false
+                uiState.errorMessage = "사용자를 차단하지 못했습니다."
+            }
+        }
+    }
+
     private func observeCommunityPostEvents() {
         tasks[.observeCommunityEvent]?.cancel()
         tasks[.observeCommunityEvent] = Task {
@@ -371,6 +408,13 @@ final class PostDetailViewModel: ObservableObject {
             uiState.reportingCommentId = nil
             uiState.selectedReportType = nil
             uiState.isReportSheetVisible = true
+        case .clickBlock:
+            guard let post = uiState.post else { return }
+            blockUser(
+                blockedUserId: post.userId,
+                blockedNickname: post.userNickname,
+                closeAfterSuccess: true
+            )
         case .selectReportType(let type):
             uiState.selectedReportType = type
         case .dismissReportSheet:
@@ -395,6 +439,13 @@ final class PostDetailViewModel: ObservableObject {
             uiState.reportingCommentId = commentId
             uiState.selectedReportType = nil
             uiState.isReportSheetVisible = true
+        case .clickBlockComment(let commentId):
+            guard let comment = uiState.comments.first(where: { $0.id == commentId }) else { return }
+            blockUser(
+                blockedUserId: comment.userId,
+                blockedNickname: comment.userNickname,
+                closeAfterSuccess: false
+            )
         case .changeCommentText(let text):
             uiState.commentText = text
         case .clickSendComment:
@@ -419,6 +470,7 @@ final class PostDetailViewModel: ObservableObject {
         updateCommunityCommentUseCase: UpdateCommunityCommentUseCase = KoinInitializerKt.resolveUpdateCommunityCommentUseCase(),
         deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase = KoinInitializerKt.resolveDeleteCommunityCommentUseCase(),
         createCommunityPostReportUseCase: CreateCommunityPostReportUseCase = KoinInitializerKt.resolveCreateCommunityPostReportUseCase(),
+        createUserBlockUseCase: CreateUserBlockUseCase = KoinInitializerKt.resolveCreateUserBlockUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
     ) {
@@ -432,6 +484,7 @@ final class PostDetailViewModel: ObservableObject {
         self.updateCommunityCommentUseCase = updateCommunityCommentUseCase
         self.deleteCommunityCommentUseCase = deleteCommunityCommentUseCase
         self.createCommunityPostReportUseCase = createCommunityPostReportUseCase
+        self.createUserBlockUseCase = createUserBlockUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.communityPostEventPublisher = communityPostEventPublisher
 
@@ -458,5 +511,6 @@ final class PostDetailViewModel: ObservableObject {
         case deleteComment
         case observeCommunityEvent
         case submitReport
+        case blockUser
     }
 }

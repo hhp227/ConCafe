@@ -249,6 +249,10 @@ private fun PostDetailContentScreen(
                                         text = { Text("신고하기") },
                                         onClick = { onAction(PostDetailAction.ClickReport) }
                                     )
+                                    DropdownMenuItem(
+                                        text = { Text("차단하기", color = colorFromHex("E53935")) },
+                                        onClick = { onAction(PostDetailAction.ClickBlock) }
+                                    )
                                 }
                             }
                         }
@@ -362,7 +366,8 @@ private fun PostDetailContentScreen(
                                         isMine = comment.userId == uiState.currentUserId,
                                         onEdit = { onAction(PostDetailAction.ClickEditComment(comment.id)) },
                                         onDelete = { onAction(PostDetailAction.ClickDeleteComment(comment.id)) },
-                                        onReport = { onAction(PostDetailAction.ClickReportComment(comment.id)) }
+                                        onReport = { onAction(PostDetailAction.ClickReportComment(comment.id)) },
+                                        onBlock = { onAction(PostDetailAction.ClickBlockComment(comment.id)) }
                                     )
                                 }
                             }
@@ -497,7 +502,8 @@ private fun CommentItem(
     isMine: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onReport: () -> Unit
+    onReport: () -> Unit,
+    onBlock: () -> Unit
 ) {
     var isMenuVisible by remember { mutableStateOf(false) }
 
@@ -568,6 +574,13 @@ private fun CommentItem(
                             onClick = {
                                 isMenuVisible = false
                                 onReport()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("차단하기", color = colorFromHex("E53935")) },
+                            onClick = {
+                                isMenuVisible = false
+                                onBlock()
                             }
                         )
                     }

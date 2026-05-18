@@ -104,6 +104,7 @@ private val composeAppPresentationModule = module {
             updateCommunityCommentUseCase = get(),
             deleteCommunityCommentUseCase = get(),
             createCommunityPostReportUseCase = get(),
+            createUserBlockUseCase = get(),
             observeCurrentUserUseCase = get(),
             communityPostEventPublisher = get()
         )

@@ -83,6 +83,11 @@ struct PostDetailView: View {
                         systemImage: "exclamationmark.bubble"
                     )
                 }
+                Button(role: .destructive) {
+                    viewModel.onAction(.clickBlock)
+                } label: {
+                    Label("차단하기", systemImage: "person.crop.circle.badge.xmark")
+                }
             }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -319,7 +324,8 @@ private struct PostDetailContentView: View {
                         isMine: comment.userId == uiState.currentUserId,
                         onEdit: { onAction(.clickEditComment(commentId: comment.id)) },
                         onDelete: { onAction(.clickDeleteComment(commentId: comment.id)) },
-                        onReport: { onAction(.clickReportComment(commentId: comment.id)) }
+                        onReport: { onAction(.clickReportComment(commentId: comment.id)) },
+                        onBlock: { onAction(.clickBlockComment(commentId: comment.id)) }
                     )
                 }
             }
@@ -486,6 +492,8 @@ private struct CommentItemView: View {
 
     let onReport: () -> Void
 
+    let onBlock: () -> Void
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
@@ -519,6 +527,9 @@ private struct CommentItemView: View {
                                 String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"),
                                 systemImage: "exclamationmark.bubble"
                             )
+                        }
+                        Button(role: .destructive, action: onBlock) {
+                            Label("차단하기", systemImage: "person.crop.circle.badge.xmark")
                         }
                     }
                 } label: {

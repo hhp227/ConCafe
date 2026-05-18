@@ -1219,6 +1219,44 @@ class FirestoreReportRemoteDataSource(
     }
 }
 
+class FirestoreUserBlockRemoteDataSource(
+    config: FirestoreConfig,
+    restApi: FirestoreRestApi,
+    tokenProvider: FirestoreAuthTokenProvider
+) : FirestoreBaseDataSource(config, restApi, tokenProvider), UserBlockRemoteDataSource {
+    override suspend fun createUserBlock(
+        blockerUserId: String,
+        blockerNickname: String,
+        input: UserBlockCreate
+    ): UserBlock {
+        val idToken = tokenProvider.getIdToken()
+        val normalizedBlockerUserId = blockerUserId.trim()
+        val normalizedBlockedUserId = input.blockedUserId.trim()
+        val blockId = "${normalizedBlockerUserId}_$normalizedBlockedUserId"
+        val createdAt = Clock.System.now().toString()
+        val path = "${config.documentBasePath()}/${FirestorePaths.USER_BLOCKS}/$blockId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "blockerUserId" to firestoreString(normalizedBlockerUserId),
+                "blockerNickname" to firestoreString(blockerNickname.trim()),
+                "blockedUserId" to firestoreString(normalizedBlockedUserId),
+                "blockedNickname" to firestoreString(input.blockedNickname.trim()),
+                "createdAt" to firestoreString(createdAt)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        return UserBlock(
+            id = blockId,
+            blockerUserId = normalizedBlockerUserId,
+            blockerNickname = blockerNickname.trim(),
+            blockedUserId = normalizedBlockedUserId,
+            blockedNickname = input.blockedNickname.trim(),
+            createdAt = createdAt
+        )
+    }
+}
+
 // ── Notice ────────────────────────────────────────────────────────────────────
 
 class FirestoreNoticeRemoteDataSource(
