@@ -976,25 +976,43 @@
     <string name="day_sun">Sun</string>
 
     <!-- Community -->
-    <string name="community_title">커뮤니티</string>
-    <string name="home_community_shortcut_desc">게시글을 확인하고 이웃과 소통해보세요</string>
-    <string name="home_community_latest_title">지금 뜨는 최신글</string>
-    <string name="home_community_see_all">전체 보기</string>
-    <string name="community_write_post">게시글 작성</string>
-    <string name="community_empty">아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!</string>
-    <string name="community_load_more">더 보기</string>
-    <string name="community_post_like_count">좋아요 %1$s</string>
-    <string name="community_post_comment_count">댓글 %1$s</string>
+    <string name="community_title">Community</string>
+    <string name="home_community_shortcut_desc">Read posts and connect with neighbors.</string>
+    <string name="home_community_latest_title">Trending Posts</string>
+    <string name="home_community_see_all">See All</string>
+    <string name="community_write_post">Write Post</string>
+    <string name="community_empty">No posts yet.\nBe the first to write one!</string>
+    <string name="community_load_more">Load More</string>
+    <string name="community_post_like_count">Likes %1$s</string>
+    <string name="community_post_comment_count">Comments %1$s</string>
+    <string name="community_anonymous">Anonymous</string>
+    <string name="community_action_edit">Edit</string>
+    <string name="community_action_delete">Delete</string>
+    <string name="community_action_report">Report</string>
+    <string name="community_action_block">Block</string>
 
     <!-- PostEdit -->
-    <string name="post_edit_title_placeholder">제목을 입력하세요</string>
-    <string name="post_edit_content_placeholder">내용을 입력하세요</string>
-    <string name="post_edit_add_image">사진 추가</string>
+    <string name="post_edit_title_placeholder">Enter a title</string>
+    <string name="post_edit_content_placeholder">Enter content</string>
+    <string name="post_edit_add_image">Add Photo</string>
     <string name="post_edit_image_limit">%1$s / %2$s</string>
-    <string name="post_edit_submit">등록하기</string>
-    <string name="post_edit_screen_title">게시글 작성</string>
-    <string name="post_edit_title_label">제목</string>
-    <string name="post_edit_content_label">내용</string>
-    <string name="post_edit_image_label">사진 첨부</string>
-    <string name="post_edit_image_guide">사진은 최대 %1$s장까지 첨부할 수 있습니다.</string>
+    <string name="post_edit_submit">Post</string>
+    <string name="post_edit_submit_edit">Save</string>
+    <string name="post_edit_submit_edit_full">Save</string>
+    <string name="post_edit_screen_title">Write Post</string>
+    <string name="post_edit_screen_title_edit">Edit Post</string>
+    <string name="post_edit_title_label">Title</string>
+    <string name="post_edit_content_label">Content</string>
+    <string name="post_edit_image_label">Attach Photos</string>
+    <string name="post_edit_image_guide">You can attach up to %1$s photos.</string>
+
+    <!-- PostDetail -->
+    <string name="post_detail_screen_title">Post</string>
+    <string name="post_detail_delete_title">Delete Post</string>
+    <string name="post_detail_delete_message">Do you want to delete this post?</string>
+    <string name="post_detail_load_failed">Could not load the post.</string>
+    <string name="post_detail_comment_edit_title">Edit Comment</string>
+    <string name="post_detail_comment_edit_placeholder">Enter comment content</string>
+    <string name="post_detail_comment_placeholder">Enter a comment</string>
+    <string name="post_detail_load_more_comments">Load Previous Comments</string>
 </resources>

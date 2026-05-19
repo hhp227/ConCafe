@@ -23,7 +23,11 @@ struct PostEditView: View {
             onAction: viewModel.onAction,
             onPickImage: { showImagePicker = true }
         )
-        .navigationTitle(viewModel.uiState.isEditMode ? "게시글 수정" : "게시글 작성")
+        .navigationTitle(
+            viewModel.uiState.isEditMode
+                ? String(localized: String.LocalizationValue("post_edit_screen_title_edit"), table: "Localizable")
+                : String(localized: String.LocalizationValue("post_edit_screen_title"), table: "Localizable")
+        )
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
@@ -67,20 +71,20 @@ private struct PostEditContentView: View {
                         infoBanner(message: infoMessage)
                     }
                     ConCafeFormField(
-                        label: "제목",
+                        label: String(localized: String.LocalizationValue("post_edit_title_label"), table: "Localizable"),
                         text: Binding(
                             get: { uiState.title },
                             set: { onAction(.changeTitle($0)) }
                         ),
-                        placeholder: "제목을 입력하세요"
+                        placeholder: String(localized: String.LocalizationValue("post_edit_title_placeholder"), table: "Localizable")
                     )
                     ConCafeFormEditor(
-                        label: "내용",
+                        label: String(localized: String.LocalizationValue("post_edit_content_label"), table: "Localizable"),
                         text: Binding(
                             get: { uiState.content },
                             set: { onAction(.changeContent($0)) }
                         ),
-                        placeholder: "내용을 입력하세요",
+                        placeholder: String(localized: String.LocalizationValue("post_edit_content_placeholder"), table: "Localizable"),
                         minHeight: 160
                     )
                     imageSection
@@ -104,7 +108,7 @@ private struct PostEditContentView: View {
         let limitText = "\(uiState.imageUrls.count) / \(uiState.imageMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("사진 첨부")
+                Text(String(localized: String.LocalizationValue("post_edit_image_label"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -127,7 +131,7 @@ private struct PostEditContentView: View {
                     addImageItem
                 }
             }
-            Text("사진은 최대 \(uiState.imageMaxCount)장까지 첨부할 수 있습니다.")
+            Text(String(format: String(localized: String.LocalizationValue("post_edit_image_guide"), table: "Localizable"), locale: Locale.current, "\(uiState.imageMaxCount)"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -206,7 +210,12 @@ private struct PostEditContentView: View {
                 } else {
                     Image(systemName: uiState.isEditMode ? "checkmark.circle" : "square.and.pencil")
                 }
-                Text(uiState.isEditMode ? "저장하기" : "등록하기").fontWeight(.bold)
+                Text(
+                    uiState.isEditMode
+                        ? String(localized: String.LocalizationValue("post_edit_submit_edit_full"), table: "Localizable")
+                        : String(localized: String.LocalizationValue("post_edit_submit"), table: "Localizable")
+                )
+                .fontWeight(.bold)
             }
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
@@ -235,7 +244,7 @@ private struct PostEditContentView: View {
                 .font(.caption)
                 .foregroundStyle(Color(hex: "6B5320"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))

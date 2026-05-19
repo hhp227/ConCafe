@@ -86,7 +86,7 @@ private fun PostEditContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (uiState.isEditMode) "게시글 수정" else stringResource(Res.string.post_edit_screen_title),
+                        text = if (uiState.isEditMode) stringResource(Res.string.post_edit_screen_title_edit) else stringResource(Res.string.post_edit_screen_title),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = textColor
@@ -114,7 +114,7 @@ private fun PostEditContentScreen(
                             )
                         } else {
                             Text(
-                                text = if (uiState.isEditMode) "저장" else stringResource(Res.string.post_edit_submit),
+                                text = if (uiState.isEditMode) stringResource(Res.string.post_edit_submit_edit) else stringResource(Res.string.post_edit_submit),
                                 color = if (uiState.canSubmit) pink else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
                             )

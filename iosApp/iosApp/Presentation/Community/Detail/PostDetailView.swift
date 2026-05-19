@@ -23,21 +23,21 @@ struct PostDetailView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("게시글")
+        .navigationTitle(String(localized: String.LocalizationValue("post_detail_screen_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 postMenuButton
             }
         }
-        .alert("게시글 삭제", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("post_detail_delete_title"), table: "Localizable"), isPresented: Binding(
             get: { viewModel.uiState.isDeleteConfirmVisible },
             set: { if !$0 { viewModel.onAction(.dismissDeleteConfirm) } }
         )) {
-            Button("삭제", role: .destructive) { viewModel.onAction(.confirmDelete) }
-            Button("취소", role: .cancel) { viewModel.onAction(.dismissDeleteConfirm) }
+            Button(String(localized: String.LocalizationValue("community_action_delete"), table: "Localizable"), role: .destructive) { viewModel.onAction(.confirmDelete) }
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) { viewModel.onAction(.dismissDeleteConfirm) }
         } message: {
-            Text("이 게시글을 삭제하시겠습니까?")
+            Text(String(localized: String.LocalizationValue("post_detail_delete_message"), table: "Localizable"))
         }
         .onAppear {
             eventCancellable = viewModel.eventPublisher.sink { event in
@@ -66,27 +66,27 @@ struct PostDetailView: View {
 
         return Menu {
             if viewModel.uiState.isOwner {
-                Button("수정") {
+                Button(String(localized: String.LocalizationValue("community_action_edit"), table: "Localizable")) {
                     viewModel.onAction(.clickEdit)
                 }
                 Button(role: .destructive) {
                     viewModel.onAction(.clickDelete)
                 } label: {
-                    Label("삭제", systemImage: "trash")
+                    Label(String(localized: String.LocalizationValue("community_action_delete"), table: "Localizable"), systemImage: "trash")
                 }
             } else {
                 Button {
                     viewModel.onAction(.clickReport)
                 } label: {
                     Label(
-                        String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"),
+                        String(localized: String.LocalizationValue("community_action_report"), table: "Localizable"),
                         systemImage: "exclamationmark.bubble"
                     )
                 }
                 Button(role: .destructive) {
                     viewModel.onAction(.clickBlock)
                 } label: {
-                    Label("차단하기", systemImage: "person.crop.circle.badge.xmark")
+                    Label(String(localized: String.LocalizationValue("community_action_block"), table: "Localizable"), systemImage: "person.crop.circle.badge.xmark")
                 }
             }
         } label: {
@@ -120,7 +120,7 @@ private struct PostDetailContentView: View {
                     .tint(Color(hex: "EF6797"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if uiState.post == nil {
-                Text("게시글을 불러오지 못했습니다.")
+                Text(String(localized: String.LocalizationValue("post_detail_load_failed"), table: "Localizable"))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -190,7 +190,7 @@ private struct PostDetailContentView: View {
 
     private var editCommentSheet: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("댓글 수정")
+            Text(String(localized: String.LocalizationValue("post_detail_comment_edit_title"), table: "Localizable"))
                 .font(.headline)
                 .foregroundStyle(.primary)
             TextEditor(text: $localEditText)
@@ -208,7 +208,7 @@ private struct PostDetailContentView: View {
                 }
             HStack {
                 Spacer()
-                Button("취소") {
+                Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable")) {
                     onAction(.dismissEditComment)
                 }
                 .foregroundStyle(.secondary)
@@ -219,7 +219,7 @@ private struct PostDetailContentView: View {
                         ProgressView().tint(.white).scaleEffect(0.8)
                             .frame(width: 40, height: 20)
                     } else {
-                        Text("수정")
+                        Text(String(localized: String.LocalizationValue("community_action_edit"), table: "Localizable"))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
@@ -264,7 +264,7 @@ private struct PostDetailContentView: View {
                             .font(.subheadline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Button("닫기") { onAction(.dismissError) }
+                        Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) { onAction(.dismissError) }
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(.white)
                     }
@@ -288,7 +288,7 @@ private struct PostDetailContentView: View {
                 Image(systemName: "bubble.left")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("댓글 \(uiState.commentCount)")
+                Text(String(format: String(localized: String.LocalizationValue("community_post_comment_count"), table: "Localizable"), locale: Locale.current, "\(uiState.commentCount)"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -310,7 +310,7 @@ private struct PostDetailContentView: View {
                     Button {
                         onAction(.loadMoreComments)
                     } label: {
-                        Text("이전 댓글 더보기")
+                        Text(String(localized: String.LocalizationValue("post_detail_load_more_comments"), table: "Localizable"))
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
@@ -339,7 +339,7 @@ private struct PostDetailContentView: View {
             Divider()
                 .overlay(Color(hex: "FFD1DC").opacity(0.2))
             HStack(spacing: 8) {
-                CompatVerticalTextField(placeholder: "댓글을 입력하세요", text: Binding(
+                CompatVerticalTextField(placeholder: String(localized: String.LocalizationValue("post_detail_comment_placeholder"), table: "Localizable"), text: Binding(
                     get: { uiState.commentText },
                     set: { onAction(.changeCommentText($0)) }
                 ))
@@ -406,7 +406,7 @@ private struct PostBodyView: View {
                             .foregroundStyle(Color(hex: "EF6797"))
                     }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(post.userNickname.isEmpty ? "익명" : post.userNickname)
+                    Text(post.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : post.userNickname)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text(post.displayDate)
@@ -457,7 +457,7 @@ private struct PostBodyView: View {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
                             .font(.system(size: 16))
                             .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
-                        Text("좋아요 \(post.likeCount)")
+                        Text(String(format: String(localized: String.LocalizationValue("community_post_like_count"), table: "Localizable"), locale: Locale.current, "\(post.likeCount)"))
                             .font(.system(size: 13))
                             .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
                     }
@@ -467,7 +467,7 @@ private struct PostBodyView: View {
                     Image(systemName: "bubble.left")
                         .font(.system(size: 15))
                         .foregroundStyle(.secondary)
-                    Text("댓글 \(post.commentCount)")
+                    Text(String(format: String(localized: String.LocalizationValue("community_post_comment_count"), table: "Localizable"), locale: Locale.current, "\(post.commentCount)"))
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -508,7 +508,7 @@ private struct CommentItemView: View {
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Color(hex: "EF6797"))
                     }
-                Text(comment.userNickname.isEmpty ? "익명" : comment.userNickname)
+                Text(comment.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : comment.userNickname)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                 Spacer()
@@ -517,19 +517,19 @@ private struct CommentItemView: View {
                     .foregroundStyle(.secondary)
                 Menu {
                     if isMine {
-                        Button("수정", action: onEdit)
+                        Button(String(localized: String.LocalizationValue("community_action_edit"), table: "Localizable"), action: onEdit)
                         Button(role: .destructive, action: onDelete) {
-                            Label("삭제", systemImage: "trash")
+                            Label(String(localized: String.LocalizationValue("community_action_delete"), table: "Localizable"), systemImage: "trash")
                         }
                     } else {
                         Button(action: onReport) {
                             Label(
-                                String(localized: String.LocalizationValue("cafe_review_action_report"), table: "Localizable"),
+                                String(localized: String.LocalizationValue("community_action_report"), table: "Localizable"),
                                 systemImage: "exclamationmark.bubble"
                             )
                         }
                         Button(role: .destructive, action: onBlock) {
-                            Label("차단하기", systemImage: "person.crop.circle.badge.xmark")
+                            Label(String(localized: String.LocalizationValue("community_action_block"), table: "Localizable"), systemImage: "person.crop.circle.badge.xmark")
                         }
                     }
                 } label: {
