@@ -279,7 +279,11 @@ private struct HomeContentView: View {
 
     private var cafeEventSection: some View {
         return VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"))
+            SectionTitle(
+                title: String(localized: String.LocalizationValue("home_section_ongoing_cafe_event"), table: "Localizable"),
+                actionTitle: uiState.canLoadMoreCafeEvents && !uiState.cafeEvents.isEmpty ? String(localized: String.LocalizationValue("home_show_more"), table: "Localizable") : nil,
+                onAction: { onAction(.loadMoreCafeEvents) }
+            )
             if !uiState.cafeEvents.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {

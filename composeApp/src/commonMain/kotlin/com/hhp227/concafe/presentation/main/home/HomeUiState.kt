@@ -25,6 +25,9 @@ data class HomeUiState(
     val birthdayCasts: List<Cast>,
     val notices: List<Notice>,
     val cafeEvents: List<HomeCafeEvent>,
+    val cafeEventCursor: String? = null,
+    val canLoadMoreCafeEvents: Boolean = false,
+    val isLoadingMoreCafeEvents: Boolean = false,
     val communityPosts: List<CommunityPost> = emptyList()
 ) {
     companion object {
@@ -44,6 +47,9 @@ data class HomeUiState(
             birthdayCasts = emptyList(),
             notices = emptyList(),
             cafeEvents = emptyList(),
+            cafeEventCursor = null,
+            canLoadMoreCafeEvents = false,
+            isLoadingMoreCafeEvents = false,
             communityPosts = emptyList()
         )
     }

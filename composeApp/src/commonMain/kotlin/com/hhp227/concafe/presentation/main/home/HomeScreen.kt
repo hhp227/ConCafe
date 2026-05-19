@@ -193,6 +193,7 @@ fun HomeContentScreen(
             item {
                 HomeCafeEventSection(
                     events = uiState.cafeEvents,
+                    canLoadMore = uiState.canLoadMoreCafeEvents && uiState.cafeEvents.isNotEmpty(),
                     onAction = onAction
                 )
             }
@@ -371,11 +372,16 @@ fun HomeContentScreen(
 @Composable
 private fun HomeCafeEventSection(
     events: List<HomeCafeEvent>,
+    canLoadMore: Boolean,
     onAction: (HomeAction) -> Unit
 ) {
     val cafeEventListState = rememberLazyListState()
 
-    SectionTitle(stringResource(Res.string.home_section_ongoing_cafe_event))
+    SectionTitle(
+        text = stringResource(Res.string.home_section_ongoing_cafe_event),
+        actionLabel = if (canLoadMore) stringResource(Res.string.home_show_more) else null,
+        onAction = { onAction(HomeAction.LoadMoreCafeEvents) }
+    )
     Spacer(Modifier.height(10.dp))
     if (events.isNotEmpty()) {
         LazyRow(

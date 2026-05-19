@@ -10,6 +10,7 @@ sealed interface HomeAction {
     data class ClickBirthdayMaid(val id: String) : HomeAction
     data object ClickLoginPromptSignIn : HomeAction
     data object DismissLoginPrompt : HomeAction
+    data object LoadMoreCafeEvents : HomeAction
     data object LoadMorePopularCasts : HomeAction
     data object LoadMoreNearbyCafes : HomeAction
     data object ClickCommunity : HomeAction
