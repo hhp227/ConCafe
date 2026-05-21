@@ -52,6 +52,9 @@ struct PostEditView: View {
                 onNavigationAction(.navigateBack)
             }
         }
+        .onDisappear {
+            dismissKeyboard()
+        }
         .sheet(isPresented: $showImagePicker) {
             CompatImagePicker(
                 onImageSelected: { image in
