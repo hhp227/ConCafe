@@ -32,8 +32,6 @@ struct PostEditView: View {
 
     @State private var showImagePicker = false
 
-    @State private var shouldNavigateBackAfterKeyboardHide = false
-
     var body: some View {
         PostEditContentView(
             uiState: viewModel.uiState,
@@ -50,17 +48,10 @@ struct PostEditView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
-                shouldNavigateBackAfterKeyboardHide = true
                 keyboardState.dismiss()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
-            guard shouldNavigateBackAfterKeyboardHide else { return }
-            shouldNavigateBackAfterKeyboardHide = false
-            onNavigationAction(.navigateBack)
-        }
         .onDisappear {
-            shouldNavigateBackAfterKeyboardHide = false
             keyboardState.dismiss()
         }
         .sheet(isPresented: $showImagePicker) {
