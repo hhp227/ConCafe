@@ -51,10 +51,7 @@ struct PostEditView: View {
             switch event {
             case .navigateBack:
                 shouldNavigateBackAfterKeyboardHide = true
-                if !keyboardState.dismiss() {
-                    shouldNavigateBackAfterKeyboardHide = false
-                    onNavigationAction(.navigateBack)
-                }
+                keyboardState.dismiss()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
