@@ -17,6 +17,8 @@ struct PostEditView: View {
 
     @State private var showImagePicker = false
 
+    @State private var navigateBackTask: Task<Void, Never>?
+
     var body: some View {
         PostEditContentView(
             uiState: viewModel.uiState,
@@ -32,13 +34,19 @@ struct PostEditView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
-                dismissKeyboard()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                navigateBackTask?.cancel()
+                navigateBackTask = Task { @MainActor in
+                    let didRequestKeyboardDismissal = dismissKeyboard()
+                    if didRequestKeyboardDismissal {
+                        await waitForKeyboardDidHide()
+                    }
+                    guard !Task.isCancelled else { return }
                     onNavigationAction(.navigateBack)
                 }
             }
         }
         .onDisappear {
+            navigateBackTask?.cancel()
             dismissKeyboard()
         }
         .sheet(isPresented: $showImagePicker) {
@@ -55,12 +63,28 @@ struct PostEditView: View {
         }
     }
 
-    private func dismissKeyboard() {
+    @discardableResult
+    private func dismissKeyboard() -> Bool {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first { $0.isKeyWindow }?
-            .endEditing(true)
+            .endEditing(true) ?? false
+    }
+
+    private func waitForKeyboardDidHide() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                for await _ in NotificationCenter.default.notifications(named: UIResponder.keyboardDidHideNotification) {
+                    break
+                }
+            }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: 600_000_000)
+            }
+            await group.next()
+            group.cancelAll()
+        }
     }
 
     init(editPostId: String? = nil, onNavigationAction: @escaping (NavigationAction) -> Void) {
@@ -216,6 +240,7 @@ private struct PostEditContentView: View {
 
     private func bottomSubmitBar() -> some View {
         Button {
+            dismissKeyboard()
             onAction(.clickSubmit)
         } label: {
             HStack(spacing: 8) {
@@ -250,6 +275,14 @@ private struct PostEditContentView: View {
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
         }
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .endEditing(true)
     }
 
     private func infoBanner(message: String) -> some View {
