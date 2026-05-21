@@ -36,10 +36,7 @@ struct PostEditView: View {
             case .navigateBack:
                 navigateBackTask?.cancel()
                 navigateBackTask = Task { @MainActor in
-                    let didRequestKeyboardDismissal = dismissKeyboard()
-                    if didRequestKeyboardDismissal {
-                        await waitForKeyboardDidHide()
-                    }
+                    await dismissKeyboardAndWaitForHide()
                     guard !Task.isCancelled else { return }
                     onNavigationAction(.navigateBack)
                 }
@@ -63,16 +60,16 @@ struct PostEditView: View {
         }
     }
 
-    @discardableResult
-    private func dismissKeyboard() -> Bool {
+    private func dismissKeyboard() {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first { $0.isKeyWindow }?
-            .endEditing(true) ?? false
+            .endEditing(true)
     }
 
-    private func waitForKeyboardDidHide() async {
+    @MainActor
+    private func dismissKeyboardAndWaitForHide() async {
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 for await _ in NotificationCenter.default.notifications(named: UIResponder.keyboardDidHideNotification) {
@@ -80,8 +77,9 @@ struct PostEditView: View {
                 }
             }
             group.addTask {
-                try? await Task.sleep(nanoseconds: 600_000_000)
+                try? await Task.sleep(nanoseconds: 350_000_000)
             }
+            dismissKeyboard()
             await group.next()
             group.cancelAll()
         }
@@ -100,6 +98,8 @@ private struct PostEditContentView: View {
     let onAction: (PostEditAction) -> Void
 
     let onPickImage: () -> Void
+
+    @State private var isPreparingSubmit = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -240,11 +240,16 @@ private struct PostEditContentView: View {
 
     private func bottomSubmitBar() -> some View {
         Button {
-            dismissKeyboard()
-            onAction(.clickSubmit)
+            guard !isPreparingSubmit else { return }
+            isPreparingSubmit = true
+            Task { @MainActor in
+                await dismissKeyboardAndWaitForHide()
+                onAction(.clickSubmit)
+                isPreparingSubmit = false
+            }
         } label: {
             HStack(spacing: 8) {
-                if uiState.isSubmitting {
+                if uiState.isSubmitting || isPreparingSubmit {
                     ProgressView().tint(.primary)
                 } else {
                     Image(systemName: uiState.isEditMode ? "checkmark.circle" : "square.and.pencil")
@@ -267,7 +272,7 @@ private struct PostEditContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .disabled(!uiState.canSubmit || uiState.isSubmitting)
+        .disabled(!uiState.canSubmit || uiState.isSubmitting || isPreparingSubmit)
         .padding(16)
         .background(Color(uiColor: .secondarySystemBackground).opacity(0.96))
         .overlay(alignment: .top) {
@@ -283,6 +288,23 @@ private struct PostEditContentView: View {
             .flatMap(\.windows)
             .first { $0.isKeyWindow }?
             .endEditing(true)
+    }
+
+    @MainActor
+    private func dismissKeyboardAndWaitForHide() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                for await _ in NotificationCenter.default.notifications(named: UIResponder.keyboardDidHideNotification) {
+                    break
+                }
+            }
+            group.addTask {
+                try? await Task.sleep(nanoseconds: 350_000_000)
+            }
+            dismissKeyboard()
+            await group.next()
+            group.cancelAll()
+        }
     }
 
     private func infoBanner(message: String) -> some View {
