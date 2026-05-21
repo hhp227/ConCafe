@@ -181,7 +181,7 @@
     <string name="settings_account_title">Account</string>
     <string name="settings_account_desc">Manage your profile and sign-in info.</string>
     <string name="settings_notification_title">Notifications</string>
-    <string name="settings_notification_desc">Configure check-in, birthday, and notice alerts.</string>
+    <string name="settings_notification_desc">Configure check-in, birthday, notice, and community alerts.</string>
     <string name="settings_inquiry_title">Inquiry</string>
     <string name="settings_inquiry_desc">Send inconvenience reports or suggestions via form.</string>
     <string name="settings_privacy_title">Privacy Policy</string>
@@ -250,6 +250,8 @@
     <string name="notification_settings_follow_desc">Receive updates when cast members get new fans.</string>
     <string name="notification_settings_event_title">Event Notification</string>
     <string name="notification_settings_event_desc">Check cafe event registrations and update news.</string>
+    <string name="notification_settings_community_title">Community Post &amp; Like Notifications</string>
+    <string name="notification_settings_community_desc">Receive alerts when your community posts get comments or likes.</string>
     <string name="notification_settings_quiet_title">Quiet Hours</string>
     <string name="notification_settings_quiet_desc">Choose night-time or daily summary mode to control notification intensity.</string>
     <string name="notification_settings_hero_title">Tune notification style to your preference</string>

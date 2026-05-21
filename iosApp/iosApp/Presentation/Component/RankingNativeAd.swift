@@ -38,7 +38,11 @@ class IosNativeAdDataSourceImpl: NSObject, NativeAdDataSource {
             #if DEBUG
             adUnitId = "ca-app-pub-3940256099942544/3986624511"
             #else
-            adUnitId = (slot == 2) ? "ca-app-pub-6216021268300256/7952443563" : "ca-app-pub-6216021268300256/5283160617"
+            if slot >= 100 {
+                adUnitId = "ca-app-pub-6216021268300256/5916790240"
+            } else {
+                adUnitId = (slot == 2) ? "ca-app-pub-6216021268300256/7952443563" : "ca-app-pub-6216021268300256/5283160617"
+            }
             #endif
 
             let loader = GADAdLoader(

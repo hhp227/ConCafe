@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.community
 
+import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.CommunityPost
 
 data class CommunityUiState(
@@ -8,5 +9,6 @@ data class CommunityUiState(
     val nextCursor: String? = null,
     val hasNext: Boolean = false,
     val isLoadingMore: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val nativeAds: Map<Int, NativeAdHandle?> = emptyMap()
 )

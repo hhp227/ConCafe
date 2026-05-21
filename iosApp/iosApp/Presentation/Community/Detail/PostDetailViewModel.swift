@@ -16,6 +16,8 @@ final class PostDetailViewModel: ObservableObject {
 
     private let getCommunityPostUseCase: GetCommunityPostUseCase
 
+    private let incrementCommunityPostViewCountUseCase: IncrementCommunityPostViewCountUseCase
+
     private let checkCommunityPostLikedUseCase: CheckCommunityPostLikedUseCase
 
     private let deleteCommunityPostUseCase: DeleteCommunityPostUseCase
@@ -59,6 +61,7 @@ final class PostDetailViewModel: ObservableObject {
                    let post = success.data as? CommunityPost {
                     uiState.post = post
                     uiState.isLoading = false
+                    incrementViewCount()
                     checkIsOwner(post: post)
                     checkLikeStatus()
                 } else {
@@ -84,6 +87,48 @@ final class PostDetailViewModel: ObservableObject {
                 }
             } catch { }
         }
+    }
+
+    private func incrementViewCount() {
+        tasks[.incrementViewCount]?.cancel()
+        tasks[.incrementViewCount] = Task {
+            try? await incrementCommunityPostViewCountUseCase.invoke(postId: postId)
+            if let post = uiState.post {
+                uiState.post = CommunityPost(
+                    id: post.id,
+                    userId: post.userId,
+                    userNickname: post.userNickname,
+                    title: post.title,
+                    content: post.content,
+                    imageUrls: post.imageUrls,
+                    likeCount: post.likeCount,
+                    commentCount: post.commentCount,
+                    viewCount: post.viewCount + 1,
+                    createdAt: post.createdAt,
+                    displayDate: post.displayDate
+                )
+            }
+        }
+    }
+
+    private func copyPost(
+        _ post: CommunityPost,
+        likeCount: Int32? = nil,
+        commentCount: Int32? = nil
+    ) -> CommunityPost {
+        CommunityPost(
+            id: post.id,
+            userId: post.userId,
+            userNickname: post.userNickname,
+            title: post.title,
+            content: post.content,
+            imageUrls: post.imageUrls,
+            likeCount: likeCount ?? post.likeCount,
+            commentCount: commentCount ?? post.commentCount,
+            viewCount: post.viewCount,
+            createdAt: post.createdAt,
+            displayDate: post.displayDate
+        )
     }
 
     private func checkLikeStatus() {
@@ -143,18 +188,7 @@ final class PostDetailViewModel: ObservableObject {
         uiState.isLiked = !wasLiked
         if let post = uiState.post {
             let newCount = wasLiked ? max(0, Int(post.likeCount) - 1) : Int(post.likeCount) + 1
-            uiState.post = CommunityPost(
-                id: post.id,
-                userId: post.userId,
-                userNickname: post.userNickname,
-                title: post.title,
-                content: post.content,
-                imageUrls: post.imageUrls,
-                likeCount: Int32(newCount),
-                commentCount: post.commentCount,
-                createdAt: post.createdAt,
-                displayDate: post.displayDate
-            )
+            uiState.post = copyPost(post, likeCount: Int32(newCount))
         }
         tasks[.toggleLike]?.cancel()
         tasks[.toggleLike] = Task {
@@ -163,18 +197,7 @@ final class PostDetailViewModel: ObservableObject {
                 if result is AppResultFailure {
                     uiState.isLiked = wasLiked
                     if let post = uiState.post {
-                        uiState.post = CommunityPost(
-                            id: post.id,
-                            userId: post.userId,
-                            userNickname: post.userNickname,
-                            title: post.title,
-                            content: post.content,
-                            imageUrls: post.imageUrls,
-                            likeCount: Int32(currentCount),
-                            commentCount: post.commentCount,
-                            createdAt: post.createdAt,
-                            displayDate: post.displayDate
-                        )
+                        uiState.post = copyPost(post, likeCount: Int32(currentCount))
                     }
                 }
             } catch {
@@ -219,18 +242,7 @@ final class PostDetailViewModel: ObservableObject {
                     uiState.commentText = ""
                     uiState.comments.append(comment)
                     if let post = uiState.post {
-                        uiState.post = CommunityPost(
-                            id: post.id,
-                            userId: post.userId,
-                            userNickname: post.userNickname,
-                            title: post.title,
-                            content: post.content,
-                            imageUrls: post.imageUrls,
-                            likeCount: post.likeCount,
-                            commentCount: post.commentCount + 1,
-                            createdAt: post.createdAt,
-                            displayDate: post.displayDate
-                        )
+                        uiState.post = copyPost(post, commentCount: post.commentCount + 1)
                     }
                 } else {
                     uiState.isSendingComment = false
@@ -277,18 +289,7 @@ final class PostDetailViewModel: ObservableObject {
                 if result is AppResultSuccess<AnyObject> {
                     uiState.comments = uiState.comments.filter { $0.id != commentId }
                     if let post = uiState.post {
-                        uiState.post = CommunityPost(
-                            id: post.id,
-                            userId: post.userId,
-                            userNickname: post.userNickname,
-                            title: post.title,
-                            content: post.content,
-                            imageUrls: post.imageUrls,
-                            likeCount: post.likeCount,
-                            commentCount: max(0, post.commentCount - 1),
-                            createdAt: post.createdAt,
-                            displayDate: post.displayDate
-                        )
+                        uiState.post = copyPost(post, commentCount: max(0, post.commentCount - 1))
                     }
                 } else {
                     uiState.errorMessage = "댓글을 삭제하지 못했습니다."
@@ -462,6 +463,7 @@ final class PostDetailViewModel: ObservableObject {
     init(
         postId: String,
         getCommunityPostUseCase: GetCommunityPostUseCase = KoinInitializerKt.resolveGetCommunityPostUseCase(),
+        incrementCommunityPostViewCountUseCase: IncrementCommunityPostViewCountUseCase = KoinInitializerKt.resolveIncrementCommunityPostViewCountUseCase(),
         checkCommunityPostLikedUseCase: CheckCommunityPostLikedUseCase = KoinInitializerKt.resolveCheckCommunityPostLikedUseCase(),
         deleteCommunityPostUseCase: DeleteCommunityPostUseCase = KoinInitializerKt.resolveDeleteCommunityPostUseCase(),
         toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase = KoinInitializerKt.resolveToggleCommunityPostLikeUseCase(),
@@ -476,6 +478,7 @@ final class PostDetailViewModel: ObservableObject {
     ) {
         self.postId = postId
         self.getCommunityPostUseCase = getCommunityPostUseCase
+        self.incrementCommunityPostViewCountUseCase = incrementCommunityPostViewCountUseCase
         self.checkCommunityPostLikedUseCase = checkCommunityPostLikedUseCase
         self.deleteCommunityPostUseCase = deleteCommunityPostUseCase
         self.toggleCommunityPostLikeUseCase = toggleCommunityPostLikeUseCase
@@ -500,6 +503,7 @@ final class PostDetailViewModel: ObservableObject {
 
     private enum TaskKey {
         case loadPost
+        case incrementViewCount
         case checkOwner
         case checkLike
         case loadComments

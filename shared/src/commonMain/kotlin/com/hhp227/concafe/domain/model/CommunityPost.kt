@@ -9,6 +9,7 @@ data class CommunityPost(
     val imageUrls: List<String>,
     val likeCount: Int,
     val commentCount: Int,
+    val viewCount: Int,
     val createdAt: String,
     val displayDate: String
 )

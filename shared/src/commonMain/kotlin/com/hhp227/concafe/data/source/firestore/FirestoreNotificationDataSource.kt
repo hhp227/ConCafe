@@ -120,6 +120,7 @@ class FirestoreNotificationDataSource(
                 "isNoticeNotificationsEnabled" to firestoreBoolean(settings.isNoticeNotificationsEnabled),
                 "isFollowNotificationsEnabled" to firestoreBoolean(settings.isFollowNotificationsEnabled),
                 "isEventNotificationsEnabled" to firestoreBoolean(settings.isEventNotificationsEnabled),
+                "isCommunityNotificationsEnabled" to firestoreBoolean(settings.isCommunityNotificationsEnabled),
                 "quietHoursMode" to firestoreString(settings.quietHoursMode.name),
                 "updatedAt" to firestoreString(Clock.System.now().toString())
             )
@@ -307,6 +308,7 @@ class FirestoreNotificationDataSource(
             isNoticeNotificationsEnabled = fields.getFirestoreBoolean("isNoticeNotificationsEnabled") ?: true,
             isFollowNotificationsEnabled = fields.getFirestoreBoolean("isFollowNotificationsEnabled") ?: true,
             isEventNotificationsEnabled = fields.getFirestoreBoolean("isEventNotificationsEnabled") ?: true,
+            isCommunityNotificationsEnabled = fields.getFirestoreBoolean("isCommunityNotificationsEnabled") ?: true,
             quietHoursMode = quietHoursMode
         )
     }

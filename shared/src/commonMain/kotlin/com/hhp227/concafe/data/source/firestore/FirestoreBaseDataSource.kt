@@ -2401,6 +2401,7 @@ abstract class FirestoreBaseDataSource(
         val imageUrls = fields.getFirestoreStringList("imageUrls")
         val likeCount = fields.getFirestoreInt("likeCount") ?: 0
         val commentCount = fields.getFirestoreInt("commentCount") ?: 0
+        val viewCount = fields.getFirestoreInt("viewCount") ?: 0
         val createdAt = fields.getFirestoreString("createdAt").orEmpty()
         val displayDate = createdAt.take(10).replace("-", ".")
         return com.hhp227.concafe.domain.model.CommunityPost(
@@ -2412,6 +2413,7 @@ abstract class FirestoreBaseDataSource(
             imageUrls = imageUrls,
             likeCount = likeCount,
             commentCount = commentCount,
+            viewCount = viewCount,
             createdAt = createdAt,
             displayDate = displayDate
         )

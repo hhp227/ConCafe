@@ -61,6 +61,7 @@ fun NotificationScreen(
                 NotificationEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is NotificationEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
                 is NotificationEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
+                is NotificationEvent.NavigateToPost -> onNavigationAction(NavigationAction.NavigateToPostDetail(event.id))
                 NotificationEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
             }
         }

@@ -15,4 +15,5 @@ struct CommunityUiState {
     var hasNext: Bool = false
     var isLoadingMore: Bool = false
     var errorMessage: String? = nil
+    var nativeAds: [Int32: any NativeAdHandle] = [:]
 }

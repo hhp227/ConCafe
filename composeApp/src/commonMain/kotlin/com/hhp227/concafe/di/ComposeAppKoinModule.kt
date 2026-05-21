@@ -82,7 +82,7 @@ private val composeAppPresentationModule = module {
     factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
     factory { NotificationSettingsViewModel(get(), get(), get()) }
-    factory { CommunityViewModel(get(), get()) }
+    factory { CommunityViewModel(get(), get(), get()) }
     factory { (postId: String?) ->
         PostEditViewModel(
             editPostId = postId,
@@ -96,6 +96,7 @@ private val composeAppPresentationModule = module {
         PostDetailViewModel(
             postId = postId,
             getCommunityPostUseCase = get(),
+            incrementCommunityPostViewCountUseCase = get(),
             checkCommunityPostLikedUseCase = get(),
             deleteCommunityPostUseCase = get(),
             toggleCommunityPostLikeUseCase = get(),

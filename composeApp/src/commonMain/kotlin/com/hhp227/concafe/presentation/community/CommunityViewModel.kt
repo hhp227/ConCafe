@@ -6,6 +6,7 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.CommunityPostEvent
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
+import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 
 class CommunityViewModel(
     private val getCommunityPostPageUseCase: GetCommunityPostPageUseCase,
-    private val communityPostEventPublisher: CommunityPostEventPublisher
+    private val communityPostEventPublisher: CommunityPostEventPublisher,
+    private val loadNativeAdUseCase: LoadNativeAdUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CommunityUiState())
     val uiState = _uiState.asStateFlow()
@@ -24,7 +26,7 @@ class CommunityViewModel(
     val event = _event.asSharedFlow()
 
     private fun refresh() {
-        _uiState.update { it.copy(isLoading = true, posts = emptyList(), nextCursor = null, hasNext = false, errorMessage = null) }
+        _uiState.update { it.copy(isLoading = true, posts = emptyList(), nextCursor = null, hasNext = false, errorMessage = null, nativeAds = emptyMap()) }
         viewModelScope.launch {
             when (val result = getCommunityPostPageUseCase(cursor = null)) {
                 is AppResult.Success -> _uiState.update {
@@ -39,12 +41,16 @@ class CommunityViewModel(
                     it.copy(isLoading = false, errorMessage = "게시글을 불러오지 못했습니다.")
                 }
             }
+            if (_uiState.value.posts.isNotEmpty()) {
+                loadNativeAd(pageIndex = 0)
+            }
         }
     }
 
     private fun loadMore() {
         val state = _uiState.value
         if (!state.hasNext || state.isLoadingMore) return
+        val pageIndex = state.posts.size / COMMUNITY_PAGE_SIZE
         _uiState.update { it.copy(isLoadingMore = true) }
         viewModelScope.launch {
             when (val result = getCommunityPostPageUseCase(cursor = state.nextCursor)) {
@@ -57,6 +63,20 @@ class CommunityViewModel(
                     )
                 }
                 is AppResult.Failure -> _uiState.update { it.copy(isLoadingMore = false) }
+            }
+            if (_uiState.value.posts.size > state.posts.size) {
+                loadNativeAd(pageIndex = pageIndex)
+            }
+        }
+    }
+
+    private fun loadNativeAd(pageIndex: Int) {
+        val slot = COMMUNITY_NATIVE_AD_SLOT_START + pageIndex
+        if (_uiState.value.nativeAds.containsKey(slot)) return
+        viewModelScope.launch {
+            val ad = loadNativeAdUseCase.invoke(slot)
+            _uiState.update { state ->
+                state.copy(nativeAds = state.nativeAds + (slot to ad))
             }
         }
     }
@@ -94,5 +114,10 @@ class CommunityViewModel(
     init {
         observeCommunityPostEvent()
         refresh()
+    }
+
+    private companion object {
+        const val COMMUNITY_PAGE_SIZE = 20
+        const val COMMUNITY_NATIVE_AD_SLOT_START = 100
     }
 }

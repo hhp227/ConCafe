@@ -1,6 +1,11 @@
 package com.hhp227.concafe.presentation.component
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
+import android.view.View
+import android.widget.Button as AndroidButton
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,6 +61,128 @@ actual fun RankingNativeAd(
                 adView.bodyView = adView.findViewWithTag("body")
                 adView.callToActionView = adView.findViewWithTag("cta")
 
+                adView.setNativeAd(nativeAd)
+            }
+        )
+    } else {
+        PlaceholderUI(modifier)
+    }
+}
+
+@Composable
+actual fun CommunityNativeAd(
+    modifier: Modifier,
+    nativeAdHandle: NativeAdHandle?
+) {
+    val nativeAd = (nativeAdHandle as? AndroidNativeAdHandle)?.nativeAd
+
+    if (nativeAd != null) {
+        AndroidView(
+            modifier = modifier,
+            factory = { context ->
+                NativeAdView(context).apply {
+                    val density = context.resources.displayMetrics.density
+                    fun dp(value: Int) = (value * density).toInt()
+
+                    val container = LinearLayout(context).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(16), dp(16), dp(16), dp(16))
+                        setBackgroundColor(android.graphics.Color.WHITE)
+                    }
+                    val topRow = LinearLayout(context).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+                    val avatar = TextView(context).apply {
+                        text = "AD"
+                        textSize = 11f
+                        typeface = Typeface.DEFAULT_BOLD
+                        gravity = android.view.Gravity.CENTER
+                        setTextColor(android.graphics.Color.rgb(239, 103, 151))
+                        background = android.graphics.drawable.GradientDrawable(
+                            android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(
+                                android.graphics.Color.rgb(255, 227, 236),
+                                android.graphics.Color.rgb(248, 197, 215)
+                            )
+                        ).apply {
+                            shape = android.graphics.drawable.GradientDrawable.OVAL
+                        }
+                    }
+                    val advertiser = TextView(context).apply {
+                        textSize = 13f
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(android.graphics.Color.rgb(102, 90, 99))
+                        maxLines = 1
+                    }
+                    val badge = TextView(context).apply {
+                        text = "광고"
+                        textSize = 11f
+                        setTextColor(android.graphics.Color.rgb(177, 163, 172))
+                    }
+                    val headline = TextView(context).apply {
+                        textSize = 15f
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(android.graphics.Color.rgb(43, 35, 48))
+                        maxLines = 2
+                    }
+                    val body = TextView(context).apply {
+                        textSize = 13f
+                        setTextColor(android.graphics.Color.rgb(102, 90, 99))
+                        maxLines = 3
+                    }
+                    val cta = AndroidButton(context).apply {
+                        textSize = 12f
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(android.graphics.Color.rgb(43, 35, 48))
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            setColor(android.graphics.Color.rgb(255, 209, 220))
+                            cornerRadius = dp(18).toFloat()
+                        }
+                        minHeight = 0
+                        minimumHeight = 0
+                        setPadding(dp(14), dp(6), dp(14), dp(6))
+                    }
+                    val divider = View(context).apply {
+                        setBackgroundColor(android.graphics.Color.argb(76, 255, 209, 220))
+                    }
+                    val bottomRow = LinearLayout(context).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = android.view.Gravity.CENTER_VERTICAL
+                    }
+
+                    topRow.addView(avatar, LinearLayout.LayoutParams(dp(32), dp(32)))
+                    topRow.addView(advertiser, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                        leftMargin = dp(8)
+                    })
+                    topRow.addView(badge)
+                    container.addView(topRow)
+                    container.addView(headline, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = dp(10)
+                    })
+                    container.addView(body, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = dp(4)
+                    })
+                    container.addView(divider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)).apply {
+                        topMargin = dp(12)
+                        bottomMargin = dp(10)
+                    })
+                    bottomRow.addView(cta)
+                    container.addView(bottomRow)
+                    addView(container)
+
+                    headlineView = headline
+                    bodyView = body
+                    advertiserView = advertiser
+                    callToActionView = cta
+                }
+            },
+            update = { adView ->
+                (adView.headlineView as? TextView)?.text = nativeAd.headline.orEmpty()
+                (adView.bodyView as? TextView)?.text = nativeAd.body.orEmpty()
+                (adView.advertiserView as? TextView)?.text = nativeAd.advertiser?.takeIf { it.isNotBlank() } ?: "ConCafe"
+                (adView.callToActionView as? AndroidButton)?.text = nativeAd.callToAction?.takeIf { it.isNotBlank() } ?: "자세히"
+                adView.callToActionView?.isClickable = false
                 adView.setNativeAd(nativeAd)
             }
         )

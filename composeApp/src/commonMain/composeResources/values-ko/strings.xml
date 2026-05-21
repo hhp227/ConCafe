@@ -181,7 +181,7 @@
     <string name="settings_account_title">계정 관리</string>
     <string name="settings_account_desc">프로필과 로그인 정보를 관리합니다.</string>
     <string name="settings_notification_title">알림 설정</string>
-    <string name="settings_notification_desc">출근, 생일, 공지 알림 설정 영역입니다.</string>
+    <string name="settings_notification_desc">출근, 생일, 공지, 커뮤니티 알림 설정 영역입니다.</string>
     <string name="settings_inquiry_title">문의하기</string>
     <string name="settings_inquiry_desc">불편사항이나 제안을 입력 폼으로 전달합니다.</string>
     <string name="settings_privacy_title">개인정보 처리방침</string>
@@ -250,6 +250,8 @@
     <string name="notification_settings_follow_desc">캐스트가 새 팬을 맞이하면 소식을 받아요.</string>
     <string name="notification_settings_event_title">이벤트 알림</string>
     <string name="notification_settings_event_desc">카페 이벤트 등록과 업데이트 소식을 확인해요.</string>
+    <string name="notification_settings_community_title">게시글 및 좋아요 알림</string>
+    <string name="notification_settings_community_desc">내 커뮤니티 게시글에 댓글이나 좋아요가 달리면 알려드려요.</string>
     <string name="notification_settings_quiet_title">조용한 시간</string>
     <string name="notification_settings_quiet_desc">밤 시간이나 하루 요약 모드를 선택해 알림 강도를 조절할 수 있어요.</string>
     <string name="notification_settings_hero_title">알림 스타일을 취향에 맞게 조절하세요</string>

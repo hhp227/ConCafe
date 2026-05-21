@@ -25,6 +25,8 @@ struct NotificationView: View {
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
+            case .navigateToPost(let id):
+                onNavigationAction(.navigateToPostDetail(postId: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .navigateBack:

@@ -118,6 +118,7 @@ import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.IncrementCommunityPostViewCountUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.CheckCommunityPostLikedUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
@@ -976,6 +977,13 @@ fun resolveCheckCommunityPostLikedUseCase(): CheckCommunityPostLikedUseCase {
 }
 
 fun resolveGetCommunityPostUseCase(): GetCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveIncrementCommunityPostViewCountUseCase(): IncrementCommunityPostViewCountUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
