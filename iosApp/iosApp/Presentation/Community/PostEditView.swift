@@ -10,43 +10,14 @@ import UIKit
 import Combine
 
 private final class PostEditKeyboardState: ObservableObject {
-    @Published private var isVisible = false
-
-    private var cancellables: Set<AnyCancellable> = []
-
     @MainActor
-    func dismiss() {
+    @discardableResult
+    func dismiss() -> Bool {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first { $0.isKeyWindow }?
-            .endEditing(true)
-    }
-
-    @MainActor
-    func dismissAndWaitUntilHidden() async {
-        dismiss()
-
-        while isVisible && !Task.isCancelled {
-            dismiss()
-            await Task.yield()
-            try? await Task.sleep(nanoseconds: 16_000_000)
-        }
-    }
-
-    init() {
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
-            .sink { [weak self] _ in self?.isVisible = true }
-            .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)
-            .sink { [weak self] _ in self?.isVisible = true }
-            .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
-            .sink { [weak self] _ in self?.isVisible = false }
-            .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)
-            .sink { [weak self] _ in self?.isVisible = false }
-            .store(in: &cancellables)
+            .endEditing(true) ?? false
     }
 }
 
@@ -61,7 +32,7 @@ struct PostEditView: View {
 
     @State private var showImagePicker = false
 
-    @State private var navigateBackTask: Task<Void, Never>?
+    @State private var shouldNavigateBackAfterKeyboardHide = false
 
     var body: some View {
         PostEditContentView(
@@ -79,16 +50,20 @@ struct PostEditView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
-                navigateBackTask?.cancel()
-                navigateBackTask = Task { @MainActor in
-                    await keyboardState.dismissAndWaitUntilHidden()
-                    guard !Task.isCancelled else { return }
+                shouldNavigateBackAfterKeyboardHide = true
+                if !keyboardState.dismiss() {
+                    shouldNavigateBackAfterKeyboardHide = false
                     onNavigationAction(.navigateBack)
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+            guard shouldNavigateBackAfterKeyboardHide else { return }
+            shouldNavigateBackAfterKeyboardHide = false
+            onNavigationAction(.navigateBack)
+        }
         .onDisappear {
-            navigateBackTask?.cancel()
+            shouldNavigateBackAfterKeyboardHide = false
             keyboardState.dismiss()
         }
         .sheet(isPresented: $showImagePicker) {
@@ -265,7 +240,7 @@ private struct PostEditContentView: View {
             guard !isPreparingSubmit else { return }
             isPreparingSubmit = true
             Task { @MainActor in
-                await keyboardState.dismissAndWaitUntilHidden()
+                keyboardState.dismiss()
                 onAction(.clickSubmit)
                 isPreparingSubmit = false
             }
