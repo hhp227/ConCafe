@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import Shared
+import UIKit
 
 struct PostDetailView: View {
     let postId: String
@@ -141,6 +142,10 @@ private struct PostDetailContentView: View {
         )) {
             reportSheet
         }
+        .onAppear {
+            isCommentFocused = false
+            dismissKeyboard()
+        }
     }
 
     private var reportSheet: some View {
@@ -190,19 +195,11 @@ private struct PostDetailContentView: View {
 
     private var editCommentSheet: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(String(localized: String.LocalizationValue("post_detail_comment_edit_title"), table: "Localizable"))
-                .font(.headline)
-                .foregroundStyle(.primary)
-            TextEditor(text: $localEditText)
-                .frame(minHeight: 80, maxHeight: 160)
-                .padding(8)
-                .background(Color(uiColor: .secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC"), lineWidth: 1)
-                )
-                .font(.system(size: 14))
+            ConCafeFormEditor(
+                label: String(localized: String.LocalizationValue("post_detail_comment_edit_title"), table: "Localizable"),
+                text: $localEditText,
+                placeholder: String(localized: String.LocalizationValue("post_detail_comment_edit_placeholder"), table: "Localizable")
+            )
                 .onAppear {
                     localEditText = uiState.editCommentText
                 }
@@ -231,8 +228,17 @@ private struct PostDetailContentView: View {
             }
         }
         .padding(20)
+        .background(Color(uiColor: .systemGroupedBackground))
         .compatMediumSheetDetent()
         .compatPresentationDragIndicator()
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .endEditing(true)
     }
 
     private var mainContent: some View {

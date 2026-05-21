@@ -32,8 +32,14 @@ struct PostEditView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
-                onNavigationAction(.navigateBack)
+                dismissKeyboard()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    onNavigationAction(.navigateBack)
+                }
             }
+        }
+        .onDisappear {
+            dismissKeyboard()
         }
         .sheet(isPresented: $showImagePicker) {
             CompatImagePicker(
@@ -47,6 +53,14 @@ struct PostEditView: View {
                 onDismiss: { showImagePicker = false }
             )
         }
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .endEditing(true)
     }
 
     init(editPostId: String? = nil, onNavigationAction: @escaping (NavigationAction) -> Void) {
