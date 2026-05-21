@@ -47,7 +47,7 @@ private struct CommunityContentView: View {
                 } else if uiState.posts.isEmpty {
                     VStack {
                         Spacer()
-                        Text("아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!")
+                        Text(String(localized: String.LocalizationValue("community_empty"), table: "Localizable"))
                             .font(.subheadline)
                             .foregroundStyle(Color(hex: "8C7E87"))
                             .multilineTextAlignment(.center)
@@ -89,12 +89,13 @@ private struct CommunityContentView: View {
                     .shadow(color: Color(hex: "EF6797").opacity(0.4), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: String.LocalizationValue("community_write_post"), table: "Localizable"))
             .padding(.trailing, 20)
             .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(hex: "F8F5F6"))
-        .navigationTitle("커뮤니티")
+        .navigationTitle(String(localized: String.LocalizationValue("community_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.large)
     }
 }
@@ -120,7 +121,7 @@ private struct CommunityPostCard: View {
                                     .font(.caption.weight(.bold))
                                     .foregroundStyle(Color(hex: "EF6797"))
                             }
-                        Text(post.userNickname.isEmpty ? "익명" : post.userNickname)
+                        Text(post.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : post.userNickname)
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color(hex: "665A63"))
                     }
@@ -184,7 +185,7 @@ private struct CommunityPostCard: View {
                         Image(systemName: "heart")
                             .font(.caption2)
                             .foregroundStyle(Color(hex: "B1A3AC"))
-                        Text("좋아요 \(post.likeCount)")
+                        Text(String(format: String(localized: String.LocalizationValue("community_post_like_count"), table: "Localizable"), locale: Locale.current, "\(post.likeCount)"))
                             .font(.caption)
                             .foregroundStyle(Color(hex: "8C7E87"))
                     }
@@ -192,7 +193,7 @@ private struct CommunityPostCard: View {
                         Image(systemName: "bubble.left")
                             .font(.caption2)
                             .foregroundStyle(Color(hex: "B1A3AC"))
-                        Text("댓글 \(post.commentCount)")
+                        Text(String(format: String(localized: String.LocalizationValue("community_post_comment_count"), table: "Localizable"), locale: Locale.current, "\(post.commentCount)"))
                             .font(.caption)
                             .foregroundStyle(Color(hex: "8C7E87"))
                     }

@@ -15,6 +15,8 @@ data class PostDetailUiState(
     val reportingCommentId: String? = null,
     val selectedReportType: String? = null,
     val isSubmittingReport: Boolean = false,
+    val isBlockingUser: Boolean = false,
+    val blockedUserIds: Set<String> = emptySet(),
     val isDeleting: Boolean = false,
     val comments: List<Comment> = emptyList(),
     val isLoadingComments: Boolean = false,

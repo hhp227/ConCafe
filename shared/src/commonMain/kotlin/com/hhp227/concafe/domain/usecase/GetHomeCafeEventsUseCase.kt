@@ -2,6 +2,7 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.repository.CafeRepository
@@ -15,13 +16,16 @@ class GetHomeCafeEventsUseCase(
     private val noticeRepository: NoticeRepository,
     private val cafeRepository: CafeRepository
 ) {
-    suspend operator fun invoke(limit: Int = HOME_EVENT_LIMIT): AppResult<List<HomeCafeEvent>> {
+    suspend operator fun invoke(
+        cursor: String? = null,
+        pageSize: Int = HOME_EVENT_LIMIT
+    ): AppResult<PagedResult<HomeCafeEvent>> {
         return try {
-            val safeLimit = limit.coerceAtLeast(1)
+            val safePageSize = pageSize.coerceAtLeast(1)
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val page = noticeRepository.getHomeCafeEventPage(
-                cursor = null,
-                pageSize = HOME_EVENT_QUERY_PAGE_SIZE
+                cursor = cursor,
+                pageSize = safePageSize
             )
             val displayableItems = page.items
                 .filter { item -> item.isDisplayableHomeEvent(today) }
@@ -32,7 +36,6 @@ class GetHomeCafeEventsUseCase(
                 }.thenBy { item ->
                     item.endDate.toLocalDateOrNull() ?: LocalDate(9999, 12, 31)
                 })
-                .take(safeLimit)
             val cafeNameById = displayableItems
                 .map { item -> item.cafeId }
                 .distinct()
@@ -44,12 +47,16 @@ class GetHomeCafeEventsUseCase(
                 ?: emptyMap()
 
             AppResult.Success(
-                displayableItems.map { item ->
-                    item.toHomeCafeEvent(
-                        cafeName = cafeNameById[item.cafeId] ?: item.cafeId,
-                        today = today
-                    )
-                }
+                PagedResult(
+                    items = displayableItems.map { item ->
+                        item.toHomeCafeEvent(
+                            cafeName = cafeNameById[item.cafeId] ?: item.cafeId,
+                            today = today
+                        )
+                    },
+                    nextCursor = page.nextCursor,
+                    hasNext = page.hasNext
+                )
             )
         } catch (e: Exception) {
             AppResult.Failure(AppError.Unknown(e.message))
@@ -103,6 +110,5 @@ class GetHomeCafeEventsUseCase(
 
     companion object {
         private const val HOME_EVENT_LIMIT = 8
-        private const val HOME_EVENT_QUERY_PAGE_SIZE = 30
     }
 }

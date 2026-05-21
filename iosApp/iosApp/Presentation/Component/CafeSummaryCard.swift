@@ -81,27 +81,17 @@ struct CafeSummaryCard: View {
 
             ZStack(alignment: .topTrailing) {
                 placeholderCafeImage
-                if let resolvedImageUrl = resolvedRemoteImageUrl(thumbnailImage) {
-                    CachedAsyncImage(
-                        url: resolvedImageUrl,
-                        placeholder: EmptyView()
-                    )
-                    .frame(width: imageSize.width, height: imageSize.height)
-                    .clipped()
-                }
+                CachedAsyncImage(
+                    url: ImageUrlUtils.normalizedRemoteUrl(from: thumbnailImage),
+                    placeholder: EmptyView()
+                )
+                .frame(width: imageSize.width, height: imageSize.height)
+                .clipped()
                 RatingBox(rating: rating)
                     .padding(.top, 8)
                     .padding(.trailing, 8)
             }
         }
-    }
-
-    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
-        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmed.isEmpty {
-            return nil
-        }
-        return URL(string: trimmed)
     }
 
     private var placeholderCafeImage: some View {

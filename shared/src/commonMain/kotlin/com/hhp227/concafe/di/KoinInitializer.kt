@@ -20,6 +20,7 @@ import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostReportUseCase
+import com.hhp227.concafe.domain.usecase.CreateUserBlockUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
@@ -1042,6 +1043,13 @@ fun resolveToggleCafeEventLikeUseCase(): ToggleCafeEventLikeUseCase {
 }
 
 fun resolveCreateCommunityPostReportUseCase(): CreateCommunityPostReportUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateUserBlockUseCase(): CreateUserBlockUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

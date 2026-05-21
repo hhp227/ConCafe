@@ -48,7 +48,6 @@ import com.hhp227.concafe.presentation.main.home.HomeScreen
 import com.hhp227.concafe.presentation.main.myinfo.MyInfoScreen
 import com.hhp227.concafe.presentation.main.ranking.RankingScreen
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import com.hhp227.concafe.presentation.security.ScreenCaptureProtectionEffect
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
@@ -75,7 +74,6 @@ fun MainScreen(
     val context = LocalContext.current
     var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
 
-    ScreenCaptureProtectionEffect()
     LaunchedEffect(Unit) {
         onNavigationAction(NavigationAction.RefreshUnreadNotificationCount)
         viewModel.onAction(

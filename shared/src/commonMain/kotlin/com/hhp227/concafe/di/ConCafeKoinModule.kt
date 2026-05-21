@@ -22,6 +22,7 @@ import com.hhp227.concafe.data.source.firestore.FirestoreReportRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreReviewRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncRemoteDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreUserBlockRemoteDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreVisitRemoteDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.domain.event.publisher.*
@@ -44,6 +45,7 @@ val dataSourceModule = module {
     single<CastClaimRemoteDataSource> { FirestoreCastClaimRemoteDataSource(get(), get(), get()) }
     single<InquiryRemoteDataSource> { FirestoreInquiryRemoteDataSource(get(), get(), get()) }
     single<ReportRemoteDataSource> { FirestoreReportRemoteDataSource(get(), get(), get()) }
+    single<UserBlockRemoteDataSource> { FirestoreUserBlockRemoteDataSource(get(), get(), get()) }
     single<NoticeRemoteDataSource> { FirestoreNoticeRemoteDataSource(get(), get(), get()).withLocalCache(get()) }
     single<AuthDataSource> { FirestoreAuthDataSource() }
     single<RankingDataSource> { FirestoreRankingDataSource(get(), get(), get()) }
@@ -71,6 +73,7 @@ val repositoryModule = module {
     single<CastClaimRepository> { CastClaimRepositoryImpl(get(), get(), get()) }
     single<InquiryRepository> { InquiryRepositoryImpl(get()) }
     single<ReportRepository> { ReportRepositoryImpl(get()) }
+    single<UserBlockRepository> { UserBlockRepositoryImpl(get()) }
     single<VisitRepository> { VisitRepositoryImpl(get()) }
     single<ReviewRepository> { ReviewRepositoryImpl(get(), get()) }
     single<NoticeRepository> { NoticeRepositoryImpl(get()) }
@@ -131,6 +134,7 @@ val useCaseModule = module {
     factory { CreateHomeBannerUseCase(get(), get(), get()) }
     factory { CreateInquiryUseCase(get(), get()) }
     factory { CreateCommunityPostReportUseCase(get(), get()) }
+    factory { CreateUserBlockUseCase(get(), get()) }
     factory { CreateCafeOwnerClaimUseCase(get(), get(), get()) }
     factory { CreateCafeRegistrationClaimUseCase(get(), get(), get()) }
     factory { ApproveCafeOwnerClaimUseCase(get(), get(), get()) }

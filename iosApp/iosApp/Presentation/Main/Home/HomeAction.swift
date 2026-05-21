@@ -16,6 +16,7 @@ enum HomeAction {
     case birthdayMaidTapped(id: String)
     case loginPromptSignInTapped
     case dismissLoginPrompt
+    case loadMoreCafeEvents
     case loadMorePopularCasts
     case loadMoreNearbyCafes
     case communityTapped

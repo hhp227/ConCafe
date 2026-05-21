@@ -388,7 +388,8 @@ service cloud.firestore {
           "statusLabel",
           "isDimmed",
           "participantCastIds",
-          "hasLivePerformance"
+          "hasLivePerformance",
+          "likeCount"
         ])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
@@ -408,7 +409,22 @@ service cloud.firestore {
         && (
           !("hasLivePerformance" in request.resource.data)
           || request.resource.data.hasLivePerformance is bool
+        )
+        && (
+          !("likeCount" in request.resource.data)
+          || (
+            request.resource.data.likeCount is int
+            && request.resource.data.likeCount >= 0
+          )
         );
+    }
+
+    function isCafeEventLikeOnlyUpdate() {
+      return request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "likeCount"
+        ]);
     }
 
     function isValidInquiryCreateData() {
@@ -447,6 +463,25 @@ service cloud.firestore {
         && request.resource.data.status == "PENDING"
         && request.resource.data.createdAt is string
         && request.resource.data.createdAtLabel is string;
+    }
+
+    function isValidUserBlockCreateData(blockId) {
+      return request.resource.data.keys().hasOnly([
+          "blockerUserId",
+          "blockerNickname",
+          "blockedUserId",
+          "blockedNickname",
+          "createdAt"
+        ])
+        && request.resource.data.blockerUserId is string
+        && request.resource.data.blockerUserId == request.auth.uid
+        && request.resource.data.blockerNickname is string
+        && request.resource.data.blockedUserId is string
+        && request.resource.data.blockedUserId.size() > 0
+        && request.resource.data.blockedUserId != request.auth.uid
+        && request.resource.data.blockedNickname is string
+        && request.resource.data.createdAt is string
+        && blockId == request.auth.uid + "_" + request.resource.data.blockedUserId;
     }
 
     function isValidStampCreateData(stampId) {
@@ -665,8 +700,15 @@ service cloud.firestore {
 
       match /events/{eventId} {
         allow read: if true;
-        allow create, update: if canManageCafe(cafeId)
+        allow create: if canManageCafe(cafeId)
           && isValidCafeEventWriteData();
+        allow update: if (
+          canManageCafe(cafeId)
+          && isValidCafeEventWriteData()
+        ) || (
+          isSignedIn()
+          && isCafeEventLikeOnlyUpdate()
+        );
         allow delete: if canManageCafe(cafeId);
 
         match /likes/{userId} {
@@ -994,6 +1036,15 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && (resource.data.reporterUserId == request.auth.uid || isAdmin());
       allow update, delete: if false;
+    }
+
+    match /userBlocks/{blockId} {
+      allow create, update: if isSignedIn()
+        && isValidUserBlockCreateData(blockId);
+      allow read: if isSignedIn()
+        && (resource.data.blockerUserId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn()
+        && resource.data.blockerUserId == request.auth.uid;
     }
 
     match /fanAnnouncementRequests/{requestId} {

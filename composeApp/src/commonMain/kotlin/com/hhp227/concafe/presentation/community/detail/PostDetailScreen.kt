@@ -38,6 +38,15 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.community_action_block
+import concafe.composeapp.generated.resources.community_action_delete
+import concafe.composeapp.generated.resources.community_action_edit
+import concafe.composeapp.generated.resources.community_action_report
+import concafe.composeapp.generated.resources.community_anonymous
+import concafe.composeapp.generated.resources.community_post_comment_count
+import concafe.composeapp.generated.resources.community_post_like_count
 import concafe.composeapp.generated.resources.community_report_sheet_title
 import concafe.composeapp.generated.resources.community_report_submit
 import concafe.composeapp.generated.resources.community_report_type_abuse
@@ -45,6 +54,14 @@ import concafe.composeapp.generated.resources.community_report_type_other
 import concafe.composeapp.generated.resources.community_report_type_privacy
 import concafe.composeapp.generated.resources.community_report_type_sexual
 import concafe.composeapp.generated.resources.community_report_type_spam
+import concafe.composeapp.generated.resources.post_detail_comment_edit_placeholder
+import concafe.composeapp.generated.resources.post_detail_comment_edit_title
+import concafe.composeapp.generated.resources.post_detail_comment_placeholder
+import concafe.composeapp.generated.resources.post_detail_delete_message
+import concafe.composeapp.generated.resources.post_detail_delete_title
+import concafe.composeapp.generated.resources.post_detail_load_failed
+import concafe.composeapp.generated.resources.post_detail_load_more_comments
+import concafe.composeapp.generated.resources.post_detail_screen_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
@@ -101,7 +118,7 @@ private fun PostDetailContentScreen(
                     .imePadding()
             ) {
                 Text(
-                    text = "댓글 수정",
+                    text = stringResource(Res.string.post_detail_comment_edit_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = textColor,
@@ -111,7 +128,7 @@ private fun PostDetailContentScreen(
                     value = localEditText,
                     onValueChange = { localEditText = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("댓글 내용을 입력하세요", fontSize = 14.sp) },
+                    placeholder = { Text(stringResource(Res.string.post_detail_comment_edit_placeholder), fontSize = 14.sp) },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colorFromHex("EF6797"),
@@ -126,7 +143,7 @@ private fun PostDetailContentScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     TextButton(onClick = { onAction(PostDetailAction.DismissEditComment) }) {
-                        Text("취소", color = secondaryTextColor)
+                        Text(stringResource(Res.string.common_cancel), color = secondaryTextColor)
                     }
                     Button(
                         onClick = { onAction(PostDetailAction.ConfirmEditComment(localEditText)) },
@@ -136,7 +153,7 @@ private fun PostDetailContentScreen(
                         if (uiState.isUpdatingComment) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                         } else {
-                            Text("수정", color = Color.White)
+                            Text(stringResource(Res.string.community_action_edit), color = Color.White)
                         }
                     }
                 }
@@ -196,16 +213,16 @@ private fun PostDetailContentScreen(
     if (uiState.isDeleteConfirmVisible) {
         AlertDialog(
             onDismissRequest = { onAction(PostDetailAction.DismissDeleteConfirm) },
-            title = { Text("게시글 삭제", fontWeight = FontWeight.Bold) },
-            text = { Text("이 게시글을 삭제하시겠습니까?") },
+            title = { Text(stringResource(Res.string.post_detail_delete_title), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(Res.string.post_detail_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { onAction(PostDetailAction.ConfirmDelete) }) {
-                    Text("삭제", color = colorFromHex("E53935"), fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935"), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onAction(PostDetailAction.DismissDeleteConfirm) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -215,7 +232,7 @@ private fun PostDetailContentScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("게시글", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = textColor) },
+                title = { Text(stringResource(Res.string.post_detail_screen_title), fontWeight = FontWeight.Bold, fontSize = 18.sp, color = textColor) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(PostDetailAction.ClickBack) }) {
                         Icon(
@@ -237,17 +254,21 @@ private fun PostDetailContentScreen(
                             ) {
                                 if (uiState.isOwner) {
                                     DropdownMenuItem(
-                                        text = { Text("수정") },
+                                        text = { Text(stringResource(Res.string.community_action_edit)) },
                                         onClick = { onAction(PostDetailAction.ClickEdit) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("삭제", color = colorFromHex("E53935")) },
+                                        text = { Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935")) },
                                         onClick = { onAction(PostDetailAction.ClickDelete) }
                                     )
                                 } else {
                                     DropdownMenuItem(
-                                        text = { Text("신고하기") },
+                                        text = { Text(stringResource(Res.string.community_action_report)) },
                                         onClick = { onAction(PostDetailAction.ClickReport) }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(Res.string.community_action_block), color = colorFromHex("E53935")) },
+                                        onClick = { onAction(PostDetailAction.ClickBlock) }
                                     )
                                 }
                             }
@@ -286,7 +307,7 @@ private fun PostDetailContentScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("게시글을 불러오지 못했습니다.", color = secondaryTextColor, textAlign = TextAlign.Center)
+                            Text(stringResource(Res.string.post_detail_load_failed), color = secondaryTextColor, textAlign = TextAlign.Center)
                         }
                     }
                     else -> {
@@ -320,7 +341,7 @@ private fun PostDetailContentScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "댓글 ${uiState.commentCount}",
+                                        text = stringResource(Res.string.community_post_comment_count, uiState.commentCount),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = secondaryTextColor
@@ -352,7 +373,7 @@ private fun PostDetailContentScreen(
                                             onClick = { onAction(PostDetailAction.LoadMoreComments) },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("이전 댓글 더보기", color = secondaryTextColor, fontSize = 13.sp)
+                                            Text(stringResource(Res.string.post_detail_load_more_comments), color = secondaryTextColor, fontSize = 13.sp)
                                         }
                                     }
                                 }
@@ -362,7 +383,8 @@ private fun PostDetailContentScreen(
                                         isMine = comment.userId == uiState.currentUserId,
                                         onEdit = { onAction(PostDetailAction.ClickEditComment(comment.id)) },
                                         onDelete = { onAction(PostDetailAction.ClickDeleteComment(comment.id)) },
-                                        onReport = { onAction(PostDetailAction.ClickReportComment(comment.id)) }
+                                        onReport = { onAction(PostDetailAction.ClickReportComment(comment.id)) },
+                                        onBlock = { onAction(PostDetailAction.ClickBlockComment(comment.id)) }
                                     )
                                 }
                             }
@@ -377,7 +399,7 @@ private fun PostDetailContentScreen(
                             .padding(16.dp),
                         action = {
                             TextButton(onClick = { onAction(PostDetailAction.DismissError) }) {
-                                Text("닫기")
+                                Text(stringResource(Res.string.common_close))
                             }
                         }
                     ) { Text(message) }
@@ -425,7 +447,7 @@ private fun PostBody(
                 }
                 Column {
                     Text(
-                        text = post.userNickname.ifBlank { "익명" },
+                        text = post.userNickname.ifBlank { stringResource(Res.string.community_anonymous) },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -470,7 +492,7 @@ private fun PostBody(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = "좋아요 ${post.likeCount}",
+                    text = stringResource(Res.string.community_post_like_count, post.likeCount),
                     fontSize = 13.sp,
                     color = if (isLiked) pink else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -485,7 +507,11 @@ private fun PostBody(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
-                Text(text = "댓글 ${post.commentCount}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = stringResource(Res.string.community_post_comment_count, post.commentCount),
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -497,7 +523,8 @@ private fun CommentItem(
     isMine: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onReport: () -> Unit
+    onReport: () -> Unit,
+    onBlock: () -> Unit
 ) {
     var isMenuVisible by remember { mutableStateOf(false) }
 
@@ -524,7 +551,7 @@ private fun CommentItem(
                 )
             }
             Text(
-                text = comment.userNickname.ifBlank { "익명" },
+                text = comment.userNickname.ifBlank { stringResource(Res.string.community_anonymous) },
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -549,14 +576,14 @@ private fun CommentItem(
                 ) {
                     if (isMine) {
                         DropdownMenuItem(
-                            text = { Text("수정") },
+                            text = { Text(stringResource(Res.string.community_action_edit)) },
                             onClick = {
                                 isMenuVisible = false
                                 onEdit()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("삭제", color = colorFromHex("E53935")) },
+                            text = { Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935")) },
                             onClick = {
                                 isMenuVisible = false
                                 onDelete()
@@ -564,10 +591,17 @@ private fun CommentItem(
                         )
                     } else {
                         DropdownMenuItem(
-                            text = { Text("신고하기") },
+                            text = { Text(stringResource(Res.string.community_action_report)) },
                             onClick = {
                                 isMenuVisible = false
                                 onReport()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(Res.string.community_action_block), color = colorFromHex("E53935")) },
+                            onClick = {
+                                isMenuVisible = false
+                                onBlock()
                             }
                         )
                     }
@@ -608,7 +642,7 @@ private fun CommentInputBar(
                 value = text,
                 onValueChange = onTextChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("댓글을 입력하세요", fontSize = 14.sp) },
+                placeholder = { Text(stringResource(Res.string.post_detail_comment_placeholder), fontSize = 14.sp) },
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = colorFromHex("EF6797"),

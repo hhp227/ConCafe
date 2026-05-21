@@ -17,6 +17,7 @@ enum PostDetailAction {
     case confirmDelete
     case dismissDeleteConfirm
     case clickReport
+    case clickBlock
     case selectReportType(String)
     case dismissReportSheet
     case submitReport
@@ -25,6 +26,7 @@ enum PostDetailAction {
     case dismissEditComment
     case clickDeleteComment(commentId: String)
     case clickReportComment(commentId: String)
+    case clickBlockComment(commentId: String)
     case changeCommentText(String)
     case clickSendComment
     case dismissError

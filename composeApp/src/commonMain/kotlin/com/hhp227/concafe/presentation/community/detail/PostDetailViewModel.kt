@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCommunityCommentUseCase
 import com.hhp227.concafe.domain.usecase.CreateCommunityPostReportUseCase
+import com.hhp227.concafe.domain.usecase.CreateUserBlockUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,7 @@ class PostDetailViewModel(
     private val updateCommunityCommentUseCase: UpdateCommunityCommentUseCase,
     private val deleteCommunityCommentUseCase: DeleteCommunityCommentUseCase,
     private val createCommunityPostReportUseCase: CreateCommunityPostReportUseCase,
+    private val createUserBlockUseCase: CreateUserBlockUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val communityPostEventPublisher: CommunityPostEventPublisher
 ) : ViewModel() {
@@ -93,9 +95,11 @@ class PostDetailViewModel(
             when (val result = getCommunityCommentPageUseCase(postId, null, COMMENT_PAGE_SIZE)) {
                 is AppResult.Success -> {
                     val page = result.data
-                    _uiState.update {
-                        it.copy(
-                            comments = page.items,
+                    _uiState.update { state ->
+                        state.copy(
+                            comments = page.items.filterNot { comment ->
+                                comment.userId in state.blockedUserIds
+                            },
                             isLoadingComments = false,
                             hasMoreComments = page.hasNext,
                             oldestCommentCursor = page.nextCursor
@@ -118,7 +122,9 @@ class PostDetailViewModel(
                     val page = result.data
                     _uiState.update { state ->
                         state.copy(
-                            comments = page.items + state.comments,
+                            comments = page.items.filterNot { comment ->
+                                comment.userId in state.blockedUserIds
+                            } + state.comments,
                             isLoadingMoreComments = false,
                             hasMoreComments = page.hasNext,
                             oldestCommentCursor = page.nextCursor
@@ -263,6 +269,33 @@ class PostDetailViewModel(
         }
     }
 
+    private fun blockUser(blockedUserId: String, blockedNickname: String, closeAfterSuccess: Boolean) {
+        if (blockedUserId.isBlank() || _uiState.value.isBlockingUser) return
+        _uiState.update { it.copy(isMenuVisible = false, isBlockingUser = true) }
+        jobs[JobKey.BLOCK_USER]?.cancel()
+        jobs[JobKey.BLOCK_USER] = viewModelScope.launch {
+            when (createUserBlockUseCase(blockedUserId, blockedNickname)) {
+                is AppResult.Success -> {
+                    if (closeAfterSuccess) {
+                        _event.emit(PostDetailEvent.NavigateBack)
+                    } else {
+                        _uiState.update { state ->
+                            state.copy(
+                                isBlockingUser = false,
+                                blockedUserIds = state.blockedUserIds + blockedUserId,
+                                comments = state.comments.filterNot { it.userId == blockedUserId },
+                                errorMessage = "사용자를 차단했습니다."
+                            )
+                        }
+                    }
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(isBlockingUser = false, errorMessage = "사용자를 차단하지 못했습니다.")
+                }
+            }
+        }
+    }
+
     private fun observeCommunityPostEvents() {
         jobs[JobKey.OBSERVE_COMMUNITY_EVENT]?.cancel()
         jobs[JobKey.OBSERVE_COMMUNITY_EVENT] = viewModelScope.launch {
@@ -303,6 +336,14 @@ class PostDetailViewModel(
                     isReportSheetVisible = true
                 )
             }
+            PostDetailAction.ClickBlock -> {
+                val post = _uiState.value.post ?: return
+                blockUser(
+                    blockedUserId = post.userId,
+                    blockedNickname = post.userNickname,
+                    closeAfterSuccess = true
+                )
+            }
             is PostDetailAction.SelectReportType -> _uiState.update { it.copy(selectedReportType = action.reportType) }
             PostDetailAction.DismissReportSheet -> _uiState.update {
                 it.copy(
@@ -325,6 +366,14 @@ class PostDetailViewModel(
                     reportingCommentId = action.commentId,
                     selectedReportType = null,
                     isReportSheetVisible = true
+                )
+            }
+            is PostDetailAction.ClickBlockComment -> {
+                val comment = _uiState.value.comments.find { it.id == action.commentId } ?: return
+                blockUser(
+                    blockedUserId = comment.userId,
+                    blockedNickname = comment.userNickname,
+                    closeAfterSuccess = false
                 )
             }
             is PostDetailAction.ChangeCommentText -> _uiState.update { it.copy(commentText = action.text) }
@@ -355,6 +404,6 @@ class PostDetailViewModel(
     private enum class JobKey {
         LOAD_POST, CHECK_OWNER, CHECK_LIKE, LOAD_COMMENTS, LOAD_MORE_COMMENTS,
         TOGGLE_LIKE, DELETE_POST, SEND_COMMENT, UPDATE_COMMENT, DELETE_COMMENT,
-        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT, SUBMIT_REPORT
+        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT, SUBMIT_REPORT, BLOCK_USER
     }
 }

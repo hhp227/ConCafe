@@ -605,18 +605,12 @@ private struct ProfileMyInfoView: View {
                                                     endPoint: .bottom
                                                 )
                                             )
-                                        if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
-                                            CachedAsyncImage(
-                                                url: imageUrl,
-                                                placeholder: EmptyView()
-                                            )
-                                            .frame(width: imageSize.width, height: imageSize.height)
-                                            .clipped()
-                                        } else {
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 22, weight: .semibold))
-                                                .foregroundStyle(Color.white.opacity(0.82))
-                                        }
+                                        CachedAsyncImage(
+                                            url: ImageUrlUtils.normalizedRemoteUrl(from: cafe.thumbnailImage),
+                                            placeholder: EmptyView()
+                                        )
+                                        .frame(width: imageSize.width, height: imageSize.height)
+                                        .clipped()
                                     }
                                 }
                                 .frame(width: 120, height: 120)
@@ -732,14 +726,12 @@ private struct ProfileMyInfoView: View {
                                     ZStack {
                                         Circle()
                                             .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
-                                        if let imageUrl = resolvedRemoteImageUrl(maid.profileImage) {
-                                            CachedAsyncImage(
-                                                url: imageUrl,
-                                                placeholder: EmptyView()
-                                            )
-                                            .frame(width: imageSize.width, height: imageSize.height)
-                                            .clipped()
-                                        }
+                                        CachedAsyncImage(
+                                            url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
+                                            placeholder: EmptyView()
+                                        )
+                                        .frame(width: imageSize.width, height: imageSize.height)
+                                        .clipped()
                                     }
                                 }
                                 .frame(width: 72, height: 72)
@@ -758,14 +750,6 @@ private struct ProfileMyInfoView: View {
                 )
             }
         }
-    }
-    
-    private func resolvedRemoteImageUrl(_ raw: String?) -> URL? {
-        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmed.isEmpty {
-            return nil
-        }
-        return URL(string: trimmed)
     }
 }
 

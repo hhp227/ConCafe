@@ -25,6 +25,9 @@ struct HomeUiState {
     let birthdayCasts: [Cast]
     let notices: [Notice]
     let cafeEvents: [HomeCafeEvent]
+    let cafeEventCursor: String?
+    let canLoadMoreCafeEvents: Bool
+    let isLoadingMoreCafeEvents: Bool
     var communityPosts: [CommunityPost]
 
     static let empty = HomeUiState(
@@ -44,6 +47,9 @@ struct HomeUiState {
         birthdayCasts: [],
         notices: [],
         cafeEvents: [],
+        cafeEventCursor: nil,
+        canLoadMoreCafeEvents: false,
+        isLoadingMoreCafeEvents: false,
         communityPosts: []
     )
 }

@@ -20,6 +20,8 @@ struct PostDetailUiState {
     var reportingCommentId: String? = nil
     var selectedReportType: String? = nil
     var isSubmittingReport: Bool = false
+    var isBlockingUser: Bool = false
+    var blockedUserIds: Set<String> = []
     var isDeleting: Bool = false
     var comments: [Comment] = []
     var isLoadingComments: Bool = false
