@@ -25,7 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.CommunityPost
+import com.hhp227.concafe.presentation.component.CommunityNativeAd
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -138,11 +140,22 @@ private fun CommunityContentScreen(
                     contentPadding = PaddingValues(bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.posts, key = { it.id }) { post ->
-                        CommunityPostCard(
-                            post = post,
-                            onClick = { onAction(CommunityAction.ClickPost(post.id)) }
-                        )
+                    uiState.posts.forEachIndexed { index, post ->
+                        item(key = post.id) {
+                            CommunityPostCard(
+                                post = post,
+                                onClick = { onAction(CommunityAction.ClickPost(post.id)) }
+                            )
+                        }
+                        val pageIndex = index / COMMUNITY_PAGE_SIZE
+                        val indexInPage = index % COMMUNITY_PAGE_SIZE
+                        val adSlot = COMMUNITY_NATIVE_AD_SLOT_START + pageIndex
+                        val nativeAd = uiState.nativeAds[adSlot]
+                        if (indexInPage == COMMUNITY_AD_INSERT_AFTER_INDEX && nativeAd != null) {
+                            item(key = "community-native-ad-$adSlot") {
+                                CommunityNativeAdCard(nativeAdHandle = nativeAd)
+                            }
+                        }
                     }
                     if (uiState.isLoadingMore) {
                         item {
@@ -174,6 +187,21 @@ private fun CommunityContentScreen(
                 Text(message)
             }
         }
+    }
+}
+
+@Composable
+private fun CommunityNativeAdCard(nativeAdHandle: NativeAdHandle?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        CommunityNativeAd(
+            modifier = Modifier.fillMaxWidth(),
+            nativeAdHandle = nativeAdHandle
+        )
     }
 }
 
@@ -324,3 +352,7 @@ private fun CommunityPostCard(
         }
     }
 }
+
+private const val COMMUNITY_PAGE_SIZE = 20
+private const val COMMUNITY_AD_INSERT_AFTER_INDEX = 5
+private const val COMMUNITY_NATIVE_AD_SLOT_START = 100

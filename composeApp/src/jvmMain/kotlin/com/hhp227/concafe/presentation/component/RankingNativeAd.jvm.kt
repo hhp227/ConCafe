@@ -32,3 +32,23 @@ actual fun RankingNativeAd(
         )
     }
 }
+
+@Composable
+actual fun CommunityNativeAd(
+    modifier: Modifier,
+    nativeAdHandle: NativeAdHandle?
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .background(Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Ad",
+            style = MaterialTheme.typography.labelLarge,
+            color = Color(0xFF9A8D95)
+        )
+    }
+}

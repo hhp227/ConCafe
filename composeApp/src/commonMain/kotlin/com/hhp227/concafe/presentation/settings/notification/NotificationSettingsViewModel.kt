@@ -51,6 +51,7 @@ class NotificationSettingsViewModel(
                             isNoticeNotificationsEnabled = result.data.isNoticeNotificationsEnabled,
                             isFollowNotificationsEnabled = result.data.isFollowNotificationsEnabled,
                             isEventNotificationsEnabled = result.data.isEventNotificationsEnabled,
+                            isCommunityNotificationsEnabled = result.data.isCommunityNotificationsEnabled,
                             quietHoursOption = result.data.quietHoursMode
                         )
                     }
@@ -93,6 +94,7 @@ class NotificationSettingsViewModel(
                 isNoticeNotificationsEnabled = nextState.isNoticeNotificationsEnabled,
                 isFollowNotificationsEnabled = nextState.isFollowNotificationsEnabled,
                 isEventNotificationsEnabled = nextState.isEventNotificationsEnabled,
+                isCommunityNotificationsEnabled = nextState.isCommunityNotificationsEnabled,
                 quietHoursMode = nextState.quietHoursOption
             )
             when (val result = updateNotificationSettingsUseCase.invoke(settings)) {
@@ -107,6 +109,7 @@ class NotificationSettingsViewModel(
                             isNoticeNotificationsEnabled = result.data.isNoticeNotificationsEnabled,
                             isFollowNotificationsEnabled = result.data.isFollowNotificationsEnabled,
                             isEventNotificationsEnabled = result.data.isEventNotificationsEnabled,
+                            isCommunityNotificationsEnabled = result.data.isCommunityNotificationsEnabled,
                             quietHoursOption = result.data.quietHoursMode
                         )
                     }
@@ -143,6 +146,9 @@ class NotificationSettingsViewModel(
             }
             is NotificationSettingsAction.ToggleEventNotifications -> {
                 updateSettings { it.copy(isEventNotificationsEnabled = action.enabled) }
+            }
+            is NotificationSettingsAction.ToggleCommunityNotifications -> {
+                updateSettings { it.copy(isCommunityNotificationsEnabled = action.enabled) }
             }
             is NotificationSettingsAction.SelectQuietHours -> {
                 updateSettings { it.copy(quietHoursOption = action.option) }

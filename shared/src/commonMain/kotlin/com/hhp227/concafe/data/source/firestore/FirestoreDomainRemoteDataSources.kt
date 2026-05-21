@@ -1979,6 +1979,7 @@ class FirestoreCommunityPostRemoteDataSource(
                 "imageUrls" to firestoreStringArray(imageUrls),
                 "likeCount" to firestoreLong(0L),
                 "commentCount" to firestoreLong(0L),
+                "viewCount" to firestoreLong(0L),
                 "createdAt" to firestoreString(createdAt),
                 "updatedAt" to firestoreString(createdAt)
             )
@@ -1994,6 +1995,7 @@ class FirestoreCommunityPostRemoteDataSource(
             imageUrls = imageUrls,
             likeCount = 0,
             commentCount = 0,
+            viewCount = 0,
             createdAt = createdAt,
             displayDate = createdAt.take(10).replace("-", ".")
         )
@@ -2014,6 +2016,30 @@ class FirestoreCommunityPostRemoteDataSource(
         val idToken = tokenProvider.getIdToken()
         val path = "${config.documentBasePath()}/${FirestorePaths.COMMUNITY_POSTS}/$postId"
         restApi.delete(path, idToken)
+    }
+
+    override suspend fun incrementViewCount(postId: String) {
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val documentName = "projects/${config.projectId}/databases/${config.databaseId}/documents/${FirestorePaths.COMMUNITY_POSTS}/$postId"
+        val path = "${config.documentBasePath()}:commit"
+        val body = """
+            {
+              "writes": [
+                {
+                  "transform": {
+                    "document": "$documentName",
+                    "fieldTransforms": [
+                      {
+                        "fieldPath": "viewCount",
+                        "increment": {"integerValue": "1"}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+        restApi.post(path, body, idToken)
     }
 
     override suspend fun updateCommunityPost(

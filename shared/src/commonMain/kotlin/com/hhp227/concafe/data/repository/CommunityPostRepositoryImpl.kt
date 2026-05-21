@@ -30,6 +30,10 @@ class CommunityPostRepositoryImpl(
         communityPostRemoteDataSource.deleteCommunityPost(postId)
     }
 
+    override suspend fun incrementViewCount(postId: String) {
+        communityPostRemoteDataSource.incrementViewCount(postId)
+    }
+
     override suspend fun updateCommunityPost(
         postId: String,
         title: String,

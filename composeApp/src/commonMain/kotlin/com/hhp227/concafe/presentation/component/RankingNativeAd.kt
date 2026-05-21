@@ -9,3 +9,9 @@ expect fun RankingNativeAd(
     modifier: Modifier = Modifier,
     nativeAdHandle: NativeAdHandle?
 )
+
+@Composable
+expect fun CommunityNativeAd(
+    modifier: Modifier = Modifier,
+    nativeAdHandle: NativeAdHandle?
+)

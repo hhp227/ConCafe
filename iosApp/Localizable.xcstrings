@@ -16529,6 +16529,50 @@
         }
       }
     },
+    "notification_settings_community_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receive alerts when your community posts get comments or likes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コミュニティ投稿にコメントやいいねが付いたら通知を受け取ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내 커뮤니티 게시글에 댓글이나 좋아요가 달리면 알려드려요."
+          }
+        }
+      }
+    },
+    "notification_settings_community_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Community Post & Like Notifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投稿・いいね通知"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "게시글 및 좋아요 알림"
+          }
+        }
+      }
+    },
     "notification_settings_follow_desc" : {
       "localizations" : {
         "en" : {
@@ -18936,19 +18980,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configure check-in, birthday, and notice alerts."
+            "value" : "Configure check-in, birthday, notice, and community alerts."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "出勤・誕生日・お知らせ通知を設定します。"
+            "value" : "出勤・誕生日・お知らせ・コミュニティ通知を設定します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "출근, 생일, 공지 알림 설정 영역입니다."
+            "value" : "출근, 생일, 공지, 커뮤니티 알림 설정 영역입니다."
           }
         }
       }

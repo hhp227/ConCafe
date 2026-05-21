@@ -11,5 +11,6 @@ enum NotificationEvent {
     case navigateBack
     case navigateToCafe(id: String)
     case navigateToCast(id: String)
+    case navigateToPost(id: String)
     case navigateToSignIn
 }

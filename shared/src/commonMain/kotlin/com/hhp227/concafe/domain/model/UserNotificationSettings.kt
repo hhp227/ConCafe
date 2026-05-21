@@ -7,6 +7,7 @@ data class UserNotificationSettings(
     val isNoticeNotificationsEnabled: Boolean,
     val isFollowNotificationsEnabled: Boolean,
     val isEventNotificationsEnabled: Boolean,
+    val isCommunityNotificationsEnabled: Boolean,
     val quietHoursMode: NotificationQuietHoursMode
 ) {
     companion object {
@@ -18,6 +19,7 @@ data class UserNotificationSettings(
                 isNoticeNotificationsEnabled = true,
                 isFollowNotificationsEnabled = true,
                 isEventNotificationsEnabled = true,
+                isCommunityNotificationsEnabled = true,
                 quietHoursMode = NotificationQuietHoursMode.OFF
             )
         }

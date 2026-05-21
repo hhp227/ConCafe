@@ -127,6 +127,16 @@ private struct NotificationSettingsContentView: View {
                             onToggle: { onAction(.eventNotificationsToggled($0)) },
                             isEnabled: !uiState.isSaving
                         )
+                        NotificationToggleRow(
+                            symbol: "bubble.left.and.bubble.right.fill",
+                            iconBackground: Color(hex: "E9F7F8"),
+                            iconForeground: Color(hex: "228B96"),
+                            title: String(localized: String.LocalizationValue("notification_settings_community_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_community_desc"), table: "Localizable"),
+                            isOn: uiState.isCommunityNotificationsEnabled,
+                            onToggle: { onAction(.communityNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
+                        )
                     }
                 }
                 settingsCard(title: String(localized: String.LocalizationValue("notification_settings_quiet_title"), table: "Localizable")) {
@@ -245,7 +255,8 @@ private struct NotificationSettingsContentView: View {
             uiState.isShiftNotificationsEnabled,
             uiState.isBirthdayNotificationsEnabled,
             uiState.isNoticeNotificationsEnabled,
-            uiState.isEventNotificationsEnabled
+            uiState.isEventNotificationsEnabled,
+            uiState.isCommunityNotificationsEnabled
         ]
 
         if uiState.isCastRole {

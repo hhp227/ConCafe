@@ -19,6 +19,7 @@ struct NotificationSettingsUiState {
     var isNoticeNotificationsEnabled: Bool
     var isFollowNotificationsEnabled: Bool
     var isEventNotificationsEnabled: Bool
+    var isCommunityNotificationsEnabled: Bool
     var quietHoursOption: NotificationQuietHoursMode
 
     static let initial = NotificationSettingsUiState(
@@ -32,6 +33,7 @@ struct NotificationSettingsUiState {
         isNoticeNotificationsEnabled: true,
         isFollowNotificationsEnabled: true,
         isEventNotificationsEnabled: true,
+        isCommunityNotificationsEnabled: true,
         quietHoursOption: .off
     )
 }

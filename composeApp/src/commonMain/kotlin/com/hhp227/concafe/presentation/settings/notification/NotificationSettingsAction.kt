@@ -10,5 +10,6 @@ sealed interface NotificationSettingsAction {
     data class ToggleNoticeNotifications(val enabled: Boolean) : NotificationSettingsAction
     data class ToggleFollowNotifications(val enabled: Boolean) : NotificationSettingsAction
     data class ToggleEventNotifications(val enabled: Boolean) : NotificationSettingsAction
+    data class ToggleCommunityNotifications(val enabled: Boolean) : NotificationSettingsAction
     data class SelectQuietHours(val option: NotificationQuietHoursMode) : NotificationSettingsAction
 }

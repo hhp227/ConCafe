@@ -7,5 +7,7 @@ sealed interface NotificationEvent {
 
     data class NavigateToCast(val id: String) : NotificationEvent
 
+    data class NavigateToPost(val id: String) : NotificationEvent
+
     data object NavigateToSignIn : NotificationEvent
 }

@@ -61,6 +61,7 @@ final class NotificationSettingsViewModel: ObservableObject {
                     uiState.isNoticeNotificationsEnabled = settings.isNoticeNotificationsEnabled
                     uiState.isFollowNotificationsEnabled = settings.isFollowNotificationsEnabled
                     uiState.isEventNotificationsEnabled = settings.isEventNotificationsEnabled
+                    uiState.isCommunityNotificationsEnabled = settings.isCommunityNotificationsEnabled
                     uiState.quietHoursOption = settings.quietHoursMode
                 } else if let failure = result as? AppResultFailure {
                     uiState.isLoading = false
@@ -99,6 +100,7 @@ final class NotificationSettingsViewModel: ObservableObject {
             isNoticeNotificationsEnabled: nextState.isNoticeNotificationsEnabled,
             isFollowNotificationsEnabled: nextState.isFollowNotificationsEnabled,
             isEventNotificationsEnabled: nextState.isEventNotificationsEnabled,
+            isCommunityNotificationsEnabled: nextState.isCommunityNotificationsEnabled,
             quietHoursMode: nextState.quietHoursOption
         )
 
@@ -118,6 +120,7 @@ final class NotificationSettingsViewModel: ObservableObject {
                     uiState.isNoticeNotificationsEnabled = settings.isNoticeNotificationsEnabled
                     uiState.isFollowNotificationsEnabled = settings.isFollowNotificationsEnabled
                     uiState.isEventNotificationsEnabled = settings.isEventNotificationsEnabled
+                    uiState.isCommunityNotificationsEnabled = settings.isCommunityNotificationsEnabled
                     uiState.quietHoursOption = settings.quietHoursMode
                 } else if let failure = result as? AppResultFailure {
                     uiState = previousState
@@ -167,6 +170,10 @@ final class NotificationSettingsViewModel: ObservableObject {
         case .eventNotificationsToggled(let enabled):
             updateSettings { state in
                 state.isEventNotificationsEnabled = enabled
+            }
+        case .communityNotificationsToggled(let enabled):
+            updateSettings { state in
+                state.isCommunityNotificationsEnabled = enabled
             }
         case .quietHoursSelected(let option):
             updateSettings { state in

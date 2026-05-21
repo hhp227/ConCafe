@@ -16,6 +16,8 @@ final class CommunityViewModel: ObservableObject {
 
     private let communityPostEventPublisher: CommunityPostEventPublisher
 
+    private let loadNativeAdUseCase: LoadNativeAdUseCase
+
     @Published private(set) var uiState = CommunityUiState()
 
     let event = PassthroughSubject<CommunityEvent, Never>()
@@ -28,6 +30,7 @@ final class CommunityViewModel: ObservableObject {
         uiState.nextCursor = nil
         uiState.hasNext = false
         uiState.errorMessage = nil
+        uiState.nativeAds = [:]
 
         Task {
             do {
@@ -38,6 +41,9 @@ final class CommunityViewModel: ObservableObject {
                     uiState.posts = paged.items as? [CommunityPost] ?? []
                     uiState.nextCursor = paged.nextCursor
                     uiState.hasNext = paged.hasNext
+                    if !uiState.posts.isEmpty {
+                        loadNativeAd(pageIndex: 0)
+                    }
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = "게시글을 불러오지 못했습니다."
@@ -53,6 +59,8 @@ final class CommunityViewModel: ObservableObject {
     private func loadMore() {
         guard uiState.hasNext, !uiState.isLoadingMore else { return }
         let cursor = uiState.nextCursor
+        let previousPostCount = uiState.posts.count
+        let pageIndex = previousPostCount / Self.pageSize
         uiState.isLoadingMore = true
 
         Task {
@@ -64,6 +72,9 @@ final class CommunityViewModel: ObservableObject {
                     uiState.posts += paged.items as? [CommunityPost] ?? []
                     uiState.nextCursor = paged.nextCursor
                     uiState.hasNext = paged.hasNext
+                    if uiState.posts.count > previousPostCount {
+                        loadNativeAd(pageIndex: pageIndex)
+                    }
                 } else {
                     uiState.isLoadingMore = false
                 }
@@ -71,6 +82,17 @@ final class CommunityViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoadingMore = false
             }
+        }
+    }
+
+    private func loadNativeAd(pageIndex: Int) {
+        let slot = Self.communityNativeAdSlotStart + Int32(pageIndex)
+        guard uiState.nativeAds[slot] == nil else { return }
+
+        Task {
+            let ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke(slot: slot))
+            guard let ad else { return }
+            uiState.nativeAds[slot] = ad
         }
     }
 
@@ -109,11 +131,16 @@ final class CommunityViewModel: ObservableObject {
 
     init(
         getCommunityPostPageUseCase: GetCommunityPostPageUseCase = KoinInitializerKt.resolveGetCommunityPostPageUseCase(),
-        communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher()
+        communityPostEventPublisher: CommunityPostEventPublisher = KoinInitializerKt.resolveCommunityPostEventPublisher(),
+        loadNativeAdUseCase: LoadNativeAdUseCase = KoinInitializerKt.resolveLoadNativeAdUseCase()
     ) {
         self.getCommunityPostPageUseCase = getCommunityPostPageUseCase
         self.communityPostEventPublisher = communityPostEventPublisher
+        self.loadNativeAdUseCase = loadNativeAdUseCase
         observeCommunityPostEvents()
         refresh()
     }
+
+    private static let pageSize = 20
+    private static let communityNativeAdSlotStart: Int32 = 100
 }

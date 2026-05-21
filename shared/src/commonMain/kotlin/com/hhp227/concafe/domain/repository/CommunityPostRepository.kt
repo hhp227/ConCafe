@@ -20,6 +20,7 @@ interface CommunityPostRepository {
         imageUrls: List<String>
     ): CommunityPost
     suspend fun deleteCommunityPost(postId: String)
+    suspend fun incrementViewCount(postId: String)
     suspend fun isLikedByUser(postId: String, userId: String): Boolean
     suspend fun toggleLike(postId: String, userId: String): Boolean
     suspend fun getComments(postId: String): List<Comment>

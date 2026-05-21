@@ -11,6 +11,7 @@ import com.hhp227.concafe.domain.usecase.DeleteCommunityCommentUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCommunityPostUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityCommentPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.IncrementCommunityPostViewCountUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCommunityCommentUseCase
@@ -30,6 +31,7 @@ private const val COMMENT_PAGE_SIZE = 5
 class PostDetailViewModel(
     private val postId: String,
     private val getCommunityPostUseCase: GetCommunityPostUseCase,
+    private val incrementCommunityPostViewCountUseCase: IncrementCommunityPostViewCountUseCase,
     private val checkCommunityPostLikedUseCase: CheckCommunityPostLikedUseCase,
     private val deleteCommunityPostUseCase: DeleteCommunityPostUseCase,
     private val toggleCommunityPostLikeUseCase: ToggleCommunityPostLikeUseCase,
@@ -58,6 +60,7 @@ class PostDetailViewModel(
                 is AppResult.Success -> {
                     val post = result.data
                     _uiState.update { it.copy(post = post, isLoading = false) }
+                    incrementViewCount()
                     checkIsOwner(postUserId = post.userId)
                     checkLikeStatus()
                 }
@@ -74,6 +77,16 @@ class PostDetailViewModel(
             val currentUser = observeCurrentUserUseCase.invoke().first()
             _uiState.update {
                 it.copy(currentUserId = currentUser?.id, isOwner = currentUser?.id == postUserId)
+            }
+        }
+    }
+
+    private fun incrementViewCount() {
+        jobs[JobKey.INCREMENT_VIEW_COUNT]?.cancel()
+        jobs[JobKey.INCREMENT_VIEW_COUNT] = viewModelScope.launch {
+            incrementCommunityPostViewCountUseCase(postId)
+            _uiState.update { state ->
+                state.copy(post = state.post?.let { post -> post.copy(viewCount = post.viewCount + 1) })
             }
         }
     }
@@ -404,6 +417,6 @@ class PostDetailViewModel(
     private enum class JobKey {
         LOAD_POST, CHECK_OWNER, CHECK_LIKE, LOAD_COMMENTS, LOAD_MORE_COMMENTS,
         TOGGLE_LIKE, DELETE_POST, SEND_COMMENT, UPDATE_COMMENT, DELETE_COMMENT,
-        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT, SUBMIT_REPORT, BLOCK_USER
+        EMIT_EVENT, OBSERVE_COMMUNITY_EVENT, SUBMIT_REPORT, BLOCK_USER, INCREMENT_VIEW_COUNT
     }
 }

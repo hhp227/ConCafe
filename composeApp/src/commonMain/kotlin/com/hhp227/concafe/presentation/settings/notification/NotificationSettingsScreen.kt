@@ -34,6 +34,8 @@ import concafe.composeapp.generated.resources.notification_quiet_off_title
 import concafe.composeapp.generated.resources.notification_settings_basic_title
 import concafe.composeapp.generated.resources.notification_settings_birthday_desc
 import concafe.composeapp.generated.resources.notification_settings_birthday_title
+import concafe.composeapp.generated.resources.notification_settings_community_desc
+import concafe.composeapp.generated.resources.notification_settings_community_title
 import concafe.composeapp.generated.resources.notification_settings_event_desc
 import concafe.composeapp.generated.resources.notification_settings_event_title
 import concafe.composeapp.generated.resources.notification_settings_follow_desc
@@ -198,6 +200,16 @@ private fun NotificationSettingsContentScreen(
                         description = stringResource(Res.string.notification_settings_event_desc),
                         checked = uiState.isEventNotificationsEnabled,
                         onCheckedChange = { onAction(NotificationSettingsAction.ToggleEventNotifications(it)) },
+                        enabled = !uiState.isSaving
+                    )
+                    NotificationToggleRow(
+                        icon = Icons.Default.Forum,
+                        iconBackground = colorFromHex("E9F7F8"),
+                        iconTint = colorFromHex("228B96"),
+                        title = stringResource(Res.string.notification_settings_community_title),
+                        description = stringResource(Res.string.notification_settings_community_desc),
+                        checked = uiState.isCommunityNotificationsEnabled,
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleCommunityNotifications(it)) },
                         enabled = !uiState.isSaving
                     )
                 }
@@ -398,7 +410,8 @@ private fun heroSummary(uiState: NotificationSettingsUiState): String {
         uiState.isShiftNotificationsEnabled,
         uiState.isBirthdayNotificationsEnabled,
         uiState.isNoticeNotificationsEnabled,
-        uiState.isEventNotificationsEnabled
+        uiState.isEventNotificationsEnabled,
+        uiState.isCommunityNotificationsEnabled
     )
 
     if (uiState.isCastRole) {

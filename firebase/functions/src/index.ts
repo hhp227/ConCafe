@@ -311,6 +311,16 @@ type CafeOwnerClaimLike = {
   requestedAt?: unknown;
 };
 
+type CommunityPostLike = {
+  userId?: unknown;
+  title?: unknown;
+  content?: unknown;
+  likeCount?: unknown;
+  commentCount?: unknown;
+  viewCount?: unknown;
+  createdAt?: unknown;
+};
+
 type FanAnnouncementRequestLike = {
   userId?: unknown;
   cafeId?: unknown;
@@ -365,6 +375,7 @@ type UserNotificationSettings = {
   isNoticeNotificationsEnabled: boolean;
   isFollowNotificationsEnabled: boolean;
   isEventNotificationsEnabled: boolean;
+  isCommunityNotificationsEnabled: boolean;
   quietHoursMode: NotificationQuietHoursMode;
 };
 
@@ -525,6 +536,15 @@ function kstDateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function kstWeekKey(date: Date): string {
+  const day = date.getUTCDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date.getTime());
+
+  monday.setUTCDate(date.getUTCDate() + mondayOffset);
+  return kstDateKey(monday);
+}
+
 function kstBirthdayKey(date: Date): string {
   const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
   const day = `${date.getUTCDate()}`.padStart(2, "0");
@@ -539,6 +559,7 @@ function readNotificationSettings(data: unknown): UserNotificationSettings {
   const isNoticeEnabled = plain?.isNoticeNotificationsEnabled !== false;
   const isFollowEnabled = plain?.isFollowNotificationsEnabled !== false;
   const isEventEnabled = plain?.isEventNotificationsEnabled !== false;
+  const isCommunityEnabled = plain?.isCommunityNotificationsEnabled !== false;
   const quietHoursRaw = asNonBlankString(plain?.quietHoursMode)?.toUpperCase();
   const quietHoursMode: NotificationQuietHoursMode =
     quietHoursRaw === "NIGHT" || quietHoursRaw === "ALL_DAY" ? quietHoursRaw : "OFF";
@@ -550,6 +571,7 @@ function readNotificationSettings(data: unknown): UserNotificationSettings {
     isNoticeNotificationsEnabled: isNoticeEnabled,
     isFollowNotificationsEnabled: isFollowEnabled,
     isEventNotificationsEnabled: isEventEnabled,
+    isCommunityNotificationsEnabled: isCommunityEnabled,
     quietHoursMode: quietHoursMode,
   };
 }
@@ -581,6 +603,7 @@ async function loadUserNotificationSettings(userId: string): Promise<UserNotific
       isNoticeNotificationsEnabled: true,
       isFollowNotificationsEnabled: true,
       isEventNotificationsEnabled: true,
+      isCommunityNotificationsEnabled: true,
       quietHoursMode: "OFF",
     };
   } else {
@@ -760,7 +783,8 @@ async function createUserNotification(
     | "CAST_SCHEDULE_CREATED"
     | "CAFE_TABLE_COUNT_UPDATE"
     | "COMMUNITY_COMMENT"
-    | "COMMUNITY_LIKE",
+    | "COMMUNITY_LIKE"
+    | "WEEKLY_COMMUNITY_HIGHLIGHT",
   title: string,
   body: string,
   targetId: string,
@@ -5092,6 +5116,125 @@ export const onScheduleDeleteExpiredClaims = onSchedule(
   }
 );
 
+export const onScheduleSendWeeklyCommunityHighlight = onSchedule(
+  {
+    schedule: "0 10 * * 1",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const now = kstNow();
+    const weekKey = kstWeekKey(now);
+    const markerRef = db().collection("weeklyCommunityHighlights").doc(weekKey);
+    const markerSnapshot = await markerRef.get();
+
+    if (markerSnapshot.get("status") === "SENT") {
+      logger.info("Weekly community highlight already sent.", {weekKey: weekKey});
+      return;
+    }
+    await markerRef.set({
+      weekKey: weekKey,
+      status: "PROCESSING",
+      updatedAt: now.toISOString(),
+      createdAt: markerSnapshot.exists ? markerSnapshot.get("createdAt") : now.toISOString(),
+    }, {merge: true});
+    const weekStart = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const postsSnapshot = await db()
+      .collection("communityPosts")
+      .where("createdAt", ">=", weekStart.toISOString())
+      .orderBy("createdAt", "desc")
+      .limit(500)
+      .get();
+    const rankedPosts = postsSnapshot.docs
+      .map((doc) => {
+        const data = doc.data() as CommunityPostLike;
+        const title = asNonBlankString(data.title);
+        const likeCount = asNonNegativeInt(data.likeCount) ?? 0;
+        const commentCount = asNonNegativeInt(data.commentCount) ?? 0;
+        const viewCount = asNonNegativeInt(data.viewCount) ?? 0;
+        const score = (likeCount * 2) + (commentCount * 3) + Math.floor(viewCount / 20);
+
+        return {
+          id: doc.id,
+          title: title,
+          score: score,
+          likeCount: likeCount,
+          commentCount: commentCount,
+          viewCount: viewCount,
+        };
+      })
+      .filter((post) => post.title != null && post.score > 0)
+      .sort((a, b) => b.score - a.score);
+    const topPost = rankedPosts[0];
+
+    if (topPost == null) {
+      await markerRef.set({
+        status: "SKIPPED",
+        reason: "NO_ACTIVE_POST",
+        updatedAt: new Date().toISOString(),
+      }, {merge: true});
+      logger.info("Skipped weekly community highlight. No active post.", {weekKey: weekKey});
+      return;
+    }
+    const tokenSnapshot = await db()
+      .collectionGroup("deviceTokens")
+      .where("isEnabled", "==", true)
+      .limit(2000)
+      .get();
+    const {targets: recipientUserIds, droppedByCap} = toNotificationRecipientUserIds(
+      tokenSnapshot.docs.map((doc) => doc.ref.parent.parent?.id)
+    );
+    const createdAt = new Date().toISOString();
+    let sentCount = 0;
+    let skippedBySettingsCount = 0;
+
+    await processInBatches(recipientUserIds, async (userId) => {
+      const settings = await loadUserNotificationSettings(userId);
+
+      if (!settings.isPushNotificationsEnabled || !settings.isCommunityNotificationsEnabled) {
+        skippedBySettingsCount += 1;
+        return;
+      }
+      await createUserNotification(
+        userId,
+        `weekly_community_highlight_${weekKey}_${topPost.id}_${userId}`,
+        "WEEKLY_COMMUNITY_HIGHLIGHT",
+        "이번 주 인기 커뮤니티 글",
+        `“${topPost.title}” 글이 이번 주 많은 반응을 받았어요.`,
+        topPost.id,
+        createdAt,
+        settings,
+        {
+          androidCollapseKey: `weekly_community_${weekKey}`,
+          androidTtlMillis: 24 * 60 * 60 * 1000,
+          apnsCollapseId: `weekly_community_${weekKey}`,
+        }
+      );
+      sentCount += 1;
+    });
+    await markerRef.set({
+      status: "SENT",
+      postId: topPost.id,
+      score: topPost.score,
+      likeCount: topPost.likeCount,
+      commentCount: topPost.commentCount,
+      viewCount: topPost.viewCount,
+      recipientCount: recipientUserIds.length,
+      sentCount: sentCount,
+      skippedBySettingsCount: skippedBySettingsCount,
+      droppedByCap: droppedByCap,
+      updatedAt: new Date().toISOString(),
+    }, {merge: true});
+    logger.info("Sent weekly community highlight.", {
+      weekKey: weekKey,
+      postId: topPost.id,
+      score: topPost.score,
+      sentCount: sentCount,
+      skippedBySettingsCount: skippedBySettingsCount,
+      droppedByCap: droppedByCap,
+    });
+  }
+);
+
 async function syncTableCountUpdateNotifications(
   cafeId: string,
   beforeData: Record<string, unknown> | undefined,
@@ -5229,7 +5372,7 @@ export const onCommunityPostLikeWrittenSendPushToAuthor = onDocumentWritten(
     }
     const settings = await loadUserNotificationSettings(postAuthorId);
 
-    if (!settings.isPushNotificationsEnabled) {
+    if (!settings.isPushNotificationsEnabled || !settings.isCommunityNotificationsEnabled) {
       return;
     }
     const likerDoc = await db().collection("users").doc(likerUserId).get();
@@ -5283,7 +5426,7 @@ export const onCommunityCommentWrittenSendPushToAuthor = onDocumentWritten(
     }
     const settings = await loadUserNotificationSettings(postAuthorId);
 
-    if (!settings.isPushNotificationsEnabled) {
+    if (!settings.isPushNotificationsEnabled || !settings.isCommunityNotificationsEnabled) {
       return;
     }
     const createdAt = new Date().toISOString();
