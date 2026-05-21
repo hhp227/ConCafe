@@ -17,6 +17,10 @@ struct PostEditView: View {
 
     @State private var showImagePicker = false
 
+    @State private var isKeyboardDismissInProgress = false
+
+    @State private var shouldNavigateBackAfterKeyboardHide = false
+
     var body: some View {
         PostEditContentView(
             uiState: viewModel.uiState,
@@ -28,6 +32,7 @@ struct PostEditView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
+                    isKeyboardDismissInProgress = dismissKeyboard()
                     viewModel.onAction(.clickSubmit)
                 } label: {
                     if viewModel.uiState.isSubmitting {
@@ -49,10 +54,22 @@ struct PostEditView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
-                onNavigationAction(.navigateBack)
+                if isKeyboardDismissInProgress || dismissKeyboard() {
+                    shouldNavigateBackAfterKeyboardHide = true
+                } else {
+                    onNavigationAction(.navigateBack)
+                }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { _ in
+            isKeyboardDismissInProgress = false
+            guard shouldNavigateBackAfterKeyboardHide else { return }
+            shouldNavigateBackAfterKeyboardHide = false
+            onNavigationAction(.navigateBack)
+        }
         .onDisappear {
+            isKeyboardDismissInProgress = false
+            shouldNavigateBackAfterKeyboardHide = false
             dismissKeyboard()
         }
         .sheet(isPresented: $showImagePicker) {
@@ -67,6 +84,15 @@ struct PostEditView: View {
                 onDismiss: { showImagePicker = false }
             )
         }
+    }
+
+    @discardableResult
+    private func dismissKeyboard() -> Bool {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .endEditing(true) ?? false
     }
 
     init(editPostId: String? = nil, onNavigationAction: @escaping (NavigationAction) -> Void) {
