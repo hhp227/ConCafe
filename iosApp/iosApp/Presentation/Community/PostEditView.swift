@@ -7,6 +7,48 @@
 
 import SwiftUI
 import UIKit
+import Combine
+
+private final class PostEditKeyboardState: ObservableObject {
+    @Published private var isVisible = false
+
+    private var cancellables: Set<AnyCancellable> = []
+
+    @MainActor
+    func dismiss() {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .endEditing(true)
+    }
+
+    @MainActor
+    func dismissAndWaitUntilHidden() async {
+        dismiss()
+
+        while isVisible && !Task.isCancelled {
+            dismiss()
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 16_000_000)
+        }
+    }
+
+    init() {
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+            .sink { [weak self] _ in self?.isVisible = true }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)
+            .sink { [weak self] _ in self?.isVisible = true }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+            .sink { [weak self] _ in self?.isVisible = false }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)
+            .sink { [weak self] _ in self?.isVisible = false }
+            .store(in: &cancellables)
+    }
+}
 
 struct PostEditView: View {
     let editPostId: String?
@@ -14,6 +56,8 @@ struct PostEditView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel: PostEditViewModel
+
+    @StateObject private var keyboardState = PostEditKeyboardState()
 
     @State private var showImagePicker = false
 
@@ -23,7 +67,8 @@ struct PostEditView: View {
         PostEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
-            onPickImage: { showImagePicker = true }
+            onPickImage: { showImagePicker = true },
+            keyboardState: keyboardState
         )
         .navigationTitle(
             viewModel.uiState.isEditMode
@@ -36,7 +81,7 @@ struct PostEditView: View {
             case .navigateBack:
                 navigateBackTask?.cancel()
                 navigateBackTask = Task { @MainActor in
-                    await dismissKeyboardAndWaitForHide()
+                    await keyboardState.dismissAndWaitUntilHidden()
                     guard !Task.isCancelled else { return }
                     onNavigationAction(.navigateBack)
                 }
@@ -44,7 +89,7 @@ struct PostEditView: View {
         }
         .onDisappear {
             navigateBackTask?.cancel()
-            dismissKeyboard()
+            keyboardState.dismiss()
         }
         .sheet(isPresented: $showImagePicker) {
             CompatImagePicker(
@@ -57,31 +102,6 @@ struct PostEditView: View {
                 },
                 onDismiss: { showImagePicker = false }
             )
-        }
-    }
-
-    private func dismissKeyboard() {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first { $0.isKeyWindow }?
-            .endEditing(true)
-    }
-
-    @MainActor
-    private func dismissKeyboardAndWaitForHide() async {
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask {
-                for await _ in NotificationCenter.default.notifications(named: UIResponder.keyboardDidHideNotification) {
-                    break
-                }
-            }
-            group.addTask {
-                try? await Task.sleep(nanoseconds: 350_000_000)
-            }
-            dismissKeyboard()
-            await group.next()
-            group.cancelAll()
         }
     }
 
@@ -98,6 +118,8 @@ private struct PostEditContentView: View {
     let onAction: (PostEditAction) -> Void
 
     let onPickImage: () -> Void
+
+    let keyboardState: PostEditKeyboardState
 
     @State private var isPreparingSubmit = false
 
@@ -243,7 +265,7 @@ private struct PostEditContentView: View {
             guard !isPreparingSubmit else { return }
             isPreparingSubmit = true
             Task { @MainActor in
-                await dismissKeyboardAndWaitForHide()
+                await keyboardState.dismissAndWaitUntilHidden()
                 onAction(.clickSubmit)
                 isPreparingSubmit = false
             }
@@ -279,31 +301,6 @@ private struct PostEditContentView: View {
             Rectangle()
                 .fill(Color(hex: "FFD1DC").opacity(0.2))
                 .frame(height: 1)
-        }
-    }
-
-    private func dismissKeyboard() {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first { $0.isKeyWindow }?
-            .endEditing(true)
-    }
-
-    @MainActor
-    private func dismissKeyboardAndWaitForHide() async {
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask {
-                for await _ in NotificationCenter.default.notifications(named: UIResponder.keyboardDidHideNotification) {
-                    break
-                }
-            }
-            group.addTask {
-                try? await Task.sleep(nanoseconds: 350_000_000)
-            }
-            dismissKeyboard()
-            await group.next()
-            group.cancelAll()
         }
     }
 
