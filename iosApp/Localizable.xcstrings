@@ -9073,6 +9073,27 @@
         }
       }
     },
+    "community_action_block" : {
+
+    },
+    "community_action_delete" : {
+
+    },
+    "community_action_edit" : {
+
+    },
+    "community_action_report" : {
+
+    },
+    "community_anonymous" : {
+
+    },
+    "community_post_comment_count" : {
+
+    },
+    "community_post_like_count" : {
+
+    },
     "community_report_sheet_title" : {
       "localizations" : {
         "en" : {
@@ -16683,6 +16704,27 @@
         }
       }
     },
+    "post_detail_comment_edit_title" : {
+
+    },
+    "post_detail_comment_placeholder" : {
+
+    },
+    "post_detail_delete_message" : {
+
+    },
+    "post_detail_delete_title" : {
+
+    },
+    "post_detail_load_failed" : {
+
+    },
+    "post_detail_load_more_comments" : {
+
+    },
+    "post_detail_screen_title" : {
+
+    },
     "QR %@" : {
 
     },
@@ -18180,6 +18222,75 @@
         }
       }
     },
+    "schedule_period_month" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 month"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1ヶ月"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1달"
+          }
+        }
+      }
+    },
+    "schedule_period_two_weeks" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 weeks"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2週間"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2주"
+          }
+        }
+      }
+    },
+    "schedule_period_week" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 week"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1週間"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1주"
+          }
+        }
+      }
+    },
     "schedule_save" : {
       "localizations" : {
         "en" : {
@@ -18242,72 +18353,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "휴무"
-          }
-        }
-      }
-    },
-    "schedule_period_month" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 month"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1ヶ月"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1달"
-          }
-        }
-      }
-    },
-    "schedule_period_two_weeks" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 weeks"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2週間"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2주"
-          }
-        }
-      }
-    },
-    "schedule_period_week" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 week"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1週間"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1주"
           }
         }
       }
@@ -20450,19 +20495,10 @@
     "가입일 %@" : {
 
     },
-    "게시글" : {
-
-    },
-    "게시글 삭제" : {
-
-    },
     "게시글 수정" : {
 
     },
     "게시글 작성" : {
-
-    },
-    "게시글을 불러오지 못했습니다." : {
 
     },
     "공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다." : {
@@ -20487,12 +20523,6 @@
     "댓글 %d" : {
 
     },
-    "댓글 %lld" : {
-
-    },
-    "댓글 수정" : {
-
-    },
     "더 불러오기" : {
 
     },
@@ -20511,16 +20541,10 @@
     "사진은 최대 %lld장까지 첨부할 수 있습니다." : {
 
     },
-    "삭제" : {
-
-    },
     "새 버전 %@이 출시되었습니다. App Store에서 업데이트할 수 있습니다." : {
 
     },
     "셉" : {
-
-    },
-    "수정" : {
 
     },
     "신고 내역" : {
@@ -20559,9 +20583,6 @@
     "유저 관리" : {
 
     },
-    "이 게시글을 삭제하시겠습니까?" : {
-
-    },
     "이미지 로딩 중" : {
 
     },
@@ -20569,9 +20590,6 @@
 
     },
     "이번 주 스케줄" : {
-
-    },
-    "이전 댓글 더보기" : {
 
     },
     "저장" : {
