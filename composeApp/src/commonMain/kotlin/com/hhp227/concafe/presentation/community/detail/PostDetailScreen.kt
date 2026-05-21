@@ -697,7 +697,7 @@ private fun ImeSafeOutlinedTextField(
     }
 
     LaunchedEffect(value) {
-        if (textFieldValue.text != value && textFieldValue.composition == null) {
+        if (textFieldValue.text != value && (value.isEmpty() || textFieldValue.composition == null)) {
             textFieldValue = TextFieldValue(
                 text = value,
                 selection = TextRange(value.length)
