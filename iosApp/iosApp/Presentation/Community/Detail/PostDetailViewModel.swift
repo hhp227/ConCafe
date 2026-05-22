@@ -149,7 +149,7 @@ final class PostDetailViewModel: ObservableObject {
         tasks[.loadComments] = Task {
             uiState.isLoadingComments = true
             do {
-                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: nil, pageSize: 5)
+                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: nil, pageSize: 15)
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<Comment> {
                     let comments = page.items as! [Comment]
@@ -169,7 +169,7 @@ final class PostDetailViewModel: ObservableObject {
         tasks[.loadMoreComments] = Task {
             uiState.isLoadingMoreComments = true
             do {
-                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: cursor, pageSize: 5)
+                let result = try await getCommunityCommentPageUseCase.invoke(postId: postId, beforeCursor: cursor, pageSize: 15)
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<Comment> {
                     let newComments = (page.items as! [Comment]).filter { !uiState.blockedUserIds.contains($0.userId) }

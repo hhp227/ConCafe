@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val COMMENT_PAGE_SIZE = 5
+private const val COMMENT_PAGE_SIZE = 15
 
 class PostDetailViewModel(
     private val postId: String,
