@@ -1422,6 +1422,9 @@
         }
       }
     },
+    "AD" : {
+
+    },
     "admin_banner_card_description" : {
       "localizations" : {
         "en" : {
@@ -9183,6 +9186,28 @@
         }
       }
     },
+    "community_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No posts yet.\nBe the first to write one!"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ投稿がありません。\n最初の投稿を書いてみましょう！"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!"
+          }
+        }
+      }
+    },
     "community_post_comment_count" : {
       "localizations" : {
         "en" : {
@@ -9381,30 +9406,7 @@
         }
       }
     },
-    "community_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No posts yet.\nBe the first to write one!"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まだ投稿がありません。\n最初の投稿を書いてみましょう！"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!"
-          }
-        }
-      }
-    },
     "community_title" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9447,6 +9449,9 @@
           }
         }
       }
+    },
+    "ConCafe" : {
+
     },
     "dashboard_action_add" : {
       "localizations" : {
@@ -16485,50 +16490,6 @@
         }
       }
     },
-    "notification_settings_event_desc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check cafe event registrations and update news."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カフェイベント登録と更新情報を確認します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카페 이벤트 등록과 업데이트 소식을 확인해요."
-          }
-        }
-      }
-    },
-    "notification_settings_event_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Event Notification"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "イベント通知"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이벤트 알림"
-          }
-        }
-      }
-    },
     "notification_settings_community_desc" : {
       "localizations" : {
         "en" : {
@@ -16569,6 +16530,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "게시글 및 좋아요 알림"
+          }
+        }
+      }
+    },
+    "notification_settings_event_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check cafe event registrations and update news."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェイベント登録と更新情報を確認します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 이벤트 등록과 업데이트 소식을 확인해요."
+          }
+        }
+      }
+    },
+    "notification_settings_event_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Event Notification"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "イベント通知"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 알림"
           }
         }
       }
@@ -20880,6 +20885,9 @@
     "공지 내용은 팔로워에게 즉시 푸시 알림으로 전송됩니다." : {
 
     },
+    "광고" : {
+
+    },
     "다음 캐스트 목록을 불러오는 중입니다." : {
 
     },
@@ -20895,9 +20903,6 @@
           }
         }
       }
-    },
-    "댓글 %d" : {
-
     },
     "더 불러오기" : {
 
@@ -20930,9 +20935,6 @@
 
     },
     "신고자: %@" : {
-
-    },
-    "아직 게시글이 없습니다.\n첫 번째 게시글을 남겨보세요!" : {
 
     },
     "안내" : {
@@ -20968,10 +20970,10 @@
     "이번 주 스케줄" : {
 
     },
-    "저장" : {
+    "자세히" : {
 
     },
-    "좋아요 %d" : {
+    "저장" : {
 
     },
     "차단" : {
@@ -20987,9 +20989,6 @@
 
     },
     "카" : {
-
-    },
-    "커뮤니티" : {
 
     },
     "콘" : {
