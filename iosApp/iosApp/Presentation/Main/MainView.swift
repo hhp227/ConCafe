@@ -47,12 +47,8 @@ struct MainView: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(selectedTab == MainNavigationTab.community.route ? .large : .inline)
         .compatOpaqueNavigationBarBackground()
+        .modifier(PrincipalLogoToolbar(isHidden: selectedTab == MainNavigationTab.community.route))
         .toolbar {
-            if selectedTab != MainNavigationTab.community.route {
-                ToolbarItem(placement: .principal) {
-                    ConCafeLogo()
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     if selectedTab == "myinfo" && viewModel.uiState.currentUser != nil {
@@ -192,6 +188,23 @@ struct MainView: View {
         self.onNavigationAction = onNavigationAction
 
         AppBarAppearance.configureDefaultAppearance()
+    }
+}
+
+private struct PrincipalLogoToolbar: ViewModifier {
+    let isHidden: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isHidden {
+            content
+        } else {
+            content.toolbar {
+                ToolbarItem(placement: .principal) {
+                    ConCafeLogo()
+                }
+            }
+        }
     }
 }
 
