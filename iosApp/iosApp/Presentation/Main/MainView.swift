@@ -41,11 +41,13 @@ struct MainView: View {
             }
         }
         .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(selectedTab == MainNavigationTab.community.route ? .large : .inline)
         .compatOpaqueNavigationBarBackground()
         .toolbar {
             ToolbarItem(placement: .principal) {
-                ConCafeLogo()
+                if selectedTab != MainNavigationTab.community.route {
+                    ConCafeLogo()
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {

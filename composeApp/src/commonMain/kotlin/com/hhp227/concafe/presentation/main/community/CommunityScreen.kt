@@ -38,6 +38,7 @@ import org.koin.core.context.GlobalContext
 @Composable
 fun CommunityScreen(
     onNavigationAction: (NavigationAction) -> Unit = {},
+    showTopBar: Boolean = true,
     viewModel: CommunityViewModel = viewModel(
         factory = viewModelFactory {
             initializer { GlobalContext.get().get<CommunityViewModel>() }
@@ -56,6 +57,7 @@ fun CommunityScreen(
     }
     CommunityContentScreen(
         uiState = uiState,
+        showTopBar = showTopBar,
         onAction = viewModel::onAction
     )
 }
@@ -64,6 +66,7 @@ fun CommunityScreen(
 @Composable
 private fun CommunityContentScreen(
     uiState: CommunityUiState,
+    showTopBar: Boolean,
     onAction: (CommunityAction) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -84,19 +87,21 @@ private fun CommunityContentScreen(
     Scaffold(
         containerColor = colorFromHex("F8F5F6"),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(Res.string.community_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+            if (showTopBar) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(Res.string.community_title),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = colorFromHex("2B2330")
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = colorFromHex("2B2330")
                 )
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(

@@ -140,7 +140,16 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { ConCafeLogo() },
+                title = {
+                    if (uiState.selectedTab == MainNavigationTab.COMMUNITY.route) {
+                        Text(
+                            text = stringResource(Res.string.community_title),
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        ConCafeLogo()
+                    }
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -242,7 +251,10 @@ fun MainScreen(
                 RankingScreen(onNavigate = onNavigationAction)
             }
             composable(MainNavigationTab.COMMUNITY.route) {
-                CommunityScreen(onNavigationAction = onNavigationAction)
+                CommunityScreen(
+                    onNavigationAction = onNavigationAction,
+                    showTopBar = false
+                )
             }
             composable(MainNavigationTab.MY_INFO.route) {
                 MyInfoScreen(onNavigate = onNavigationAction)

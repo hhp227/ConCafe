@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -102,7 +103,16 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { ConCafeLogo() },
+                title = {
+                    if (uiState.selectedTab == MainNavigationTab.COMMUNITY.route) {
+                        Text(
+                            text = stringResource(Res.string.community_title),
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        ConCafeLogo()
+                    }
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -179,7 +189,10 @@ fun MainScreen(
                         MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen(onNavigationAction = onNavigationAction)
                         MainNavigationTab.RANKING.route -> RankingScreen(onNavigate = onNavigationAction)
-                        MainNavigationTab.COMMUNITY.route -> CommunityScreen(onNavigationAction = onNavigationAction)
+                        MainNavigationTab.COMMUNITY.route -> CommunityScreen(
+                            onNavigationAction = onNavigationAction,
+                            showTopBar = false
+                        )
                         MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
                         else -> HomeScreen(onNavigate = onNavigationAction)
                     }
