@@ -225,6 +225,12 @@ private struct NotificationSectionsView: View {
             return ("tablecells.fill", Color(hex: "ECFFF5"), Color(hex: "1F8B5F"))
         } else if type == "FOLLOW_UPDATE" {
             return ("person.badge.plus.fill", Color(hex: "F1E8FF"), Color(hex: "8A52E2"))
+        } else if type == "COMMUNITY_COMMENT" {
+            return ("text.bubble.fill", Color(hex: "EAF7FF"), Color(hex: "2878A8"))
+        } else if type == "COMMUNITY_LIKE" {
+            return ("heart.fill", Color(hex: "FFE9EF"), Color(hex: "D94F75"))
+        } else if type == "WEEKLY_COMMUNITY_HIGHLIGHT" {
+            return ("flame.fill", Color(hex: "FFF3DF"), Color(hex: "D27B21"))
         } else {
             return ("bell.fill", Color(uiColor: .tertiarySystemFill), .secondary)
         }

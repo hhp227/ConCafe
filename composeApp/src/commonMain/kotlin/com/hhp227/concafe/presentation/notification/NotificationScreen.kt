@@ -343,6 +343,9 @@ private fun notificationVisual(type: String): NotificationVisual {
         "CAST_SCHEDULE_CREATED" -> NotificationVisual(Icons.Filled.EventAvailable, colorFromHex("F0F7FF"), colorFromHex("2D74C4"))
         "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, colorFromHex("ECFFF5"), colorFromHex("1F8B5F"))
         "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, colorFromHex("F1E8FF"), colorFromHex("8A52E2"))
+        "COMMUNITY_COMMENT" -> NotificationVisual(Icons.Filled.Forum, colorFromHex("EAF7FF"), colorFromHex("2878A8"))
+        "COMMUNITY_LIKE" -> NotificationVisual(Icons.Filled.Favorite, colorFromHex("FFE9EF"), colorFromHex("D94F75"))
+        "WEEKLY_COMMUNITY_HIGHLIGHT" -> NotificationVisual(Icons.Filled.Whatshot, colorFromHex("FFF3DF"), colorFromHex("D27B21"))
         else -> NotificationVisual(Icons.Filled.Notifications, colorFromHex("F2F2F2"), colorFromHex("666666"))
     }
 }
