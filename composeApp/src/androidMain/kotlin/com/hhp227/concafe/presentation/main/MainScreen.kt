@@ -42,6 +42,7 @@ import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
+import com.hhp227.concafe.presentation.main.community.CommunityScreen
 import com.hhp227.concafe.presentation.main.explore.ExploreScreen
 import com.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
 import com.hhp227.concafe.presentation.main.home.HomeScreen
@@ -212,7 +213,15 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(MainNavigationTab.HOME.route) {
-                HomeScreen(onNavigate = onNavigationAction)
+                HomeScreen(
+                    onNavigate = { action ->
+                        if (action == NavigationAction.NavigateToCommunity) {
+                            viewModel.onAction(MainAction.SelectTab(MainNavigationTab.COMMUNITY.route))
+                        } else {
+                            onNavigationAction(action)
+                        }
+                    }
+                )
             }
             composable(MainNavigationTab.EXPLORE.route) {
                 ExploreScreen(onNavigate = onNavigationAction)
@@ -231,6 +240,9 @@ fun MainScreen(
             }
             composable(MainNavigationTab.RANKING.route) {
                 RankingScreen(onNavigate = onNavigationAction)
+            }
+            composable(MainNavigationTab.COMMUNITY.route) {
+                CommunityScreen(onNavigationAction = onNavigationAction)
             }
             composable(MainNavigationTab.MY_INFO.route) {
                 MyInfoScreen(onNavigate = onNavigationAction)
@@ -263,6 +275,7 @@ private fun MainNavigationTab.icon(): ImageVector {
         MainNavigationTab.CAFE_MANAGEMENT -> Icons.Default.ManageAccounts
         MainNavigationTab.ADMIN_OPERATIONS -> Icons.Default.AdminPanelSettings
         MainNavigationTab.RANKING -> Icons.Default.EmojiEvents
+        MainNavigationTab.COMMUNITY -> Icons.Default.Article
         MainNavigationTab.MY_INFO -> Icons.Default.Person
     }
 }
@@ -277,6 +290,7 @@ private fun MainNavigationTab.label(): String {
         MainNavigationTab.CAFE_MANAGEMENT -> stringResource(Res.string.main_tab_cafe_management)
         MainNavigationTab.ADMIN_OPERATIONS -> stringResource(Res.string.main_tab_admin_operations)
         MainNavigationTab.RANKING -> stringResource(Res.string.main_tab_ranking)
+        MainNavigationTab.COMMUNITY -> stringResource(Res.string.community_title)
         MainNavigationTab.MY_INFO -> stringResource(Res.string.main_tab_my_info)
     }
 }

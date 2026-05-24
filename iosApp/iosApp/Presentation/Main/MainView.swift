@@ -23,7 +23,7 @@ struct MainView: View {
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
-                HomeView(onNavigationAction: onNavigationAction)
+                HomeView(onNavigationAction: handleHomeNavigationAction)
                     .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
                     .tag("home")
                 ExploreView(onNavigationAction: onNavigationAction)
@@ -33,6 +33,8 @@ struct MainView: View {
                     .tag(viewModel.uiState.thirdTab.route)
                 rankingTabView
                     .tag("ranking")
+                CommunityView(onNavigationAction: onNavigationAction)
+                    .tag(MainNavigationTab.community.route)
                 MyInfoView(onNavigationAction: onNavigationAction)
                     .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
                     .tag("myinfo")
@@ -101,6 +103,16 @@ struct MainView: View {
         }
     }
 
+    private func handleHomeNavigationAction(_ action: NavigationAction) {
+        switch action {
+        case .navigateToCommunity:
+            selectedTab = MainNavigationTab.community.route
+            viewModel.onAction(.selectTab(route: MainNavigationTab.community.route))
+        default:
+            onNavigationAction(action)
+        }
+    }
+
     @ViewBuilder
     private var roleBasedThirdTabView: some View {
         switch viewModel.uiState.thirdTab {
@@ -146,6 +158,8 @@ struct MainView: View {
             return String(localized: String.LocalizationValue("main_tab_admin_operations"), table: "Localizable")
         case MainNavigationTab.ranking.route:
             return String(localized: String.LocalizationValue("main_tab_ranking"), table: "Localizable")
+        case MainNavigationTab.community.route:
+            return String(localized: String.LocalizationValue("community_title"), table: "Localizable")
         case MainNavigationTab.myInfo.route:
             return String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable")
         default:

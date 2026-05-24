@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.MainNavigationTab
 import com.hhp227.concafe.domain.usecase.CheckAppUpdateUseCase
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -56,7 +57,7 @@ class MainViewModel(
 
     private fun selectTab(route: String) {
         _uiState.update { state ->
-            if (state.tabs.any { it.route == route }) {
+            if (state.tabs.any { it.route == route } || route == MainNavigationTab.COMMUNITY.route) {
                 state.copy(selectedTab = route)
             } else {
                 state
