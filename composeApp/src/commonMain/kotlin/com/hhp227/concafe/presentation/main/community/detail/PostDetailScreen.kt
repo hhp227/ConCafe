@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community.detail
+package com.hhp227.concafe.presentation.main.community.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -685,7 +686,7 @@ private fun ImeSafeOutlinedTextField(
     shape: RoundedCornerShape = RoundedCornerShape(12.dp),
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     maxLines: Int = Int.MAX_VALUE,
-    textStyle: androidx.compose.ui.text.TextStyle = LocalTextStyle.current
+    textStyle: TextStyle = LocalTextStyle.current
 ) {
     var textFieldValue by remember {
         mutableStateOf(

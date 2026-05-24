@@ -16,9 +16,9 @@ import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cafe.event.CafeEventScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
-import com.hhp227.concafe.presentation.community.CommunityScreen
-import com.hhp227.concafe.presentation.community.detail.PostDetailScreen
-import com.hhp227.concafe.presentation.community.edit.PostEditScreen
+import com.hhp227.concafe.presentation.main.community.CommunityScreen
+import com.hhp227.concafe.presentation.main.community.detail.PostDetailScreen
+import com.hhp227.concafe.presentation.main.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen

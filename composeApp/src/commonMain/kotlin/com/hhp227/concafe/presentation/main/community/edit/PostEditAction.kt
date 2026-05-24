@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community.edit
+package com.hhp227.concafe.presentation.main.community.edit
 
 sealed interface PostEditAction {
     data object ClickBack : PostEditAction

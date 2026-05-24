@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community.edit
+package com.hhp227.concafe.presentation.main.community.edit
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
