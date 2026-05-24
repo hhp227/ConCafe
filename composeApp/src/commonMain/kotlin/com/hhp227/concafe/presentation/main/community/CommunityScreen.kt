@@ -86,6 +86,11 @@ private fun CommunityContentScreen(
 
     Scaffold(
         containerColor = colorFromHex("F8F5F6"),
+        contentWindowInsets = if (showTopBar) {
+            ScaffoldDefaults.contentWindowInsets
+        } else {
+            WindowInsets(0.dp)
+        },
         topBar = {
             if (showTopBar) {
                 TopAppBar(

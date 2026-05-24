@@ -22,30 +22,34 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $selectedTab) {
-                HomeView(onNavigationAction: handleHomeNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
-                    .tag("home")
-                ExploreView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable"), systemImage: "magnifyingglass") }
-                    .tag("explore")
-                roleBasedThirdTabView
-                    .tag(viewModel.uiState.thirdTab.route)
-                rankingTabView
-                    .tag("ranking")
-                CommunityView(onNavigationAction: onNavigationAction)
-                    .tag(MainNavigationTab.community.route)
-                MyInfoView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
-                    .tag("myinfo")
+            ZStack {
+                TabView(selection: tabSelection) {
+                    HomeView(onNavigationAction: handleHomeNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
+                        .tag("home")
+                    ExploreView(onNavigationAction: onNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable"), systemImage: "magnifyingglass") }
+                        .tag("explore")
+                    roleBasedThirdTabView
+                        .tag(viewModel.uiState.thirdTab.route)
+                    rankingTabView
+                        .tag("ranking")
+                    MyInfoView(onNavigationAction: onNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
+                        .tag("myinfo")
+                }
+                if selectedTab == MainNavigationTab.community.route {
+                    CommunityView(onNavigationAction: onNavigationAction)
+                        .padding(.bottom, Self.tabBarHeight)
+                }
             }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(selectedTab == MainNavigationTab.community.route ? .large : .inline)
         .compatOpaqueNavigationBarBackground()
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                if selectedTab != MainNavigationTab.community.route {
+            if selectedTab != MainNavigationTab.community.route {
+                ToolbarItem(placement: .principal) {
                     ConCafeLogo()
                 }
             }
@@ -105,6 +109,13 @@ struct MainView: View {
         }
     }
 
+    private var tabSelection: Binding<String> {
+        Binding(
+            get: { selectedTab },
+            set: { selectedTab = $0 }
+        )
+    }
+
     private func handleHomeNavigationAction(_ action: NavigationAction) {
         switch action {
         case .navigateToCommunity:
@@ -114,6 +125,8 @@ struct MainView: View {
             onNavigationAction(action)
         }
     }
+
+    private static let tabBarHeight: CGFloat = 49
 
     @ViewBuilder
     private var roleBasedThirdTabView: some View {
