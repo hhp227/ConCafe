@@ -5296,6 +5296,28 @@
         }
       }
     },
+    "cafeinfo_label_type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cafe Type"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェタイプ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페 타입"
+          }
+        }
+      }
+    },
     "cafeinfo_label_weekday" : {
       "localizations" : {
         "en" : {

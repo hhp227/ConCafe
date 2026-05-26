@@ -8,6 +8,46 @@
 import Foundation
 import Shared
 
+enum CafeTypeOption: String, CaseIterable, Identifiable {
+    case maid = "MAID"
+    case butler = "BUTLER"
+    case idol = "IDOL"
+    case devil = "DEVIL"
+    case doll = "DOLL"
+    case cosplay = "COSPLAY"
+    case namjang = "NAMJANG"
+    case yokai = "YOKAI"
+    case cat = "CAT"
+    case other = "OTHER"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .maid:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case .butler:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case .idol:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case .devil:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        case .doll:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_doll"), table: "Localizable")
+        case .cosplay:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cosplay"), table: "Localizable")
+        case .namjang:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_namjang"), table: "Localizable")
+        case .yokai:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_yokai"), table: "Localizable")
+        case .cat:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cat"), table: "Localizable")
+        case .other:
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_other"), table: "Localizable")
+        }
+    }
+}
+
 struct CafeInfoEditUiState {
     let galleryMaxCount = 3
 
@@ -17,6 +57,7 @@ struct CafeInfoEditUiState {
     var isSaving = false
     var cafeName = ""
     var cafeDescription = ""
+    var conceptType = "MAID"
     var representativeImageUrl: String?
     var galleryImages: [String] = []
     var address = ""

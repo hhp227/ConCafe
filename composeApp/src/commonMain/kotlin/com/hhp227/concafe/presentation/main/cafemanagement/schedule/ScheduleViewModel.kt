@@ -15,6 +15,7 @@ import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.event.ScheduleManagementEvent as ScheduleManagementDomainEvent
 
@@ -297,6 +298,7 @@ class ScheduleViewModel(
                 jobs[TaskKey.SUBMIT]?.cancel()
                 jobs[TaskKey.SUBMIT] = viewModelScope.launch {
                     val pendingUpdates = currentState.pendingUpdates
+                    val requestBatchId = buildScheduleRequestBatchId(managedCastId)
                     for (pendingUpdate in pendingUpdates) {
                         when (
                             val result = updateCastScheduleUseCase.invoke(
@@ -305,7 +307,8 @@ class ScheduleViewModel(
                                     date = pendingUpdate.date,
                                     status = pendingUpdate.status,
                                     startTime = pendingUpdate.startTime,
-                                    endTime = pendingUpdate.endTime
+                                    endTime = pendingUpdate.endTime,
+                                    requestBatchId = requestBatchId
                                 )
                             )
                         ) {
@@ -361,6 +364,10 @@ class ScheduleViewModel(
         private const val SCHEDULE_CONCEPT_MAID = "schedule_concept_maid"
         private const val SCHEDULE_CONCEPT_BUTLER = "schedule_concept_butler"
         private const val SCHEDULE_CONCEPT_IDOL = "schedule_concept_idol"
+
+        private fun buildScheduleRequestBatchId(castId: String): String {
+            return "${castId}_${Clock.System.now().toEpochMilliseconds()}"
+        }
     }
 }
 

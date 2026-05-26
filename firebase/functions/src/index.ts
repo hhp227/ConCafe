@@ -338,6 +338,7 @@ type CastScheduleLike = {
   startTime?: unknown;
   endTime?: unknown;
   createdBy?: unknown;
+  requestBatchId?: unknown;
 };
 
 type NoticeLike = {
@@ -1693,6 +1694,7 @@ async function syncCastScheduleCreatedOwnerNotifications(
   const cafeId = asNonBlankString(afterData.cafeId);
   const scheduleDate = asNonBlankString(afterData.date);
   const createdBy = asNonBlankString(afterData.createdBy);
+  const requestBatchId = asNonBlankString(afterData.requestBatchId);
 
   if (castId == null || cafeId == null || scheduleDate == null || createdBy == null) {
     return;
@@ -1726,14 +1728,20 @@ async function syncCastScheduleCreatedOwnerNotifications(
     ? ` ${startTime} - ${endTime}`
     : "";
   const createdAt = new Date().toISOString();
+  const notificationIdPrefix = requestBatchId == null ?
+    `cast_schedule_created_${scheduleId}` :
+    `cast_schedule_created_batch_${requestBatchId}`;
+  const notificationBody = requestBatchId == null ?
+    `${castName}님이 ${scheduleDate}${timeLabel} 스케줄을 등록했어요.` :
+    `${castName}님이 스케줄을 등록했어요.`;
 
   await processInBatches(recipientUserIds, async (ownerId) => {
     await createUserNotification(
       ownerId,
-      `cast_schedule_created_${scheduleId}_${ownerId}`,
+      `${notificationIdPrefix}_${ownerId}`,
       "CAST_SCHEDULE_CREATED",
       `${cafeName} 스케줄 등록`,
-      `${castName}님이 ${scheduleDate}${timeLabel} 스케줄을 등록했어요.`,
+      notificationBody,
       cafeId,
       createdAt
     );

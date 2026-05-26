@@ -49,6 +49,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
+                    uiState.conceptType = Self.normalizeConceptType(detail.cafe.conceptType)
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
@@ -107,6 +108,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                         cafeId: cafeId,
                         name: uiState.cafeName,
                         description: uiState.cafeDescription,
+                        conceptType: Self.normalizeConceptType(uiState.conceptType),
                         representativeImageUrl: uploadedRepresentativeImage,
                         galleryImages: uploadedGalleryImages,
                         location: GeoPoint(
@@ -131,6 +133,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.isSaving = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
+                    uiState.conceptType = Self.normalizeConceptType(detail.cafe.conceptType)
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
@@ -186,7 +189,7 @@ final class CafeInfoEditViewModel: ObservableObject {
                             )
                         ),
                         thumbnailImage: uploadedRepresentativeImage,
-                        conceptType: "MAID",
+                        conceptType: Self.normalizeConceptType(uiState.conceptType),
                         businessHours: formatBusinessHours(),
                         phoneNumber: uiState.contactNumber.trimmingCharacters(in: .whitespacesAndNewlines)
                     )
@@ -235,6 +238,8 @@ final class CafeInfoEditViewModel: ObservableObject {
             uiState.cafeName = value
         case .changeCafeDescription(let value):
             uiState.cafeDescription = value
+        case .changeConceptType(let value):
+            uiState.conceptType = Self.normalizeConceptType(value)
         case .changeAddress(let value):
             uiState.address = value
         case .changeContactNumber(let value):
@@ -313,6 +318,15 @@ final class CafeInfoEditViewModel: ObservableObject {
         } else {
             loadCafeInfo()
         }
+    }
+
+    private static func normalizeConceptType(_ value: String) -> String {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
+        return CafeTypeOption.allCases.contains { $0.rawValue == normalized } ? normalized : CafeTypeOption.maid.rawValue
     }
 
     deinit {

@@ -609,6 +609,7 @@
     <string name="cafeinfo_section_location_contact">位置・連絡先</string>
     <string name="cafeinfo_section_business_hours">営業時間</string>
     <string name="cafeinfo_label_name">カフェ名</string>
+    <string name="cafeinfo_label_type">カフェタイプ</string>
     <string name="cafeinfo_label_description">カフェ紹介</string>
     <string name="cafeinfo_label_address">地域 / 住所</string>
     <string name="cafeinfo_label_contact">連絡先</string>

@@ -304,6 +304,7 @@ final class ScheduleViewModel: ObservableObject {
 
             let managedCastId = uiState.managedCastId
             let pendingUpdates = uiState.pendingUpdates
+            let requestBatchId = "\(managedCastId)_\(Int(Date().timeIntervalSince1970 * 1000))"
             tasks[.submit]?.cancel()
             tasks[.submit] = Task { [weak self] in
                 guard let self else { return }
@@ -315,7 +316,8 @@ final class ScheduleViewModel: ObservableObject {
                                 date: pendingUpdate.date,
                                 status: pendingUpdate.status,
                                 startTime: pendingUpdate.startTime,
-                                endTime: pendingUpdate.endTime
+                                endTime: pendingUpdate.endTime,
+                                requestBatchId: requestBatchId
                             )
                         )
                         if Task.isCancelled { return }

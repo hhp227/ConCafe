@@ -662,6 +662,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         val updatedCafe = currentCafe.copy(
             name = update.name,
             desc = update.description,
+            conceptType = update.conceptType.trim().uppercase(),
             thumbnailImage = representativeImage,
             region = currentCafe.region.copy(address = update.address)
         )

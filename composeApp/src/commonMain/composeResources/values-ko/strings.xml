@@ -609,6 +609,7 @@
     <string name="cafeinfo_section_location_contact">위치 및 연락처</string>
     <string name="cafeinfo_section_business_hours">영업시간</string>
     <string name="cafeinfo_label_name">카페명</string>
+    <string name="cafeinfo_label_type">카페 타입</string>
     <string name="cafeinfo_label_description">카페 소개</string>
     <string name="cafeinfo_label_address">지역 / 주소</string>
     <string name="cafeinfo_label_contact">연락처</string>

@@ -25,6 +25,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.PhoneNumberTextField
 import com.hhp227.concafe.core.util.TimeUtils
+import com.hhp227.concafe.domain.model.ConceptType
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
@@ -220,6 +221,10 @@ private fun CafeInfoEditContent(
                                 label = stringResource(Res.string.cafeinfo_label_name),
                                 value = uiState.cafeName,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeCafeName(it)) }
+                            )
+                            CafeTypeDropdownField(
+                                selectedConceptType = uiState.conceptType,
+                                onSelect = { onAction(CafeInfoEditAction.ChangeConceptType(it)) }
                             )
                             CafeInfoTextField(
                                 label = stringResource(Res.string.cafeinfo_label_description),
@@ -684,6 +689,81 @@ private fun SmallTimeField(
                 }
             }
         )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CafeTypeDropdownField(
+    selectedConceptType: String,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedType = ConceptType.fromRaw(selectedConceptType) ?: ConceptType.MAID
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = cafeTypeLabel(selectedType),
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(Res.string.cafeinfo_label_type)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                focusedBorderColor = Color(0x33FFD1DC),
+                unfocusedBorderColor = Color(0x33FFD1DC)
+            )
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            ConceptType.entries.forEach { type ->
+                DropdownMenuItem(
+                    text = { Text(cafeTypeLabel(type)) },
+                    onClick = {
+                        onSelect(type.name)
+                        expanded = false
+                    },
+                    trailingIcon = if (type == selectedType) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = colorFromHex("EF6797")
+                            )
+                        }
+                    } else {
+                        null
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun cafeTypeLabel(type: ConceptType): String {
+    return when (type) {
+        ConceptType.MAID -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        ConceptType.BUTLER -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        ConceptType.IDOL -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        ConceptType.DEVIL -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        ConceptType.DOLL -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        ConceptType.COSPLAY -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        ConceptType.NAMJANG -> stringResource(Res.string.home_nearby_cafe_type_namjang)
+        ConceptType.YOKAI -> stringResource(Res.string.home_nearby_cafe_type_yokai)
+        ConceptType.CAT -> stringResource(Res.string.home_nearby_cafe_type_cat)
+        ConceptType.OTHER -> stringResource(Res.string.home_nearby_cafe_type_other)
     }
 }
 
