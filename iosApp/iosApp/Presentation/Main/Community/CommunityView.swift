@@ -59,26 +59,45 @@ private struct CommunityContentView: View {
                     }
                     .frame(maxWidth: .infinity)
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(Array(uiState.posts.enumerated()), id: \.element.id) { index, post in
-                                CommunityPostCard(post: post) {
-                                    onAction(.clickPost(postId: post.id))
+                    GeometryReader { geometry in
+                        let columnCount = communityGridColumnCount(for: geometry.size.width)
+
+                        ScrollView {
+                            LazyVStack(spacing: 12) {
+                                ForEach(Array(stride(from: 0, to: uiState.posts.count, by: columnCount)), id: \.self) { rowStartIndex in
+                                    let rowEndIndex = min(rowStartIndex + columnCount, uiState.posts.count)
+
+                                    HStack(spacing: 12) {
+                                        ForEach(rowStartIndex..<rowEndIndex, id: \.self) { index in
+                                            let post = uiState.posts[index]
+
+                                            CommunityPostCard(post: post) {
+                                                onAction(.clickPost(postId: post.id))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                        }
+                                        ForEach(0..<(columnCount - (rowEndIndex - rowStartIndex)), id: \.self) { _ in
+                                            Spacer()
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+
+                                    if let nativeAd = nativeAd(in: rowStartIndex..<rowEndIndex) {
+                                        CommunityNativeAdCard(nativeAdHandle: nativeAd)
+                                    }
                                 }
-                                if let nativeAd = nativeAd(for: index) {
-                                    CommunityNativeAdCard(nativeAdHandle: nativeAd)
+                                if uiState.isLoadingMore {
+                                    ProgressView()
+                                        .tint(Color(hex: "EF6797"))
+                                        .padding(.vertical, 12)
+                                } else if uiState.hasNext {
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .onAppear { onAction(.loadMore) }
                                 }
+                                Spacer().frame(height: 80)
                             }
-                            if uiState.isLoadingMore {
-                                ProgressView()
-                                    .tint(Color(hex: "EF6797"))
-                                    .padding(.vertical, 12)
-                            } else if uiState.hasNext {
-                                Color.clear
-                                    .frame(height: 1)
-                                    .onAppear { onAction(.loadMore) }
-                            }
-                            Spacer().frame(height: 80)
                         }
                     }
                 }
@@ -110,6 +129,19 @@ private struct CommunityContentView: View {
         let indexInPage = postIndex % Self.pageSize
         guard indexInPage == Self.adInsertAfterIndex else { return nil }
         return uiState.nativeAds[Self.nativeAdSlotStart + Int32(pageIndex)]
+    }
+
+    private func nativeAd(in postIndexRange: Range<Int>) -> (any NativeAdHandle)? {
+        for index in postIndexRange {
+            if let nativeAd = nativeAd(for: index) {
+                return nativeAd
+            }
+        }
+        return nil
+    }
+
+    private func communityGridColumnCount(for width: CGFloat) -> Int {
+        width >= 700 ? 2 : 1
     }
 
     private static let pageSize = 20

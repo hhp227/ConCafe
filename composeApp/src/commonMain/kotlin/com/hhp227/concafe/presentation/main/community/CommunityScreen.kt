@@ -144,44 +144,56 @@ private fun CommunityContentScreen(
                 }
             }
             else -> {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = PaddingValues(bottom = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
                 ) {
-                    uiState.posts.forEachIndexed { index, post ->
-                        item(key = post.id) {
-                            CommunityPostCard(
-                                post = post,
-                                onClick = { onAction(CommunityAction.ClickPost(post.id)) }
-                            )
-                        }
-                        val pageIndex = index / COMMUNITY_PAGE_SIZE
-                        val indexInPage = index % COMMUNITY_PAGE_SIZE
-                        val adSlot = COMMUNITY_NATIVE_AD_SLOT_START + pageIndex
-                        val nativeAd = uiState.nativeAds[adSlot]
-                        if (indexInPage == COMMUNITY_AD_INSERT_AFTER_INDEX && nativeAd != null) {
-                            item(key = "community-native-ad-$adSlot") {
-                                CommunityNativeAdCard(nativeAdHandle = nativeAd)
-                            }
-                        }
-                    }
-                    if (uiState.isLoadingMore) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = colorFromHex("EF6797"),
-                                    strokeWidth = 2.dp
+                    val columnCount = if (maxWidth >= CommunityGridTwoColumnMinWidth) 2 else 1
+                    val rows = uiState.posts.chunked(columnCount)
+
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        rows.forEachIndexed { rowIndex, rowPosts ->
+                            val rowStartIndex = rowIndex * columnCount
+
+                            item(key = rowPosts.joinToString(prefix = "community-post-row-") { it.id }) {
+                                CommunityPostRow(
+                                    posts = rowPosts,
+                                    columnCount = columnCount,
+                                    onPostClick = { postId -> onAction(CommunityAction.ClickPost(postId)) }
                                 )
                             }
+                            nativeAdForRow(
+                                rowStartIndex = rowStartIndex,
+                                rowSize = rowPosts.size,
+                                nativeAds = uiState.nativeAds
+                            )?.let { nativeAd ->
+                                item(key = "community-native-ad-$rowStartIndex") {
+                                    CommunityNativeAdCard(nativeAdHandle = nativeAd)
+                                }
+                            }
                         }
+                        if (uiState.isLoadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = colorFromHex("EF6797"),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                        }
+                        item { Spacer(Modifier.height(80.dp)) }
                     }
-                    item { Spacer(Modifier.height(80.dp)) }
                 }
             }
         }
@@ -196,6 +208,47 @@ private fun CommunityContentScreen(
             ) {
                 Text(message)
             }
+        }
+    }
+}
+
+@Composable
+private fun CommunityPostRow(
+    posts: List<CommunityPost>,
+    columnCount: Int,
+    onPostClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        posts.forEach { post ->
+            CommunityPostCard(
+                post = post,
+                modifier = Modifier.weight(1f),
+                onClick = { onPostClick(post.id) }
+            )
+        }
+        repeat(columnCount - posts.size) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+private fun nativeAdForRow(
+    rowStartIndex: Int,
+    rowSize: Int,
+    nativeAds: Map<Int, NativeAdHandle?>
+): NativeAdHandle? {
+    return (0 until rowSize).firstNotNullOfOrNull { offset ->
+        val postIndex = rowStartIndex + offset
+        val pageIndex = postIndex / COMMUNITY_PAGE_SIZE
+        val indexInPage = postIndex % COMMUNITY_PAGE_SIZE
+
+        if (indexInPage == COMMUNITY_AD_INSERT_AFTER_INDEX) {
+            nativeAds[COMMUNITY_NATIVE_AD_SLOT_START + pageIndex]
+        } else {
+            null
         }
     }
 }
@@ -218,12 +271,13 @@ private fun CommunityNativeAdCard(nativeAdHandle: NativeAdHandle?) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CommunityPostCard(
+    modifier: Modifier = Modifier,
     post: CommunityPost,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(0.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -366,3 +420,4 @@ private fun CommunityPostCard(
 private const val COMMUNITY_PAGE_SIZE = 20
 private const val COMMUNITY_AD_INSERT_AFTER_INDEX = 5
 private const val COMMUNITY_NATIVE_AD_SLOT_START = 100
+private val CommunityGridTwoColumnMinWidth = 700.dp

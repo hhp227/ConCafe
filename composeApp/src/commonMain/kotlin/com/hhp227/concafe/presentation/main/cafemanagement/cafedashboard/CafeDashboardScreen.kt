@@ -969,57 +969,58 @@ private fun ShortcutGrid(
         DashboardQrMetricCard(
             onClick = onQrMetricClick
         )
+        ShortcutCardGrid(
+            shortcuts = listOf(
+                CafeDashboardShortcut.EVENT_MANAGEMENT,
+                CafeDashboardShortcut.CAFE_SETTINGS,
+                CafeDashboardShortcut.MENU_GOODS,
+                CafeDashboardShortcut.EXTERNAL_LINKS,
+                CafeDashboardShortcut.SOCIAL_MEDIA,
+                CafeDashboardShortcut.RESERVATION
+            ),
+            onShortcutClick = onShortcutClick
+        )
+    }
+}
+
+@Composable
+private fun ShortcutCardGrid(
+    shortcuts: List<CafeDashboardShortcut>,
+    onShortcutClick: (CafeDashboardShortcut) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columnCount = dashboardMenuColumnCount(maxWidth)
+
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.EVENT_MANAGEMENT,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.EVENT_MANAGEMENT) }
-                )
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.CAFE_SETTINGS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.CAFE_SETTINGS) }
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.MENU_GOODS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.MENU_GOODS) }
-                )
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.EXTERNAL_LINKS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.EXTERNAL_LINKS) }
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.SOCIAL_MEDIA,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.SOCIAL_MEDIA) }
-                )
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.RESERVATION,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.RESERVATION) }
-                )
+            shortcuts.chunked(columnCount).forEach { rowShortcuts ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowShortcuts.forEach { shortcut ->
+                        ShortcutCard(
+                            modifier = Modifier.weight(1f),
+                            shortcut = shortcut,
+                            onClick = { onShortcutClick(shortcut) }
+                        )
+                    }
+                    repeat(columnCount - rowShortcuts.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
+}
+
+private fun dashboardMenuColumnCount(width: androidx.compose.ui.unit.Dp): Int = when {
+    width >= 1300.dp -> 5
+    width >= 1000.dp -> 4
+    width >= 700.dp -> 3
+    else -> 2
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

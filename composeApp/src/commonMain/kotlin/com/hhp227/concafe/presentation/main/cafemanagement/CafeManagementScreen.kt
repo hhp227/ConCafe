@@ -166,11 +166,11 @@ private fun CafeManagementContentScreen(
                                 subtitle = stringResource(Res.string.cafemgmt_section_my_cafe_subtitle)
                             )
                         }
-                        items(uiState.visibleOwnedCafes, key = { it.id }) { cafe ->
-                            CompactOwnedCafeCard(
-                                cafe = cafe,
-                                onClick = { onAction(CafeManagementAction.ClickCafe(cafe.id)) },
-                                onArrowClick = { onAction(CafeManagementAction.ClickCafeDetail(cafe.id)) }
+                        item {
+                            OwnedCafeGrid(
+                                cafes = uiState.visibleOwnedCafes,
+                                onCafeClick = { cafeId -> onAction(CafeManagementAction.ClickCafe(cafeId)) },
+                                onCafeDetailClick = { cafeId -> onAction(CafeManagementAction.ClickCafeDetail(cafeId)) }
                             )
                         }
                         if (uiState.hasHiddenOwnedCafes) {
@@ -233,6 +233,39 @@ private fun CafeManagementContentScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OwnedCafeGrid(
+    cafes: List<CafeManagementData.OwnedCafeSummary>,
+    onCafeClick: (String) -> Unit,
+    onCafeDetailClick: (String) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columnCount = if (maxWidth >= OwnedCafeGridTwoColumnMinWidth) 2 else 1
+        val rows = cafes.chunked(columnCount)
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            rows.forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    row.forEach { cafe ->
+                        CompactOwnedCafeCard(
+                            cafe = cafe,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onCafeClick(cafe.id) },
+                            onArrowClick = { onCafeDetailClick(cafe.id) }
+                        )
+                    }
+                    repeat(columnCount - row.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -383,12 +416,14 @@ private fun SectionHeader(
 @Composable
 private fun CompactOwnedCafeCard(
     cafe: CafeManagementData.OwnedCafeSummary,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onArrowClick: () -> Unit
 ) {
     val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
 
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         onClick = onClick
@@ -468,6 +503,8 @@ private fun CompactOwnedCafeCard(
         }
     }
 }
+
+private val OwnedCafeGridTwoColumnMinWidth = 700.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
