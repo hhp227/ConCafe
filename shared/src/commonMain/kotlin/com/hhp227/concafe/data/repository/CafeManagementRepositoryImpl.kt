@@ -22,6 +22,7 @@ class CafeManagementRepositoryImpl(
     }
 
     override suspend fun getCafeManagementData(userId: String): CafeManagementData {
+        cafeRemoteDataSource.refreshCafeManagementData(userId)
         val manageableCafes = loadManageableCafes(userId)
         val (ownedCafes, searchableCafes, pendingCafeOwnerClaims, pendingCafeRegistrationClaims) = coroutineScope {
             val ownedCafesDeferred = async { buildOwnedCafeSummaries(manageableCafes) }

@@ -20,6 +20,8 @@ final class CafeManagementViewModel: ObservableObject {
 
     private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
 
+    private let cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     @Published private(set) var uiState = CafeManagementUiState()
@@ -186,6 +188,38 @@ final class CafeManagementViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeOwnerClaimEvent() {
+        tasks[.cafeOwnerClaimEvent]?.cancel()
+        tasks[.cafeOwnerClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeOwnerClaimEventPublisher.events) {
+                    let shouldRefresh: Bool
+                    switch event {
+                    case let created as CafeOwnerClaimEvent.Created:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == created.claimId
+                        })
+                    case let approved as CafeOwnerClaimEvent.Approved:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == approved.claimId
+                        })
+                    case let rejected as CafeOwnerClaimEvent.Rejected:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == rejected.claimId
+                        })
+                    default:
+                        shouldRefresh = false
+                    }
+                    if shouldRefresh {
+                        self.refreshPendingClaims(resetMessage: false)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func startClaimPolling() {
         let pollingIntervalNanoseconds = cafeManagementClaimPollingIntervalNanoseconds
         tasks[.claimPolling]?.cancel()
@@ -258,17 +292,20 @@ final class CafeManagementViewModel: ObservableObject {
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
+        cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher = KoinInitializerKt.resolveCafeOwnerClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
+        self.cafeOwnerClaimEventPublisher = cafeOwnerClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
+        observeCafeOwnerClaimEvent()
         startClaimPolling()
     }
 
@@ -282,6 +319,7 @@ final class CafeManagementViewModel: ObservableObject {
         case session
         case cafeDetailEvent
         case cafeRegistrationClaimEvent
+        case cafeOwnerClaimEvent
         case claimPolling
     }
 
