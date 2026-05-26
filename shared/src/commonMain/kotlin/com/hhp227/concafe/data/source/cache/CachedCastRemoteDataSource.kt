@@ -128,12 +128,18 @@ class CachedCastRemoteDataSource(
             upstream.getFollowedCastsRemote(userId)
         }
 
-    override suspend fun refreshCastByLinkedUserId(userId: String): Cast? =
-        cache.cacheFirst(cacheKey(CAST_CACHE_PREFIX, "byLinkedUser", "userId" to userId)) {
-            upstream.refreshCastByLinkedUserId(userId) ?: CachedRemoteNull
-        }.let { value ->
-            if (value === CachedRemoteNull) null else value as Cast
+    override suspend fun refreshCastByLinkedUserId(userId: String): Cast? {
+        val key = cacheKey(CAST_CACHE_PREFIX, "byLinkedUser", "userId" to userId)
+        cache.remove(key)
+        val refreshed = upstream.refreshCastByLinkedUserId(userId)
+        if (refreshed == null) {
+            cache.put(key, CachedRemoteNull)
+        } else {
+            invalidateCast(refreshed.id, refreshed.cafeId)
+            cache.put(key, refreshed)
         }
+        return refreshed
+    }
 
     override suspend fun fetchCastByLinkedUserId(userId: String): Cast? =
         cache.cacheFirst(cacheKey(CAST_CACHE_PREFIX, "byLinkedUser", "userId" to userId)) {
@@ -207,6 +213,7 @@ class CachedCastRemoteDataSource(
 
     private suspend fun invalidateCast(castId: String, cafeId: String) {
         cache.remove(castDetailKey(castId))
+        cache.removeByPrefix("$CAST_CACHE_PREFIX.byLinkedUser")
         cache.removeByPrefix("$CAST_CACHE_PREFIX.search")
         cache.removeByPrefix("$CAST_CACHE_PREFIX.homePopular")
         cache.removeByPrefix("$CAST_CACHE_PREFIX.birthday")

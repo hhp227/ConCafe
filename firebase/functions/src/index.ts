@@ -650,15 +650,36 @@ async function loadAdminUserIds(): Promise<string[]> {
 }
 
 async function loadCafeOwnerUserIds(cafeId: string): Promise<string[]> {
-  const snapshot = await db()
-    .collection("users")
-    .where("affiliatedCafeId", "==", cafeId)
-    .where("role", "==", "CAFE_OWNER")
-    .get();
+  const [cafeSnapshot, affiliatedOwnerSnapshot, ownedCafeOwnerSnapshot] = await Promise.all([
+    db().collection("cafes").doc(cafeId).get(),
+    db()
+      .collection("users")
+      .where("affiliatedCafeId", "==", cafeId)
+      .where("role", "==", "CAFE_OWNER")
+      .get(),
+    db()
+      .collection("users")
+      .where("ownedCafeIds", "array-contains", cafeId)
+      .get(),
+  ]);
+  const ownerIds = new Set<string>();
 
-  return snapshot.docs
-    .map((doc) => asNonBlankString(doc.id))
-    .filter((value): value is string => value != null);
+  asStringArray(cafeSnapshot.data()?.ownerIds).forEach((userId) => ownerIds.add(userId));
+  affiliatedOwnerSnapshot.docs.forEach((doc) => {
+    const userId = asNonBlankString(doc.id);
+    if (userId != null) {
+      ownerIds.add(userId);
+    }
+  });
+  ownedCafeOwnerSnapshot.docs.forEach((doc) => {
+    const userId = asNonBlankString(doc.id);
+    const role = asNonBlankString(doc.get("role"));
+    if (userId != null && role === "CAFE_OWNER") {
+      ownerIds.add(userId);
+    }
+  });
+
+  return [...ownerIds];
 }
 
 async function hasFanAnnouncementPermission(
