@@ -25,6 +25,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
@@ -241,6 +242,13 @@ private fun DetailRoutePane(
         is Route.Schedule -> {
             ScheduleScreen(
                 castId = route.castId,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.CastManagement -> {
+            CastManagementScreen(
+                cafeId = route.cafeId,
+                cafeName = route.cafeName,
                 onNavigationAction = onNavigationAction
             )
         }
