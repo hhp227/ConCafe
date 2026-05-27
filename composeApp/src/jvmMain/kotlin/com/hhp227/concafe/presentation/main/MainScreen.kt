@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -20,6 +21,7 @@ import com.hhp227.concafe.presentation.component.ConCafeLogo
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementScreen
 import com.hhp227.concafe.presentation.main.checkin.CheckInScreen
+import com.hhp227.concafe.presentation.main.community.CommunityScreen
 import com.hhp227.concafe.presentation.main.explore.ExploreScreen
 import com.hhp227.concafe.presentation.main.fanmanagement.FanManagementScreen
 import com.hhp227.concafe.presentation.main.home.HomeScreen
@@ -101,7 +103,16 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { ConCafeLogo() },
+                title = {
+                    if (uiState.selectedTab == MainNavigationTab.COMMUNITY.route) {
+                        Text(
+                            text = stringResource(Res.string.community_title),
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        ConCafeLogo()
+                    }
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -163,13 +174,25 @@ fun MainScreen(
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {
                 key(uiState.currentUser?.id, uiState.selectedTab) {
                     when (uiState.selectedTab) {
-                        MainNavigationTab.HOME.route -> HomeScreen(onNavigate = onNavigationAction)
+                        MainNavigationTab.HOME.route -> HomeScreen(
+                            onNavigate = { action ->
+                                if (action == NavigationAction.NavigateToCommunity) {
+                                    viewModel.onAction(MainAction.SelectTab(MainNavigationTab.COMMUNITY.route))
+                                } else {
+                                    onNavigationAction(action)
+                                }
+                            }
+                        )
                         MainNavigationTab.EXPLORE.route -> ExploreScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.CHECK_IN.route -> CheckInScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.FAN_MANAGEMENT.route -> FanManagementScreen(onNavigationAction = onNavigationAction)
                         MainNavigationTab.CAFE_MANAGEMENT.route -> CafeManagementScreen(onNavigate = onNavigationAction)
                         MainNavigationTab.ADMIN_OPERATIONS.route -> AdminOperationsScreen(onNavigationAction = onNavigationAction)
                         MainNavigationTab.RANKING.route -> RankingScreen(onNavigate = onNavigationAction)
+                        MainNavigationTab.COMMUNITY.route -> CommunityScreen(
+                            onNavigationAction = onNavigationAction,
+                            showTopBar = false
+                        )
                         MainNavigationTab.MY_INFO.route -> MyInfoScreen(onNavigate = onNavigationAction)
                         else -> HomeScreen(onNavigate = onNavigationAction)
                     }
@@ -200,6 +223,7 @@ fun desktopMainTabs(uiState: MainUiState): List<Pair<MainNavigationTab, ImageVec
             MainNavigationTab.CAFE_MANAGEMENT -> Icons.Default.ManageAccounts
             MainNavigationTab.ADMIN_OPERATIONS -> Icons.Default.AdminPanelSettings
             MainNavigationTab.RANKING -> Icons.Default.EmojiEvents
+            MainNavigationTab.COMMUNITY -> Icons.Default.Article
             MainNavigationTab.MY_INFO -> Icons.Default.Person
         }
     }
@@ -214,5 +238,6 @@ private fun MainNavigationTab.label(): String = when (this) {
     MainNavigationTab.CAFE_MANAGEMENT -> stringResource(Res.string.main_tab_cafe_management)
     MainNavigationTab.ADMIN_OPERATIONS -> stringResource(Res.string.main_tab_admin_operations)
     MainNavigationTab.RANKING -> stringResource(Res.string.main_tab_ranking)
+    MainNavigationTab.COMMUNITY -> stringResource(Res.string.community_title)
     MainNavigationTab.MY_INFO -> stringResource(Res.string.main_tab_my_info)
 }

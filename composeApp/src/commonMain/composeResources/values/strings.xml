@@ -612,6 +612,7 @@
     <string name="cafeinfo_section_location_contact">Location &amp; Contact</string>
     <string name="cafeinfo_section_business_hours">Business Hours</string>
     <string name="cafeinfo_label_name">Cafe Name</string>
+    <string name="cafeinfo_label_type">Cafe Type</string>
     <string name="cafeinfo_label_description">Cafe Description</string>
     <string name="cafeinfo_label_address">Region / Address</string>
     <string name="cafeinfo_label_contact">Contact</string>

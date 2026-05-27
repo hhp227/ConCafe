@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community.detail
+package com.hhp227.concafe.presentation.main.community.detail
 
 sealed interface PostDetailAction {
     data object ClickBack : PostDetailAction

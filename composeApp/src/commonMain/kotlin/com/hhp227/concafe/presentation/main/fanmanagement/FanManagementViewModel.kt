@@ -266,6 +266,9 @@ class FanManagementViewModel(
                         isClaimSheetVisible = state.isClaimSheetVisible && claimUiState.claimSheet != null
                     )
                 }
+                if (claimUiState.statusCard?.accent == FanManagementUiState.Accent.LINKED) {
+                    loadFanManagement(presentation = LoadPresentation.BACKGROUND)
+                }
             }
         }
     }

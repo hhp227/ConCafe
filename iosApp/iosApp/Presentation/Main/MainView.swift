@@ -22,29 +22,33 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $selectedTab) {
-                HomeView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
-                    .tag("home")
-                ExploreView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable"), systemImage: "magnifyingglass") }
-                    .tag("explore")
-                roleBasedThirdTabView
-                    .tag(viewModel.uiState.thirdTab.route)
-                rankingTabView
-                    .tag("ranking")
-                MyInfoView(onNavigationAction: onNavigationAction)
-                    .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
-                    .tag("myinfo")
+            ZStack {
+                TabView(selection: tabSelection) {
+                    HomeView(onNavigationAction: handleHomeNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_home"), table: "Localizable"), systemImage: "house.fill") }
+                        .tag("home")
+                    ExploreView(onNavigationAction: onNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_explore"), table: "Localizable"), systemImage: "magnifyingglass") }
+                        .tag("explore")
+                    roleBasedThirdTabView
+                        .tag(viewModel.uiState.thirdTab.route)
+                    rankingTabView
+                        .tag("ranking")
+                    MyInfoView(onNavigationAction: onNavigationAction)
+                        .tabItem { Label(String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable"), systemImage: "person") }
+                        .tag("myinfo")
+                }
+                if selectedTab == MainNavigationTab.community.route {
+                    CommunityView(onNavigationAction: onNavigationAction)
+                        .padding(.bottom, Self.tabBarHeight)
+                }
             }
         }
         .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(selectedTab == MainNavigationTab.community.route ? .large : .inline)
         .compatOpaqueNavigationBarBackground()
+        .modifier(PrincipalLogoToolbar(isHidden: selectedTab == MainNavigationTab.community.route))
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                ConCafeLogo()
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     if selectedTab == "myinfo" && viewModel.uiState.currentUser != nil {
@@ -101,6 +105,25 @@ struct MainView: View {
         }
     }
 
+    private var tabSelection: Binding<String> {
+        Binding(
+            get: { selectedTab },
+            set: { selectedTab = $0 }
+        )
+    }
+
+    private func handleHomeNavigationAction(_ action: NavigationAction) {
+        switch action {
+        case .navigateToCommunity:
+            selectedTab = MainNavigationTab.community.route
+            viewModel.onAction(.selectTab(route: MainNavigationTab.community.route))
+        default:
+            onNavigationAction(action)
+        }
+    }
+
+    private static let tabBarHeight: CGFloat = 49
+
     @ViewBuilder
     private var roleBasedThirdTabView: some View {
         switch viewModel.uiState.thirdTab {
@@ -146,6 +169,8 @@ struct MainView: View {
             return String(localized: String.LocalizationValue("main_tab_admin_operations"), table: "Localizable")
         case MainNavigationTab.ranking.route:
             return String(localized: String.LocalizationValue("main_tab_ranking"), table: "Localizable")
+        case MainNavigationTab.community.route:
+            return String(localized: String.LocalizationValue("community_title"), table: "Localizable")
         case MainNavigationTab.myInfo.route:
             return String(localized: String.LocalizationValue("main_tab_my_info"), table: "Localizable")
         default:
@@ -163,6 +188,23 @@ struct MainView: View {
         self.onNavigationAction = onNavigationAction
 
         AppBarAppearance.configureDefaultAppearance()
+    }
+}
+
+private struct PrincipalLogoToolbar: ViewModifier {
+    let isHidden: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isHidden {
+            content
+        } else {
+            content.toolbar {
+                ToolbarItem(placement: .principal) {
+                    ConCafeLogo()
+                }
+            }
+        }
     }
 }
 

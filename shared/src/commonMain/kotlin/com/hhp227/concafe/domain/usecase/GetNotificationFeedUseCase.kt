@@ -130,6 +130,11 @@ class GetNotificationFeedUseCase(
                 id = "fan_announcement",
                 title = "팬 공지",
                 types = setOf("FAN_ANNOUNCEMENT")
+            ),
+            SectionSpec(
+                id = "community",
+                title = "커뮤니티",
+                types = setOf("COMMUNITY_COMMENT", "COMMUNITY_LIKE", "WEEKLY_COMMUNITY_HIGHLIGHT")
             )
         )
     }

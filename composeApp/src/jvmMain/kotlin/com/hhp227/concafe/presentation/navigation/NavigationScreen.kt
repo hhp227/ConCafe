@@ -16,15 +16,16 @@ import com.hhp227.concafe.presentation.cafe.CafeScreen
 import com.hhp227.concafe.presentation.cafe.event.CafeEventScreen
 import com.hhp227.concafe.presentation.cast.CastScreen
 import com.hhp227.concafe.presentation.castedit.CastEditScreen
-import com.hhp227.concafe.presentation.community.CommunityScreen
-import com.hhp227.concafe.presentation.community.detail.PostDetailScreen
-import com.hhp227.concafe.presentation.community.edit.PostEditScreen
+import com.hhp227.concafe.presentation.main.community.CommunityScreen
+import com.hhp227.concafe.presentation.main.community.detail.PostDetailScreen
+import com.hhp227.concafe.presentation.main.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard.CafeDashboardScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo.CafeInfoEditScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.externallink.ExternalLinkScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
@@ -241,6 +242,13 @@ private fun DetailRoutePane(
         is Route.Schedule -> {
             ScheduleScreen(
                 castId = route.castId,
+                onNavigationAction = onNavigationAction
+            )
+        }
+        is Route.CastManagement -> {
+            CastManagementScreen(
+                cafeId = route.cafeId,
+                cafeName = route.cafeName,
                 onNavigationAction = onNavigationAction
             )
         }

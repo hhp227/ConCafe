@@ -11,6 +11,7 @@ enum CafeInfoEditAction {
     case clickBack
     case changeCafeName(String)
     case changeCafeDescription(String)
+    case changeConceptType(String)
     case changeAddress(String)
     case changeContactNumber(String)
     case changeWeekdayOpen(String)

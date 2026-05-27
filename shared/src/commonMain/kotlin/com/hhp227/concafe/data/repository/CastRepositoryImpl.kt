@@ -179,7 +179,7 @@ class CastRepositoryImpl(
     }
 
     override suspend fun getCastByLinkedUserId(userId: String): Cast? {
-        return castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        return castRemoteDataSource.refreshCastByLinkedUserId(userId)
     }
 
     override suspend fun followCast(userId: String, castId: String) {

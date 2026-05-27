@@ -226,6 +226,7 @@ private struct CafeInfoEditContentView: View {
                     set: { onAction(.changeCafeName($0)) }
                 )
             )
+            cafeTypeDropdown
             ConCafeFormEditor(
                 label: String(localized: String.LocalizationValue("cafeinfo_label_description"), table: "Localizable"),
                 text: Binding(
@@ -234,6 +235,49 @@ private struct CafeInfoEditContentView: View {
                 )
             )
         }
+    }
+
+    private var cafeTypeDropdown: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(localized: String.LocalizationValue("cafeinfo_label_type"), table: "Localizable"))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+            Menu {
+                ForEach(CafeTypeOption.allCases) { option in
+                    Button {
+                        onAction(.changeConceptType(option.rawValue))
+                    } label: {
+                        if option.rawValue == uiState.conceptType {
+                            Label(option.title, systemImage: "checkmark")
+                        } else {
+                            Text(option.title)
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedCafeTypeTitle)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color(hex: "8A8088"))
+                }
+                .frame(height: 52)
+                .padding(.horizontal, 16)
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var selectedCafeTypeTitle: String {
+        CafeTypeOption(rawValue: uiState.conceptType)?.title ?? CafeTypeOption.maid.title
     }
 
     private var representativeImageSection: some View {

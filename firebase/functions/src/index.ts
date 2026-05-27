@@ -338,6 +338,7 @@ type CastScheduleLike = {
   startTime?: unknown;
   endTime?: unknown;
   createdBy?: unknown;
+  requestBatchId?: unknown;
 };
 
 type NoticeLike = {
@@ -650,15 +651,36 @@ async function loadAdminUserIds(): Promise<string[]> {
 }
 
 async function loadCafeOwnerUserIds(cafeId: string): Promise<string[]> {
-  const snapshot = await db()
-    .collection("users")
-    .where("affiliatedCafeId", "==", cafeId)
-    .where("role", "==", "CAFE_OWNER")
-    .get();
+  const [cafeSnapshot, affiliatedOwnerSnapshot, ownedCafeOwnerSnapshot] = await Promise.all([
+    db().collection("cafes").doc(cafeId).get(),
+    db()
+      .collection("users")
+      .where("affiliatedCafeId", "==", cafeId)
+      .where("role", "==", "CAFE_OWNER")
+      .get(),
+    db()
+      .collection("users")
+      .where("ownedCafeIds", "array-contains", cafeId)
+      .get(),
+  ]);
+  const ownerIds = new Set<string>();
 
-  return snapshot.docs
-    .map((doc) => asNonBlankString(doc.id))
-    .filter((value): value is string => value != null);
+  asStringArray(cafeSnapshot.data()?.ownerIds).forEach((userId) => ownerIds.add(userId));
+  affiliatedOwnerSnapshot.docs.forEach((doc) => {
+    const userId = asNonBlankString(doc.id);
+    if (userId != null) {
+      ownerIds.add(userId);
+    }
+  });
+  ownedCafeOwnerSnapshot.docs.forEach((doc) => {
+    const userId = asNonBlankString(doc.id);
+    const role = asNonBlankString(doc.get("role"));
+    if (userId != null && role === "CAFE_OWNER") {
+      ownerIds.add(userId);
+    }
+  });
+
+  return [...ownerIds];
 }
 
 async function hasFanAnnouncementPermission(
@@ -1672,6 +1694,7 @@ async function syncCastScheduleCreatedOwnerNotifications(
   const cafeId = asNonBlankString(afterData.cafeId);
   const scheduleDate = asNonBlankString(afterData.date);
   const createdBy = asNonBlankString(afterData.createdBy);
+  const requestBatchId = asNonBlankString(afterData.requestBatchId);
 
   if (castId == null || cafeId == null || scheduleDate == null || createdBy == null) {
     return;
@@ -1705,14 +1728,20 @@ async function syncCastScheduleCreatedOwnerNotifications(
     ? ` ${startTime} - ${endTime}`
     : "";
   const createdAt = new Date().toISOString();
+  const notificationIdPrefix = requestBatchId == null ?
+    `cast_schedule_created_${scheduleId}` :
+    `cast_schedule_created_batch_${requestBatchId}`;
+  const notificationBody = requestBatchId == null ?
+    `${castName}님이 ${scheduleDate}${timeLabel} 스케줄을 등록했어요.` :
+    `${castName}님이 스케줄을 등록했어요.`;
 
   await processInBatches(recipientUserIds, async (ownerId) => {
     await createUserNotification(
       ownerId,
-      `cast_schedule_created_${scheduleId}_${ownerId}`,
+      `${notificationIdPrefix}_${ownerId}`,
       "CAST_SCHEDULE_CREATED",
       `${cafeName} 스케줄 등록`,
-      `${castName}님이 ${scheduleDate}${timeLabel} 스케줄을 등록했어요.`,
+      notificationBody,
       cafeId,
       createdAt
     );

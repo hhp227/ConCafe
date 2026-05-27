@@ -155,50 +155,54 @@ private struct CafeDashboardContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
-                ScrollView {
-                    VStack(spacing: 18) {
-                        if uiState.cafe != nil {
-                            heroCard
-                        }
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(
-                                message: {
-                                    switch infoMessage {
-                                    case "dashboard_info_cast_list_load_failed",
-                                         "dashboard_info_select_cast_for_schedule",
-                                         "dashboard_info_external_link_input_required",
-                                         "dashboard_info_external_link_updated",
-                                         "dashboard_info_external_link_added",
-                                         "dashboard_info_external_link_deleted",
-                                         "dashboard_info_select_cast_for_delete",
-                                         "dashboard_info_cast_deleted",
-                                         "dashboard_info_cast_claim_approved",
-                                         "dashboard_info_cast_claim_rejected",
-                                         "dashboard_info_social_media_saved",
-                                         "dashboard_info_reservation_saved",
-                                    "dashboard_info_table_counts_saved":
-                                        return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
-                                    default:
-                                        return infoMessage
-                                    }
-                                }()
-                            )
-                        }
-                        if uiState.cafe != nil {
-                            metricGrid
-                            if !uiState.pendingCastClaims.isEmpty {
-                                pendingCastClaimSection
+                GeometryReader { geometry in
+                    let contentWidth = max(0, geometry.size.width - 40)
+
+                    ScrollView {
+                        VStack(spacing: 18) {
+                            if uiState.cafe != nil {
+                                heroCard
                             }
-                            shortcutGrid
-                            castManagementSection
-                            if !uiState.externalLinks.isEmpty {
-                                externalLinkSection
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(
+                                    message: {
+                                        switch infoMessage {
+                                        case "dashboard_info_cast_list_load_failed",
+                                             "dashboard_info_select_cast_for_schedule",
+                                             "dashboard_info_external_link_input_required",
+                                             "dashboard_info_external_link_updated",
+                                             "dashboard_info_external_link_added",
+                                             "dashboard_info_external_link_deleted",
+                                             "dashboard_info_select_cast_for_delete",
+                                             "dashboard_info_cast_deleted",
+                                             "dashboard_info_cast_claim_approved",
+                                             "dashboard_info_cast_claim_rejected",
+                                             "dashboard_info_social_media_saved",
+                                             "dashboard_info_reservation_saved",
+                                        "dashboard_info_table_counts_saved":
+                                            return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                                        default:
+                                            return infoMessage
+                                        }
+                                    }()
+                                )
                             }
-                            homeBannerSection
+                            if uiState.cafe != nil {
+                                metricGrid
+                                if !uiState.pendingCastClaims.isEmpty {
+                                    pendingCastClaimSection
+                                }
+                                shortcutGrid(contentWidth: contentWidth)
+                                castManagementSection
+                                if !uiState.externalLinks.isEmpty {
+                                    externalLinkSection
+                                }
+                                homeBannerSection
+                            }
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 20)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 20)
                 }
             }
         }
@@ -366,31 +370,48 @@ private struct CafeDashboardContentView: View {
         }
     }
 
-    private var shortcutGrid: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private func shortcutGrid(contentWidth: CGFloat) -> some View {
+        let shortcuts: [CafeDashboardShortcut] = [
+            .eventManagement,
+            .cafeSettings,
+            .menuGoods,
+            .externalLinks,
+            .socialMedia,
+            .reservation
+        ]
+        return VStack(alignment: .leading, spacing: 14) {
             sectionHeader(
                 title: String(localized: String.LocalizationValue("dashboard_section_menu_title"), table: "Localizable"),
                 subtitle: String(localized: String.LocalizationValue("dashboard_section_menu_subtitle"), table: "Localizable")
             )
             dashboardQrMetricCard
             LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                columns: dashboardMenuGridColumns(count: dashboardMenuColumnCount(for: contentWidth)),
                 spacing: 12
             ) {
-                ForEach([
-                    CafeDashboardShortcut.eventManagement,
-                    .cafeSettings,
-                    .menuGoods,
-                    .externalLinks,
-                    .socialMedia,
-                    .reservation
-                ]) { shortcut in
+                ForEach(shortcuts) { shortcut in
                     shortcutCard(shortcut: shortcut)
                 }
             }
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func dashboardMenuGridColumns(count: Int) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: count)
+    }
+
+    private func dashboardMenuColumnCount(for width: CGFloat) -> Int {
+        if width >= 1300 {
+            return 5
+        } else if width >= 1000 {
+            return 4
+        } else if width >= 700 {
+            return 3
+        } else {
+            return 2
+        }
     }
 
     private var dashboardQrMetricCard: some View {

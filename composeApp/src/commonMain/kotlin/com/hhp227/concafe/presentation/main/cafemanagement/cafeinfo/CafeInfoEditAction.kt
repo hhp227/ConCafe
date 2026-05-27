@@ -4,6 +4,7 @@ sealed interface CafeInfoEditAction {
     data object ClickBack : CafeInfoEditAction
     data class ChangeCafeName(val value: String) : CafeInfoEditAction
     data class ChangeCafeDescription(val value: String) : CafeInfoEditAction
+    data class ChangeConceptType(val value: String) : CafeInfoEditAction
     data class ChangeAddress(val value: String) : CafeInfoEditAction
     data class ChangeContactNumber(val value: String) : CafeInfoEditAction
     data class ChangeWeekdayOpen(val value: String) : CafeInfoEditAction

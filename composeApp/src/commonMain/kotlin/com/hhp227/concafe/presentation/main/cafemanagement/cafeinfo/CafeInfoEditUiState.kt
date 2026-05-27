@@ -10,6 +10,7 @@ data class CafeInfoEditUiState(
     val isSaving: Boolean = false,
     val cafeName: String = "",
     val cafeDescription: String = "",
+    val conceptType: String = "MAID",
     val representativeImageUrl: String? = null,
     val galleryImages: List<String> = emptyList(),
     val address: String = "",

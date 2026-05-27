@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CafeRegistrationDraft
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.ConceptType
 import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.domain.model.Region
 import com.hhp227.concafe.core.util.TimeUtils
@@ -53,6 +54,7 @@ class CafeInfoEditViewModel(
                             isLoading = false,
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
+                            conceptType = normalizeConceptType(detail.cafe.conceptType),
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
                             galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
@@ -120,6 +122,7 @@ class CafeInfoEditViewModel(
                         cafeId = targetCafeId,
                         name = currentState.cafeName,
                         description = currentState.cafeDescription,
+                        conceptType = normalizeConceptType(currentState.conceptType),
                         representativeImageUrl = uploadedRepresentativeImage,
                         galleryImages = uploadedGalleryImages,
                         location = GeoPoint(
@@ -145,6 +148,7 @@ class CafeInfoEditViewModel(
                             isSaving = false,
                             cafeName = detail.cafe.name,
                             cafeDescription = detail.cafe.desc,
+                            conceptType = normalizeConceptType(detail.cafe.conceptType),
                             representativeImageUrl = cafeImages.firstOrNull() ?: detail.cafe.thumbnailImage,
                             galleryImages = cafeImages.drop(1).take(_uiState.value.galleryMaxCount),
                             address = detail.cafe.region.address,
@@ -205,7 +209,7 @@ class CafeInfoEditViewModel(
                             )
                         ),
                         thumbnailImage = uploadedRepresentativeImage,
-                        conceptType = "MAID",
+                        conceptType = normalizeConceptType(currentState.conceptType),
                         businessHours = formatBusinessHours(currentState),
                         phoneNumber = currentState.contactNumber.trim()
                     )
@@ -250,6 +254,7 @@ class CafeInfoEditViewModel(
             }
             is CafeInfoEditAction.ChangeCafeName -> _uiState.update { it.copy(cafeName = action.value) }
             is CafeInfoEditAction.ChangeCafeDescription -> _uiState.update { it.copy(cafeDescription = action.value) }
+            is CafeInfoEditAction.ChangeConceptType -> _uiState.update { it.copy(conceptType = normalizeConceptType(action.value)) }
             is CafeInfoEditAction.ChangeAddress -> _uiState.update { it.copy(address = action.value) }
             is CafeInfoEditAction.SetPinnedLocation -> _uiState.update {
                 it.copy(
@@ -359,5 +364,9 @@ class CafeInfoEditViewModel(
         private const val MSG_PIN_LOCATION_HINT = "cafeinfo_info_pin_location_hint"
         private const val MSG_EXCEPTION_NEXT_STEP = "cafeinfo_info_exception_next_step"
         private const val MSG_IMAGE_UPLOAD_FAILED = "cafeinfo_info_image_upload_failed"
+
+        private fun normalizeConceptType(value: String): String {
+            return ConceptType.fromRaw(value)?.name ?: ConceptType.MAID.name
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community
+package com.hhp227.concafe.presentation.main.community
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

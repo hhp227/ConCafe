@@ -115,6 +115,15 @@ class CachedCafeRemoteDataSource(
             upstream.fetchPendingCafeRegistrationClaims(userId)
         }
 
+    override suspend fun refreshCafeManagementData(userId: String) {
+        upstream.refreshCafeManagementData(userId)
+        cache.remove(cacheKey(CAFE_CACHE_PREFIX, "ownedIds", "userId" to userId))
+        cache.remove(cacheKey(CAFE_CACHE_PREFIX, "pendingOwnerClaims", "userId" to userId))
+        cache.remove(cacheKey(CAFE_CACHE_PREFIX, "pendingRegistrationClaims", "userId" to userId))
+        cache.remove(cacheKey(CAFE_CACHE_PREFIX, "all"))
+        cache.removeByPrefix("$CAFE_CACHE_PREFIX.search")
+    }
+
     override suspend fun fetchCafeTodayCheckInCount(cafeId: String): Int =
         cache.cacheFirst(cacheKey(CAFE_CACHE_PREFIX, "todayCheckInCount", "cafeId" to cafeId)) {
             upstream.fetchCafeTodayCheckInCount(cafeId)

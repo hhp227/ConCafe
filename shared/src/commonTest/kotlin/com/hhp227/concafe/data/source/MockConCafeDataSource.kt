@@ -471,7 +471,9 @@ class MockConCafeDataSource : ConCafeDataSource {
         AppNotification("noti-5", "user-1", "메이드 하우스 공지", "3월 특별 이벤트가 시작되었어요!", "CAFE_NOTICE", "cafe-1", false, "2026-03-09T06:00:00Z", "4시간 전"),
         AppNotification("noti-6", "user-1", "핑크 캐슬 공지", "신규 메이드 입장 안내를 확인하세요.", "CAFE_NOTICE", "cafe-2", true, "2026-03-08T09:00:00Z", "1일 전"),
         AppNotification("noti-7", "user-1", "새로운 팔로워", "메이드팬123님이 회원님을 팔로우했어요.", "FOLLOW_UPDATE", null, false, "2026-03-09T05:00:00Z", "5시간 전"),
-        AppNotification("noti-8", "user-1", "팬클럽 가입 알림", "리본러버님이 회원님을 새로 팔로우했어요.", "FOLLOW_UPDATE", null, true, "2026-03-07T08:00:00Z", "2일 전")
+        AppNotification("noti-8", "user-1", "팬클럽 가입 알림", "리본러버님이 회원님을 새로 팔로우했어요.", "FOLLOW_UPDATE", null, true, "2026-03-07T08:00:00Z", "2일 전"),
+        AppNotification("noti-9", "user-1", "새 댓글 알림", "하루님이 회원님의 게시글에 댓글을 남겼어요.", "COMMUNITY_COMMENT", "post-1", false, "2026-03-09T04:30:00Z", "5시간 전"),
+        AppNotification("noti-10", "user-1", "새 좋아요 알림", "미카님이 회원님의 게시글을 좋아해요.", "COMMUNITY_LIKE", "post-2", true, "2026-03-07T06:30:00Z", "2일 전")
     )
 
     private val notificationSettingsByUserId = mutableMapOf<String, UserNotificationSettings>()
@@ -660,6 +662,7 @@ class MockConCafeDataSource : ConCafeDataSource {
         val updatedCafe = currentCafe.copy(
             name = update.name,
             desc = update.description,
+            conceptType = update.conceptType.trim().uppercase(),
             thumbnailImage = representativeImage,
             region = currentCafe.region.copy(address = update.address)
         )

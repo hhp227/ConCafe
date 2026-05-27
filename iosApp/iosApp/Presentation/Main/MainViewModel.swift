@@ -53,7 +53,7 @@ final class MainViewModel: ObservableObject {
     }
 
     private func selectTab(_ route: String) {
-        guard uiState.tabs.contains(where: { $0.route == route }) else { return }
+        guard uiState.tabs.contains(where: { $0.route == route }) || route == MainNavigationTab.community.route else { return }
         uiState.selectedTab = route
     }
 

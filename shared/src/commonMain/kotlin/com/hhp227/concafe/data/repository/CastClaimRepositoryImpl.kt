@@ -52,12 +52,12 @@ class CastClaimRepositoryImpl(
     }
 
     override suspend fun getAffiliatedCafeId(userId: String): String? {
-        val linkedCast = castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        val linkedCast = castRemoteDataSource.refreshCastByLinkedUserId(userId)
         return resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
     }
 
     override suspend fun getMyCastClaimStatus(userId: String): MyCastClaimStatus {
-        val linkedCast = castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        val linkedCast = castRemoteDataSource.refreshCastByLinkedUserId(userId)
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
         val affiliatedCafe = affiliatedCafeId?.let { cafeId -> cafeRemoteDataSource.fetchCafeById(cafeId) }
         val userClaims = castClaimRemoteDataSource.fetchCastClaimsForUser(userId)
@@ -87,7 +87,7 @@ class CastClaimRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<CastClaimCandidate> {
-        val linkedCast = castRemoteDataSource.fetchCastByLinkedUserId(userId)
+        val linkedCast = castRemoteDataSource.refreshCastByLinkedUserId(userId)
         val affiliatedCafeId = resolveAffiliatedCafeId(userId = userId, linkedCast = linkedCast)
 
         if (linkedCast != null || affiliatedCafeId == null) {

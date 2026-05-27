@@ -26,7 +26,7 @@ class MainNavigationPolicy {
     }
 
     fun normalizeMainTab(route: String?, user: User?): String {
-        val availableRoutes = resolveMainTabs(user).map { it.route }
+        val availableRoutes = resolveMainTabs(user).map { it.route } + MainNavigationTab.COMMUNITY.route
         val thirdTabRoutes = setOf(
             MainNavigationTab.CHECK_IN.route,
             MainNavigationTab.FAN_MANAGEMENT.route,

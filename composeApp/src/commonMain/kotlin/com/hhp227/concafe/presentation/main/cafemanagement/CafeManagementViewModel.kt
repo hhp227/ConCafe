@@ -16,8 +16,10 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeOwnerClaimEvent
 import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -27,6 +29,7 @@ class CafeManagementViewModel(
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
+    private val cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeManagementUiState())
@@ -193,6 +196,25 @@ class CafeManagementViewModel(
         }
     }
 
+    private fun observeCafeOwnerClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_OWNER_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_OWNER_CLAIM_EVENT] = viewModelScope.launch {
+            cafeOwnerClaimEventPublisher.events.collectLatest { claimEvent ->
+                val shouldRefresh = when (claimEvent) {
+                    is CafeOwnerClaimEvent.Created -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeOwnerClaimEvent.Approved -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeOwnerClaimEvent.Rejected -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                }
+                if (shouldRefresh) {
+                    refreshPendingClaims(resetMessage = false)
+                }
+            }
+        }
+    }
+
     private fun startClaimPolling() {
         jobs[TaskKey.POLL_CLAIM]?.cancel()
         jobs[TaskKey.POLL_CLAIM] = viewModelScope.launch {
@@ -250,6 +272,7 @@ class CafeManagementViewModel(
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
+        observeCafeOwnerClaimEvent()
         startClaimPolling()
     }
 
@@ -264,6 +287,7 @@ class CafeManagementViewModel(
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
+        OBSERVE_CAFE_OWNER_CLAIM_EVENT,
         POLL_CLAIM
     }
 

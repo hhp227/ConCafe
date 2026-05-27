@@ -134,13 +134,14 @@ class FirestoreCafeRemoteDataSource(
         val businessHours = formatBusinessHours(update)
         val phoneNumber = update.contactNumber.trim()
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFES}/${update.cafeId}" +
-            "?updateMask.fieldPaths=name&updateMask.fieldPaths=desc&updateMask.fieldPaths=thumbnailImage" +
+            "?updateMask.fieldPaths=name&updateMask.fieldPaths=desc&updateMask.fieldPaths=conceptType&updateMask.fieldPaths=thumbnailImage" +
             "&updateMask.fieldPaths=galleryImages&updateMask.fieldPaths=businessHours" +
             "&updateMask.fieldPaths=phoneNumber&updateMask.fieldPaths=region"
         val body = firestoreDocumentBody(
             mapOf(
                 "name" to firestoreString(update.name.trim()),
                 "desc" to firestoreString(update.description.trim()),
+                "conceptType" to firestoreString(update.conceptType.trim().uppercase()),
                 "thumbnailImage" to firestoreNullableString(representativeImage),
                 "galleryImages" to firestoreStringArray(nextImages),
                 "businessHours" to firestoreString(businessHours),
@@ -710,6 +711,7 @@ class FirestoreCastRemoteDataSource(
             ?: throw NoSuchElementException("cast detail not found")
         val documentId = "${update.castId}_${update.date}"
         val schedulePath = "${config.documentBasePath()}/${FirestorePaths.CAST_SCHEDULES}/$documentId"
+        val requestBatchId = update.requestBatchId?.trim()?.takeIf { it.isNotEmpty() }
 
         when (update.status) {
             CastScheduleStatus.WORK -> {
@@ -726,7 +728,8 @@ class FirestoreCastRemoteDataSource(
                         "startTime" to firestoreString(startTime),
                         "endTime" to firestoreString(endTime),
                         "status" to firestoreString(CastScheduleStatus.WORK.name),
-                        "createdBy" to firestoreString(currentUserId)
+                        "createdBy" to firestoreString(currentUserId),
+                        "requestBatchId" to firestoreNullableString(requestBatchId)
                     )
                 )
                 restApi.patch(schedulePath, scheduleBody, idToken)
@@ -740,7 +743,8 @@ class FirestoreCastRemoteDataSource(
                         "startTime" to firestoreNullableString(null),
                         "endTime" to firestoreNullableString(null),
                         "status" to firestoreString(update.status.name),
-                        "createdBy" to firestoreString(currentUserId)
+                        "createdBy" to firestoreString(currentUserId),
+                        "requestBatchId" to firestoreNullableString(requestBatchId)
                     )
                 )
                 restApi.patch(schedulePath, scheduleBody, idToken)

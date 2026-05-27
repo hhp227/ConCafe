@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community
+package com.hhp227.concafe.presentation.main.community
 
 import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.CommunityPost

@@ -41,55 +41,55 @@ private struct CafeManagementContentView: View {
     var body: some View {
         Group {
             if !uiState.isLoading {
-                ScrollView {
-                    VStack(spacing: 18) {
-                        heroCard
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(
-                                message: {
-                                    switch infoMessage {
-                                    case "cafemgmt_info_owner_claim_registered":
-                                        return String(localized: String.LocalizationValue("cafemgmt_info_owner_claim_registered"), table: "Localizable")
-                                    default:
-                                        return infoMessage
-                                    }
-                                }()
-                            )
-                        }
-                        if uiState.hasOwnedCafes {
-                            sectionHeader(
-                                title: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_title"), table: "Localizable"),
-                                subtitle: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_subtitle"), table: "Localizable")
-                            )
-                            VStack(spacing: 12) {
-                                ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
-                                    ownedCafeCard(cafe: cafe)
-                                }
-                            }
-                            if uiState.hasHiddenOwnedCafes {
-                                expandOwnedCafeButton
-                            }
-                            if !uiState.pendingClaims.isEmpty {
-                                sectionHeader(
-                                    title: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_title"), table: "Localizable"),
-                                    subtitle: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_subtitle"), table: "Localizable")
+                GeometryReader { geometry in
+                    let contentWidth = max(0, geometry.size.width - 40)
+
+                    ScrollView {
+                        VStack(spacing: 18) {
+                            heroCard
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(
+                                    message: {
+                                        switch infoMessage {
+                                        case "cafemgmt_info_owner_claim_registered":
+                                            return String(localized: String.LocalizationValue("cafemgmt_info_owner_claim_registered"), table: "Localizable")
+                                        default:
+                                            return infoMessage
+                                        }
+                                    }()
                                 )
-                                VStack(spacing: 12) {
-                                    ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
-                                        pendingClaimCard(claim: claim)
+                            }
+                            if uiState.hasOwnedCafes {
+                                sectionHeader(
+                                    title: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_title"), table: "Localizable"),
+                                    subtitle: String(localized: String.LocalizationValue("cafemgmt_section_my_cafe_subtitle"), table: "Localizable")
+                                )
+                                ownedCafeGrid(contentWidth: contentWidth)
+                                if uiState.hasHiddenOwnedCafes {
+                                    expandOwnedCafeButton
+                                }
+                                if !uiState.pendingClaims.isEmpty {
+                                    sectionHeader(
+                                        title: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_title"), table: "Localizable"),
+                                        subtitle: String(localized: String.LocalizationValue("cafemgmt_section_claim_status_subtitle"), table: "Localizable")
+                                    )
+                                    VStack(spacing: 12) {
+                                        ForEach(Array(uiState.pendingClaims.enumerated()), id: \.offset) { _, claim in
+                                            pendingClaimCard(claim: claim)
+                                        }
                                     }
                                 }
+                                searchCafeSection
+                                addCafeCard
+                            } else {
+                                searchCafeSection
+                                emptyStateCard
                             }
-                            searchCafeSection
-                            addCafeCard
-                        } else {
-                            searchCafeSection
-                            emptyStateCard
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                        .padding(.bottom, 32)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 32)
                 }
             } else {
                 VStack {
@@ -177,8 +177,32 @@ private struct CafeManagementContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func ownedCafeCard(cafe: CafeManagementData.OwnedCafeSummary) -> some View {
-        let dynamicHeight = min(max(UIScreen.main.bounds.width / 1.8, 220), 500)
+    private func ownedCafeGrid(contentWidth: CGFloat) -> some View {
+        let columnCount = ownedCafeGridColumnCount(for: contentWidth)
+        let cardWidth = ownedCafeGridCardWidth(contentWidth: contentWidth, columnCount: columnCount)
+
+        return LazyVGrid(columns: ownedCafeGridColumns(count: columnCount), spacing: 12) {
+            ForEach(uiState.visibleOwnedCafes, id: \.id) { cafe in
+                ownedCafeCard(cafe: cafe, cardWidth: cardWidth)
+            }
+        }
+    }
+
+    private func ownedCafeGridColumns(count: Int) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: count)
+    }
+
+    private func ownedCafeGridColumnCount(for contentWidth: CGFloat) -> Int {
+        contentWidth >= 700 ? 2 : 1
+    }
+
+    private func ownedCafeGridCardWidth(contentWidth: CGFloat, columnCount: Int) -> CGFloat {
+        let spacing = CGFloat(columnCount - 1) * 12
+        return max(0, (contentWidth - spacing) / CGFloat(columnCount))
+    }
+
+    private func ownedCafeCard(cafe: CafeManagementData.OwnedCafeSummary, cardWidth: CGFloat) -> some View {
+        let dynamicHeight = min(max(cardWidth / 1.8, 220), 500)
         return ZStack(alignment: .trailing) {
             Button {
                 onAction(.clickCafe(cafe.id))

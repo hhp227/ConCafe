@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.community.detail
+package com.hhp227.concafe.presentation.main.community.detail
 
 import com.hhp227.concafe.domain.model.Comment
 import com.hhp227.concafe.domain.model.CommunityPost
