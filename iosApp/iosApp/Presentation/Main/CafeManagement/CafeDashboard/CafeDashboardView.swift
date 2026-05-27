@@ -379,8 +379,7 @@ private struct CafeDashboardContentView: View {
             .socialMedia,
             .reservation
         ]
-
-        VStack(alignment: .leading, spacing: 14) {
+        return VStack(alignment: .leading, spacing: 14) {
             sectionHeader(
                 title: String(localized: String.LocalizationValue("dashboard_section_menu_title"), table: "Localizable"),
                 subtitle: String(localized: String.LocalizationValue("dashboard_section_menu_subtitle"), table: "Localizable")
