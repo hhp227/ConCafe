@@ -676,7 +676,7 @@ private struct CafeDashboardContentView: View {
                     Text("게스트 캐스트 관리")
                         .font(.headline.weight(.bold))
                         .foregroundStyle(Color(hex: "8C7A83"))
-                    Text("소속 캐스트가 아닌 하루 출연자를 관리합니다")
+                    Text("소속 캐스트가 아닌 출연자를 관리합니다")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1346,7 +1346,7 @@ private struct GuestScheduleInputSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("게스트 출연 추가")
                     .font(.headline.weight(.bold))
-                Text("소속 캐스트가 아닌 하루 출연자를 카페 스케줄에 표시합니다.")
+                Text("소속 캐스트가 아닌 출연자를 카페 스케줄에 표시합니다.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 ConCafeFormField(

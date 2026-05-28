@@ -643,7 +643,7 @@ private fun GuestScheduleSheetContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("게스트 출연 추가", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("소속 캐스트가 아닌 하루 출연자를 카페 스케줄에 표시합니다.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("소속 캐스트가 아닌 출연자를 카페 스케줄에 표시합니다.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         ConCafeFormField(
             label = "게스트 이름",
             value = uiState.guestName,
@@ -1618,7 +1618,7 @@ private fun GuestManagementSection(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text("게스트 캐스트 관리", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colorFromHex("8C7A83"))
-                    Text("소속 캐스트가 아닌 하루 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = colorFromHex("7E7480"))
+                    Text("소속 캐스트가 아닌 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = colorFromHex("7E7480"))
                 }
                 Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("FCE6EF"), onClick = onAddClick) {
                     Row(
