@@ -48,8 +48,7 @@ struct ScheduleView: View {
             )
             .background(TransparentPresentationBackground())
         }
-        .onReceive(viewModel.event) { event in
-            switch event {
+        .fullScreenCover(isPresented: Binding(
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             case .showMessage(let message):
@@ -256,53 +255,15 @@ private struct ScheduleEditModal: View {
     }
 }
 
-private struct TopRoundedRectangle: Shape {
-    let radius: CGFloat
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
-            roundedRect: rect,
-            byRoundingCorners: [.topLeft, .topRight],
-            cornerRadii: CGSize(width: radius, height: radius)
-        )
-        return Path(path.cgPath)
-    }
-}
-
-private struct TransparentPresentationBackground: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.backgroundColor = .clear
-        DispatchQueue.main.async {
-            clearPresentationBackground(from: view)
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            clearPresentationBackground(from: uiView)
-        }
-    }
-
-    private func clearPresentationBackground(from view: UIView) {
-        var currentView: UIView? = view
-        while let parent = currentView?.superview, !(parent is UIWindow) {
-            parent.backgroundColor = .clear
-            currentView = parent
-        }
-    }
-}
-
 private struct TimePickerField: View {
     let title: String
-    
+
     let value: String
-    
+
     let isEnabled: Bool
-    
+
     let options: [String]
-    
+
     let onSelect: (String) -> Void
 
     var body: some View {
@@ -649,7 +610,6 @@ private struct ScheduleContentView: View {
             }
         }
     }
-}
 
 struct ScheduleView_Previews: PreviewProvider {
     static var previews: some View {

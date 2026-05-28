@@ -60,16 +60,15 @@ class GetScheduleManagementDataUseCase(
                         toDate = scheduleEnd.toString()
                     )
                 }
-
-                Triple(
-                    detailDeferred.await(),
-                    schedulesDeferred.await().associateBy { schedule -> schedule.date },
-                    scheduleStatusesDeferred.await()
+                ScheduleLoadResult(
+                    detail = detailDeferred.await(),
+                    scheduleByDate = schedulesDeferred.await().associateBy { schedule -> schedule.date },
+                    scheduleStatusByDate = scheduleStatusesDeferred.await()
                 )
             }
-            val detail = loaded.first
-            val scheduleByDate = loaded.second
-            val scheduleStatusByDate = loaded.third
+            val detail = loaded.detail
+            val scheduleByDate = loaded.scheduleByDate
+            val scheduleStatusByDate = loaded.scheduleStatusByDate
             val scheduleDates = (0..29).map { weekStart.plus(DatePeriod(days = it)) }
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
 
@@ -123,6 +122,12 @@ class GetScheduleManagementDataUseCase(
         }
     }
 }
+
+private data class ScheduleLoadResult(
+    val detail: com.hhp227.concafe.domain.model.CastDetail,
+    val scheduleByDate: Map<String, com.hhp227.concafe.domain.model.CastSchedule>,
+    val scheduleStatusByDate: Map<String, CastScheduleStatus>
+)
 
 private fun resolveStatusLabel(
     date: LocalDate,

@@ -9,6 +9,8 @@ import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 
 interface CastRemoteDataSource {
     suspend fun searchCastsRemote(
@@ -53,6 +55,12 @@ interface CastRemoteDataSource {
     suspend fun getWorkingCastSchedulesByCafeAndDate(cafeId: String, date: String): Map<String, CastSchedule>
 
     suspend fun updateCastScheduleRemote(update: CastScheduleUpdate): CastSchedule?
+
+    suspend fun fetchGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule>
+
+    suspend fun upsertGuestCastScheduleRemote(input: GuestCastScheduleUpsert): GuestCastSchedule
+
+    suspend fun deleteGuestCastScheduleRemote(scheduleId: String)
 
     suspend fun refreshFollowedCastIds(userId: String)
 

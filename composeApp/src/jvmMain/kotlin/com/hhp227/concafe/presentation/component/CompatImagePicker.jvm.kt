@@ -22,11 +22,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.skia.Image as SkiaImage
 import java.awt.GraphicsEnvironment
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
+import java.util.Base64
 import javax.imageio.ImageIO
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -131,24 +136,57 @@ private suspend fun decodeImageBitmap(
     JvmImageBitmapMemoryCache.get(cacheKey)?.let { return it }
     return withContext(Dispatchers.IO) {
         runCatching {
-            val original: BufferedImage? = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                val connection = URL(imageUrl).openConnection().apply {
-                    connectTimeout = 10_000
-                    readTimeout = 15_000
-                }
-                connection.getInputStream().use { ImageIO.read(it) }
-            } else {
-                File(imageUrl).inputStream().use { ImageIO.read(it) }
-            }
-            val source = original ?: return@runCatching null
-            val maxPx = displaySize.maxPx()
-            val scaled = if (maxPx != null) scaleDown(source, maxPx) else source
-            val bitmap = scaled.toComposeImageBitmap()
+            val bytes = readImageBytes(imageUrl) ?: return@runCatching null
+            val bitmap = decodeWithImageIo(bytes, displaySize) ?: decodeWithSkia(bytes) ?: return@runCatching null
 
             JvmImageBitmapMemoryCache.put(cacheKey, bitmap)
             bitmap
         }.getOrNull()
     }
+}
+
+private fun readImageBytes(imageUrl: String): ByteArray? {
+    return when {
+        imageUrl.startsWith("data:image/", ignoreCase = true) -> {
+            val base64 = imageUrl.substringAfter(',', missingDelimiterValue = "")
+            if (base64.isBlank()) null else Base64.getDecoder().decode(base64)
+        }
+        imageUrl.startsWith("http://", ignoreCase = true) || imageUrl.startsWith("https://", ignoreCase = true) -> {
+            openHttpConnection(imageUrl).inputStream.use { it.readBytes() }
+        }
+        imageUrl.startsWith("file:", ignoreCase = true) -> {
+            File(URI(imageUrl)).readBytes()
+        }
+        else -> {
+            File(imageUrl).readBytes()
+        }
+    }
+}
+
+private fun openHttpConnection(imageUrl: String): HttpURLConnection {
+    return (URL(imageUrl).openConnection() as HttpURLConnection).apply {
+        instanceFollowRedirects = true
+        connectTimeout = 10_000
+        readTimeout = 20_000
+        setRequestProperty("User-Agent", "ConCafe Desktop")
+        setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
+    }
+}
+
+private fun decodeWithSkia(bytes: ByteArray): ImageBitmap? {
+    return runCatching {
+        SkiaImage.makeFromEncoded(bytes).toComposeImageBitmap()
+    }.getOrNull()
+}
+
+private fun decodeWithImageIo(
+    bytes: ByteArray,
+    displaySize: ImageDisplaySize
+): ImageBitmap? {
+    val original = ByteArrayInputStream(bytes).use { ImageIO.read(it) } ?: return null
+    val maxPx = displaySize.maxPx()
+    val scaled = if (maxPx != null) scaleDown(original, maxPx) else original
+    return scaled.toComposeImageBitmap()
 }
 
 /** Returns null for FULL (no downscaling). */

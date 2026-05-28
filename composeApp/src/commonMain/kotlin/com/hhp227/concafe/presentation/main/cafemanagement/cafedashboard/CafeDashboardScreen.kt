@@ -27,9 +27,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.GuestCastSchedule
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
@@ -58,6 +60,7 @@ fun CafeDashboardScreen(
     val socialMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val reservationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val tableCountSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val guestSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val qrSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isQrSheetVisible by rememberSaveable { mutableStateOf(false) }
 
@@ -158,6 +161,18 @@ fun CafeDashboardScreen(
             sheetState = tableCountSheetState
         ) {
             TableCountSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (uiState.isGuestSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissGuestSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = guestSheetState
+        ) {
+            GuestScheduleSheetContent(
                 uiState = uiState,
                 onAction = viewModel::onAction
             )
@@ -301,6 +316,13 @@ private fun CafeDashboardContentScreen(
                                 onLoadMoreClick = {
                                     onAction(CafeDashboardAction.ClickLoadMoreCasts)
                                 }
+                            )
+                        }
+                        item {
+                            GuestManagementSection(
+                                guestSchedules = uiState.guestSchedules,
+                                onAddClick = { onAction(CafeDashboardAction.ClickAddGuest) },
+                                onDeleteClick = { onAction(CafeDashboardAction.DeleteGuest(it)) }
                             )
                         }
                         if (uiState.externalLinks.isNotEmpty()) {
@@ -603,6 +625,124 @@ private fun TableCountSheetContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun GuestScheduleSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .keyboardBottomInsets(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("게스트 출연 추가", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("소속 캐스트가 아닌 하루 출연자를 카페 스케줄에 표시합니다.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ConCafeFormField(
+            label = "게스트 이름",
+            value = uiState.guestName,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestName(it)) },
+            placeholder = "이름"
+        )
+        ConCafeFormField(
+            label = "프로필 이미지 URL",
+            value = uiState.guestProfileImage,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestProfileImage(it)) },
+            placeholder = "https://"
+        )
+        DashboardDropdownField(
+            label = "출연일",
+            value = uiState.guestDate,
+            options = uiState.guestDateOptions,
+            onSelect = { onAction(CafeDashboardAction.ChangeGuestDate(it)) }
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DashboardDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "시작",
+                value = uiState.guestStartTime,
+                options = uiState.guestTimeOptions,
+                onSelect = { onAction(CafeDashboardAction.ChangeGuestStartTime(it)) }
+            )
+            DashboardDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "종료",
+                value = uiState.guestEndTime,
+                options = uiState.guestTimeOptions,
+                onSelect = { onAction(CafeDashboardAction.ChangeGuestEndTime(it)) }
+            )
+        }
+        ConCafeFormField(
+            label = "메모",
+            value = uiState.guestMemo,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestMemo(it)) },
+            placeholder = "이벤트명, 참고사항"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitGuest) },
+            enabled = uiState.isGuestSubmitEnabled && !uiState.isGuestSaving,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorFromHex("FFD1DC"),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isGuestSaving) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Text("게스트 출연 추가", fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissGuestSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardDropdownField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                shape = RoundedCornerShape(16.dp)
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -1456,6 +1596,111 @@ private fun LoadMoreCastItem(
             color = colorFromHex("8F848F"),
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+@Composable
+private fun GuestManagementSection(
+    guestSchedules: List<GuestCastSchedule>,
+    onAddClick: () -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+    ) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("게스트 캐스트 관리", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colorFromHex("8C7A83"))
+                    Text("소속 캐스트가 아닌 하루 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = colorFromHex("7E7480"))
+                }
+                Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("FCE6EF"), onClick = onAddClick) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
+                        Text("추가", style = MaterialTheme.typography.labelMedium, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (guestSchedules.isEmpty()) {
+                Text(
+                    "등록된 게스트 캐스트가 없습니다",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(colorFromHex("F8F2F6"))
+                        .padding(14.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    guestSchedules.forEach { guest ->
+                        GuestManagementRow(guest = guest, onDeleteClick = { onDeleteClick(guest.id) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuestManagementRow(
+    guest: GuestCastSchedule,
+    onDeleteClick: () -> Unit
+) {
+    val profileImage = guest.profileImage
+    val memo = guest.memo
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = colorFromHex("FFF8FB"),
+        border = BorderStroke(1.dp, colorFromHex("F0D9E4"))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.size(46.dp).clip(CircleShape).background(colorFromHex("FFE2EC")),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!profileImage.isNullOrBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = profileImage,
+                        modifier = Modifier.matchParentSize(),
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.THUMBNAIL
+                    )
+                } else {
+                    Text(guest.name.take(2), fontWeight = FontWeight.Bold, color = colorFromHex("8B3154"))
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(guest.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("FCE6EF")) {
+                        Text("게스트", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text("${guest.date} · ${guest.startTime} - ${guest.endTime}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (!memo.isNullOrBlank()) {
+                    Text(memo, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(Icons.Default.Delete, contentDescription = null, tint = colorFromHex("C15A7B"))
+            }
+        }
     }
 }
 

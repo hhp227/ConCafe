@@ -504,6 +504,12 @@
         color: #99624a;
       }
 
+      .cast-name-chip.guest {
+        border-color: #f0c4df;
+        background: #fff0f7;
+        color: #b33b78;
+      }
+
       .month-grid {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -889,6 +895,7 @@
           selectedCafeId: "",
           casts: [],
           schedules: [],
+          guestSchedules: [],
         };
 
         const el = {
@@ -1099,6 +1106,21 @@
             addedByDay[dayIndex][castName] = true;
             castNamesByDay[dayIndex].push(castName);
           });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed < weekStart || parsed > weekEnd) {
+                return;
+              }
+              const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedByDay[dayIndex][guestName]) {
+                return;
+              }
+              addedByDay[dayIndex][guestName] = true;
+              castNamesByDay[dayIndex].push({ name: guestName, guest: true });
+            });
+          }
 
           const headerDates = labels.map(function (_, index) {
             const date = new Date(weekStart);
@@ -1119,9 +1141,12 @@
               return '<td><span class="cast-name-chip">-</span></td>';
             }
             const chips = castNames
-              .sort(function (a, b) { return a.localeCompare(b, "ko"); })
-              .map(function (name) {
-                return '<span class="cast-name-chip work">' + escapeHtml(name) + "</span>";
+              .sort(function (a, b) {
+                return String(a.name || a).localeCompare(String(b.name || b), "ko");
+              })
+              .map(function (item) {
+                const name = item.name || item;
+                return '<span class="cast-name-chip ' + (item.guest ? "guest" : "work") + '">' + escapeHtml(name) + "</span>";
               })
               .join("");
             return '<td><div class="cast-name-row">' + chips + "</div></td>";
@@ -1180,6 +1205,27 @@
             addedNamesByDate[schedule.date][castName] = true;
             workCastNamesByDate[schedule.date].push(castName);
           });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              if (!schedule.date) {
+                return;
+              }
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+                return;
+              }
+              if (!workCastNamesByDate[schedule.date]) {
+                workCastNamesByDate[schedule.date] = [];
+                addedNamesByDate[schedule.date] = {};
+              }
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedNamesByDate[schedule.date][guestName]) {
+                return;
+              }
+              addedNamesByDate[schedule.date][guestName] = true;
+              workCastNamesByDate[schedule.date].push({ name: guestName, guest: true });
+            });
+          }
           el.cafeScheduleTitle.textContent = (month + 1) + "월 " + selectedCafe.name + " 스케줄";
 
           let cells = "";
@@ -1191,10 +1237,11 @@
             const current = new Date(year, month, day);
             const key = formatDateKey(current);
             const castNames = (workCastNamesByDate[key] || []).slice().sort(function (a, b) {
-              return a.localeCompare(b, "ko");
+              return String(a.name || a).localeCompare(String(b.name || b), "ko");
             });
             const lines = castNames.length
-              ? castNames.map(function (name) {
+              ? castNames.map(function (item) {
+                  const name = item.name || item;
                   return '<div class="month-cast-line">' + escapeHtml(name) + "</div>";
                 }).join("")
               : '<div class="month-cast-line">-</div>';
@@ -1265,7 +1312,7 @@
         function getVisibleScheduleCount() {
           const weekStart = startOfCurrentWeek();
           const weekEnd = endOfCurrentWeek();
-          return state.schedules.filter(function (schedule) {
+          const castScheduleCount = state.schedules.filter(function (schedule) {
             if (el.castFilter.value && schedule.castId !== el.castFilter.value) {
               return false;
             }
@@ -1278,6 +1325,20 @@
             }
             return parsed >= weekStart && parsed <= weekEnd;
           }).length;
+          if (el.castFilter.value) {
+            return castScheduleCount;
+          }
+          const guestScheduleCount = state.guestSchedules.filter(function (schedule) {
+            if (!schedule.date) {
+              return false;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return false;
+            }
+            return parsed >= weekStart && parsed <= weekEnd;
+          }).length;
+          return castScheduleCount + guestScheduleCount;
         }
 
         function updateSummary() {
@@ -1412,6 +1473,7 @@
           if (!state.selectedCafeId) {
             state.casts = [];
             state.schedules = [];
+            state.guestSchedules = [];
             renderCastFilter();
             renderCafeScheduleSection();
             renderCastList();
@@ -1425,6 +1487,7 @@
             const results = await Promise.all([
               castRef.get(),
               db.collection("castSchedules").where("cafeId", "==", state.selectedCafeId).get(),
+              db.collection("guestCastSchedules").where("cafeId", "==", state.selectedCafeId).get(),
             ]);
 
             const castNameById = {};
@@ -1457,6 +1520,19 @@
                 createdAt: data.createdAt || "",
                 updatedAt: data.updatedAt || "",
                 createdVia: data.createdVia || "",
+              };
+            });
+            state.guestSchedules = results[2].docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                cafeId: data.cafeId || "",
+                date: data.date || "",
+                name: data.name || "게스트",
+                profileImage: data.profileImage || "",
+                startTime: data.startTime || "",
+                endTime: data.endTime || "",
+                memo: data.memo || "",
               };
             });
 

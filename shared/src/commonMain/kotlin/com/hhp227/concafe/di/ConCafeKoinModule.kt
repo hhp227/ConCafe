@@ -167,6 +167,9 @@ val useCaseModule = module {
     factory { GetNotificationSettingsUseCase(get(), get()) }
     factory { GetRankingFeedUseCase(get()) }
     factory { GetScheduleManagementDataUseCase(get(), get()) }
+    factory { GetGuestCastSchedulesUseCase(get(), get()) }
+    factory { UpsertGuestCastScheduleUseCase(get(), get()) }
+    factory { DeleteGuestCastScheduleUseCase(get(), get()) }
     factory { GetCafeScheduleCalendarUseCase(get()) }
     factory { GetSignUpCafeListUseCase(get()) }
     factory { GetPendingCastClaimsForCafeUseCase(get(), get()) }

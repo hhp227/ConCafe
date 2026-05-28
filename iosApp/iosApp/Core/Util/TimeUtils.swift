@@ -111,12 +111,23 @@ final class TimeUtils {
         String(format: "%02d:%02d", hour, minute)
     }
 
+    static func formatIsoDate(_ date: Date) -> String {
+        let formatter = makeIsoDateFormatter()
+        return formatter.string(from: date)
+    }
+
     static func currentIsoDate() -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar.current
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
+        formatIsoDate(Date())
+    }
+
+    static func isoDateOptionsFromToday(days: Int) -> [String] {
+        guard days > 0 else { return [] }
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: Date())
+
+        return (0..<days)
+            .compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
+            .map(formatIsoDate)
     }
 
     static func isCurrentDateVisitedAt(_ visitedAt: String) -> Bool {
@@ -125,10 +136,7 @@ final class TimeUtils {
         formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
 
         if let parsed = formatter.date(from: visitedAt) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.calendar = Calendar.current
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let dateFormatter = makeIsoDateFormatter()
             return dateFormatter.string(from: parsed) == today
         } else {
             return visitedAt.hasPrefix(today)
@@ -285,5 +293,13 @@ final class TimeUtils {
         let month = text[monthRange]
         let day = text[dayRange]
         return "\(year)-\(month)-\(day)"
+    }
+
+    private static func makeIsoDateFormatter() -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
     }
 }

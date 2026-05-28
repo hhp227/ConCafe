@@ -20,6 +20,7 @@ object FirestorePaths {
     const val STAMPS = "stamps"
     const val CAST_DIRECTORY = "castDirectory"
     const val CAST_SCHEDULES = "castSchedules"
+    const val GUEST_CAST_SCHEDULES = "guestCastSchedules"
     const val INQUIRIES = "inquiries"
     const val RANKINGS = "rankings"
     const val USER_BLOCKS = "userBlocks"
