@@ -109,7 +109,7 @@ struct CafeView: View {
                         var transaction = Transaction()
                         transaction.disablesAnimations = true
                         withTransaction(transaction) {
-                            proxy.scrollTo(targetId, anchor: .bottom)
+                            proxy.scrollTo(targetId, anchor: cafeCastPagingRestoreAnchor)
                         }
                     }
                 }
@@ -149,6 +149,8 @@ struct CafeView: View {
         _viewModel = StateObject(wrappedValue: CafeViewModel(cafeId: cafeId))
     }
 }
+
+private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
