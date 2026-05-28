@@ -48,7 +48,8 @@ struct ScheduleView: View {
             )
             .background(TransparentPresentationBackground())
         }
-        .fullScreenCover(isPresented: Binding(
+        .onReceive(viewModel.event) { event in
+            switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             case .showMessage(let message):
@@ -255,6 +256,44 @@ private struct ScheduleEditModal: View {
     }
 }
 
+private struct TopRoundedRectangle: Shape {
+    let radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: [.topLeft, .topRight],
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
+    }
+}
+
+private struct TransparentPresentationBackground: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        DispatchQueue.main.async {
+            clearPresentationBackground(from: view)
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            clearPresentationBackground(from: uiView)
+        }
+    }
+
+    private func clearPresentationBackground(from view: UIView) {
+        var currentView: UIView? = view
+        while let parent = currentView?.superview, !(parent is UIWindow) {
+            parent.backgroundColor = .clear
+            currentView = parent
+        }
+    }
+}
+
 private struct TimePickerField: View {
     let title: String
 
@@ -302,15 +341,15 @@ private struct TimePickerField: View {
 
 private struct ScheduleContentView: View {
     let uiState: ScheduleUiState
-
+    
     let onAction: (ScheduleAction) -> Void
-
+    
     @State private var scheduleScrollTargetId: String?
-
+    
     @State private var scheduleScrollRequestToken = 0
-
+    
     @State private var isScheduleScrollRequestPending = false
-
+    
     var body: some View {
         ZStack {
             Group {
@@ -365,7 +404,7 @@ private struct ScheduleContentView: View {
             }
         }
     }
-
+    
     private var castSummaryCard: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
@@ -411,7 +450,7 @@ private struct ScheduleContentView: View {
         )
         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
-
+    
     private var weekSelectorSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -465,13 +504,13 @@ private struct ScheduleContentView: View {
             }
         }
     }
-
+    
     private func requestScheduleScroll(to dayId: String) {
         scheduleScrollTargetId = dayId
         isScheduleScrollRequestPending = true
         scheduleScrollRequestToken += 1
     }
-
+    
     private func resolveScheduleScrollTargetId(for dayId: String) -> String? {
         if uiState.schedules.contains(where: { $0.id == dayId }) {
             return dayId
@@ -481,16 +520,16 @@ private struct ScheduleContentView: View {
             normalizedScheduleDateId(schedule.id) == normalizedDayId
         }?.id
     }
-
+    
     private func normalizedScheduleDateId(_ value: String) -> String {
         String(value.prefix(10))
     }
-
+    
     private var schedulePeriodTabs: some View {
         HStack(spacing: 4) {
             ForEach(SchedulePeriod.allCases, id: \.self) { period in
                 let isSelected = uiState.schedulePeriod == period
-
+                
                 Button {
                     onAction(.selectPeriod(period))
                 } label: {
@@ -509,35 +548,35 @@ private struct ScheduleContentView: View {
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .secondarySystemGroupedBackground }).opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
-
+    
     private func infoBanner(message: String) -> some View {
         HStack(spacing: 10) {
             Text(
                 {
                     switch message {
                     case "schedule_info_saved_work",
-                         "schedule_info_saved_off",
-                         "schedule_info_saved_vacation",
-                         "schedule_info_load_failed",
-                         "schedule_info_more_next_step",
-                         "schedule_info_calendar_next_step",
-                         "schedule_error_end_after_start",
-                         "schedule_info_edit_applied",
-                         "schedule_info_no_changes",
-                         "schedule_error_start_required",
-                         "schedule_error_end_required",
-                         "schedule_error_save_failed",
-                         "schedule_error_week_save_failed",
-                         "schedule_event_week_saved":
+                        "schedule_info_saved_off",
+                        "schedule_info_saved_vacation",
+                        "schedule_info_load_failed",
+                        "schedule_info_more_next_step",
+                        "schedule_info_calendar_next_step",
+                        "schedule_error_end_after_start",
+                        "schedule_info_edit_applied",
+                        "schedule_info_no_changes",
+                        "schedule_error_start_required",
+                        "schedule_error_end_required",
+                        "schedule_error_save_failed",
+                        "schedule_error_week_save_failed",
+                        "schedule_event_week_saved":
                         return String(localized: String.LocalizationValue(message), table: "Localizable")
                     default:
                         return message
                     }
                 }()
             )
-                .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            .font(.caption)
+            .foregroundStyle(Color(hex: "6B5320"))
+            .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("schedule_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
@@ -553,7 +592,7 @@ private struct ScheduleContentView: View {
                 .stroke(Color(hex: "F1D88D"), lineWidth: 1)
         )
     }
-
+    
     private var scheduleListSection: some View {
         VStack(spacing: 12) {
             ForEach(uiState.schedules, id: \.id) { schedule in
@@ -610,6 +649,7 @@ private struct ScheduleContentView: View {
             }
         }
     }
+}
 
 struct ScheduleView_Previews: PreviewProvider {
     static var previews: some View {
