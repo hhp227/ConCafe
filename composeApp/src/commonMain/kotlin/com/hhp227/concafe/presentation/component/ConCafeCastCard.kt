@@ -112,6 +112,7 @@ fun ConCafeCastCard(
             )
             Text(
                 text = subtitle,
+                modifier = if (subtitleMaxLines == 2) Modifier.heightIn(min = 32.dp) else Modifier,
                 maxLines = subtitleMaxLines,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

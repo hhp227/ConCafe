@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
@@ -169,7 +170,7 @@ class CafeViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
-                            casts = if (append) state.casts + result.data.items else result.data.items,
+                            casts = (if (append) state.casts + result.data.items else result.data.items).sortedByTodayWorkFirst(),
                             castsNextCursor = result.data.nextCursor,
                             canLoadMoreCasts = result.data.hasNext,
                             isLoadingMoreCasts = false
@@ -454,4 +455,11 @@ private fun com.hhp227.concafe.domain.model.CafeEventManagementItem.statusPriori
         normalized.contains("종료") || normalized.contains("ended") || normalized.contains("end") -> 2
         else -> 3
     }
+}
+
+private fun List<CafeDetailCast>.sortedByTodayWorkFirst(): List<CafeDetailCast> {
+    return sortedWith(
+        compareByDescending<CafeDetailCast> { it.todaySchedule != null }
+            .thenBy { it.cast.name }
+    )
 }

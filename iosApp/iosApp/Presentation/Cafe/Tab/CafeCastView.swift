@@ -45,8 +45,10 @@ struct CafeCastView: View {
                         .onAppear {
                             loadMoreIfNeeded(appearedIndex: index)
                         }
+                        .frame(minHeight: cafeCastCardMinimumHeight)
                     }
                 }
+                .animation(.snappy(duration: 0.25), value: maids.map { $0.cast.id })
                 pagingFooter
             }
             .background(
@@ -141,3 +143,4 @@ private let cafeCastGridMaximumColumnCount = 4
 private let cafeCastGridHorizontalPadding: CGFloat = 24
 private let cafeCastGridItemSpacing: CGFloat = 12
 private let cafeCastGridMinimumCellWidth: CGFloat = 180
+private let cafeCastCardMinimumHeight: CGFloat = 198

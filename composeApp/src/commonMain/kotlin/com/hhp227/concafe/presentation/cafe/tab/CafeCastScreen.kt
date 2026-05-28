@@ -8,6 +8,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,18 +46,20 @@ fun CafeCastScreen(
                 rows.forEach { rowItems ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         rowItems.forEach { castItem ->
-                            val attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(castItem.todaySchedule)
+                            key(castItem.cast.id) {
+                                val attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(castItem.todaySchedule)
 
-                            ConCafeCastCard(
-                                name = castItem.cast.name,
-                                subtitle = castItem.cast.desc,
-                                imageUrl = castItem.cast.profileImage,
-                                attendanceStatusText = cafeCastAttendanceStatusText(attendanceStatus),
-                                isWorking = castItem.isWorking,
-                                subtitleMaxLines = 2,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onAction(CafeAction.ClickMaid(castItem.cast.id)) }
-                            )
+                                ConCafeCastCard(
+                                    name = castItem.cast.name,
+                                    subtitle = castItem.cast.desc,
+                                    imageUrl = castItem.cast.profileImage,
+                                    attendanceStatusText = cafeCastAttendanceStatusText(attendanceStatus),
+                                    isWorking = castItem.isWorking,
+                                    subtitleMaxLines = 2,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onAction(CafeAction.ClickMaid(castItem.cast.id)) }
+                                )
+                            }
                         }
                         repeat(gridColumnCount - rowItems.size) {
                             Spacer(modifier = Modifier.weight(1f))
