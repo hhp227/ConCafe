@@ -237,7 +237,7 @@ private struct CafeContentView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 20)
                 } header: {
-                    tabHeader
+                    tabHeader(topSafeArea: topSafeArea)
                 }
             }
         } else if uiState.isLoading {
@@ -390,7 +390,7 @@ private struct CafeContentView: View {
         }
     }
 
-    private var tabHeader: some View {
+    private func tabHeader(topSafeArea: CGFloat) -> some View {
         ScrollableConCafeTabBar(
             labels: CafeUiState.TabType.allCases.map { tab in
                 if tab == .info {
@@ -414,6 +414,7 @@ private struct CafeContentView: View {
             }
         )
         .frame(maxWidth: .infinity)
+        .padding(.top, topSafeArea)
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .zIndex(1)
     }
