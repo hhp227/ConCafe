@@ -391,14 +391,26 @@
       }
 
       .schedule-view-field {
-        min-width: 150px;
+        min-width: 0;
       }
 
       .schedule-controls {
-        display: flex;
-        align-items: flex-end;
+        display: grid;
         gap: 8px;
-        flex-wrap: wrap;
+        width: min(100%, 420px);
+      }
+
+      .schedule-download-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .schedule-download-actions .button {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 10px;
+        text-align: center;
       }
 
       .schedule-block {
@@ -810,12 +822,14 @@
                     <option value="month">1달</option>
                   </select>
                 </div>
-                <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
-                  스케줄 이미지 다운로드
-                </button>
-                <button class="button button-secondary" id="downloadScheduleExcelButton" type="button">
-                  스케줄 엑셀 다운로드
-                </button>
+                <div class="schedule-download-actions">
+                  <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
+                    스케줄 이미지 다운로드
+                  </button>
+                  <button class="button button-secondary" id="downloadScheduleExcelButton" type="button">
+                    스케줄 엑셀 다운로드
+                  </button>
+                </div>
               </div>
             </div>
             <div class="schedule-block" id="cafeScheduleCapture">
@@ -956,6 +970,13 @@
               return value.trim();
             })
             .join(" ");
+        }
+
+        function normalizeText(value, fallback) {
+          if (typeof value === "string" && value.trim()) {
+            return value.trim();
+          }
+          return fallback;
         }
 
         function getSelectedCafe() {
@@ -1673,57 +1694,69 @@
           setStatus("선택한 카페의 실제 캐스트와 스케줄을 불러오는 중입니다.");
           try {
             const castRef = db.collection("cafes").doc(state.selectedCafeId).collection("casts");
-            const results = await Promise.all([
+            const results = await Promise.allSettled([
               castRef.get(),
               db.collection("castSchedules").where("cafeId", "==", state.selectedCafeId).get(),
               db.collection("guestCastSchedules").where("cafeId", "==", state.selectedCafeId).get(),
             ]);
 
+            if (results[0].status === "rejected" || results[1].status === "rejected") {
+              console.error("Failed to load selected cafe data", {
+                casts: results[0].status === "rejected" ? results[0].reason : null,
+                schedules: results[1].status === "rejected" ? results[1].reason : null,
+              });
+              throw new Error("Required cafe schedule data failed to load.");
+            }
+            if (results[2].status === "rejected") {
+              console.error("Failed to load guest cast schedules", results[2].reason);
+            }
+
             const castNameById = {};
-            state.casts = results[0].docs.map(function (doc) {
+            state.casts = results[0].value.docs.map(function (doc) {
               const data = doc.data() || {};
-              castNameById[doc.id] = data.name || "이름 없음";
+              const castName = normalizeText(data.name, "이름 없음");
+              castNameById[doc.id] = castName;
               return {
                 id: doc.id,
-                name: data.name || "이름 없음",
-                conceptRole: data.conceptRole || "역할 없음",
-                birthday: data.birthday || "",
-                linkedUserId: data.linkedUserId || "",
-                createdVia: data.createdVia || "",
+                name: castName,
+                conceptRole: normalizeText(data.conceptRole, "역할 없음"),
+                birthday: normalizeText(data.birthday, ""),
+                linkedUserId: normalizeText(data.linkedUserId, ""),
+                createdVia: normalizeText(data.createdVia, ""),
               };
             }).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
             });
 
-            state.schedules = results[1].docs.map(function (doc) {
+            state.schedules = results[1].value.docs.map(function (doc) {
               const data = doc.data() || {};
               return {
                 id: doc.id,
-                castId: data.castId || "",
-                castName: castNameById[data.castId] || data.castName || "이름 없음",
-                date: data.date || "",
-                status: data.status || "OFF",
-                startTime: data.startTime || "",
-                endTime: data.endTime || "",
-                memo: data.memo || "",
+                castId: normalizeText(data.castId, ""),
+                castName: castNameById[data.castId] || normalizeText(data.castName, "이름 없음"),
+                date: normalizeText(data.date, ""),
+                status: normalizeText(data.status, "OFF"),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
                 createdAt: data.createdAt || "",
                 updatedAt: data.updatedAt || "",
-                createdVia: data.createdVia || "",
+                createdVia: normalizeText(data.createdVia, ""),
               };
             });
-            state.guestSchedules = results[2].docs.map(function (doc) {
+            state.guestSchedules = results[2].status === "fulfilled" ? results[2].value.docs.map(function (doc) {
               const data = doc.data() || {};
               return {
                 id: doc.id,
-                cafeId: data.cafeId || "",
-                date: data.date || "",
-                name: data.name || "게스트",
-                profileImage: data.profileImage || "",
-                startTime: data.startTime || "",
-                endTime: data.endTime || "",
-                memo: data.memo || "",
+                cafeId: normalizeText(data.cafeId, ""),
+                date: normalizeText(data.date, ""),
+                name: normalizeText(data.name, "게스트"),
+                profileImage: normalizeText(data.profileImage, ""),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
               };
-            });
+            }) : [];
 
             renderCastFilter();
             renderCafeScheduleSection();
