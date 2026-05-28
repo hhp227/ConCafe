@@ -23,6 +23,8 @@ struct CafeCastView: View {
 
     @State private var lastPagingTriggerCount: Int = 0
 
+    @State private var pagingCooldownUntil: Date?
+
     var body: some View {
         if maids.isEmpty {
             emptyCard(String(localized: String.LocalizationValue("cafe_cast_empty"), table: "Localizable"))
@@ -45,8 +47,10 @@ struct CafeCastView: View {
                         .onAppear {
                             loadMoreIfNeeded(appearedIndex: index)
                         }
+                        .frame(minHeight: cafeCastCardMinimumHeight)
                     }
                 }
+                .animation(.snappy(duration: 0.25), value: maids.map { $0.cast.id })
                 pagingFooter
             }
             .background(
@@ -60,6 +64,10 @@ struct CafeCastView: View {
                         }
                 }
             )
+            .onChange(of: maids.count) { _ in
+                guard lastPagingTriggerCount != 0 else { return }
+                pagingCooldownUntil = Date().addingTimeInterval(cafeCastPagingCooldownSeconds)
+            }
         }
     }
 
@@ -84,6 +92,9 @@ struct CafeCastView: View {
 
     private func loadMoreIfNeeded(appearedIndex: Int) {
         guard canLoadMore, !isLoadingMore else { return }
+        if let pagingCooldownUntil, Date() < pagingCooldownUntil {
+            return
+        }
         guard appearedIndex >= maids.count - 1 else { return }
         guard lastPagingTriggerCount != maids.count else { return }
         lastPagingTriggerCount = maids.count
@@ -141,3 +152,5 @@ private let cafeCastGridMaximumColumnCount = 4
 private let cafeCastGridHorizontalPadding: CGFloat = 24
 private let cafeCastGridItemSpacing: CGFloat = 12
 private let cafeCastGridMinimumCellWidth: CGFloat = 180
+private let cafeCastCardMinimumHeight: CGFloat = 198
+private let cafeCastPagingCooldownSeconds: TimeInterval = 0.8

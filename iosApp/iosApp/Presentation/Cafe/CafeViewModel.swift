@@ -179,7 +179,8 @@ final class CafeViewModel: ObservableObject {
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeDetailCast> {
-                    uiState.casts = append ? (uiState.casts + page.items as! [CafeDetailCast]) : page.items as! [CafeDetailCast]
+                    let items = page.items as! [CafeDetailCast]
+                    uiState.casts = (append ? uiState.casts + items : items).sortedByTodayWorkFirst()
                     uiState.castsNextCursor = page.nextCursor
                     uiState.canLoadMoreCasts = page.hasNext
                     uiState.isLoadingMoreCasts = false
@@ -515,5 +516,22 @@ private extension CafeEventManagementItem {
             return 2
         }
         return 3
+    }
+}
+
+private extension Array where Element == CafeDetailCast {
+    func sortedByTodayWorkFirst() -> [CafeDetailCast] {
+        sorted { lhs, rhs in
+            let lhsHasTodaySchedule = lhs.todaySchedule != nil
+            let rhsHasTodaySchedule = rhs.todaySchedule != nil
+
+            if lhsHasTodaySchedule != rhsHasTodaySchedule {
+                return lhsHasTodaySchedule
+            }
+            if lhs.cast.name != rhs.cast.name {
+                return lhs.cast.name < rhs.cast.name
+            }
+            return lhs.cast.id < rhs.cast.id
+        }
     }
 }

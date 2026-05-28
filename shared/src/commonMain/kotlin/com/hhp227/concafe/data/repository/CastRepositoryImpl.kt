@@ -14,6 +14,8 @@ import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.repository.CastRepository
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -155,6 +157,18 @@ class CastRepositoryImpl(
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
         return castRemoteDataSource.updateCastScheduleRemote(update)
+    }
+
+    override suspend fun getGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> {
+        return castRemoteDataSource.fetchGuestCastSchedules(cafeId, fromDate, toDate)
+    }
+
+    override suspend fun upsertGuestCastSchedule(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        return castRemoteDataSource.upsertGuestCastScheduleRemote(input)
+    }
+
+    override suspend fun deleteGuestCastSchedule(scheduleId: String) {
+        castRemoteDataSource.deleteGuestCastScheduleRemote(scheduleId)
     }
 
     private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {

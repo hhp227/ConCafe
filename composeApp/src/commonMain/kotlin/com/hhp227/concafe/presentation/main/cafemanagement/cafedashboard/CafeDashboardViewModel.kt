@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.core.util.TimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,8 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
@@ -30,23 +33,29 @@ import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.domain.usecase.GetGuestCastSchedulesUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
+import com.hhp227.concafe.domain.usecase.UpsertGuestCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.DeleteGuestCastScheduleUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
     private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
     private val getCafeDashboardUseCase: GetCafeDashboardUseCase,
     private val getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase,
+    private val getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase,
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
     private val cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase,
     private val updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase,
     private val updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase,
     private val updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase,
+    private val upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase,
+    private val deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
@@ -81,6 +90,7 @@ class CafeDashboardViewModel(
                     }
                     refreshCastPreviews(resetMessage = false)
                     refreshClaimData(resetMessage = false)
+                    refreshGuestSchedules(resetMessage = false)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
@@ -88,6 +98,7 @@ class CafeDashboardViewModel(
                             cafe = null,
                             castPreviews = emptyList(),
                             pendingCastClaims = emptyList(),
+                            guestSchedules = emptyList(),
                             nextCastCursor = null,
                             hasMoreCasts = false,
                             isLoading = false,
@@ -431,6 +442,113 @@ class CafeDashboardViewModel(
                 totalTableCountInput = (tableCounts?.total ?: 0).toString(),
                 infoMessage = null
             )
+        }
+    }
+
+    private fun refreshGuestSchedules(resetMessage: Boolean = true) {
+        if (resetMessage) {
+            _uiState.update { it.copy(infoMessage = null) }
+        }
+        val dateOptions = TimeUtils.isoDateOptionsFromToday(GUEST_SCHEDULE_DISPLAY_DAYS)
+        val startDate = dateOptions.firstOrNull() ?: return
+        val endDate = dateOptions.lastOrNull() ?: return
+        _uiState.update { state ->
+            state.copy(
+                guestDateOptions = dateOptions,
+                guestDate = state.guestDate.ifBlank { dateOptions.firstOrNull().orEmpty() }
+            )
+        }
+        viewModelScope.launch {
+            when (val result = getGuestCastSchedulesUseCase.invoke(cafeId, startDate, endDate)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(guestSchedules = result.data.sortedByGuestSchedule())
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = result.error.toString()) }
+                }
+            }
+        }
+    }
+
+    private fun clickAddGuest() {
+        val dateOptions = _uiState.value.guestDateOptions.ifEmpty {
+            TimeUtils.isoDateOptionsFromToday(GUEST_SCHEDULE_DISPLAY_DAYS)
+        }
+        _uiState.update {
+            it.copy(
+                isGuestSheetVisible = true,
+                guestName = "",
+                guestProfileImage = "",
+                guestDate = dateOptions.firstOrNull().orEmpty(),
+                guestStartTime = CafeDashboardUiState.DEFAULT_GUEST_START_TIME,
+                guestEndTime = CafeDashboardUiState.DEFAULT_GUEST_END_TIME,
+                guestMemo = "",
+                guestDateOptions = dateOptions,
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun dismissGuestSheet() {
+        _uiState.update { it.copy(isGuestSheetVisible = false) }
+    }
+
+    private fun submitGuest() {
+        val state = _uiState.value
+        if (!state.isGuestSubmitEnabled) {
+            _uiState.update { it.copy(infoMessage = "게스트 이름과 출연 시간을 확인해 주세요") }
+            return
+        }
+        _uiState.update { it.copy(isGuestSaving = true, infoMessage = null) }
+        viewModelScope.launch {
+            when (
+                val result = upsertGuestCastScheduleUseCase.invoke(
+                    GuestCastScheduleUpsert(
+                        cafeId = cafeId,
+                        date = state.guestDate,
+                        name = state.guestName,
+                        profileImage = state.guestProfileImage.takeIf { it.isNotBlank() },
+                        startTime = state.guestStartTime,
+                        endTime = state.guestEndTime,
+                        memo = state.guestMemo.takeIf { it.isNotBlank() }
+                    )
+                )
+            ) {
+                is AppResult.Success -> {
+                    _uiState.update { current ->
+                        current.copy(
+                            isGuestSaving = false,
+                            isGuestSheetVisible = false,
+                            guestSchedules = (current.guestSchedules.filterNot { it.id == result.data.id } + result.data)
+                                .sortedByGuestSchedule(),
+                            infoMessage = "게스트 출연을 추가했습니다"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isGuestSaving = false, infoMessage = "게스트 출연 저장에 실패했습니다") }
+                }
+            }
+        }
+    }
+
+    private fun deleteGuest(scheduleId: String) {
+        viewModelScope.launch {
+            when (deleteGuestCastScheduleUseCase.invoke(scheduleId)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            guestSchedules = it.guestSchedules.filterNot { guest -> guest.id == scheduleId },
+                            infoMessage = "게스트 출연을 삭제했습니다"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = "게스트 출연 삭제에 실패했습니다") }
+                }
+            }
         }
     }
 
@@ -798,6 +916,16 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ChangeReservationUrl -> changeReservationUrl(action.value)
             CafeDashboardAction.SubmitReservation -> submitReservation()
             CafeDashboardAction.ClickTableCountMetric -> clickTableCountMetric()
+            CafeDashboardAction.ClickAddGuest -> clickAddGuest()
+            CafeDashboardAction.DismissGuestSheet -> dismissGuestSheet()
+            is CafeDashboardAction.ChangeGuestName -> _uiState.update { it.copy(guestName = action.value) }
+            is CafeDashboardAction.ChangeGuestProfileImage -> _uiState.update { it.copy(guestProfileImage = action.value) }
+            is CafeDashboardAction.ChangeGuestDate -> _uiState.update { it.copy(guestDate = action.value) }
+            is CafeDashboardAction.ChangeGuestStartTime -> _uiState.update { it.copy(guestStartTime = action.value) }
+            is CafeDashboardAction.ChangeGuestEndTime -> _uiState.update { it.copy(guestEndTime = action.value) }
+            is CafeDashboardAction.ChangeGuestMemo -> _uiState.update { it.copy(guestMemo = action.value) }
+            CafeDashboardAction.SubmitGuest -> submitGuest()
+            is CafeDashboardAction.DeleteGuest -> deleteGuest(action.scheduleId)
             CafeDashboardAction.DismissTableCountSheet -> dismissTableCountSheet()
             is CafeDashboardAction.ChangeCurrentTableCount -> changeCurrentTableCount(action.value)
             is CafeDashboardAction.ChangeTotalTableCount -> changeTotalTableCount(action.value)
@@ -834,3 +962,8 @@ class CafeDashboardViewModel(
 
 private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
 private const val PAGINATION_DELAY_MILLIS = 1_000L
+private const val GUEST_SCHEDULE_DISPLAY_DAYS = 30
+
+private fun List<GuestCastSchedule>.sortedByGuestSchedule(): List<GuestCastSchedule> {
+    return sortedWith(compareBy({ it.date }, { it.startTime }, { it.name }))
+}

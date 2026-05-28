@@ -20,6 +20,8 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase
 
+    private let getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase
+
     private let approveCastClaimUseCase: ApproveCastClaimUseCase
 
     private let rejectCastClaimUseCase: RejectCastClaimUseCase
@@ -31,6 +33,10 @@ final class CafeDashboardViewModel: ObservableObject {
     private let updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase
 
     private let updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase
+
+    private let upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase
+
+    private let deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase
 
     private let deleteCastUseCase: DeleteCastUseCase
 
@@ -72,10 +78,12 @@ final class CafeDashboardViewModel: ObservableObject {
                     uiState.isLoading = false
                     refreshCastPreviews(resetMessage: false)
                     refreshClaimData(resetMessage: false)
+                    refreshGuestSchedules(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
                     uiState.cafe = nil
                     uiState.castPreviews = []
                     uiState.pendingCastClaims = []
+                    uiState.guestSchedules = []
                     uiState.nextCastCursor = nil
                     uiState.hasMoreCasts = false
                     uiState.isLoading = false
@@ -85,6 +93,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 uiState.cafe = nil
                 uiState.castPreviews = []
                 uiState.pendingCastClaims = []
+                uiState.guestSchedules = []
                 uiState.nextCastCursor = nil
                 uiState.hasMoreCasts = false
                 uiState.isLoading = false
@@ -329,6 +338,107 @@ final class CafeDashboardViewModel: ObservableObject {
     private func clickTableCountMetric() {
         uiState.isTableCountSheetVisible = true
         uiState.infoMessage = nil
+    }
+
+    private func refreshGuestSchedules(resetMessage: Bool = true) {
+        if resetMessage {
+            uiState.infoMessage = nil
+        }
+        let dateOptions = TimeUtils.isoDateOptionsFromToday(days: Self.guestScheduleDisplayDays)
+        uiState.guestDateOptions = dateOptions
+        if uiState.guestDate.isEmpty {
+            uiState.guestDate = dateOptions.first ?? ""
+        }
+        guard let endDate = dateOptions.last, let startDate = dateOptions.first else { return }
+        Task {
+            do {
+                let result = try await getGuestCastSchedulesUseCase.invoke(
+                    cafeId: cafeId,
+                    fromDate: startDate,
+                    toDate: endDate
+                )
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let schedules = success.data as? [GuestCastSchedule] {
+                    uiState.guestSchedules = schedules.sortedByGuestSchedule()
+                } else if let failure = result as? AppResultFailure {
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func clickAddGuest() {
+        if uiState.guestDateOptions.isEmpty {
+            uiState.guestDateOptions = TimeUtils.isoDateOptionsFromToday(days: Self.guestScheduleDisplayDays)
+        }
+        uiState.isGuestSheetVisible = true
+        uiState.guestName = ""
+        uiState.guestProfileImage = ""
+        uiState.guestDate = uiState.guestDateOptions.first ?? ""
+        uiState.guestStartTime = CafeDashboardUiState.defaultGuestStartTime
+        uiState.guestEndTime = CafeDashboardUiState.defaultGuestEndTime
+        uiState.guestMemo = ""
+        uiState.infoMessage = nil
+    }
+
+    private func dismissGuestSheet() {
+        uiState.isGuestSheetVisible = false
+    }
+
+    private func submitGuest() {
+        guard uiState.isGuestSubmitEnabled else {
+            uiState.infoMessage = "게스트 이름과 출연 시간을 확인해 주세요"
+            return
+        }
+        let input = GuestCastScheduleUpsert(
+            id: nil,
+            cafeId: cafeId,
+            date: uiState.guestDate,
+            name: uiState.guestName,
+            profileImage: uiState.guestProfileImage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : uiState.guestProfileImage,
+            startTime: uiState.guestStartTime,
+            endTime: uiState.guestEndTime,
+            memo: uiState.guestMemo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : uiState.guestMemo
+        )
+        uiState.isGuestSaving = true
+        Task {
+            do {
+                let result = try await upsertGuestCastScheduleUseCase.invoke(input: input)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let guest = success.data as? GuestCastSchedule {
+                    uiState.isGuestSaving = false
+                    uiState.isGuestSheetVisible = false
+                    uiState.guestSchedules.removeAll { $0.id == guest.id }
+                    uiState.guestSchedules.append(guest)
+                    uiState.guestSchedules = uiState.guestSchedules.sortedByGuestSchedule()
+                    uiState.infoMessage = "게스트 출연을 추가했습니다"
+                } else {
+                    uiState.isGuestSaving = false
+                    uiState.infoMessage = "게스트 출연 저장에 실패했습니다"
+                }
+            } catch {
+                uiState.isGuestSaving = false
+                uiState.infoMessage = "게스트 출연 저장에 실패했습니다"
+            }
+        }
+    }
+
+    private func deleteGuest(_ id: String) {
+        Task {
+            do {
+                let result = try await deleteGuestCastScheduleUseCase.invoke(scheduleId: id)
+                if result is AppResultSuccess<KotlinUnit> || result is AppResultSuccess<AnyObject> {
+                    uiState.guestSchedules.removeAll { $0.id == id }
+                    uiState.infoMessage = "게스트 출연을 삭제했습니다"
+                } else {
+                    uiState.infoMessage = "게스트 출연 삭제에 실패했습니다"
+                }
+            } catch {
+                uiState.infoMessage = "게스트 출연 삭제에 실패했습니다"
+            }
+        }
     }
 
     private func dismissTableCountSheet() {
@@ -828,6 +938,26 @@ final class CafeDashboardViewModel: ObservableObject {
             submitReservation()
         case .clickTableCountMetric:
             clickTableCountMetric()
+        case .clickAddGuest:
+            clickAddGuest()
+        case .dismissGuestSheet:
+            dismissGuestSheet()
+        case .changeGuestName(let value):
+            uiState.guestName = value
+        case .changeGuestProfileImage(let value):
+            uiState.guestProfileImage = value
+        case .changeGuestDate(let value):
+            uiState.guestDate = value
+        case .changeGuestStartTime(let value):
+            uiState.guestStartTime = value
+        case .changeGuestEndTime(let value):
+            uiState.guestEndTime = value
+        case .changeGuestMemo(let value):
+            uiState.guestMemo = value
+        case .submitGuest:
+            submitGuest()
+        case .deleteGuest(let id):
+            deleteGuest(id)
         case .dismissTableCountSheet:
             dismissTableCountSheet()
         case .changeCurrentTableCount(let value):
@@ -844,12 +974,15 @@ final class CafeDashboardViewModel: ObservableObject {
         getCafeCastPageUseCase: GetCafeCastPageUseCase = KoinInitializerKt.resolveGetCafeCastPageUseCase(),
         getCafeDashboardUseCase: GetCafeDashboardUseCase = KoinInitializerKt.resolveGetCafeDashboardUseCase(),
         getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase = KoinInitializerKt.resolveGetPendingCastClaimsForCafeUseCase(),
+        getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase = KoinInitializerKt.resolveGetGuestCastSchedulesUseCase(),
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
         cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase = KoinInitializerKt.resolveCafeExternalLinkLocalUseCase(),
         updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase = KoinInitializerKt.resolveUpdateCafeSocialMediaUseCase(),
         updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase = KoinInitializerKt.resolveUpdateCafeReservationUrlUseCase(),
         updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase = KoinInitializerKt.resolveUpdateCafeTableCountsUseCase(),
+        upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase = KoinInitializerKt.resolveUpsertGuestCastScheduleUseCase(),
+        deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase = KoinInitializerKt.resolveDeleteGuestCastScheduleUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
@@ -861,12 +994,15 @@ final class CafeDashboardViewModel: ObservableObject {
         self.getCafeCastPageUseCase = getCafeCastPageUseCase
         self.getCafeDashboardUseCase = getCafeDashboardUseCase
         self.getPendingCastClaimsForCafeUseCase = getPendingCastClaimsForCafeUseCase
+        self.getGuestCastSchedulesUseCase = getGuestCastSchedulesUseCase
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
         self.cafeExternalLinkLocalUseCase = cafeExternalLinkLocalUseCase
         self.updateCafeSocialMediaUseCase = updateCafeSocialMediaUseCase
         self.updateCafeReservationUrlUseCase = updateCafeReservationUrlUseCase
         self.updateCafeTableCountsUseCase = updateCafeTableCountsUseCase
+        self.upsertGuestCastScheduleUseCase = upsertGuestCastScheduleUseCase
+        self.deleteGuestCastScheduleUseCase = deleteGuestCastScheduleUseCase
         self.deleteCastUseCase = deleteCastUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
@@ -900,4 +1036,15 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let castClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
+    private static let guestScheduleDisplayDays = 30
+}
+
+private extension Array where Element == GuestCastSchedule {
+    func sortedByGuestSchedule() -> [GuestCastSchedule] {
+        sorted {
+            if $0.date != $1.date { return $0.date < $1.date }
+            if $0.startTime != $1.startTime { return $0.startTime < $1.startTime }
+            return $0.name < $1.name
+        }
+    }
 }

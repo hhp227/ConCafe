@@ -163,16 +163,6 @@ fun ScheduleScreen(
         onAction = viewModel::onAction
     )
 }
-
-@Composable
-private fun statusLabel(status: CastScheduleStatus): String {
-    return when (status) {
-        CastScheduleStatus.WORK -> stringResource(Res.string.schedule_status_work)
-        CastScheduleStatus.OFF -> stringResource(Res.string.schedule_status_off)
-        CastScheduleStatus.VACATION -> stringResource(Res.string.schedule_status_vacation)
-    }
-}
-
 @Composable
 private fun ScheduleEditSheet(
     uiState: ScheduleUiState,
@@ -465,8 +455,7 @@ private fun ScheduleContentScreen(
                         schedules = uiState.schedules,
                         scrollRequest = scheduleScrollRequest,
                         onAction = onAction
-                    )
-                }
+                    )                }
             } else {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
@@ -871,6 +860,15 @@ private fun resolveScheduleDurationLabel(value: String): String {
             stringResource(Res.string.schedule_duration_hours_minutes, hours, minutes)
         }
         else -> value
+    }
+}
+
+@Composable
+private fun statusLabel(status: CastScheduleStatus): String {
+    return when (status) {
+        CastScheduleStatus.WORK -> stringResource(Res.string.schedule_status_work)
+        CastScheduleStatus.OFF -> stringResource(Res.string.schedule_status_off)
+        CastScheduleStatus.VACATION -> stringResource(Res.string.schedule_status_vacation)
     }
 }
 

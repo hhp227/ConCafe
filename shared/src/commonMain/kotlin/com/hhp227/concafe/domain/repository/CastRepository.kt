@@ -45,6 +45,12 @@ interface CastRepository {
 
     suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule?
 
+    suspend fun getGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule>
+
+    suspend fun upsertGuestCastSchedule(input: GuestCastScheduleUpsert): GuestCastSchedule
+
+    suspend fun deleteGuestCastSchedule(scheduleId: String)
+
     suspend fun isFollowing(userId: String, castId: String): Boolean
 
     suspend fun getFollowedCastIds(userId: String): List<String>

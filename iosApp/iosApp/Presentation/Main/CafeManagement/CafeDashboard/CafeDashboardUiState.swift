@@ -12,6 +12,7 @@ struct CafeDashboardUiState {
     var cafe: CafeDashboardData?
     var castPreviews: [CafeCastPreview] = []
     var pendingCastClaims: [PendingCastClaimPreview] = []
+    var guestSchedules: [GuestCastSchedule] = []
     var externalLinks: [CafeDashboardExternalLink] = []
     var selectedCastId: String?
     var nextCastCursor: String?
@@ -32,6 +33,16 @@ struct CafeDashboardUiState {
     var isReservationSheetVisible = false
     var isSavingReservation = false
     var isTableCountSheetVisible = false
+    var isGuestSheetVisible = false
+    var isGuestSaving = false
+    var guestName = ""
+    var guestProfileImage = ""
+    var guestDate = ""
+    var guestStartTime = CafeDashboardUiState.defaultGuestStartTime
+    var guestEndTime = CafeDashboardUiState.defaultGuestEndTime
+    var guestMemo = ""
+    var guestDateOptions: [String] = []
+    var guestTimeOptions: [String] = CafeDashboardUiState.defaultGuestTimeOptions()
     var currentTableCountInput = ""
     var totalTableCountInput = ""
     var isSavingTableCounts = false
@@ -46,6 +57,22 @@ struct CafeDashboardUiState {
     var isTableCountSubmitEnabled: Bool {
         guard let current = Int(currentTableCountInput), let total = Int(totalTableCountInput) else { return false }
         return total >= 0 && current >= 0 && current <= total
+    }
+
+    var isGuestSubmitEnabled: Bool {
+        !guestName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !guestDate.isEmpty &&
+        guestStartTime < guestEndTime
+    }
+
+    static let defaultGuestStartTime = "14:00"
+
+    static let defaultGuestEndTime = "22:00"
+
+    static func defaultGuestTimeOptions() -> [String] {
+        (0...23).flatMap { hour in
+            ["00", "30"].map { minute in String(format: "%02d:%@", hour, minute) }
+        }
     }
 }
 

@@ -1,9 +1,11 @@
 package com.hhp227.concafe.core.util
 
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
@@ -147,6 +149,12 @@ object TimeUtils {
     fun currentIsoDate(): String {
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         return "${now.year}-${now.monthNumber.toString().padStart(2, '0')}-${now.dayOfMonth.toString().padStart(2, '0')}"
+    }
+
+    fun isoDateOptionsFromToday(days: Int): List<String> {
+        if (days <= 0) return emptyList()
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        return (0 until days).map { today.plus(DatePeriod(days = it)).toString() }
     }
 
     fun isCurrentDateVisitedAt(visitedAt: String): Boolean {

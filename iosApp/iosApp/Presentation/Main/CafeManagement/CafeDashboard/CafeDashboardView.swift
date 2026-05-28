@@ -97,6 +97,19 @@ struct CafeDashboardView: View {
                 onAction: viewModel.onAction
             )
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.uiState.isGuestSheetVisible },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.onAction(.dismissGuestSheet)
+                }
+            }
+        )) {
+            GuestScheduleInputSheet(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+        }
         .sheet(isPresented: $isQrSheetPresented) {
             DashboardQrSheetView(
                 payload: buildCafeCheckInQrPayload(cafeId: viewModel.uiState.cafe?.id ?? cafeId)
@@ -143,7 +156,7 @@ private struct CafeDashboardContentView: View {
     let onAction: (CafeDashboardAction) -> Void
 
     let onQrMetricTap: () -> Void
-    
+
 
     var body: some View {
         Group {
@@ -194,6 +207,7 @@ private struct CafeDashboardContentView: View {
                                 }
                                 shortcutGrid(contentWidth: contentWidth)
                                 castManagementSection
+                                guestManagementSection
                                 if !uiState.externalLinks.isEmpty {
                                     externalLinkSection
                                 }
@@ -653,6 +667,116 @@ private struct CafeDashboardContentView: View {
             .frame(width: 80)
         }
         .buttonStyle(.plain)
+    }
+
+    private var guestManagementSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("게스트 캐스트 관리")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(Color(hex: "8C7A83"))
+                    Text("소속 캐스트가 아닌 출연자를 관리합니다")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button {
+                    onAction(.clickAddGuest)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                        Text("추가")
+                            .fontWeight(.bold)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(Color(hex: "EF6797"))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(hex: "FCE6EF"))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            if uiState.guestSchedules.isEmpty {
+                Text("등록된 게스트 캐스트가 없습니다")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .background(Color(hex: "F8F2F6"))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(uiState.guestSchedules, id: \.id) { guest in
+                        guestManagementRow(guest)
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+        )
+    }
+
+    private func guestManagementRow(_ guest: GuestCastSchedule) -> some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(Color(hex: "FFE2EC"))
+                .frame(width: 46, height: 46)
+                .overlay {
+                    if let rawImageUrl = guest.profileImage,
+                       let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: rawImageUrl) {
+                        CachedAsyncImage(url: imageUrl, displaySize: .thumbnail)
+                            .clipShape(Circle())
+                    } else {
+                        Text(String(guest.name.prefix(2)))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color(hex: "8B3154"))
+                    }
+                }
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(guest.name)
+                        .font(.subheadline.weight(.bold))
+                    Text("게스트")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(Color(hex: "EF6797"))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(Color(hex: "FCE6EF"))
+                        .clipShape(Capsule())
+                }
+                Text("\(guest.date) · \(guest.startTime) - \(guest.endTime)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if let memo = guest.memo, !memo.isEmpty {
+                    Text(memo)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button {
+                onAction(.deleteGuest(guest.id))
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundStyle(Color(hex: "C15A7B"))
+                    .frame(width: 34, height: 34)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(Color(hex: "FFF8FB"))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(hex: "F0D9E4"), lineWidth: 1)
+        )
     }
 
     private var homeBannerSection: some View {
@@ -1209,5 +1333,119 @@ private struct TableCountInputSheet: View {
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
+    }
+}
+
+private struct GuestScheduleInputSheet: View {
+    let uiState: CafeDashboardUiState
+
+    let onAction: (CafeDashboardAction) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("게스트 출연 추가")
+                    .font(.headline.weight(.bold))
+                Text("소속 캐스트가 아닌 출연자를 카페 스케줄에 표시합니다.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ConCafeFormField(
+                    label: "게스트 이름",
+                    text: Binding(get: { uiState.guestName }, set: { onAction(.changeGuestName($0)) }),
+                    placeholder: "이름"
+                )
+                ConCafeFormField(
+                    label: "프로필 이미지 URL",
+                    text: Binding(get: { uiState.guestProfileImage }, set: { onAction(.changeGuestProfileImage($0)) }),
+                    placeholder: "https://"
+                )
+                dashboardPickerField(
+                    title: "출연일",
+                    value: uiState.guestDate,
+                    options: uiState.guestDateOptions,
+                    onSelect: { onAction(.changeGuestDate($0)) }
+                )
+                HStack(spacing: 12) {
+                    dashboardPickerField(
+                        title: "시작",
+                        value: uiState.guestStartTime,
+                        options: uiState.guestTimeOptions,
+                        onSelect: { onAction(.changeGuestStartTime($0)) }
+                    )
+                    dashboardPickerField(
+                        title: "종료",
+                        value: uiState.guestEndTime,
+                        options: uiState.guestTimeOptions,
+                        onSelect: { onAction(.changeGuestEndTime($0)) }
+                    )
+                }
+                ConCafeFormField(
+                    label: "메모",
+                    text: Binding(get: { uiState.guestMemo }, set: { onAction(.changeGuestMemo($0)) }),
+                    placeholder: "이벤트명, 참고사항"
+                )
+                Button {
+                    onAction(.submitGuest)
+                } label: {
+                    Group {
+                        if uiState.isGuestSaving {
+                            ProgressView()
+                                .tint(.secondary)
+                        } else {
+                            Text("게스트 출연 추가")
+                                .font(.headline.weight(.bold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(!uiState.isGuestSubmitEnabled || uiState.isGuestSaving ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .foregroundStyle(.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(!uiState.isGuestSubmitEnabled || uiState.isGuestSaving)
+                Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
+                    onAction(.dismissGuestSheet)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+    }
+
+    private func dashboardPickerField(
+        title: String,
+        value: String,
+        options: [String],
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+            Menu {
+                ForEach(options, id: \.self) { option in
+                    Button(option) {
+                        onSelect(option)
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(value)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Color(uiColor: .secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+        }
     }
 }

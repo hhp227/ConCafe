@@ -754,6 +754,67 @@ class FirestoreCastRemoteDataSource(
         return fetchCastSchedulesRemoteInternal(update.castId, update.date, update.date, idToken).firstOrNull()
     }
 
+    override suspend fun fetchGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> {
+        require(cafeId.isNotBlank()) { "cafeId is required" }
+        val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
+        val documents = runCatching { runGuestCastScheduleRangeQuery(cafeId, fromDate, toDate, idToken) }
+            .recoverCatching { runGuestCastScheduleRangeQuery(cafeId, fromDate, toDate, null) }
+            .getOrElse { emptyList() }
+        return documents
+            .mapNotNull { parseGuestCastScheduleDocument(it) }
+            .filter { it.date in fromDate..toDate }
+            .sortedWith(compareBy<GuestCastSchedule> { it.date }.thenBy { it.startTime }.thenBy { it.name })
+    }
+
+    override suspend fun upsertGuestCastScheduleRemote(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        val cafeId = input.cafeId.trim()
+        val date = normalizeScheduleDateOrNull(input.date) ?: throw IllegalArgumentException("date is required")
+        val name = input.name.trim().takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("guest name is required")
+        val startTime = input.startTime.trim().takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("start time is required")
+        val endTime = input.endTime.trim().takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("end time is required")
+        require(cafeId.isNotBlank()) { "cafeId is required" }
+        require(startTime < endTime) { "end time must be after start time" }
+
+        val idToken = tokenProvider.getIdToken()
+        val currentUserId = tokenProvider.getCurrentUserId()?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("signed-in user is required")
+        val scheduleId = input.id?.trim()?.takeIf { it.isNotEmpty() } ?: nextFirestoreEntityId("guest-schedule")
+        val path = "${config.documentBasePath()}/${FirestorePaths.GUEST_CAST_SCHEDULES}/$scheduleId"
+        val now = Clock.System.now().toString()
+        val body = firestoreDocumentBody(
+            mapOf(
+                "cafeId" to firestoreString(cafeId),
+                "date" to firestoreString(date),
+                "name" to firestoreString(name),
+                "profileImage" to firestoreNullableString(input.profileImage?.trim()?.takeIf { it.isNotEmpty() }),
+                "startTime" to firestoreString(startTime),
+                "endTime" to firestoreString(endTime),
+                "memo" to firestoreNullableString(input.memo?.trim()?.takeIf { it.isNotEmpty() }),
+                "createdBy" to firestoreString(currentUserId),
+                "updatedAt" to firestoreString(now)
+            )
+        )
+
+        restApi.patch(path, body, idToken)
+        return GuestCastSchedule(
+            id = scheduleId,
+            cafeId = cafeId,
+            date = date,
+            name = name,
+            profileImage = input.profileImage?.trim()?.takeIf { it.isNotEmpty() },
+            startTime = startTime,
+            endTime = endTime,
+            memo = input.memo?.trim()?.takeIf { it.isNotEmpty() }
+        )
+    }
+
+    override suspend fun deleteGuestCastScheduleRemote(scheduleId: String) {
+        require(scheduleId.isNotBlank()) { "scheduleId is required" }
+        val idToken = tokenProvider.getIdToken()
+        val path = "${config.documentBasePath()}/${FirestorePaths.GUEST_CAST_SCHEDULES}/${scheduleId.trim()}"
+        restApi.delete(path, idToken)
+    }
+
     override suspend fun refreshFollowedCastIds(userId: String) {
         fetchFollowedCastIdsRemote(userId)
     }

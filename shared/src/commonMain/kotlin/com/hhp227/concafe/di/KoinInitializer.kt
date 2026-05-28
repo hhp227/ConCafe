@@ -74,6 +74,7 @@ import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
+import com.hhp227.concafe.domain.usecase.GetGuestCastSchedulesUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
@@ -105,6 +106,8 @@ import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.UpsertGuestCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.DeleteGuestCastScheduleUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
@@ -518,6 +521,27 @@ fun resolveGetRankingFeedUseCase(): GetRankingFeedUseCase {
 }
 
 fun resolveGetScheduleManagementDataUseCase(): GetScheduleManagementDataUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetGuestCastSchedulesUseCase(): GetGuestCastSchedulesUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpsertGuestCastScheduleUseCase(): UpsertGuestCastScheduleUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteGuestCastScheduleUseCase(): DeleteGuestCastScheduleUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

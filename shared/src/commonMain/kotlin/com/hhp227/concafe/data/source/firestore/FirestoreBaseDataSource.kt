@@ -1326,6 +1326,26 @@ abstract class FirestoreBaseDataSource(
         return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
     }
 
+    protected suspend fun runGuestCastScheduleRangeQuery(
+        cafeId: String,
+        fromDate: String,
+        toDate: String,
+        idToken: String?
+    ): List<JsonObject> {
+        val path = "${config.documentBasePath()}:runQuery"
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{"collectionId": "${FirestorePaths.GUEST_CAST_SCHEDULES}"}],
+                "where": {"fieldFilter": {"field": {"fieldPath": "cafeId"},"op": "EQUAL","value": {"stringValue": "${escapeFirestoreQueryString(cafeId)}"}}}
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = path, body = body, idToken = idToken)
+        val parsed = Json.parseToJsonElement(response).jsonArray
+        return parsed.mapNotNull { element -> element.jsonObject["document"]?.jsonObject }
+    }
+
     protected suspend fun runCastFollowerQuery(
         castId: String,
         idToken: String?,
@@ -1882,6 +1902,28 @@ abstract class FirestoreBaseDataSource(
         val cafeId = fields.getFirestoreString("cafeId").orEmpty()
         if (cafeId.isBlank()) return null
         return CastSchedule(id = entry.id, castId = entry.castId, cafeId = cafeId, date = entry.date, startTime = startTime, endTime = endTime)
+    }
+
+    protected fun parseGuestCastScheduleDocument(document: JsonObject): GuestCastSchedule? {
+        val fields = document["fields"]?.jsonObject ?: return null
+        val name = document["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        val scheduleId = name.substringAfterLast("/")
+        val cafeId = fields.getFirestoreString("cafeId")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        val date = normalizeScheduleDateOrNull(fields.getFirestoreString("date")) ?: return null
+        val guestName = fields.getFirestoreString("name")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        val startTime = fields.getFirestoreString("startTime")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        val endTime = fields.getFirestoreString("endTime")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+
+        return GuestCastSchedule(
+            id = scheduleId,
+            cafeId = cafeId,
+            date = date,
+            name = guestName,
+            profileImage = fields.getFirestoreString("profileImage")?.trim()?.takeIf { it.isNotEmpty() },
+            startTime = startTime,
+            endTime = endTime,
+            memo = fields.getFirestoreString("memo")?.trim()?.takeIf { it.isNotEmpty() }
+        )
     }
 
     protected fun parseCastFollowDocument(document: JsonObject): CastFollowerSnapshot? {

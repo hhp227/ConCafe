@@ -10,6 +10,8 @@ import com.hhp227.concafe.domain.model.CastScheduleStatus
 import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 
 class CachedCastRemoteDataSource(
     private val upstream: CastRemoteDataSource,
@@ -116,6 +118,22 @@ class CachedCastRemoteDataSource(
             cache.removeByPrefix(cacheKey(CAST_CACHE_PREFIX, "workingSchedules", "cafeId" to it.cafeId))
         }
         return updated
+    }
+
+    override suspend fun fetchGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> =
+        cache.cacheFirst(cacheKey(CAST_CACHE_PREFIX, "guestSchedules", "cafeId" to cafeId, "fromDate" to fromDate, "toDate" to toDate)) {
+            upstream.fetchGuestCastSchedules(cafeId, fromDate, toDate)
+        }
+
+    override suspend fun upsertGuestCastScheduleRemote(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        val updated = upstream.upsertGuestCastScheduleRemote(input)
+        cache.removeByPrefix(cacheKey(CAST_CACHE_PREFIX, "guestSchedules", "cafeId" to updated.cafeId))
+        return updated
+    }
+
+    override suspend fun deleteGuestCastScheduleRemote(scheduleId: String) {
+        upstream.deleteGuestCastScheduleRemote(scheduleId)
+        cache.removeByPrefix(cacheKey(CAST_CACHE_PREFIX, "guestSchedules"))
     }
 
     override suspend fun fetchFollowedCastIds(userId: String): List<String> =

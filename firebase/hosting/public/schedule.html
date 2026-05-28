@@ -391,14 +391,26 @@
       }
 
       .schedule-view-field {
-        min-width: 150px;
+        min-width: 0;
       }
 
       .schedule-controls {
-        display: flex;
-        align-items: flex-end;
+        display: grid;
         gap: 8px;
-        flex-wrap: wrap;
+        width: min(100%, 420px);
+      }
+
+      .schedule-download-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .schedule-download-actions .button {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 10px;
+        text-align: center;
       }
 
       .schedule-block {
@@ -502,6 +514,12 @@
         border-color: #f2d4c4;
         background: #fff3eb;
         color: #99624a;
+      }
+
+      .cast-name-chip.guest {
+        border-color: #f0c4df;
+        background: #fff0f7;
+        color: #b33b78;
       }
 
       .month-grid {
@@ -804,9 +822,14 @@
                     <option value="month">1달</option>
                   </select>
                 </div>
-                <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
-                  스케줄 이미지 다운로드
-                </button>
+                <div class="schedule-download-actions">
+                  <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
+                    스케줄 이미지 다운로드
+                  </button>
+                  <button class="button button-secondary" id="downloadScheduleExcelButton" type="button">
+                    스케줄 엑셀 다운로드
+                  </button>
+                </div>
               </div>
             </div>
             <div class="schedule-block" id="cafeScheduleCapture">
@@ -889,6 +912,7 @@
           selectedCafeId: "",
           casts: [],
           schedules: [],
+          guestSchedules: [],
         };
 
         const el = {
@@ -902,6 +926,7 @@
           castFilter: document.getElementById("castFilter"),
           cafeScheduleView: document.getElementById("cafeScheduleView"),
           downloadScheduleImageButton: document.getElementById("downloadScheduleImageButton"),
+          downloadScheduleExcelButton: document.getElementById("downloadScheduleExcelButton"),
           refreshButton: document.getElementById("refreshButton"),
           castList: document.getElementById("castList"),
           castEmptyState: document.getElementById("castEmptyState"),
@@ -945,6 +970,13 @@
               return value.trim();
             })
             .join(" ");
+        }
+
+        function normalizeText(value, fallback) {
+          if (typeof value === "string" && value.trim()) {
+            return value.trim();
+          }
+          return fallback;
         }
 
         function getSelectedCafe() {
@@ -1099,6 +1131,21 @@
             addedByDay[dayIndex][castName] = true;
             castNamesByDay[dayIndex].push(castName);
           });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed < weekStart || parsed > weekEnd) {
+                return;
+              }
+              const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedByDay[dayIndex][guestName]) {
+                return;
+              }
+              addedByDay[dayIndex][guestName] = true;
+              castNamesByDay[dayIndex].push({ name: guestName, guest: true });
+            });
+          }
 
           const headerDates = labels.map(function (_, index) {
             const date = new Date(weekStart);
@@ -1119,9 +1166,12 @@
               return '<td><span class="cast-name-chip">-</span></td>';
             }
             const chips = castNames
-              .sort(function (a, b) { return a.localeCompare(b, "ko"); })
-              .map(function (name) {
-                return '<span class="cast-name-chip work">' + escapeHtml(name) + "</span>";
+              .sort(function (a, b) {
+                return String(a.name || a).localeCompare(String(b.name || b), "ko");
+              })
+              .map(function (item) {
+                const name = item.name || item;
+                return '<span class="cast-name-chip ' + (item.guest ? "guest" : "work") + '">' + escapeHtml(name) + "</span>";
               })
               .join("");
             return '<td><div class="cast-name-row">' + chips + "</div></td>";
@@ -1180,6 +1230,27 @@
             addedNamesByDate[schedule.date][castName] = true;
             workCastNamesByDate[schedule.date].push(castName);
           });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              if (!schedule.date) {
+                return;
+              }
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+                return;
+              }
+              if (!workCastNamesByDate[schedule.date]) {
+                workCastNamesByDate[schedule.date] = [];
+                addedNamesByDate[schedule.date] = {};
+              }
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedNamesByDate[schedule.date][guestName]) {
+                return;
+              }
+              addedNamesByDate[schedule.date][guestName] = true;
+              workCastNamesByDate[schedule.date].push({ name: guestName, guest: true });
+            });
+          }
           el.cafeScheduleTitle.textContent = (month + 1) + "월 " + selectedCafe.name + " 스케줄";
 
           let cells = "";
@@ -1191,10 +1262,11 @@
             const current = new Date(year, month, day);
             const key = formatDateKey(current);
             const castNames = (workCastNamesByDate[key] || []).slice().sort(function (a, b) {
-              return a.localeCompare(b, "ko");
+              return String(a.name || a).localeCompare(String(b.name || b), "ko");
             });
             const lines = castNames.length
-              ? castNames.map(function (name) {
+              ? castNames.map(function (item) {
+                  const name = item.name || item;
                   return '<div class="month-cast-line">' + escapeHtml(name) + "</div>";
                 }).join("")
               : '<div class="month-cast-line">-</div>';
@@ -1231,6 +1303,191 @@
           return raw.replace(/[\\/:*?"<>|]/g, "_");
         }
 
+        function buildScheduleExcelFileName() {
+          const selectedCafe = getSelectedCafe();
+          const cafeName = selectedCafe ? selectedCafe.name : "카페";
+          const viewLabel = el.cafeScheduleView.value === "month" ? "1달" : "1주";
+          const now = new Date();
+          const stamp = String(now.getFullYear()) + pad2(now.getMonth() + 1) + pad2(now.getDate());
+          const raw = cafeName + "_" + viewLabel + "_스케줄_" + stamp + ".xls";
+          return raw.replace(/[\\/:*?"<>|]/g, "_");
+        }
+
+        function getTargetCastIdSet() {
+          const targetCastIdSet = {};
+          state.casts
+            .filter(function (cast) {
+              return !el.castFilter.value || cast.id === el.castFilter.value;
+            })
+            .forEach(function (cast) {
+              targetCastIdSet[cast.id] = true;
+            });
+          return targetCastIdSet;
+        }
+
+        function appendUniqueScheduleName(groupedNames, addedNames, key, item) {
+          const name = item.name || item;
+          if (!groupedNames[key]) {
+            groupedNames[key] = [];
+            addedNames[key] = {};
+          }
+          if (addedNames[key][name]) {
+            return;
+          }
+          addedNames[key][name] = true;
+          groupedNames[key].push(item);
+        }
+
+        function getSortedScheduleNames(items) {
+          return (items || []).slice().sort(function (a, b) {
+            return String(a.name || a).localeCompare(String(b.name || b), "ko");
+          }).map(function (item) {
+            return item.name || item;
+          });
+        }
+
+        function buildWeeklyScheduleExcelRows() {
+          const now = new Date();
+          const weekStart = startOfCurrentWeek(now);
+          const weekEnd = endOfCurrentWeek(now);
+          const labels = ["월", "화", "수", "목", "금", "토", "일"];
+          const targetCastIdSet = getTargetCastIdSet();
+          const namesByDay = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+          const addedByDay = { 0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.castId || !schedule.date || schedule.status !== "WORK" || !targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed < weekStart || parsed > weekEnd) {
+              return;
+            }
+            const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+            appendUniqueScheduleName(namesByDay, addedByDay, dayIndex, schedule.castName || "이름 없음");
+          });
+
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed < weekStart || parsed > weekEnd) {
+                return;
+              }
+              const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+              appendUniqueScheduleName(namesByDay, addedByDay, dayIndex, (schedule.name || "게스트") + " · 게스트");
+            });
+          }
+
+          const header = ["구분"].concat(labels.map(function (label, index) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + index);
+            return label + " " + (date.getMonth() + 1) + "/" + date.getDate();
+          }));
+          const body = ["근무 캐스트"].concat(labels.map(function (_, dayIndex) {
+            const names = getSortedScheduleNames(namesByDay[dayIndex]);
+            return names.length ? names.join("\n") : "-";
+          }));
+          return [header, body];
+        }
+
+        function buildMonthlyScheduleExcelRows() {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDate = new Date(year, month, 1);
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const offset = (firstDate.getDay() + 6) % 7;
+          const targetCastIdSet = getTargetCastIdSet();
+          const namesByDate = {};
+          const addedByDate = {};
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date || !schedule.castId || schedule.status !== "WORK" || !targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+              return;
+            }
+            appendUniqueScheduleName(namesByDate, addedByDate, schedule.date, schedule.castName || "이름 없음");
+          });
+
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!schedule.date || !parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+                return;
+              }
+              appendUniqueScheduleName(namesByDate, addedByDate, schedule.date, (schedule.name || "게스트") + " · 게스트");
+            });
+          }
+
+          const rows = [["월", "화", "수", "목", "금", "토", "일"]];
+          let row = [];
+          for (let i = 0; i < offset; i += 1) {
+            row.push("");
+          }
+          for (let day = 1; day <= daysInMonth; day += 1) {
+            const key = formatDateKey(new Date(year, month, day));
+            const names = getSortedScheduleNames(namesByDate[key]);
+            row.push(String(day) + (names.length ? "\n" + names.join("\n") : "\n-"));
+            if (row.length === 7) {
+              rows.push(row);
+              row = [];
+            }
+          }
+          if (row.length) {
+            while (row.length < 7) {
+              row.push("");
+            }
+            rows.push(row);
+          }
+          return rows;
+        }
+
+        function excelCellHtml(value) {
+          return "<td>" + escapeHtml(value).replace(/\n/g, "<br>") + "</td>";
+        }
+
+        function downloadScheduleExcel() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            setStatus("카페를 먼저 선택해주세요.");
+            return;
+          }
+
+          const title = el.cafeScheduleTitle.textContent || (selectedCafe.name + " 스케줄");
+          const rows = el.cafeScheduleView.value === "month"
+            ? buildMonthlyScheduleExcelRows()
+            : buildWeeklyScheduleExcelRows();
+          const columnCount = rows.reduce(function (max, row) {
+            return Math.max(max, row.length);
+          }, 1);
+          const tableRows =
+            '<tr><th colspan="' + columnCount + '">' + escapeHtml(title) + "</th></tr>" +
+            rows.map(function (row) {
+              return "<tr>" + row.map(excelCellHtml).join("") + "</tr>";
+            }).join("");
+          const html =
+            "\uFEFF" +
+            '<html><head><meta charset="UTF-8" /></head><body>' +
+            '<table border="1">' + tableRows + "</table>" +
+            "</body></html>";
+          const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = buildScheduleExcelFileName();
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          setStatus("스케줄 엑셀 파일을 다운로드했습니다.");
+          setTimeout(function () {
+            setStatus("");
+          }, 1500);
+        }
+
         async function downloadScheduleImage() {
           if (!state.selectedCafeId) {
             setStatus("카페를 먼저 선택해주세요.");
@@ -1265,7 +1522,7 @@
         function getVisibleScheduleCount() {
           const weekStart = startOfCurrentWeek();
           const weekEnd = endOfCurrentWeek();
-          return state.schedules.filter(function (schedule) {
+          const castScheduleCount = state.schedules.filter(function (schedule) {
             if (el.castFilter.value && schedule.castId !== el.castFilter.value) {
               return false;
             }
@@ -1278,6 +1535,20 @@
             }
             return parsed >= weekStart && parsed <= weekEnd;
           }).length;
+          if (el.castFilter.value) {
+            return castScheduleCount;
+          }
+          const guestScheduleCount = state.guestSchedules.filter(function (schedule) {
+            if (!schedule.date) {
+              return false;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return false;
+            }
+            return parsed >= weekStart && parsed <= weekEnd;
+          }).length;
+          return castScheduleCount + guestScheduleCount;
         }
 
         function updateSummary() {
@@ -1412,6 +1683,7 @@
           if (!state.selectedCafeId) {
             state.casts = [];
             state.schedules = [];
+            state.guestSchedules = [];
             renderCastFilter();
             renderCafeScheduleSection();
             renderCastList();
@@ -1422,43 +1694,69 @@
           setStatus("선택한 카페의 실제 캐스트와 스케줄을 불러오는 중입니다.");
           try {
             const castRef = db.collection("cafes").doc(state.selectedCafeId).collection("casts");
-            const results = await Promise.all([
+            const results = await Promise.allSettled([
               castRef.get(),
               db.collection("castSchedules").where("cafeId", "==", state.selectedCafeId).get(),
+              db.collection("guestCastSchedules").where("cafeId", "==", state.selectedCafeId).get(),
             ]);
 
+            if (results[0].status === "rejected" || results[1].status === "rejected") {
+              console.error("Failed to load selected cafe data", {
+                casts: results[0].status === "rejected" ? results[0].reason : null,
+                schedules: results[1].status === "rejected" ? results[1].reason : null,
+              });
+              throw new Error("Required cafe schedule data failed to load.");
+            }
+            if (results[2].status === "rejected") {
+              console.error("Failed to load guest cast schedules", results[2].reason);
+            }
+
             const castNameById = {};
-            state.casts = results[0].docs.map(function (doc) {
+            state.casts = results[0].value.docs.map(function (doc) {
               const data = doc.data() || {};
-              castNameById[doc.id] = data.name || "이름 없음";
+              const castName = normalizeText(data.name, "이름 없음");
+              castNameById[doc.id] = castName;
               return {
                 id: doc.id,
-                name: data.name || "이름 없음",
-                conceptRole: data.conceptRole || "역할 없음",
-                birthday: data.birthday || "",
-                linkedUserId: data.linkedUserId || "",
-                createdVia: data.createdVia || "",
+                name: castName,
+                conceptRole: normalizeText(data.conceptRole, "역할 없음"),
+                birthday: normalizeText(data.birthday, ""),
+                linkedUserId: normalizeText(data.linkedUserId, ""),
+                createdVia: normalizeText(data.createdVia, ""),
               };
             }).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
             });
 
-            state.schedules = results[1].docs.map(function (doc) {
+            state.schedules = results[1].value.docs.map(function (doc) {
               const data = doc.data() || {};
               return {
                 id: doc.id,
-                castId: data.castId || "",
-                castName: castNameById[data.castId] || data.castName || "이름 없음",
-                date: data.date || "",
-                status: data.status || "OFF",
-                startTime: data.startTime || "",
-                endTime: data.endTime || "",
-                memo: data.memo || "",
+                castId: normalizeText(data.castId, ""),
+                castName: castNameById[data.castId] || normalizeText(data.castName, "이름 없음"),
+                date: normalizeText(data.date, ""),
+                status: normalizeText(data.status, "OFF"),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
                 createdAt: data.createdAt || "",
                 updatedAt: data.updatedAt || "",
-                createdVia: data.createdVia || "",
+                createdVia: normalizeText(data.createdVia, ""),
               };
             });
+            state.guestSchedules = results[2].status === "fulfilled" ? results[2].value.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                cafeId: normalizeText(data.cafeId, ""),
+                date: normalizeText(data.date, ""),
+                name: normalizeText(data.name, "게스트"),
+                profileImage: normalizeText(data.profileImage, ""),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
+              };
+            }) : [];
 
             renderCastFilter();
             renderCafeScheduleSection();
@@ -1541,9 +1839,13 @@
             updateSummary();
             loadSelectedCafeData();
           });
-          el.castFilter.addEventListener("change", renderCastList);
+          el.castFilter.addEventListener("change", function () {
+            renderCafeScheduleSection();
+            renderCastList();
+          });
           el.cafeScheduleView.addEventListener("change", renderCafeScheduleSection);
           el.downloadScheduleImageButton.addEventListener("click", downloadScheduleImage);
+          el.downloadScheduleExcelButton.addEventListener("click", downloadScheduleExcel);
           el.refreshButton.addEventListener("click", loadSelectedCafeData);
 
           await loadCafes();

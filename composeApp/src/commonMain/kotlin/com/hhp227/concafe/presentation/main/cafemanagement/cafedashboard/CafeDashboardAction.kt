@@ -33,4 +33,14 @@ sealed interface CafeDashboardAction {
     data class ChangeCurrentTableCount(val value: String) : CafeDashboardAction
     data class ChangeTotalTableCount(val value: String) : CafeDashboardAction
     data object SubmitTableCounts : CafeDashboardAction
+    data object ClickAddGuest : CafeDashboardAction
+    data object DismissGuestSheet : CafeDashboardAction
+    data class ChangeGuestName(val value: String) : CafeDashboardAction
+    data class ChangeGuestProfileImage(val value: String) : CafeDashboardAction
+    data class ChangeGuestDate(val value: String) : CafeDashboardAction
+    data class ChangeGuestStartTime(val value: String) : CafeDashboardAction
+    data class ChangeGuestEndTime(val value: String) : CafeDashboardAction
+    data class ChangeGuestMemo(val value: String) : CafeDashboardAction
+    data object SubmitGuest : CafeDashboardAction
+    data class DeleteGuest(val scheduleId: String) : CafeDashboardAction
 }

@@ -40,4 +40,14 @@ enum CafeDashboardAction {
     case changeCurrentTableCount(String)
     case changeTotalTableCount(String)
     case submitTableCounts
+    case clickAddGuest
+    case dismissGuestSheet
+    case changeGuestName(String)
+    case changeGuestProfileImage(String)
+    case changeGuestDate(String)
+    case changeGuestStartTime(String)
+    case changeGuestEndTime(String)
+    case changeGuestMemo(String)
+    case submitGuest
+    case deleteGuest(String)
 }

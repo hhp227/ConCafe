@@ -138,6 +138,40 @@ service cloud.firestore {
         );
     }
 
+    function isValidGuestCastScheduleWriteData() {
+      return request.resource.data.keys().hasOnly([
+          "cafeId",
+          "date",
+          "name",
+          "profileImage",
+          "startTime",
+          "endTime",
+          "memo",
+          "createdBy",
+          "updatedAt"
+        ])
+        && request.resource.data.cafeId is string
+        && request.resource.data.date is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.startTime is string
+        && request.resource.data.endTime is string
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedAt is string
+        && (
+          !("profileImage" in request.resource.data)
+          || request.resource.data.profileImage is string
+          || request.resource.data.profileImage == null
+        )
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        );
+    }
+
     function isValidTemporaryCastEntryWrite() {
       return request.resource.data.cafeId is string
         && request.resource.data.cafeName is string
@@ -968,6 +1002,16 @@ service cloud.firestore {
         && exists(
           /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
         );
+    }
+
+    match /guestCastSchedules/{scheduleId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && isValidGuestCastScheduleWriteData()
+        && canManageCafe(request.resource.data.cafeId);
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && canManageCafe(resource.data.cafeId);
     }
 
     match /reviews/{reviewId} {

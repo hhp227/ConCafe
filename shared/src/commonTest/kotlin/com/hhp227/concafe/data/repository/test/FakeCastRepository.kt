@@ -13,6 +13,8 @@ import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.repository.CastRepository
 
 class FakeCastRepository(
@@ -161,6 +163,25 @@ class FakeCastRepository(
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
         return dataSource.updateCastSchedule(update)
     }
+
+    override suspend fun getGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> {
+        return emptyList()
+    }
+
+    override suspend fun upsertGuestCastSchedule(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        return GuestCastSchedule(
+            id = input.id ?: "guest-schedule-test",
+            cafeId = input.cafeId,
+            date = input.date,
+            name = input.name,
+            profileImage = input.profileImage,
+            startTime = input.startTime,
+            endTime = input.endTime,
+            memo = input.memo
+        )
+    }
+
+    override suspend fun deleteGuestCastSchedule(scheduleId: String) = Unit
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
         return dataSource.followedCastIdsByUser[userId]?.contains(castId) == true
