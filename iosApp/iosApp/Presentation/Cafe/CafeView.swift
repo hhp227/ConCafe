@@ -17,6 +17,8 @@ struct CafeView: View {
 
     @State private var countBeforeLoad = (casts: 0, notices: 0, reviews: 0)
 
+    @State private var castPagingAnchorId: String?
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
@@ -27,7 +29,8 @@ struct CafeView: View {
                     switch action {
                     case .loadMoreCasts:
                         let count = viewModel.uiState.casts.count
-                        countBeforeLoad.casts = (countBeforeLoad.casts == 0) ? -count : count
+                        countBeforeLoad.casts = count
+                        castPagingAnchorId = viewModel.uiState.casts.last?.cast.id
                     case .loadMoreNotices:
                         let count = viewModel.uiState.notices.count
                         countBeforeLoad.notices = count
@@ -38,6 +41,7 @@ struct CafeView: View {
                         switch tab {
                         case .casts:
                             countBeforeLoad.casts = -1
+                            castPagingAnchorId = nil
                         case .notices:
                             countBeforeLoad.notices = -1
                         case .reviews:
@@ -93,14 +97,21 @@ struct CafeView: View {
             }
             .onChange(of: viewModel.uiState.casts.count) { newCount in
                 guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
-                let preCount = abs(countBeforeLoad.casts)
-                let wasSubsequent = countBeforeLoad.casts > 0
+                let preCount = countBeforeLoad.casts
+                let targetId = castPagingAnchorId
                 countBeforeLoad.casts = -1
-                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                castPagingAnchorId = nil
+                guard newCount > preCount, preCount > 0 else { return }
                 guard viewModel.uiState.selectedTab == .casts else { return }
-                let targetId = viewModel.uiState.casts[preCount - 1].cast.id
+                guard let targetId else { return }
                 DispatchQueue.main.async {
-                    proxy.scrollTo(targetId, anchor: .bottom)
+                    DispatchQueue.main.async {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            proxy.scrollTo(targetId, anchor: .bottom)
+                        }
+                    }
                 }
             }
             .onChange(of: viewModel.uiState.notices.count) { newCount in
