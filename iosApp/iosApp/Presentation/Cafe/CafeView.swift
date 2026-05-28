@@ -439,8 +439,6 @@ private struct CafeContentView: View {
 
     private func pinnedTabHeader(topSafeArea: CGFloat) -> some View {
         VStack(spacing: 0) {
-            Color.clear
-                .frame(height: topSafeArea)
             tabHeader()
         }
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
