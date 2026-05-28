@@ -17,6 +17,8 @@ struct CafeView: View {
 
     @State private var countBeforeLoad = (casts: 0, notices: 0, reviews: 0)
 
+    @State private var castPagingAnchorId: String?
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
@@ -27,7 +29,8 @@ struct CafeView: View {
                     switch action {
                     case .loadMoreCasts:
                         let count = viewModel.uiState.casts.count
-                        countBeforeLoad.casts = (countBeforeLoad.casts == 0) ? -count : count
+                        countBeforeLoad.casts = count
+                        castPagingAnchorId = viewModel.uiState.casts.last?.cast.id
                     case .loadMoreNotices:
                         let count = viewModel.uiState.notices.count
                         countBeforeLoad.notices = count
@@ -38,6 +41,7 @@ struct CafeView: View {
                         switch tab {
                         case .casts:
                             countBeforeLoad.casts = -1
+                            castPagingAnchorId = nil
                         case .notices:
                             countBeforeLoad.notices = -1
                         case .reviews:
@@ -93,14 +97,21 @@ struct CafeView: View {
             }
             .onChange(of: viewModel.uiState.casts.count) { newCount in
                 guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
-                let preCount = abs(countBeforeLoad.casts)
-                let wasSubsequent = countBeforeLoad.casts > 0
+                let preCount = countBeforeLoad.casts
+                let targetId = castPagingAnchorId
                 countBeforeLoad.casts = -1
-                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                castPagingAnchorId = nil
+                guard newCount > preCount, preCount > 0 else { return }
                 guard viewModel.uiState.selectedTab == .casts else { return }
-                let targetId = viewModel.uiState.casts[preCount - 1].cast.id
+                guard let targetId else { return }
                 DispatchQueue.main.async {
-                    proxy.scrollTo(targetId, anchor: .bottom)
+                    DispatchQueue.main.async {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            proxy.scrollTo(targetId, anchor: cafeCastPagingRestoreAnchor)
+                        }
+                    }
                 }
             }
             .onChange(of: viewModel.uiState.notices.count) { newCount in
@@ -139,6 +150,8 @@ struct CafeView: View {
     }
 }
 
+private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
+
 private struct CafeContentView: View {
     let uiState: CafeUiState
 
@@ -147,6 +160,8 @@ private struct CafeContentView: View {
     let topAnchorId: String
 
     @State private var scrollOffset: CGFloat = 0
+
+    @State private var tabHeaderMinY: CGFloat = .greatestFiniteMagnitude
 
     var body: some View {
         GeometryReader { proxy in
@@ -162,10 +177,21 @@ private struct CafeContentView: View {
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
                 }
+                .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
+                    if value != .greatestFiniteMagnitude {
+                        tabHeaderMinY = value
+                    }
+                }
+                if uiState.detail != nil, isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
+                    pinnedTabHeader(topSafeArea: proxy.safeAreaInsets.top)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
+                }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
                     .padding(.trailing, 20)
                     .padding(.bottom, 24)
+                    .zIndex(3)
                 }
             }
             .toolbar {
@@ -216,17 +242,23 @@ private struct CafeContentView: View {
     @ViewBuilder
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: 0) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
                 summarySection(detail: detail)
-                Section {
-                    tabContent(detail: detail)
+                tabHeader()
+                    .overlay {
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: CafeTabHeaderOffsetPreferenceKey.self,
+                                value: proxy.frame(in: .named("cafeScroll")).minY
+                            )
+                        }
+                        .allowsHitTesting(false)
+                    }
+                tabContent(detail: detail)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 20)
-                } header: {
-                    tabHeader
                 }
-            }
         } else if uiState.isLoading {
             ProgressView()
             .frame(maxWidth: .infinity)
@@ -315,6 +347,14 @@ private struct CafeContentView: View {
                         .font(.title2)
                 }
             }
+            if !conceptLabel.isEmpty {
+                Text(conceptLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(hex: "9E2E5C"))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: "FDE7EF"), in: Capsule())
+            }
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
@@ -330,14 +370,6 @@ private struct CafeContentView: View {
                     Text(detail.cafe.region.city)
                     .foregroundStyle(.secondary)
                 }
-            }
-            if !conceptLabel.isEmpty {
-                Text(conceptLabel)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "9E2E5C"))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "FDE7EF"), in: Capsule())
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -377,7 +409,7 @@ private struct CafeContentView: View {
         }
     }
 
-    private var tabHeader: some View {
+    private func tabHeader() -> some View {
         ScrollableConCafeTabBar(
             labels: CafeUiState.TabType.allCases.map { tab in
                 if tab == .info {
@@ -403,6 +435,17 @@ private struct CafeContentView: View {
         .frame(maxWidth: .infinity)
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .zIndex(1)
+    }
+
+    private func pinnedTabHeader(topSafeArea: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            tabHeader()
+        }
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+    }
+
+    private func isTabPinned(topSafeArea: CGFloat) -> Bool {
+        tabHeaderMinY <= topSafeArea
     }
 
     @ViewBuilder
@@ -458,6 +501,14 @@ private struct CafeContentView: View {
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CafeTabHeaderOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
