@@ -161,7 +161,7 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
-    @State private var tabHeaderMinY: CGFloat = .greatestFiniteMagnitude
+    @State private var tabHeaderContentMinY: CGFloat?
 
     var body: some View {
         GeometryReader { proxy in
@@ -178,8 +178,13 @@ private struct CafeContentView: View {
                     scrollOffset = value
                 }
                 .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
-                    if value != .greatestFiniteMagnitude {
-                        tabHeaderMinY = value
+                    guard value != .greatestFiniteMagnitude else { return }
+
+                    let nextContentMinY = value - scrollOffset
+                    if nextContentMinY.isFinite {
+                        if tabHeaderContentMinY == nil || !isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
+                            tabHeaderContentMinY = nextContentMinY
+                        }
                     }
                 }
                 if uiState.detail != nil, isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
@@ -445,7 +450,8 @@ private struct CafeContentView: View {
     }
 
     private func isTabPinned(topSafeArea: CGFloat) -> Bool {
-        tabHeaderMinY <= topSafeArea
+        guard let tabHeaderContentMinY else { return false }
+        return tabHeaderContentMinY + scrollOffset <= topSafeArea
     }
 
     @ViewBuilder
