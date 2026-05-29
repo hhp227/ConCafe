@@ -151,6 +151,7 @@ struct CafeView: View {
 }
 
 private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
+private let cafeTabPinnedResetScrollOffset: CGFloat = -8
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
@@ -161,7 +162,7 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
-    @State private var tabHeaderPinScrollOffset: CGFloat?
+    @State private var isTabPinned = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -179,15 +180,11 @@ private struct CafeContentView: View {
                 }
                 .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
                     guard value != .greatestFiniteMagnitude, value.isFinite else { return }
-                    if let tabHeaderPinScrollOffset, scrollOffset <= tabHeaderPinScrollOffset {
-                        return
-                    }
-                    guard tabHeaderPinScrollOffset == nil || value > proxy.safeAreaInsets.top else { return }
-
-                    let headerContentMinY = value - scrollOffset
-                    let nextPinScrollOffset = proxy.safeAreaInsets.top - headerContentMinY
-                    if nextPinScrollOffset.isFinite {
-                        tabHeaderPinScrollOffset = nextPinScrollOffset
+                    let shouldPin = value <= proxy.safeAreaInsets.top
+                    if shouldPin {
+                        isTabPinned = true
+                    } else if scrollOffset >= cafeTabPinnedResetScrollOffset {
+                        isTabPinned = false
                     }
                 }
                 if uiState.detail != nil, isTabPinned {
@@ -451,11 +448,6 @@ private struct CafeContentView: View {
             tabHeader()
         }
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-    }
-
-    private var isTabPinned: Bool {
-        guard let tabHeaderPinScrollOffset else { return false }
-        return scrollOffset <= tabHeaderPinScrollOffset
     }
 
     private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
