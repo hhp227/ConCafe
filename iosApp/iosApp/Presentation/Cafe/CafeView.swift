@@ -182,7 +182,8 @@ private struct CafeContentView: View {
 
                     let nextContentMinY = value - scrollOffset
                     if nextContentMinY.isFinite {
-                        if tabHeaderContentMinY == nil || !isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
+                        let isOriginalHeaderBelowPinLine = value > proxy.safeAreaInsets.top
+                        if tabHeaderContentMinY == nil || isOriginalHeaderBelowPinLine || !isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
                             tabHeaderContentMinY = nextContentMinY
                         }
                     }
