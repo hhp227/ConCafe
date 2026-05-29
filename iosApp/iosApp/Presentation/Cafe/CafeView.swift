@@ -183,7 +183,6 @@ private struct CafeContentView: View {
                 }
                 if uiState.detail != nil, isTabPinned {
                     pinnedTabHeader()
-                        .padding(.top, proxy.safeAreaInsets.top)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         .zIndex(2)
                 }
