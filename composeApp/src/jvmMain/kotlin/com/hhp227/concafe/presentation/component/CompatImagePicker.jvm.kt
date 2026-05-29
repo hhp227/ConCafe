@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.skia.Image as SkiaImage
 import java.awt.GraphicsEnvironment
@@ -128,6 +132,29 @@ private fun chooseImageFile(): String? {
     }
 }
 
+@Composable
+actual fun rememberImagePrefetcher(): ImagePrefetcher {
+    return remember {
+        object : ImagePrefetcher {
+            override fun prefetch(imageUrls: List<String?>, displaySize: ImageDisplaySize) {
+                imageUrls
+                    .asSequence()
+                    .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
+                    .distinct()
+                    .forEach { url ->
+                        JvmImagePrefetchScope.launch {
+                            decodeImageBitmap(
+                                imageUrl = url,
+                                cacheKey = "$url|$displaySize",
+                                displaySize = displaySize
+                            )
+                        }
+                    }
+            }
+        }
+    }
+}
+
 private suspend fun decodeImageBitmap(
     imageUrl: String,
     cacheKey: String,
@@ -152,7 +179,9 @@ private fun readImageBytes(imageUrl: String): ByteArray? {
             if (base64.isBlank()) null else Base64.getDecoder().decode(base64)
         }
         imageUrl.startsWith("http://", ignoreCase = true) || imageUrl.startsWith("https://", ignoreCase = true) -> {
-            openHttpConnection(imageUrl).inputStream.use { it.readBytes() }
+            JvmImageDiskCache.getOrPut(imageUrl) {
+                openHttpConnection(imageUrl).inputStream.use { it.readBytes() }
+            }
         }
         imageUrl.startsWith("file:", ignoreCase = true) -> {
             File(URI(imageUrl)).readBytes()
@@ -189,11 +218,10 @@ private fun decodeWithImageIo(
     return scaled.toComposeImageBitmap()
 }
 
-/** Returns null for FULL (no downscaling). */
 private fun ImageDisplaySize.maxPx(): Int? = when (this) {
     ImageDisplaySize.THUMBNAIL -> 512
     ImageDisplaySize.MEDIUM -> 1200
-    ImageDisplaySize.FULL -> null
+    ImageDisplaySize.FULL -> 3840
 }
 
 private fun scaleDown(source: BufferedImage, maxPx: Int): BufferedImage {
@@ -228,5 +256,53 @@ private object JvmImageBitmapMemoryCache {
 
     fun put(key: String, value: ImageBitmap) = synchronized(cache) {
         cache[key] = value
+    }
+}
+
+private object JvmImagePrefetchScope {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    fun launch(block: suspend () -> Unit) {
+        scope.launch { block() }
+    }
+}
+
+private object JvmImageDiskCache {
+    private const val MAX_BYTES = 512L * 1024L * 1024L
+    private val cacheDir = File(System.getProperty("java.io.tmpdir"), "concafe-image-cache").apply {
+        mkdirs()
+    }
+
+    fun getOrPut(imageUrl: String, fetch: () -> ByteArray): ByteArray {
+        val file = File(cacheDir, imageUrl.toCacheFileName())
+        if (file.isFile && file.length() > 0L) {
+            file.setLastModified(System.currentTimeMillis())
+            return file.readBytes()
+        }
+
+        val bytes = fetch()
+        runCatching {
+            evictIfNeeded(bytes.size.toLong())
+            file.writeBytes(bytes)
+        }
+        return bytes
+    }
+
+    private fun evictIfNeeded(incomingBytes: Long) {
+        val files = cacheDir.listFiles()?.filter { it.isFile } ?: return
+        var totalBytes = files.sumOf { it.length() } + incomingBytes
+        if (totalBytes <= MAX_BYTES) return
+
+        files.sortedBy { it.lastModified() }.forEach { file ->
+            if (totalBytes <= MAX_BYTES) return
+            totalBytes -= file.length()
+            file.delete()
+        }
+    }
+
+    private fun String.toCacheFileName(): String {
+        var hash = 1125899906842597L
+        forEach { char -> hash = 31 * hash + char.code }
+        return hash.toString(16).replace("-", "m")
     }
 }

@@ -140,6 +140,14 @@ private final class CachedImageLoader: ObservableObject {
         return cache
     }()
 
+    private static let diskCacheDirectory: URL = {
+        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        let directory = base.appendingPathComponent("ConCafeImageCache", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }()
+
     func load(from url: URL?, maxPixels: Int?, cacheKey: String) async {
         guard let url, !cacheKey.isEmpty else {
             loadedKey = ""
@@ -186,10 +194,19 @@ private final class CachedImageLoader: ObservableObject {
     /// 백그라운드 스레드에서 실행. CancellationError를 throws로 전파하여 stale 업데이트를 방지.
     private static func fetchAndDecode(url: URL, maxPixels: Int?, nsKey: NSString) async throws -> UIImage? {
         let request = URLRequest(url: url)
+        let diskURL = diskCacheURL(for: nsKey)
+
+        if FileManager.default.fileExists(atPath: diskURL.path),
+           let img = decode(fileURL: diskURL, maxPixels: maxPixels) {
+            try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: diskURL.path)
+            memoryCache.setObject(img, forKey: nsKey)
+            return img
+        }
 
         // URLCache 디스크 히트 — 네트워크 왕복 없이 즉시 디코딩
         if let cachedResponse = URLCache.shared.cachedResponse(for: request),
            let img = decode(data: cachedResponse.data, maxPixels: maxPixels) {
+            try? cachedResponse.data.write(to: diskURL, options: .atomic)
             memoryCache.setObject(img, forKey: nsKey)
             return img
         }
@@ -201,6 +218,7 @@ private final class CachedImageLoader: ObservableObject {
             // 대용량 이미지는 Data 전체를 메모리에 올리면 피크가 커질 수 있으므로
             // 파일로 다운로드한 뒤 파일 기반으로 다운샘플 디코딩한다.
             let downloadedFileURL = try await fetchRemoteFile(request: request)
+            try? replaceDiskCachedFile(from: downloadedFileURL, to: diskURL)
             image = decode(fileURL: downloadedFileURL, maxPixels: maxPixels)
         }
 
@@ -210,6 +228,43 @@ private final class CachedImageLoader: ObservableObject {
         guard let img = image else { return nil }
         memoryCache.setObject(img, forKey: nsKey)
         return img
+    }
+
+    private static func diskCacheURL(for key: NSString) -> URL {
+        let encoded = Data(key.description.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "=", with: "")
+        return diskCacheDirectory.appendingPathComponent(encoded)
+    }
+
+    private static func replaceDiskCachedFile(from source: URL, to destination: URL) throws {
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try? FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.copyItem(at: source, to: destination)
+        trimDiskCacheIfNeeded()
+    }
+
+    private static func trimDiskCacheIfNeeded(maxBytes: Int64 = 300 * 1024 * 1024) {
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: diskCacheDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey]
+        ) else { return }
+
+        let entries = files.compactMap { url -> (url: URL, modified: Date, size: Int64)? in
+            guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]) else { return nil }
+            return (url, values.contentModificationDate ?? .distantPast, Int64(values.fileSize ?? 0))
+        }
+        var totalSize = entries.reduce(Int64(0)) { $0 + $1.size }
+        guard totalSize > maxBytes else { return }
+
+        for entry in entries.sorted(by: { $0.modified < $1.modified }) {
+            if totalSize <= maxBytes { break }
+            try? FileManager.default.removeItem(at: entry.url)
+            totalSize -= entry.size
+        }
     }
 
     /// URLSession download API: 대용량 응답을 파일로 받아 메모리 피크를 줄인다.

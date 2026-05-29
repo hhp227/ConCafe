@@ -53,6 +53,8 @@ import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.LazyGridImagePrefetch
+import com.hhp227.concafe.presentation.component.LazyListImagePrefetch
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -200,6 +202,12 @@ fun HomeContentScreen(
             item {
                 val popularCastListState = rememberLazyListState()
 
+                LazyListImagePrefetch(
+                    state = popularCastListState,
+                    imageUrls = uiState.popularCasts.map { it.profileImage },
+                    aheadCount = 10,
+                    displaySize = ImageDisplaySize.THUMBNAIL
+                )
                 SectionTitle(
                     text = stringResource(Res.string.home_section_popular_cast),
                     actionLabel = if (uiState.canLoadMorePopularCasts) stringResource(Res.string.home_show_more) else null,
@@ -239,6 +247,12 @@ fun HomeContentScreen(
             }
             item {
                 val nearbyGridState = rememberLazyGridState()
+                LazyGridImagePrefetch(
+                    state = nearbyGridState,
+                    imageUrls = uiState.nearbyCafes.map { it.thumbnailImage },
+                    aheadCount = 12,
+                    displaySize = ImageDisplaySize.THUMBNAIL
+                )
 
                 SnapLazyHorizontalGridToStartEffect(nearbyGridState)
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -297,6 +311,12 @@ fun HomeContentScreen(
                 item {
                     val birthdayCastListState = rememberLazyListState()
 
+                    LazyListImagePrefetch(
+                        state = birthdayCastListState,
+                        imageUrls = uiState.birthdayCasts.map { it.profileImage },
+                        aheadCount = 10,
+                        displaySize = ImageDisplaySize.THUMBNAIL
+                    )
                     SectionTitle(stringResource(Res.string.home_section_birthday_cast))
                     Spacer(Modifier.height(10.dp))
                     LazyRow(
@@ -376,6 +396,12 @@ private fun HomeCafeEventSection(
     onAction: (HomeAction) -> Unit
 ) {
     val cafeEventListState = rememberLazyListState()
+    LazyListImagePrefetch(
+        state = cafeEventListState,
+        imageUrls = events.map { it.imageUrl },
+        aheadCount = 8,
+        displaySize = ImageDisplaySize.MEDIUM
+    )
 
     SectionTitle(
         text = stringResource(Res.string.home_section_ongoing_cafe_event),
