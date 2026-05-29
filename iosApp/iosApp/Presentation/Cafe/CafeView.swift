@@ -190,11 +190,6 @@ private struct CafeContentView: View {
                         tabHeaderPinScrollOffset = nextPinScrollOffset
                     }
                 }
-                if uiState.detail != nil, isTabPinned {
-                    pinnedTabHeader()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .zIndex(2)
-                }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
                     .padding(.trailing, 20)
@@ -211,6 +206,12 @@ private struct CafeContentView: View {
                         .font(.headline)
                         .frame(width: 36, height: 36)
                     }
+                }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if uiState.detail != nil, isTabPinned {
+                    pinnedTabHeader()
+                        .zIndex(2)
                 }
             }
         }
