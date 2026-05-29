@@ -152,6 +152,7 @@ struct CafeView: View {
 
 private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
 private let cafeTabPinnedResetScrollOffset: CGFloat = -8
+private let cafeCastPagingLayoutLockDelay: TimeInterval = 0.45
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
@@ -163,6 +164,10 @@ private struct CafeContentView: View {
     @State private var scrollOffset: CGFloat = 0
 
     @State private var isTabPinned = false
+
+    @State private var isCastPagingLayoutLocked = false
+
+    @State private var castPagingLayoutLockGeneration = 0
 
     var body: some View {
         GeometryReader { proxy in
@@ -183,7 +188,7 @@ private struct CafeContentView: View {
                     let shouldPin = value <= proxy.safeAreaInsets.top
                     if shouldPin {
                         isTabPinned = true
-                    } else if scrollOffset >= cafeTabPinnedResetScrollOffset {
+                    } else if !isCastPagingLayoutLocked, scrollOffset >= cafeTabPinnedResetScrollOffset {
                         isTabPinned = false
                     }
                 }
@@ -211,6 +216,27 @@ private struct CafeContentView: View {
                     }
                 }
             }
+            .onChange(of: uiState.isLoadingMoreCasts) { isLoading in
+                guard uiState.selectedTab == .casts else { return }
+                if isLoading {
+                    castPagingLayoutLockGeneration += 1
+                    isCastPagingLayoutLocked = true
+                } else {
+                    unlockCastPagingLayoutAfterDelay()
+                }
+            }
+            .onChange(of: uiState.casts.count) { _ in
+                guard uiState.selectedTab == .casts, isCastPagingLayoutLocked else { return }
+                unlockCastPagingLayoutAfterDelay()
+            }
+        }
+    }
+
+    private func unlockCastPagingLayoutAfterDelay() {
+        let generation = castPagingLayoutLockGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + cafeCastPagingLayoutLockDelay) {
+            guard generation == castPagingLayoutLockGeneration else { return }
+            isCastPagingLayoutLocked = false
         }
     }
 
