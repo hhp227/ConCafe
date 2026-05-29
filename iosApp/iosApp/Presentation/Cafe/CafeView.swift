@@ -151,6 +151,8 @@ struct CafeView: View {
 }
 
 private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
+private let cafeTabPinnedResetScrollOffset: CGFloat = -8
+private let cafeCastPagingLayoutLockDelay: TimeInterval = 0.45
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
@@ -161,7 +163,11 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
-    @State private var tabHeaderMinY: CGFloat = .greatestFiniteMagnitude
+    @State private var isTabPinned = false
+
+    @State private var isCastPagingLayoutLocked = false
+
+    @State private var castPagingLayoutLockGeneration = 0
 
     var body: some View {
         GeometryReader { proxy in
@@ -178,12 +184,17 @@ private struct CafeContentView: View {
                     scrollOffset = value
                 }
                 .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
-                    if value != .greatestFiniteMagnitude {
-                        tabHeaderMinY = value
+                    guard value != .greatestFiniteMagnitude, value.isFinite else { return }
+                    let shouldPin = value <= proxy.safeAreaInsets.top
+                    if shouldPin {
+                        isTabPinned = true
+                    } else if !isCastPagingLayoutLocked, scrollOffset >= cafeTabPinnedResetScrollOffset {
+                        isTabPinned = false
                     }
                 }
-                if uiState.detail != nil, isTabPinned(topSafeArea: proxy.safeAreaInsets.top) {
-                    pinnedTabHeader(topSafeArea: proxy.safeAreaInsets.top)
+                if uiState.detail != nil, isTabPinned {
+                    pinnedTabHeader()
+                        .padding(.top, pinnedTabTopPadding(in: proxy))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         .zIndex(2)
                 }
@@ -205,6 +216,27 @@ private struct CafeContentView: View {
                     }
                 }
             }
+            .onChange(of: uiState.isLoadingMoreCasts) { isLoading in
+                guard uiState.selectedTab == .casts else { return }
+                if isLoading {
+                    castPagingLayoutLockGeneration += 1
+                    isCastPagingLayoutLocked = true
+                } else {
+                    unlockCastPagingLayoutAfterDelay()
+                }
+            }
+            .onChange(of: uiState.casts.count) { _ in
+                guard uiState.selectedTab == .casts, isCastPagingLayoutLocked else { return }
+                unlockCastPagingLayoutAfterDelay()
+            }
+        }
+    }
+
+    private func unlockCastPagingLayoutAfterDelay() {
+        let generation = castPagingLayoutLockGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + cafeCastPagingLayoutLockDelay) {
+            guard generation == castPagingLayoutLockGeneration else { return }
+            isCastPagingLayoutLocked = false
         }
     }
 
@@ -254,7 +286,7 @@ private struct CafeContentView: View {
                             )
                         }
                         .allowsHitTesting(false)
-                    }
+                }
                 tabContent(detail: detail)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 20)
@@ -437,15 +469,15 @@ private struct CafeContentView: View {
         .zIndex(1)
     }
 
-    private func pinnedTabHeader(topSafeArea: CGFloat) -> some View {
+    private func pinnedTabHeader() -> some View {
         VStack(spacing: 0) {
             tabHeader()
         }
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
-    private func isTabPinned(topSafeArea: CGFloat) -> Bool {
-        tabHeaderMinY <= topSafeArea
+    private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
+        max(0, proxy.safeAreaInsets.top - proxy.frame(in: .global).minY)
     }
 
     @ViewBuilder
