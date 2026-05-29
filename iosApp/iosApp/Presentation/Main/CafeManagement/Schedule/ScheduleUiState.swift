@@ -84,8 +84,9 @@ struct ScheduleUiState {
     func applyingSchedulePeriod(_ period: SchedulePeriod) -> ScheduleUiState {
         var next = self
         next.schedulePeriod = period
-        next.weekDays = Array(allWeekDays.prefix(period.dayCount))
-        next.schedules = Array(allSchedules.prefix(period.dayCount))
+        let visibleDayCount = period.visibleDayCount(totalDayCount: allWeekDays.count)
+        next.weekDays = Array(allWeekDays.prefix(visibleDayCount))
+        next.schedules = Array(allSchedules.prefix(visibleDayCount))
         next.weekRangeLabel = resolveScheduleRangeLabel(next.weekDays)
         if !next.weekDays.contains(where: { $0.id == next.selectedDayId }) {
             next.selectedDayId = next.weekDays.first?.id ?? ""
@@ -99,11 +100,14 @@ enum SchedulePeriod: CaseIterable {
     case twoWeeks
     case oneMonth
 
-    var dayCount: Int {
+    func visibleDayCount(totalDayCount: Int) -> Int {
         switch self {
-        case .oneWeek: return 7
-        case .twoWeeks: return 14
-        case .oneMonth: return 30
+        case .oneWeek:
+            return min(7, totalDayCount)
+        case .twoWeeks:
+            return min(14, totalDayCount)
+        case .oneMonth:
+            return totalDayCount
         }
     }
 

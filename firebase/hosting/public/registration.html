@@ -76,7 +76,7 @@
       }
 
       .page-grid {
-        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+        grid-template-columns: minmax(0, 0.98fr) minmax(360px, 1.02fr);
         margin-top: 20px;
       }
 
@@ -207,7 +207,7 @@
       }
 
       .section + .section {
-        margin-top: 20px;
+        margin-top: 16px;
       }
 
       .section-header {
@@ -249,6 +249,48 @@
       .field-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .compact-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 14px;
+      }
+
+      .form-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 16px;
+      }
+
+      .form-panel + .form-panel {
+        margin-top: 14px;
+      }
+
+      .form-panel-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+
+      .operator-cafe-card {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .operator-cafe-name {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .admin-cafe-controls {
+        display: grid;
         gap: 14px;
       }
 
@@ -360,8 +402,8 @@
       .list-item {
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: var(--surface-soft);
-        padding: 16px;
+        background: #fff;
+        padding: 14px;
       }
 
       .item-head {
@@ -434,16 +476,16 @@
       }
 
       .weekday-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 6px;
         margin-top: 12px;
       }
 
       .weekday-chip {
-        min-width: 36px;
+        min-width: 0;
         height: 36px;
-        padding: 0 10px;
+        padding: 0 6px;
         border-radius: 8px;
         border: 1px solid var(--line);
         background: #fff;
@@ -453,6 +495,33 @@
         justify-content: center;
         font-size: 13px;
         font-weight: 700;
+      }
+
+      .weekday-chip.off {
+        background: #f0eef1;
+        border-color: #d8c9d1;
+        color: #655a62;
+      }
+
+      .schedule-list {
+        gap: 10px;
+      }
+
+      .schedule-card {
+        padding: 14px;
+      }
+
+      .schedule-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .schedule-summary {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
       }
 
       .weekday-chip.work {
@@ -579,8 +648,13 @@
         }
 
         .field-grid,
+        .compact-grid,
         .stat-list {
           grid-template-columns: minmax(0, 1fr);
+        }
+
+        .weekday-row {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
         }
 
         h1 {
@@ -632,10 +706,10 @@
     <div class="page">
       <section class="hero">
         <div class="surface hero-copy">
-          <div class="eyebrow">캐스트, 스케줄 등록</div>
-          <h1>캐스트, 스케줄 등록 페이지</h1>
+          <div class="eyebrow">운영자 관리</div>
+          <h1>캐스트, 스케줄 등록</h1>
           <p>
-            카페별 캐스트를 등록하고, 스케줄을 관리할수 있는 페이지입니다.
+            카페 운영자와 관리자만 캐스트와 출근 스케줄을 등록할 수 있습니다.
           </p>
           <div class="status-banner info" id="authStatus">운영 세션을 확인하는 중입니다.</div>
         </div>
@@ -665,14 +739,14 @@
 
       <div class="page-grid">
         <div>
-          <section class="surface section">
+          <section class="surface section" id="cafeSection">
             <div class="section-header">
               <div>
-                <h2>1. 카페 선택</h2>
-                <p>실제 서비스에 반영할 카페를 먼저 선택합니다.</p>
+                <h2 id="cafeSectionTitle">운영 카페</h2>
+                <p id="cafeSectionDescription">권한이 있는 카페만 표시됩니다.</p>
               </div>
             </div>
-            <div class="field-grid">
+            <div class="admin-cafe-controls" id="adminCafeControls">
               <div class="field">
                 <label for="cafeSearch">카페 검색</label>
                 <input id="cafeSearch" type="search" placeholder="카페 이름 또는 지역으로 검색" />
@@ -684,15 +758,27 @@
                 </select>
               </div>
             </div>
+            <div class="operator-cafe-card" id="operatorCafeCard" style="display: none;">
+              <p class="helper">현재 관리 대상</p>
+              <h3 class="operator-cafe-name" id="operatorCafeName">운영 카페 없음</h3>
+              <p id="operatorCafeMeta">운영자 권한을 확인한 뒤 자동으로 선택됩니다.</p>
+              <div class="field" id="operatorCafeSwitchField" style="display: none;">
+                <label for="operatorCafeSelect">운영 카페 전환</label>
+                <select id="operatorCafeSelect"></select>
+              </div>
+            </div>
             <div class="status-banner info" id="cafeStatus">카페 목록을 불러오는 중입니다.</div>
           </section>
 
           <section class="surface section">
             <div class="section-header">
               <div>
-                <h2>2. 캐스트 등록</h2>
+                <h2>등록</h2>
+                <p>캐스트를 먼저 추가한 뒤 같은 화면에서 스케줄을 바로 입력합니다.</p>
               </div>
             </div>
+            <div class="form-panel">
+              <h3 class="form-panel-title">캐스트 정보</h3>
             <form id="castForm">
               <div class="field-grid">
                 <div class="field">
@@ -717,21 +803,16 @@
                 </div>
               </div>
               <div class="button-row" style="margin-top: 18px;">
-                <button class="button button-primary" id="castSubmitButton" type="submit">캐스트 등록</button>
+                <button class="button button-primary" id="castSubmitButton" type="submit">캐스트 저장</button>
                 <button class="button button-ghost" type="reset">입력 초기화</button>
               </div>
             </form>
             <div class="status-banner info" id="castFormStatus" style="display: none;"></div>
-          </section>
-
-          <section class="surface section">
-            <div class="section-header">
-              <div>
-                <h2>3. 스케줄 등록</h2>
-              </div>
             </div>
+            <div class="form-panel">
+              <h3 class="form-panel-title">스케줄 정보</h3>
             <form id="scheduleForm">
-              <div class="field-grid">
+              <div class="compact-grid">
                 <div class="field">
                   <label for="scheduleCast">대상 캐스트</label>
                   <select id="scheduleCast" required>
@@ -764,11 +845,12 @@
                 </div>
               </div>
               <div class="button-row" style="margin-top: 18px;">
-                <button class="button button-primary" id="scheduleSubmitButton" type="submit">스케줄 등록</button>
+                <button class="button button-primary" id="scheduleSubmitButton" type="submit">스케줄 저장</button>
                 <button class="button button-ghost" type="reset">입력 초기화</button>
               </div>
             </form>
             <div class="status-banner info" id="scheduleFormStatus" style="display: none;"></div>
+            </div>
           </section>
         </div>
 
@@ -793,7 +875,7 @@
               </div>
               <button class="button button-secondary" id="refreshSchedulesButton" type="button">새로고침</button>
             </div>
-            <div class="list" id="scheduleList"></div>
+            <div class="list schedule-list" id="scheduleList"></div>
             <p class="empty" id="scheduleEmptyState">선택한 카페의 캐스트가 아직 없습니다.</p>
           </section>
         </div>
@@ -856,11 +938,12 @@
           appId: "1:387905493709:web:registration-page",
         };
 
-        const ALLOWED_ROLES = ["TEMP_CAFE_OPERATOR", "CAFE_OWNER", "ADMIN"];
+        const ALLOWED_ROLES = ["CAFE_OWNER", "ADMIN"];
 
         const state = {
           user: null,
           userRole: "",
+          ownedCafeIds: [],
           cafes: [],
           filteredCafes: [],
           selectedCafeId: "",
@@ -874,6 +957,15 @@
           selectedCafeLabel: document.getElementById("selectedCafeLabel"),
           castCount: document.getElementById("castCount"),
           scheduleCount: document.getElementById("scheduleCount"),
+          cafeSection: document.getElementById("cafeSection"),
+          cafeSectionTitle: document.getElementById("cafeSectionTitle"),
+          cafeSectionDescription: document.getElementById("cafeSectionDescription"),
+          adminCafeControls: document.getElementById("adminCafeControls"),
+          operatorCafeCard: document.getElementById("operatorCafeCard"),
+          operatorCafeName: document.getElementById("operatorCafeName"),
+          operatorCafeMeta: document.getElementById("operatorCafeMeta"),
+          operatorCafeSwitchField: document.getElementById("operatorCafeSwitchField"),
+          operatorCafeSelect: document.getElementById("operatorCafeSelect"),
           cafeSearch: document.getElementById("cafeSearch"),
           cafeSelect: document.getElementById("cafeSelect"),
           cafeStatus: document.getElementById("cafeStatus"),
@@ -941,6 +1033,23 @@
             .join(" ");
         }
 
+        function normalizeText(value, fallback) {
+          if (typeof value === "string" && value.trim()) {
+            return value.trim();
+          }
+          return fallback;
+        }
+
+        function toStringArray(value) {
+          return Array.isArray(value)
+            ? value.filter(function (item) {
+                return typeof item === "string" && item.trim();
+              }).map(function (item) {
+                return item.trim();
+              })
+            : [];
+        }
+
         function toBirthdayKey(dateValue) {
           if (!dateValue || typeof dateValue !== "string" || dateValue.length < 10) {
             return null;
@@ -998,6 +1107,22 @@
           return !!state.user && ALLOWED_ROLES.indexOf(state.userRole) >= 0;
         }
 
+        function isAdmin() {
+          return state.userRole === "ADMIN";
+        }
+
+        function isSelectedCafeManageable() {
+          if (!isSessionReady() || !state.selectedCafeId) {
+            return false;
+          }
+          if (isAdmin()) {
+            return true;
+          }
+          const selectedCafe = getSelectedCafe();
+          return state.ownedCafeIds.indexOf(state.selectedCafeId) >= 0 ||
+            !!(selectedCafe && state.user && selectedCafe.ownerIds.indexOf(state.user.uid) >= 0);
+        }
+
         function updateSummary() {
           el.cafeCount.textContent = String(state.cafes.length);
           el.castCount.textContent = String(state.casts.length);
@@ -1006,7 +1131,41 @@
           el.selectedCafeLabel.textContent = cafe ? cafe.name : "없음";
         }
 
+        function renderCafeAccessView() {
+          const selectedCafe = getSelectedCafe();
+          if (!isSessionReady()) {
+            el.cafeSectionTitle.textContent = "운영 카페";
+            el.cafeSectionDescription.textContent = "로그인 후 권한이 있는 카페를 확인할 수 있습니다.";
+            el.adminCafeControls.style.display = "grid";
+            el.operatorCafeCard.style.display = "none";
+            return;
+          }
+          if (isAdmin()) {
+            el.cafeSectionTitle.textContent = "카페 선택";
+            el.cafeSectionDescription.textContent = "관리자는 전체 카페 중 등록 대상 카페를 선택합니다.";
+            el.adminCafeControls.style.display = "grid";
+            el.operatorCafeCard.style.display = "none";
+            return;
+          }
+
+          el.cafeSectionTitle.textContent = "운영 카페";
+          el.cafeSectionDescription.textContent = "카페 운영자는 본인이 운영 중인 카페만 관리할 수 있습니다.";
+          el.adminCafeControls.style.display = "none";
+          el.operatorCafeCard.style.display = "";
+          el.operatorCafeName.textContent = selectedCafe ? selectedCafe.name : "운영 카페 없음";
+          el.operatorCafeMeta.textContent = selectedCafe
+            ? (selectedCafe.regionLabel || "지역 정보 없음")
+            : "운영자 권한으로 연결된 카페가 없습니다.";
+          el.operatorCafeSwitchField.style.display = state.cafes.length > 1 ? "" : "none";
+          el.operatorCafeSelect.innerHTML = state.cafes.map(function (cafe) {
+            const label = cafe.regionLabel ? cafe.name + " · " + cafe.regionLabel : cafe.name;
+            return '<option value="' + escapeHtml(cafe.id) + '">' + escapeHtml(label) + "</option>";
+          }).join("");
+          el.operatorCafeSelect.value = state.selectedCafeId;
+        }
+
         function renderCafeOptions() {
+          renderCafeAccessView();
           const currentValue = state.selectedCafeId;
           el.cafeSelect.innerHTML =
             '<option value="">카페를 선택하세요</option>' +
@@ -1017,6 +1176,7 @@
           if (currentValue && state.filteredCafes.some(function (item) { return item.id === currentValue; })) {
             el.cafeSelect.value = currentValue;
           }
+          renderCafeAccessView();
         }
 
         function filterCafes() {
@@ -1095,7 +1255,7 @@
               ? " work"
               : schedule.status === "VACATION"
                 ? " vacation"
-                : "";
+                : " off";
             const title = schedule.status === "WORK" && schedule.startTime && schedule.endTime
               ? schedule.date + " " + schedule.startTime + " - " + schedule.endTime
               : schedule.date + " " + (schedule.status === "VACATION" ? "휴가" : "휴무");
@@ -1111,16 +1271,19 @@
           }
           el.scheduleEmptyState.style.display = "none";
           el.scheduleList.innerHTML = state.casts.map(function (cast) {
-            const intro = cast.desc ? '<p class="small" style="margin-top:8px;">' + escapeHtml(cast.desc) + "</p>" : "";
             const weekdays = renderWeekdayChips(cast.id);
-            return '<article class="list-item"><div class="item-head"><div><h3 class="item-title">' +
+            const workCount = state.schedules.filter(function (schedule) {
+              return schedule.castId === cast.id && schedule.status === "WORK";
+            }).length;
+            return '<article class="list-item schedule-card"><div class="schedule-card-head"><div><h3 class="item-title">' +
               escapeHtml(cast.name) +
               '</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">' +
               escapeHtml(cast.conceptRole) +
-              "</span></div>" + intro + weekdays +
-              '</div><span class="chip neutral small">' +
-              escapeHtml(cast.createdVia || "서비스") +
-              "</span></div></article>";
+              "</span></div></div>" +
+              '<span class="chip neutral small">등록 ' + workCount + "건</span></div>" +
+              weekdays +
+              '<p class="schedule-summary">이번 주 기준: 분홍색은 근무, 회색은 휴무, 노란색은 휴가입니다.</p>' +
+              "</article>";
           }).join("");
         }
 
@@ -1133,16 +1296,28 @@
         }
 
         function setInteractionAvailability() {
-          const enabled = isSessionReady() && !!state.selectedCafeId;
+          renderCafeAccessView();
+          const enabled = isSelectedCafeManageable();
           el.castSubmitButton.disabled = !enabled;
-          el.scheduleSubmitButton.disabled = !enabled;
+          el.scheduleSubmitButton.disabled = !enabled || !state.casts.length;
+          el.cafeSearch.disabled = !isSessionReady() || !isAdmin();
+          el.cafeSelect.disabled = !isSessionReady() || !isAdmin();
+          el.operatorCafeSelect.disabled = !isSessionReady() || isAdmin() || state.cafes.length < 2;
+          el.refreshCastsButton.disabled = !enabled;
+          el.refreshSchedulesButton.disabled = !enabled;
 
           if (!isSessionReady()) {
             setBanner(el.castFormStatus, "info", "로그인 후 사용할 수 있습니다.");
             setBanner(el.scheduleFormStatus, "info", "로그인 후 사용할 수 있습니다.");
           } else if (!state.selectedCafeId) {
-            setBanner(el.castFormStatus, "info", "카페를 먼저 선택하세요.");
-            setBanner(el.scheduleFormStatus, "info", "카페와 캐스트를 먼저 선택하세요.");
+            setBanner(el.castFormStatus, "info", isAdmin() ? "카페를 먼저 선택하세요." : "운영 중인 카페가 없습니다.");
+            setBanner(el.scheduleFormStatus, "info", isAdmin() ? "카페와 캐스트를 먼저 선택하세요." : "운영 중인 카페가 없습니다.");
+          } else if (!isSelectedCafeManageable()) {
+            setBanner(el.castFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
+            setBanner(el.scheduleFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
+          } else if (!state.casts.length) {
+            el.castFormStatus.style.display = "none";
+            setBanner(el.scheduleFormStatus, "info", "스케줄 등록 전에 캐스트를 먼저 저장하세요.");
           } else {
             el.castFormStatus.style.display = "none";
             el.scheduleFormStatus.style.display = "none";
@@ -1157,39 +1332,78 @@
           const data = doc.data() || {};
           const role = typeof data.role === "string" ? data.role : "";
           if (ALLOWED_ROLES.indexOf(role) < 0) {
-            throw new Error("허용되지 않은 역할입니다: " + role);
+            throw new Error("카페 운영자 또는 관리자만 사용할 수 있습니다.");
           }
           state.user = user;
           state.userRole = role;
+          state.ownedCafeIds = toStringArray(data.ownedCafeIds);
         }
 
         async function ensureOperatorSession(user) {
           if (!user) {
             state.user = null;
             state.userRole = "";
+            state.ownedCafeIds = [];
             return;
           }
           await resolveSessionRole(user);
         }
 
         async function loadCafes() {
+          if (!isSessionReady()) {
+            state.cafes = [];
+            state.filteredCafes = [];
+            state.selectedCafeId = "";
+            renderCafeOptions();
+            updateSummary();
+            setBanner(el.cafeStatus, "info", "로그인 후 운영 카페를 확인할 수 있습니다.");
+            return;
+          }
+
           setBanner(el.cafeStatus, "info", "카페 목록을 불러오는 중입니다.");
           try {
+            state.casts = [];
+            state.schedules = [];
+            renderCastOptions();
+            renderCastList();
+            renderScheduleList();
             const snapshot = await db.collection("cafes").get();
-            state.cafes = snapshot.docs.map(function (doc) {
+            const cafes = snapshot.docs.map(function (doc) {
               const data = doc.data() || {};
+              const ownerIds = toStringArray(data.ownerIds);
               return {
                 id: doc.id,
-                name: typeof data.name === "string" && data.name.trim() ? data.name.trim() : "이름 없는 카페",
+                name: normalizeText(data.name, "이름 없는 카페"),
                 regionLabel: normalizeRegionLabel(data.region),
+                ownerIds: ownerIds,
               };
             }).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
             });
+
+            state.cafes = isAdmin()
+              ? cafes
+              : cafes.filter(function (cafe) {
+                  return state.ownedCafeIds.indexOf(cafe.id) >= 0 ||
+                    cafe.ownerIds.indexOf(state.user.uid) >= 0;
+                });
             state.filteredCafes = state.cafes.slice();
+            if (!isAdmin()) {
+              state.selectedCafeId = state.cafes.length ? state.cafes[0].id : "";
+            } else if (state.selectedCafeId && !state.cafes.some(function (cafe) { return cafe.id === state.selectedCafeId; })) {
+              state.selectedCafeId = "";
+            }
             renderCafeOptions();
             updateSummary();
-            setBanner(el.cafeStatus, "success", "카페 목록을 불러왔습니다.");
+            setInteractionAvailability();
+            if (!state.cafes.length) {
+              setBanner(el.cafeStatus, "info", isAdmin() ? "등록된 카페가 없습니다." : "운영 권한이 연결된 카페가 없습니다.");
+              return;
+            }
+            setBanner(el.cafeStatus, "success", isAdmin() ? "카페 목록을 불러왔습니다." : "운영 중인 카페를 불러왔습니다.");
+            if (state.selectedCafeId) {
+              await loadCafeData();
+            }
           } catch (error) {
             setBanner(el.cafeStatus, "error", "카페 목록을 불러오지 못했습니다.");
             console.error(error);
@@ -1219,16 +1433,17 @@
             const castNameById = {};
             state.casts = results[0].docs.map(function (doc) {
               const data = doc.data() || {};
-              castNameById[doc.id] = data.name || "이름 없음";
+              const castName = normalizeText(data.name, "이름 없음");
+              castNameById[doc.id] = castName;
               return {
                 id: doc.id,
-                name: data.name || "이름 없음",
-                conceptRole: data.conceptRole || "역할 없음",
-                birthday: data.birthday || "",
-                desc: data.desc || "",
-                linkedUserId: data.linkedUserId || "",
-                profileImage: data.profileImage || "",
-                createdVia: data.createdVia || "",
+                name: castName,
+                conceptRole: normalizeText(data.conceptRole, "역할 없음"),
+                birthday: normalizeText(data.birthday, ""),
+                desc: normalizeText(data.desc, ""),
+                linkedUserId: normalizeText(data.linkedUserId, ""),
+                profileImage: normalizeText(data.profileImage, ""),
+                createdVia: normalizeText(data.createdVia, ""),
               };
             }).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
@@ -1238,17 +1453,17 @@
               const data = doc.data() || {};
               return {
                 id: doc.id,
-                cafeId: data.cafeId || "",
-                castId: data.castId || "",
-                castName: castNameById[data.castId] || data.castName || "이름 없음",
-                date: data.date || "",
-                status: data.status || "OFF",
-                startTime: data.startTime || "",
-                endTime: data.endTime || "",
-                memo: data.memo || "",
+                cafeId: normalizeText(data.cafeId, ""),
+                castId: normalizeText(data.castId, ""),
+                castName: castNameById[data.castId] || normalizeText(data.castName, "이름 없음"),
+                date: normalizeText(data.date, ""),
+                status: normalizeText(data.status, "OFF"),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
                 createdAt: data.createdAt || "",
                 updatedAt: data.updatedAt || "",
-                createdVia: data.createdVia || "",
+                createdVia: normalizeText(data.createdVia, ""),
               };
             }).sort(function (a, b) {
               if (String(a.date) === String(b.date)) {
@@ -1277,6 +1492,10 @@
           }
           if (!state.selectedCafeId) {
             setBanner(el.castFormStatus, "error", "카페를 먼저 선택하세요.");
+            return;
+          }
+          if (!isSelectedCafeManageable()) {
+            setBanner(el.castFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
             return;
           }
 
@@ -1341,6 +1560,10 @@
           }
           if (!state.selectedCafeId) {
             setBanner(el.scheduleFormStatus, "error", "카페를 먼저 선택하세요.");
+            return;
+          }
+          if (!isSelectedCafeManageable()) {
+            setBanner(el.scheduleFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
             return;
           }
 
@@ -1439,13 +1662,38 @@
               setAuthBanner("info", "권한을 확인하는 중입니다.");
               try {
                 await ensureOperatorSession(user);
-                el.authStatus.style.display = "none";
+                setAuthBanner("success", state.userRole === "ADMIN" ? "관리자 권한으로 접속했습니다." : "카페 운영자 권한으로 접속했습니다.");
+                await loadCafes();
               } catch (error) {
+                state.user = null;
+                state.userRole = "";
+                state.ownedCafeIds = [];
+                state.selectedCafeId = "";
+                state.cafes = [];
+                state.filteredCafes = [];
+                state.casts = [];
+                state.schedules = [];
+                renderCafeOptions();
+                renderCastOptions();
+                renderCastList();
+                renderScheduleList();
+                updateSummary();
                 setAuthBanner("error", error.message || "이 페이지를 사용할 권한이 없습니다.");
               }
             } else {
               state.user = null;
               state.userRole = "";
+              state.ownedCafeIds = [];
+              state.selectedCafeId = "";
+              state.cafes = [];
+              state.filteredCafes = [];
+              state.casts = [];
+              state.schedules = [];
+              renderCafeOptions();
+              renderCastOptions();
+              renderCastList();
+              renderScheduleList();
+              updateSummary();
               if (authUserInfo) authUserInfo.style.display = "none";
               if (signInBtn) signInBtn.style.display = "";
               setAuthBanner("info", "로그인이 필요합니다. 우측 상단의 로그인 버튼을 눌러주세요.");
@@ -1488,6 +1736,12 @@
             updateSummary();
             loadCafeData();
           });
+          el.operatorCafeSelect.addEventListener("change", function () {
+            state.selectedCafeId = el.operatorCafeSelect.value;
+            updateSummary();
+            renderCafeAccessView();
+            loadCafeData();
+          });
           el.castForm.addEventListener("submit", handleCastSubmit);
           el.scheduleForm.addEventListener("submit", handleScheduleSubmit);
           el.scheduleStatus.addEventListener("change", toggleScheduleTimeFields);
@@ -1495,8 +1749,6 @@
           el.refreshSchedulesButton.addEventListener("click", loadCafeData);
           toggleScheduleTimeFields();
           setInteractionAvailability();
-
-          await loadCafes();
         }
 
         boot();
