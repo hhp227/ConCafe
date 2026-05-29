@@ -161,6 +161,8 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
+    @State private var tabHeaderPinThreshold: CGFloat?
+
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .bottomTrailing) {
@@ -174,6 +176,21 @@ private struct CafeContentView: View {
                 .background(Color(hex: "FFF9FC"))
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
+                }
+                .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
+                    guard value != .greatestFiniteMagnitude, value.isFinite else { return }
+                    guard value > proxy.safeAreaInsets.top else { return }
+                    if let tabHeaderPinThreshold, scrollOffset <= tabHeaderPinThreshold {
+                        return
+                    }
+
+                    tabHeaderPinThreshold = scrollOffset + proxy.safeAreaInsets.top - value
+                }
+                if uiState.detail != nil, isTabPinned {
+                    pinnedTabHeader()
+                        .padding(.top, proxy.safeAreaInsets.top)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
@@ -230,18 +247,23 @@ private struct CafeContentView: View {
     @ViewBuilder
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: 0) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
                 summarySection(detail: detail)
-                Section {
-                    tabContent(detail: detail)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 20)
-                } header: {
-                    tabHeader()
-                        .zIndex(1)
-                    }
-            }
+                tabHeader()
+                    .overlay {
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: CafeTabHeaderOffsetPreferenceKey.self,
+                                value: proxy.frame(in: .named("cafeScroll")).minY
+                            )
+                        }
+                        .allowsHitTesting(false)
+                }
+                tabContent(detail: detail)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 20)
+                }
         } else if uiState.isLoading {
             ProgressView()
             .frame(maxWidth: .infinity)
@@ -420,6 +442,18 @@ private struct CafeContentView: View {
         .zIndex(1)
     }
 
+    private func pinnedTabHeader() -> some View {
+        VStack(spacing: 0) {
+            tabHeader()
+        }
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+    }
+
+    private var isTabPinned: Bool {
+        guard let tabHeaderPinThreshold else { return false }
+        return scrollOffset <= tabHeaderPinThreshold
+    }
+
     @ViewBuilder
     private func tabContent(detail: CafeDetail) -> some View {
         switch uiState.selectedTab {
@@ -473,6 +507,14 @@ private struct CafeContentView: View {
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CafeTabHeaderOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
