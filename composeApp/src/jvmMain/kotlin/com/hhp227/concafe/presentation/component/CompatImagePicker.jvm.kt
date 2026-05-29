@@ -142,12 +142,19 @@ actual fun rememberImagePrefetcher(): ImagePrefetcher {
                     .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
                     .distinct()
                     .forEach { url ->
+                        val cacheKey = "$url|$displaySize"
+
+                        if (!JvmImagePrefetchRegistry.markRunning(cacheKey)) return@forEach
                         JvmImagePrefetchScope.launch {
-                            decodeImageBitmap(
-                                imageUrl = url,
-                                cacheKey = "$url|$displaySize",
-                                displaySize = displaySize
-                            )
+                            try {
+                                decodeImageBitmap(
+                                    imageUrl = url,
+                                    cacheKey = cacheKey,
+                                    displaySize = displaySize
+                                )
+                            } finally {
+                                JvmImagePrefetchRegistry.markFinished(cacheKey)
+                            }
                         }
                     }
             }
@@ -264,6 +271,19 @@ private object JvmImagePrefetchScope {
 
     fun launch(block: suspend () -> Unit) {
         scope.launch { block() }
+    }
+}
+
+private object JvmImagePrefetchRegistry {
+    private val runningKeys = mutableSetOf<String>()
+
+    fun markRunning(cacheKey: String): Boolean = synchronized(runningKeys) {
+        runningKeys.add(cacheKey)
+    }
+
+    fun markFinished(cacheKey: String) = synchronized(runningKeys) {
+        runningKeys.remove(cacheKey)
+        Unit
     }
 }
 

@@ -106,8 +106,7 @@ struct CachedAsyncImage<Placeholder: View>: View {
 
     private var cacheKey: String {
         guard let url else { return "" }
-        let sizeTag = displaySize.maxPixels.map { "\($0)" } ?? "full"
-        return "\(url.absoluteString)|\(sizeTag)"
+        return CachedImageLoader.cacheKey(for: url, displaySize: displaySize)
     }
 }
 
@@ -126,12 +125,51 @@ extension CachedAsyncImage where Placeholder == DefaultCachedAsyncImagePlacehold
     }
 }
 
+enum ImagePrefetcher {
+    static func prefetch(
+        _ imageUrls: [String?],
+        displaySize: ImageDisplaySize = .thumbnail
+    ) {
+        let urls = imageUrls.compactMap { ImageUrlUtils.normalizedRemoteUrl(from: $0) }
+        prefetch(urls, displaySize: displaySize)
+    }
+
+    static func prefetch(
+        _ urls: [URL],
+        displaySize: ImageDisplaySize = .thumbnail
+    ) {
+        let uniqueUrls = Array(Dictionary(grouping: urls, by: \.absoluteString).compactMap { $0.value.first })
+        guard !uniqueUrls.isEmpty else { return }
+
+        Task { @MainActor in
+            CachedImageLoader.prefetch(urls: uniqueUrls, displaySize: displaySize)
+        }
+    }
+}
+
+extension View {
+    func lazyListImagePrefetch(
+        index: Int,
+        imageUrls: [String?],
+        aheadCount: Int = 8,
+        displaySize: ImageDisplaySize = .thumbnail
+    ) -> some View {
+        onAppear {
+            guard index >= 0 else { return }
+            let urls = Array(imageUrls.dropFirst(index + 1).prefix(aheadCount))
+            ImagePrefetcher.prefetch(urls, displaySize: displaySize)
+        }
+    }
+}
+
 @MainActor
 private final class CachedImageLoader: ObservableObject {
     @Published var image: UIImage?
 
     /// 현재 표시 중인 캐시 키. 오래된(stale) Task 결과를 걸러내는 데 사용.
     private var loadedKey = ""
+
+    private static var prefetchTasks: [String: Task<Void, Never>] = [:]
 
     private static let memoryCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
@@ -147,6 +185,38 @@ private final class CachedImageLoader: ObservableObject {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }()
+
+    static func cacheKey(for url: URL, displaySize: ImageDisplaySize) -> String {
+        let sizeTag = displaySize.maxPixels.map { "\($0)" } ?? "full"
+        return "\(url.absoluteString)|\(sizeTag)"
+    }
+
+    static func prefetch(urls: [URL], displaySize: ImageDisplaySize) {
+        for url in urls {
+            guard prefetchTasks.count < 6 else { break }
+
+            let cacheKey = cacheKey(for: url, displaySize: displaySize)
+            let nsKey = cacheKey as NSString
+
+            if memoryCache.object(forKey: nsKey) != nil || prefetchTasks[cacheKey] != nil {
+                continue
+            }
+
+            let task = Task.detached(priority: .utility) {
+                do {
+                    _ = try await Self.fetchAndDecode(url: url, maxPixels: displaySize.maxPixels, nsKey: nsKey)
+                } catch {
+                    // Prefetch is opportunistic. The visible image load will retry if needed.
+                }
+            }
+            prefetchTasks[cacheKey] = task
+
+            Task {
+                await task.value
+                Self.prefetchTasks[cacheKey] = nil
+            }
+        }
+    }
 
     func load(from url: URL?, maxPixels: Int?, cacheKey: String) async {
         guard let url, !cacheKey.isEmpty else {
@@ -201,6 +271,8 @@ private final class CachedImageLoader: ObservableObject {
             try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: diskURL.path)
             memoryCache.setObject(img, forKey: nsKey)
             return img
+        } else if FileManager.default.fileExists(atPath: diskURL.path) {
+            try? FileManager.default.removeItem(at: diskURL)
         }
 
         // URLCache 디스크 히트 — 네트워크 왕복 없이 즉시 디코딩
@@ -218,8 +290,10 @@ private final class CachedImageLoader: ObservableObject {
             // 대용량 이미지는 Data 전체를 메모리에 올리면 피크가 커질 수 있으므로
             // 파일로 다운로드한 뒤 파일 기반으로 다운샘플 디코딩한다.
             let downloadedFileURL = try await fetchRemoteFile(request: request)
-            try? replaceDiskCachedFile(from: downloadedFileURL, to: diskURL)
             image = decode(fileURL: downloadedFileURL, maxPixels: maxPixels)
+            if image != nil {
+                try? replaceDiskCachedFile(from: downloadedFileURL, to: diskURL)
+            }
         }
 
         // 디코딩 전 취소 여부 확인

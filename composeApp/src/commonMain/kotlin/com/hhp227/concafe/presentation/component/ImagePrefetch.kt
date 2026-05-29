@@ -44,6 +44,39 @@ fun LazyListImagePrefetch(
 }
 
 @Composable
+fun LazyListGridImagePrefetch(
+    state: LazyListState,
+    imageUrls: List<String?>,
+    columns: Int,
+    firstGridRowIndex: Int,
+    aheadCount: Int = 12,
+    displaySize: ImageDisplaySize = ImageDisplaySize.THUMBNAIL
+) {
+    val prefetcher = rememberImagePrefetcher()
+    val stableUrls = remember(imageUrls) { imageUrls.toList() }
+
+    LaunchedEffect(state, stableUrls, columns, firstGridRowIndex, aheadCount, displaySize, prefetcher) {
+        snapshotFlow { state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
+            .distinctUntilChanged()
+            .collectLatest { lastVisibleRowIndex ->
+                val normalizedColumns = columns.coerceAtLeast(1)
+                val gridRowIndex = lastVisibleRowIndex - firstGridRowIndex
+                if (gridRowIndex < 0) return@collectLatest
+                val lastVisibleItemIndex = ((gridRowIndex + 1) * normalizedColumns) - 1
+
+                prefetcher.prefetch(
+                    imageUrls = stableUrls
+                        .asSequence()
+                        .drop(lastVisibleItemIndex + 1)
+                        .take(aheadCount)
+                        .toList(),
+                    displaySize = displaySize
+                )
+            }
+    }
+}
+
+@Composable
 fun LazyGridImagePrefetch(
     state: LazyGridState,
     imageUrls: List<String?>,

@@ -104,7 +104,7 @@ private struct ExploreContentView: View {
             }
         }
     }
-    
+
     private var searchSection: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
@@ -178,12 +178,24 @@ private struct ExploreContentView: View {
         } else {
             LazyVGrid(columns: exploreGridColumns(for: contentWidth), spacing: 12) {
                 if uiState.selectedTab == .cafe {
-                    ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { _, cafe in
+                    ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { index, cafe in
                         cafeCard(cafe)
+                            .lazyListImagePrefetch(
+                                index: index,
+                                imageUrls: uiState.cafes.map { $0.thumbnailImage },
+                                aheadCount: 12,
+                                displaySize: .thumbnail
+                            )
                     }
                 } else {
-                    ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { _, maid in
+                    ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { index, maid in
                         maidCard(maid)
+                            .lazyListImagePrefetch(
+                                index: index,
+                                imageUrls: uiState.maids.map { $0.profileImage },
+                                aheadCount: 12,
+                                displaySize: .thumbnail
+                            )
                     }
                 }
             }

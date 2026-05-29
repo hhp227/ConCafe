@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,7 +20,9 @@ import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -47,6 +50,14 @@ fun CafeMenuScreen(
     if (!hasMenu && !hasGoods) {
         EmptyContent(text = stringResource(Res.string.cafe_menu_empty))
         return
+    }
+    val imagePrefetcher = rememberImagePrefetcher()
+
+    LaunchedEffect(menus, goods, imagePrefetcher) {
+        imagePrefetcher.prefetch(
+            imageUrls = (menus.map { it.image } + goods.map { it.image }).take(24),
+            displaySize = ImageDisplaySize.THUMBNAIL
+        )
     }
     Column(verticalArrangement = Arrangement.spacedBy(28.dp)) {
         if (hasMenu) {

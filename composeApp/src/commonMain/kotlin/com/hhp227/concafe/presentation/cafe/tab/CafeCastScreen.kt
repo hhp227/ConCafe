@@ -8,24 +8,22 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hhp227.concafe.core.util.CastScheduleAttendanceUtils
-import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
-import concafe.composeapp.generated.resources.Res
-import concafe.composeapp.generated.resources.cafe_cast_empty
-import concafe.composeapp.generated.resources.cast_today_finished
-import concafe.composeapp.generated.resources.cast_today_upcoming
-import concafe.composeapp.generated.resources.cast_today_working
+import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
+import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -38,6 +36,14 @@ fun CafeCastScreen(
     if (casts.isEmpty()) {
         EmptyContent(text = stringResource(Res.string.cafe_cast_empty))
     } else {
+        val imagePrefetcher = rememberImagePrefetcher()
+
+        LaunchedEffect(casts, imagePrefetcher) {
+            imagePrefetcher.prefetch(
+                imageUrls = casts.map { it.cast.profileImage }.take(24),
+                displaySize = ImageDisplaySize.THUMBNAIL
+            )
+        }
         BoxWithConstraints {
             val gridColumnCount = cafeCastGridColumnCount(maxWidth)
             val rows = casts.chunked(gridColumnCount)

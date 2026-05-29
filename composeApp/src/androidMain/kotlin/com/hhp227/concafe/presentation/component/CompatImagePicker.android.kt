@@ -104,7 +104,13 @@ actual fun CompatImageDisplay(
             modifier = Modifier.matchParentSize(),
             contentScale = contentScale
         )
-        if (painter.state is AsyncImagePainter.State.Loading || painter.state is AsyncImagePainter.State.Error) {
+        if (painter.state is AsyncImagePainter.State.Loading) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0x0F000000))
+            )
+        } else if (painter.state is AsyncImagePainter.State.Error) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -135,6 +141,7 @@ actual fun rememberImagePrefetcher(): ImagePrefetcher {
                     .distinct()
                     .forEach { url ->
                         val cacheKey = stableImageCacheKey(url, displaySize)
+                        if (!AndroidImagePrefetchRegistry.markRunning(cacheKey)) return@forEach
                         val request = ImageRequest.Builder(context)
                             .data(url)
                             .size(displaySize.coilSize())
@@ -143,11 +150,36 @@ actual fun rememberImagePrefetcher(): ImagePrefetcher {
                             .memoryCachePolicy(CachePolicy.ENABLED)
                             .diskCachePolicy(CachePolicy.ENABLED)
                             .networkCachePolicy(CachePolicy.ENABLED)
+                            .listener(
+                                onCancel = { _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                },
+                                onSuccess = { _, _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                },
+                                onError = { _, _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                    imageLoader.memoryCache?.remove(MemoryCache.Key(cacheKey))
+                                }
+                            )
                             .build()
                         imageLoader.enqueue(request)
                     }
             }
         }
+    }
+}
+
+private object AndroidImagePrefetchRegistry {
+    private val runningKeys = mutableSetOf<String>()
+
+    fun markRunning(cacheKey: String): Boolean = synchronized(runningKeys) {
+        runningKeys.add(cacheKey)
+    }
+
+    fun markFinished(cacheKey: String) = synchronized(runningKeys) {
+        runningKeys.remove(cacheKey)
+        Unit
     }
 }
 

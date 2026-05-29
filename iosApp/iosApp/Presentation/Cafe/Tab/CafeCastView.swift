@@ -14,7 +14,7 @@ struct CafeCastView: View {
     let canLoadMore: Bool
 
     let isLoadingMore: Bool
-    
+
     let onPagingTriggerDisappear: () -> Void
 
     let onAction: (CafeAction) -> Void
@@ -47,6 +47,12 @@ struct CafeCastView: View {
                         .onAppear {
                             loadMoreIfNeeded(appearedIndex: index)
                         }
+                        .lazyListImagePrefetch(
+                            index: index,
+                            imageUrls: maids.map { $0.cast.profileImage },
+                            aheadCount: 12,
+                            displaySize: .thumbnail
+                        )
                         .frame(minHeight: cafeCastCardMinimumHeight)
                     }
                 }
