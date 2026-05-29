@@ -51,8 +51,9 @@ data class ScheduleUiState(
         }
 
     fun withSchedulePeriod(period: SchedulePeriod): ScheduleUiState {
-        val visibleWeekDays = allWeekDays.take(period.dayCount)
-        val visibleSchedules = allSchedules.take(period.dayCount)
+        val visibleDayCount = period.visibleDayCount(allWeekDays.size)
+        val visibleWeekDays = allWeekDays.take(visibleDayCount)
+        val visibleSchedules = allSchedules.take(visibleDayCount)
         return copy(
             schedulePeriod = period,
             weekRangeLabel = resolveRangeLabel(visibleWeekDays),
@@ -86,10 +87,18 @@ data class ScheduleUiState(
     }
 }
 
-enum class SchedulePeriod(val dayCount: Int) {
-    ONE_WEEK(7),
-    TWO_WEEKS(14),
-    ONE_MONTH(30)
+enum class SchedulePeriod {
+    ONE_WEEK,
+    TWO_WEEKS,
+    ONE_MONTH;
+
+    fun visibleDayCount(totalDayCount: Int): Int {
+        return when (this) {
+            ONE_WEEK -> minOf(7, totalDayCount)
+            TWO_WEEKS -> minOf(14, totalDayCount)
+            ONE_MONTH -> totalDayCount
+        }
+    }
 }
 
 private fun resolveRangeLabel(days: List<ScheduleManagementWeekDay>): String {

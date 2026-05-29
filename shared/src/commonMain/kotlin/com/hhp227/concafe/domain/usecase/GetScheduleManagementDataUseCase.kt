@@ -41,7 +41,7 @@ class GetScheduleManagementDataUseCase(
             val nowDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val today = nowDateTime.date
             val weekStart = today.toWeekStart()
-            val scheduleEnd = weekStart.plus(DatePeriod(days = 29))
+            val scheduleEnd = today.plus(DatePeriod(months = 1)).toMonthEnd()
             val loaded = coroutineScope {
                 val detailDeferred = async {
                     castRepository.getCastDetail(resolvedCastId)
@@ -69,7 +69,7 @@ class GetScheduleManagementDataUseCase(
             val detail = loaded.detail
             val scheduleByDate = loaded.scheduleByDate
             val scheduleStatusByDate = loaded.scheduleStatusByDate
-            val scheduleDates = (0..29).map { weekStart.plus(DatePeriod(days = it)) }
+            val scheduleDates = weekStart.datesUntil(scheduleEnd)
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
 
             AppResult.Success(
@@ -162,6 +162,21 @@ private fun resolveStatusLabel(
 private fun LocalDate.toWeekStart(): LocalDate {
     val daysFromSunday = dayOfWeek.isoDayNumber % 7
     return minus(DatePeriod(days = daysFromSunday))
+}
+
+private fun LocalDate.toMonthEnd(): LocalDate {
+    val nextMonthStart = LocalDate(year, monthNumber, 1).plus(DatePeriod(months = 1))
+    return nextMonthStart.minus(DatePeriod(days = 1))
+}
+
+private fun LocalDate.datesUntil(endInclusive: LocalDate): List<LocalDate> {
+    val dates = mutableListOf<LocalDate>()
+    var current = this
+    while (current <= endInclusive) {
+        dates += current
+        current = current.plus(DatePeriod(days = 1))
+    }
+    return dates
 }
 
 private fun LocalDate.toKoreanDayLabel(): String {
