@@ -42,6 +42,8 @@ import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.LazyListGridImagePrefetch
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -150,7 +152,22 @@ fun ExploreContentScreen(
                 }
             }
         }
+        val prefetchImageUrls = remember(uiState.selectedTab, uiState.cafes, uiState.maids) {
+            if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+                uiState.cafes.map { it.thumbnailImage }
+            } else {
+                uiState.maids.map { it.profileImage }
+            }
+        }
 
+        LazyListGridImagePrefetch(
+            state = listState,
+            imageUrls = prefetchImageUrls,
+            columns = gridColumnCount,
+            firstGridRowIndex = 2,
+            aheadCount = 12,
+            displaySize = ImageDisplaySize.THUMBNAIL
+        )
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),

@@ -215,6 +215,7 @@
 		0A8ABA782F5C1D8B00265D4F /* SettingsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA772F5C1D8B00265D4F /* SettingsAction.swift */; };
 		0A8ABA7A2F5C1DA000265D4F /* SettingsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8ABA792F5C1DA000265D4F /* SettingsEvent.swift */; };
 		0A90EBF42F7798F900CEFB85 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A90EBF32F7798F900CEFB85 /* LaunchScreen.storyboard */; };
+		0A92FDFA2FC9A46A00C09E50 /* ImagePrefetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A92FDF92FC9A46500C09E50 /* ImagePrefetcher.swift */; };
 		0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */; };
 		0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */; };
 		0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */; };
@@ -476,6 +477,7 @@
 		0A8ABA772F5C1D8B00265D4F /* SettingsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAction.swift; sourceTree = "<group>"; };
 		0A8ABA792F5C1DA000265D4F /* SettingsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsEvent.swift; sourceTree = "<group>"; };
 		0A90EBF32F7798F900CEFB85 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		0A92FDF92FC9A46500C09E50 /* ImagePrefetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePrefetcher.swift; sourceTree = "<group>"; };
 		0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConCafeTabBar.swift; sourceTree = "<group>"; };
 		0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingViewModel.swift; sourceTree = "<group>"; };
 		0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableConCafeTabBar.swift; sourceTree = "<group>"; };
@@ -1104,6 +1106,7 @@
 		0ADC46E92F5B33A5003484E4 /* Component */ = {
 			isa = PBXGroup;
 			children = (
+				0A92FDF92FC9A46500C09E50 /* ImagePrefetcher.swift */,
 				0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */,
 				0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */,
 				0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */,
@@ -1522,6 +1525,7 @@
 				0A6B334C2F610B860074940F /* MenuGoodsAction.swift in Sources */,
 				0A3DB80E2F649F6D00064804 /* BannerEditEvent.swift in Sources */,
 				0A580D9F2F59660000390F67 /* NavigationStackCompat.swift in Sources */,
+				0A92FDFA2FC9A46A00C09E50 /* ImagePrefetcher.swift in Sources */,
 				0A64950F2F99413000341F17 /* MapUiState.swift in Sources */,
 				0A2C5B282F6561C200D3004E /* NotificationSettingsViewModel.swift in Sources */,
 				0A3DB80A2F649F2E00064804 /* BannerEditUiState.swift in Sources */,

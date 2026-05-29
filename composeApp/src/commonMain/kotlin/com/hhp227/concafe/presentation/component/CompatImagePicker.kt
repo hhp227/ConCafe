@@ -9,7 +9,7 @@ enum class ImageDisplaySize {
     THUMBNAIL,
     /** Banners, event cards, medium-sized display (~1200px max dimension) */
     MEDIUM,
-    /** Full-screen picture viewer — no downscaling */
+    /** Full-screen picture viewer — capped to avoid decoding huge originals */
     FULL
 }
 

@@ -152,7 +152,7 @@ private struct HomeContentView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     if !uiState.popularCasts.isEmpty {
-                        ForEach(Array(uiState.popularCasts.enumerated()), id: \.offset) { _, maid in
+                        ForEach(Array(uiState.popularCasts.enumerated()), id: \.element.id) { index, maid in
                             ConCafeCastCard(
                                 name: maid.name,
                                 subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
@@ -161,6 +161,12 @@ private struct HomeContentView: View {
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
                             )
                             .frame(width: 132, alignment: .leading)
+                            .lazyListImagePrefetch(
+                                index: index,
+                                imageUrls: uiState.popularCasts.map { $0.profileImage },
+                                aheadCount: 10,
+                                displaySize: .thumbnail
+                            )
                         }
                     } else {
                         HomeSectionPlaceholderCard(
@@ -195,10 +201,16 @@ private struct HomeContentView: View {
                                 alignment: .center,
                                 spacing: 12
                             ) {
-                                ForEach(uiState.nearbyCafes, id: \.id) { cafe in
+                                ForEach(Array(uiState.nearbyCafes.enumerated()), id: \.element.id) { index, cafe in
                                     NearByCafeItem(cafe: cafe)
                                         .frame(width: itemWidth, height: 92, alignment: .leading)
                                         .contentShape(Rectangle())
+                                        .lazyListImagePrefetch(
+                                            index: index,
+                                            imageUrls: uiState.nearbyCafes.map { $0.thumbnailImage },
+                                            aheadCount: 12,
+                                            displaySize: .thumbnail
+                                        )
                                         .onTapGesture {
                                             onAction(.cafeTapped(id: cafe.id))
                                         }
@@ -239,7 +251,7 @@ private struct HomeContentView: View {
             SectionTitle(title: String(localized: String.LocalizationValue("home_section_birthday_cast"), table: "Localizable"))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
-                    ForEach(uiState.birthdayCasts, id: \.id) { maid in
+                    ForEach(Array(uiState.birthdayCasts.enumerated()), id: \.element.id) { index, maid in
                         VStack(spacing: 8) {
                             GeometryReader { proxy in
                                 ZStack {
@@ -262,6 +274,12 @@ private struct HomeContentView: View {
                         .onTapGesture {
                             onAction(.birthdayMaidTapped(id: maid.id))
                         }
+                        .lazyListImagePrefetch(
+                            index: index,
+                            imageUrls: uiState.birthdayCasts.map { $0.profileImage },
+                            aheadCount: 10,
+                            displaySize: .thumbnail
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
@@ -287,10 +305,16 @@ private struct HomeContentView: View {
             if !uiState.cafeEvents.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        ForEach(uiState.cafeEvents, id: \.id) { event in
+                        ForEach(Array(uiState.cafeEvents.enumerated()), id: \.element.id) { index, event in
                             HomeCafeEventCard(event: event)
                                 .frame(width: 276, height: 236, alignment: .top)
                                 .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .lazyListImagePrefetch(
+                                    index: index,
+                                    imageUrls: uiState.cafeEvents.map { $0.imageUrl },
+                                    aheadCount: 8,
+                                    displaySize: .medium
+                                )
                                 .onTapGesture {
                                     onAction(.cafeEventTapped(cafeId: event.cafeId, eventId: event.id))
                                 }

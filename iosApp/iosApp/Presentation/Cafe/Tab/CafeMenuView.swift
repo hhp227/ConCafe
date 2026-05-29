@@ -43,8 +43,14 @@ struct CafeMenuView: View {
     private var menuSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionTitle(String(localized: String.LocalizationValue("menugoods_tab_menu"), table: "Localizable"))
-            ForEach(menus, id: \.id) { menu in
+            ForEach(Array(menus.enumerated()), id: \.element.id) { index, menu in
                 menuRow(menu)
+                    .lazyListImagePrefetch(
+                        index: index,
+                        imageUrls: menus.map { $0.image },
+                        aheadCount: 8,
+                        displaySize: .thumbnail
+                    )
             }
         }
     }
@@ -107,8 +113,14 @@ struct CafeMenuView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionTitle(String(localized: String.LocalizationValue("menugoods_tab_goods"), table: "Localizable"))
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(goods, id: \.id) { good in
+                ForEach(Array(goods.enumerated()), id: \.element.id) { index, good in
                     goodsTile(good)
+                        .lazyListImagePrefetch(
+                            index: index,
+                            imageUrls: goods.map { $0.image },
+                            aheadCount: 8,
+                            displaySize: .thumbnail
+                        )
                 }
             }
         }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,10 +21,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Size
+import okio.Path.Companion.toOkioPath
 import java.io.File
 
 @Composable
@@ -69,18 +75,26 @@ actual fun CompatImageDisplay(
     displaySize: ImageDisplaySize
 ) {
     val shape = if (applyRoundedClip) RoundedCornerShape(20.dp) else null
-    val coilSize = when (displaySize) {
-        ImageDisplaySize.THUMBNAIL -> Size(640, 640)
-        ImageDisplaySize.MEDIUM -> Size(1200, 1200)
-        // Size.ORIGINAL causes crash on high-res photos (>~100MB bitmap limit on Android Canvas)
-        ImageDisplaySize.FULL -> Size(3840, 3840)
-    }
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
+    val context = LocalContext.current
+    val imageLoader = remember(context) { AndroidAppImageLoader.get(context) }
+    val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
+    val coilSize = displaySize.coilSize()
+    val cacheKey = normalizedImageUrl?.let { stableImageCacheKey(it, displaySize) }
+    val request = remember(normalizedImageUrl, displaySize, cacheKey) {
+        ImageRequest.Builder(context)
+            .data(normalizedImageUrl)
             .size(coilSize)
+            .memoryCacheKey(cacheKey)
+            .diskCacheKey(cacheKey)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .networkCachePolicy(CachePolicy.ENABLED)
             .crossfade(true)
             .build()
+    }
+    val painter = rememberAsyncImagePainter(
+        model = request,
+        imageLoader = imageLoader
     )
 
     Box(modifier = if (shape != null) modifier.clip(shape) else modifier) {
@@ -90,7 +104,13 @@ actual fun CompatImageDisplay(
             modifier = Modifier.matchParentSize(),
             contentScale = contentScale
         )
-        if (painter.state is AsyncImagePainter.State.Loading || painter.state is AsyncImagePainter.State.Error) {
+        if (painter.state is AsyncImagePainter.State.Loading) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0x0F000000))
+            )
+        } else if (painter.state is AsyncImagePainter.State.Error) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -106,4 +126,95 @@ actual fun CompatImageDisplay(
             }
         }
     }
+}
+
+@Composable
+actual fun rememberImagePrefetcher(): ImagePrefetcher {
+    val context = LocalContext.current
+    val imageLoader = remember(context) { AndroidAppImageLoader.get(context) }
+    return remember(imageLoader, context) {
+        object : ImagePrefetcher {
+            override fun prefetch(imageUrls: List<String?>, displaySize: ImageDisplaySize) {
+                imageUrls
+                    .asSequence()
+                    .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
+                    .distinct()
+                    .forEach { url ->
+                        val cacheKey = stableImageCacheKey(url, displaySize)
+                        if (!AndroidImagePrefetchRegistry.markRunning(cacheKey)) return@forEach
+                        val request = ImageRequest.Builder(context)
+                            .data(url)
+                            .size(displaySize.coilSize())
+                            .memoryCacheKey(cacheKey)
+                            .diskCacheKey(cacheKey)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .networkCachePolicy(CachePolicy.ENABLED)
+                            .listener(
+                                onCancel = { _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                },
+                                onSuccess = { _, _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                },
+                                onError = { _, _ ->
+                                    AndroidImagePrefetchRegistry.markFinished(cacheKey)
+                                    imageLoader.memoryCache?.remove(MemoryCache.Key(cacheKey))
+                                }
+                            )
+                            .build()
+                        imageLoader.enqueue(request)
+                    }
+            }
+        }
+    }
+}
+
+private object AndroidImagePrefetchRegistry {
+    private val runningKeys = mutableSetOf<String>()
+
+    fun markRunning(cacheKey: String): Boolean = synchronized(runningKeys) {
+        runningKeys.add(cacheKey)
+    }
+
+    fun markFinished(cacheKey: String) = synchronized(runningKeys) {
+        runningKeys.remove(cacheKey)
+        Unit
+    }
+}
+
+private object AndroidAppImageLoader {
+    @Volatile
+    private var instance: ImageLoader? = null
+
+    fun get(context: Context): ImageLoader {
+        return instance ?: synchronized(this) {
+            instance ?: ImageLoader.Builder(context.applicationContext)
+                .memoryCache {
+                    MemoryCache.Builder(context.applicationContext)
+                        .maxSizePercent(0.22)
+                        .build()
+                }
+                .diskCache {
+                    DiskCache.Builder()
+                        .directory(File(context.applicationContext.cacheDir, "image_cache").toOkioPath())
+                        .maxSizeBytes(300L * 1024L * 1024L)
+                        .build()
+                }
+                .crossfade(true)
+                .respectCacheHeaders(false)
+                .build()
+                .also { instance = it }
+        }
+    }
+}
+
+private fun ImageDisplaySize.coilSize(): Size = when (this) {
+    ImageDisplaySize.THUMBNAIL -> Size(512, 512)
+    ImageDisplaySize.MEDIUM -> Size(1200, 1200)
+    ImageDisplaySize.FULL -> Size(3840, 3840)
+}
+
+private fun stableImageCacheKey(imageUrl: String, displaySize: ImageDisplaySize): String {
+    return "${imageUrl.trim()}|${displaySize.name}"
 }
