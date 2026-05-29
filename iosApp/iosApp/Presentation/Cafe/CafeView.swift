@@ -182,13 +182,19 @@ private struct CafeContentView: View {
                     if let tabHeaderPinScrollOffset, scrollOffset <= tabHeaderPinScrollOffset {
                         return
                     }
-                    guard value > proxy.safeAreaInsets.top else { return }
+                    guard tabHeaderPinScrollOffset == nil || value > proxy.safeAreaInsets.top else { return }
 
                     let headerContentMinY = value - scrollOffset
                     let nextPinScrollOffset = proxy.safeAreaInsets.top - headerContentMinY
                     if nextPinScrollOffset.isFinite {
                         tabHeaderPinScrollOffset = nextPinScrollOffset
                     }
+                }
+                if uiState.detail != nil, isTabPinned {
+                    pinnedTabHeader()
+                        .padding(.top, pinnedTabTopPadding(in: proxy))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
@@ -206,12 +212,6 @@ private struct CafeContentView: View {
                         .font(.headline)
                         .frame(width: 36, height: 36)
                     }
-                }
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                if uiState.detail != nil, isTabPinned {
-                    pinnedTabHeader()
-                        .zIndex(2)
                 }
             }
         }
@@ -456,6 +456,10 @@ private struct CafeContentView: View {
     private var isTabPinned: Bool {
         guard let tabHeaderPinScrollOffset else { return false }
         return scrollOffset <= tabHeaderPinScrollOffset
+    }
+
+    private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
+        max(0, proxy.safeAreaInsets.top - proxy.frame(in: .global).minY)
     }
 
     @ViewBuilder
