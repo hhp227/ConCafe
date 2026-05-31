@@ -205,24 +205,6 @@ private struct CafeContentView: View {
                     .padding(.bottom, 24)
                     .zIndex(3)
                 }
-                if uiState.shouldShowFavoriteTooltip {
-                    DetailTooltipBubble(
-                        text: String(localized: String.LocalizationValue("cafe_favorite_tooltip"), table: "Localizable")
-                    )
-                        .padding(.top, proxy.safeAreaInsets.top + 48)
-                        .padding(.trailing, 12)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                        .zIndex(4)
-                        .onAppear {
-                            onAction(.favoriteTooltipShown)
-                        }
-                        .task(id: uiState.shouldShowFavoriteTooltip) {
-                            try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
-                            if !Task.isCancelled {
-                                onAction(.dismissFavoriteTooltip)
-                            }
-                        }
-                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -232,6 +214,28 @@ private struct CafeContentView: View {
                         Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
                         .font(.headline)
                         .frame(width: 36, height: 36)
+                    }
+                }
+            }
+            .safeAreaInset(edge: .top) {
+                if uiState.shouldShowFavoriteTooltip {
+                    HStack {
+                        Spacer()
+                        DetailTooltipBubble(
+                            text: String(localized: String.LocalizationValue("cafe_favorite_tooltip"), table: "Localizable")
+                        )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            .zIndex(4)
+                            .onAppear {
+                                onAction(.favoriteTooltipShown)
+                            }
+                            .task(id: uiState.shouldShowFavoriteTooltip) {
+                                try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
+                                if !Task.isCancelled {
+                                    onAction(.dismissFavoriteTooltip)
+                                }
+                            }
+                            .padding(.trailing, 8)
                     }
                 }
             }
