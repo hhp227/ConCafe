@@ -58,6 +58,7 @@ import concafe.composeapp.generated.resources.cast_follow
 import concafe.composeapp.generated.resources.cast_follower_count
 import concafe.composeapp.generated.resources.cast_follower_label
 import concafe.composeapp.generated.resources.cast_following
+import concafe.composeapp.generated.resources.cast_follow_tooltip
 import concafe.composeapp.generated.resources.cast_schedule_off
 import concafe.composeapp.generated.resources.cast_schedule_title
 import concafe.composeapp.generated.resources.cast_schedule_work
@@ -79,6 +80,8 @@ import concafe.composeapp.generated.resources.cast_weekday_sun
 import concafe.composeapp.generated.resources.cast_weekday_thu
 import concafe.composeapp.generated.resources.cast_weekday_tue
 import concafe.composeapp.generated.resources.cast_weekday_wed
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 import org.jetbrains.compose.resources.stringResource
@@ -186,6 +189,7 @@ private fun CastContentScreen(
                             detail = uiState.detail,
                             isFollowing = uiState.isFollowing,
                             isSelfCast = uiState.isSelfCast,
+                            shouldShowFollowTooltip = uiState.shouldShowFollowTooltip,
                             onAction = onAction
                         )
                     }
@@ -376,13 +380,28 @@ private fun resolveHeroImages(
     return if (fallback.isNotEmpty()) listOf(fallback) else listOf("")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CastSummarySection(
     detail: CastDetail,
     isFollowing: Boolean,
     isSelfCast: Boolean,
+    shouldShowFollowTooltip: Boolean,
     onAction: (CastAction) -> Unit
 ) {
+    val followTooltipState = rememberTooltipState(isPersistent = true)
+
+    LaunchedEffect(shouldShowFollowTooltip) {
+        if (shouldShowFollowTooltip) {
+            onAction(CastAction.MarkFollowTooltipShown)
+            launch { followTooltipState.show() }
+            delay(DETAIL_TOOLTIP_DURATION_MILLIS)
+            followTooltipState.dismiss()
+            onAction(CastAction.DismissFollowTooltip)
+        } else {
+            followTooltipState.dismiss()
+        }
+    }
     Surface(color = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
@@ -450,28 +469,38 @@ private fun CastSummarySection(
                         )
                     }
                 }
-                Button(
-                    onClick = { onAction(CastAction.ClickFollow) },
-                    enabled = !isSelfCast,
-                    colors = if (isFollowing) {
-                        ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("F1E3EB"),
-                            contentColor = colorFromHex("6A4960")
-                        )
-                    } else {
-                        ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("EF6797"),
-                            contentColor = Color.White
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text(stringResource(Res.string.cast_follow_tooltip))
+                        }
+                    },
+                    state = followTooltipState
+                ) {
+                    Button(
+                        onClick = { onAction(CastAction.ClickFollow) },
+                        enabled = !isSelfCast,
+                        colors = if (isFollowing) {
+                            ButtonDefaults.buttonColors(
+                                containerColor = colorFromHex("F1E3EB"),
+                                contentColor = colorFromHex("6A4960")
+                            )
+                        } else {
+                            ButtonDefaults.buttonColors(
+                                containerColor = colorFromHex("EF6797"),
+                                contentColor = Color.White
+                            )
+                        }
+                    ) {
+                        Text(
+                            stringResource(if (isFollowing) {
+                                Res.string.cast_following
+                            } else {
+                                Res.string.cast_follow
+                            })
                         )
                     }
-                ) {
-                    Text(
-                        stringResource(if (isFollowing) {
-                            Res.string.cast_following
-                        } else {
-                            Res.string.cast_follow
-                        })
-                    )
                 }
             }
             Row(
@@ -487,6 +516,8 @@ private fun CastSummarySection(
         }
     }
 }
+
+private const val DETAIL_TOOLTIP_DURATION_MILLIS = 5_000L
 
 @Composable
 private fun CastTodaySection(detail: CastDetail) {

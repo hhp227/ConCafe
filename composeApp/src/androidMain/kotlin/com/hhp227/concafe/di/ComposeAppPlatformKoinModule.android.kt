@@ -14,8 +14,6 @@ import com.hhp227.concafe.presentation.auth.signup.PhoneAuthProvider
 import com.hhp227.concafe.presentation.auth.signup.SocialFirebaseAuthProvider
 import com.hhp227.concafe.presentation.main.checkin.AndroidCheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
-import com.hhp227.concafe.presentation.theme.AndroidThemePreferenceStore
-import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -24,7 +22,6 @@ internal fun androidPlatformModules(application: Application): List<Module> {
         module {
             single<Context> { application }
             single<FirebaseMessaging> { FirebaseMessaging.getInstance() }
-            single<ThemePreferenceStore> { AndroidThemePreferenceStore(get()) }
             single<AndroidPushTokenClient> {
                 AndroidPushTokenClient(
                     context = get(),

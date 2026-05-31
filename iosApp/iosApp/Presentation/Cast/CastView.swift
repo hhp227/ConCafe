@@ -9,6 +9,7 @@ import SwiftUI
 import Shared
 
 private let castSummaryTitleTriggerOffset: CGFloat = 22
+private let detailTooltipDurationNanoseconds: UInt64 = 5_000_000_000
 
 struct CastView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -81,6 +82,7 @@ private struct CastContentView: View {
                         detail: detail,
                         isFollowing: uiState.isFollowing,
                         isSelfCast: uiState.isSelfCast,
+                        shouldShowFollowTooltip: uiState.shouldShowFollowTooltip,
                         onAction: onAction
                     )
                         .background(summaryOffsetReader)
@@ -258,6 +260,8 @@ private struct CastSummarySection: View {
 
     let isSelfCast: Bool
 
+    let shouldShowFollowTooltip: Bool
+
     let onAction: (CastAction) -> Void
 
     var body: some View {
@@ -310,6 +314,24 @@ private struct CastSummarySection: View {
                 }
                 .disabled(isSelfCast)
                 .opacity(isSelfCast ? 0.5 : 1.0)
+                .overlay(alignment: .bottomTrailing) {
+                    if shouldShowFollowTooltip {
+                        DetailTooltipBubble(
+                            text: String(localized: String.LocalizationValue("cast_follow_tooltip"), table: "Localizable")
+                        )
+                            .offset(y: 56)
+                            .zIndex(1)
+                            .onAppear {
+                                onAction(.followTooltipShown)
+                            }
+                            .task(id: shouldShowFollowTooltip) {
+                                try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
+                                if !Task.isCancelled {
+                                    onAction(.dismissFollowTooltip)
+                                }
+                            }
+                    }
+                }
             }
             HStack(spacing: 18) {
                 statItem(

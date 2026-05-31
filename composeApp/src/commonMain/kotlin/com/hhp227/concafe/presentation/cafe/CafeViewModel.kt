@@ -26,6 +26,9 @@ import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
+import com.hhp227.concafe.domain.model.DetailTooltipType
+import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
 
 class CafeViewModel(
@@ -38,6 +41,8 @@ class CafeViewModel(
     private val getCafeReviewPageUseCase: GetCafeReviewPageUseCase,
     private val toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase,
     private val deleteReviewUseCase: DeleteReviewUseCase,
+    private val shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase,
+    private val markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
@@ -137,7 +142,9 @@ class CafeViewModel(
                     isLoggedIn = result.data.isLoggedIn,
                     isVisitVerified = result.data.isVisitVerified,
                     shouldScrollToTopOnReturn = _uiState.value.shouldScrollToTopOnReturn,
-                    currentUserId = result.data.currentUserId
+                    currentUserId = result.data.currentUserId,
+                    shouldShowFavoriteTooltip = _uiState.value.shouldShowFavoriteTooltip ||
+                            shouldShowDetailTooltipUseCase.invoke(DetailTooltipType.CAFE_FAVORITE)
                 )
                 refreshCastPage()
                 if (_uiState.value.selectedTab == CafeUiState.TabType.NOTICES && _uiState.value.notices.isEmpty()) {
@@ -370,6 +377,12 @@ class CafeViewModel(
                 }
                 CafeAction.ClickFavorite -> {
                     toggleFavorite()
+                }
+                CafeAction.MarkFavoriteTooltipShown -> {
+                    markDetailTooltipShownUseCase.invoke(DetailTooltipType.CAFE_FAVORITE)
+                }
+                CafeAction.DismissFavoriteTooltip -> {
+                    _uiState.update { it.copy(shouldShowFavoriteTooltip = false) }
                 }
                 CafeAction.ClickWriteReview -> {
                     clickWriteReview()

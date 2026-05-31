@@ -18,6 +18,10 @@ final class CastViewModel: ObservableObject {
 
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
+    private let shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase
+
+    private let markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase
+
     private let castEventPublisher: CastEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
@@ -101,7 +105,10 @@ final class CastViewModel: ObservableObject {
                         isFollowing: feed.isFollowing,
                         isLoggedIn: feed.isLoggedIn,
                         todayAttendanceStatus: feed.todayAttendanceStatus,
-                        isSelfCast: feed.isSelfCast
+                        isSelfCast: feed.isSelfCast,
+                        shouldShowFollowTooltip: (uiState.shouldShowFollowTooltip ||
+                            shouldShowDetailTooltipUseCase.invoke(type: .castFollow)) &&
+                            !feed.isSelfCast
                     )
                 } else {
                     uiState.isLoading = false
@@ -141,6 +148,10 @@ final class CastViewModel: ObservableObject {
             event.send(.navigateBack)
         case .followTapped:
             toggleFollow()
+        case .followTooltipShown:
+            markDetailTooltipShownUseCase.invoke(type: .castFollow)
+        case .dismissFollowTooltip:
+            uiState.shouldShowFollowTooltip = false
         case .refresh:
             loadCastDetail()
         case .cafeTapped:
@@ -155,12 +166,16 @@ final class CastViewModel: ObservableObject {
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase(),
+        shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase = KoinInitializerKt.resolveShouldShowDetailTooltipUseCase(),
+        markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase = KoinInitializerKt.resolveMarkDetailTooltipShownUseCase(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
         reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
+        self.shouldShowDetailTooltipUseCase = shouldShowDetailTooltipUseCase
+        self.markDetailTooltipShownUseCase = markDetailTooltipShownUseCase
         self.castEventPublisher = castEventPublisher
         self.reviewEventPublisher = reviewEventPublisher
 

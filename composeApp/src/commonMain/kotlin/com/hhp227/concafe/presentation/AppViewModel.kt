@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
-import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
+import com.hhp227.concafe.presentation.theme.toPresentationThemeMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,7 +26,7 @@ class AppViewModel(
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
     private val getNotificationFeedUseCase: GetNotificationFeedUseCase,
-    private val themePreferenceStore: ThemePreferenceStore
+    private val observeThemeModeUseCase: ObserveThemeModeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState = _uiState.asStateFlow()
@@ -47,8 +48,8 @@ class AppViewModel(
     private fun observeThemeMode() {
         jobs[JobKey.OBSERVE_THEME]?.cancel()
         jobs[JobKey.OBSERVE_THEME] = viewModelScope.launch {
-            themePreferenceStore.themeMode.collect { themeMode ->
-                _uiState.update { it.copy(themeMode = themeMode) }
+            observeThemeModeUseCase.invoke().collect { themeMode ->
+                _uiState.update { it.copy(themeMode = themeMode.toPresentationThemeMode()) }
             }
         }
     }

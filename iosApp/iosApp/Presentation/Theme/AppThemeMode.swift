@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Shared
 import SwiftUI
 
 enum AppThemeMode: String, CaseIterable, Identifiable {
@@ -24,6 +25,26 @@ enum AppThemeMode: String, CaseIterable, Identifiable {
     }
 
     var colorScheme: ColorScheme {
+        switch self {
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        }
+    }
+
+    init(themeMode: ThemeMode) {
+        switch themeMode {
+        case .light:
+            self = .light
+        case .dark:
+            self = .dark
+        default:
+            self = .light
+        }
+    }
+
+    var sharedThemeMode: ThemeMode {
         switch self {
         case .light:
             return .light

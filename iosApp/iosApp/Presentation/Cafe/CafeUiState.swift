@@ -33,6 +33,7 @@ struct CafeUiState {
     var isVisitVerified: Bool
     var shouldScrollToTopOnReturn: Bool
     var currentUserId: String?
+    var shouldShowFavoriteTooltip: Bool
 
     static let empty = CafeUiState(
         isLoading: false,
@@ -58,7 +59,8 @@ struct CafeUiState {
         isLoggedIn: false,
         isVisitVerified: false,
         shouldScrollToTopOnReturn: false,
-        currentUserId: nil
+        currentUserId: nil,
+        shouldShowFavoriteTooltip: false
     )
 
     enum TabType: CaseIterable {

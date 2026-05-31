@@ -4,6 +4,8 @@ import com.hhp227.concafe.data.source.JvmNativeAdDataSource
 import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.local.JvmCafeExternalLinkLocalStore
+import com.hhp227.concafe.data.source.local.JvmUserPreferenceLocalDataSource
+import com.hhp227.concafe.data.source.local.UserPreferenceLocalDataSource
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreRestApi
@@ -20,6 +22,7 @@ actual fun sharedPlatformModules(): List<Module> {
         module {
             single { createPlatformHttpClient() }
             single<CafeExternalLinkLocalStore> { JvmCafeExternalLinkLocalStore() }
+            single<UserPreferenceLocalDataSource> { JvmUserPreferenceLocalDataSource() }
             single<FirestoreRestApi> {
                 KtorFirestoreRestApi(get(), FIREBASE_WEB_API_KEY)
             }

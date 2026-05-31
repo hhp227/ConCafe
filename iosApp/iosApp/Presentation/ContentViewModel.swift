@@ -22,7 +22,7 @@ final class ContentViewModel: ObservableObject {
 
     private let getNotificationFeedUseCase: GetNotificationFeedUseCase
 
-    private let themePreferences: AppThemePreferences
+    private let observeThemeModeUseCase: ObserveThemeModeUseCase
 
     @Published private(set) var uiState = ContentUiState()
 
@@ -46,8 +46,12 @@ final class ContentViewModel: ObservableObject {
     private func observeThemeMode() {
         tasks[.observeTheme]?.cancel()
         tasks[.observeTheme] = Task {
-            for await themeMode in themePreferences.observeThemeMode() {
-                uiState.themeMode = themeMode
+            do {
+                for try await themeMode in asyncSequence(for: observeThemeModeUseCase.invoke()) {
+                    uiState.themeMode = AppThemeMode(themeMode: themeMode)
+                }
+            } catch {
+                uiState.themeMode = .light
             }
         }
     }
@@ -146,14 +150,14 @@ final class ContentViewModel: ObservableObject {
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase(),
         getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase(),
-        themePreferences: AppThemePreferences = .shared
+        observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase()
     ) {
         self.checkAppUpdateUseCase = checkAppUpdateUseCase
         self.observeNetworkAlertStateUseCase = observeNetworkAlertStateUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.registerPushTokenUseCase = registerPushTokenUseCase
         self.getNotificationFeedUseCase = getNotificationFeedUseCase
-        self.themePreferences = themePreferences
+        self.observeThemeModeUseCase = observeThemeModeUseCase
 
         observeNetworkAlertState()
         observeThemeMode()

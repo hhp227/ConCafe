@@ -9,6 +9,10 @@ sealed interface CafeAction {
 
     data object ClickFavorite : CafeAction
 
+    data object MarkFavoriteTooltipShown : CafeAction
+
+    data object DismissFavoriteTooltip : CafeAction
+
     data object ClickWriteReview : CafeAction
 
     data object LoadMoreCasts : CafeAction

@@ -5,6 +5,10 @@ sealed interface CastAction {
 
     data object ClickFollow : CastAction
 
+    data object MarkFollowTooltipShown : CastAction
+
+    data object DismissFollowTooltip : CastAction
+
     data object ClickCafe : CastAction
 
     data object Refresh : CastAction

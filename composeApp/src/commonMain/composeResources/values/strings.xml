@@ -765,6 +765,7 @@
     <string name="cafe_tab_notices">Notices</string>
     <string name="cafe_accessibility_back">Back</string>
     <string name="cafe_accessibility_favorite">Favorite</string>
+    <string name="cafe_favorite_tooltip">Add a cafe to your favorites to receive notifications about events, table counts, notices, and other cafe updates. (Information may vary by location.)</string>
     <string name="cafe_accessibility_more">More</string>
     <string name="cafe_action_write_review">Write Review</string>
     <string name="cafe_action_refresh">Refresh</string>
@@ -800,6 +801,7 @@
     <string name="cast_action_refresh">Refresh</string>
     <string name="cast_error_detail_load_failed">Failed to load cast details.</string>
     <string name="cast_follow">Follow</string>
+    <string name="cast_follow_tooltip">Follow a cast member to receive shift notifications and other updates.</string>
     <string name="cast_following">Following</string>
     <string name="cast_follower_label">Followers</string>
     <string name="cast_follower_count">%1$d followers</string>
