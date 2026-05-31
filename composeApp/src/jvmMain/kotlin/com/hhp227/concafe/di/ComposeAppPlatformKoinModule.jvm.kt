@@ -10,15 +10,12 @@ import com.hhp227.concafe.presentation.auth.signup.PhoneAuthProvider
 import com.hhp227.concafe.presentation.auth.signup.SocialFirebaseAuthProvider
 import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
 import com.hhp227.concafe.presentation.main.checkin.JvmCheckInLocationProvider
-import com.hhp227.concafe.presentation.theme.JvmThemePreferenceStore
-import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 internal fun jvmPlatformModules(): List<Module> {
     return listOf(
         module {
-            single<ThemePreferenceStore> { JvmThemePreferenceStore() }
             single<GoogleIdTokenProvider> { JvmGoogleIdTokenProvider() }
             single<KakaoIdTokenProvider> { JvmKakaoIdTokenProvider() }
             single<CheckInLocationProvider> { JvmCheckInLocationProvider() }

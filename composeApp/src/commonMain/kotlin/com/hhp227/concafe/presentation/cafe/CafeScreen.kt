@@ -38,7 +38,9 @@ import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -105,6 +107,7 @@ fun CafeContentScreen(
 ) {
     val noticesTabLabel = stringResource(Res.string.cafe_tab_notices)
     val eventTabLabel = stringResource(Res.string.noticeevent_tab_event)
+    val favoriteTooltipState = rememberTooltipState(isPersistent = true)
     val tabLabels = listOf(
         stringResource(Res.string.cafe_tab_info),
         stringResource(Res.string.cafe_tab_casts),
@@ -168,6 +171,17 @@ fun CafeContentScreen(
                 }
             }
     }
+    LaunchedEffect(uiState.shouldShowFavoriteTooltip) {
+        if (uiState.shouldShowFavoriteTooltip) {
+            onAction(CafeAction.MarkFavoriteTooltipShown)
+            launch { favoriteTooltipState.show() }
+            delay(DETAIL_TOOLTIP_DURATION_MILLIS)
+            favoriteTooltipState.dismiss()
+            onAction(CafeAction.DismissFavoriteTooltip)
+        } else {
+            favoriteTooltipState.dismiss()
+        }
+    }
     Scaffold(
         containerColor = colorFromHex("FFFBFD"),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -190,16 +204,26 @@ fun CafeContentScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
-                        Icon(
-                            imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = stringResource(Res.string.cafe_accessibility_favorite),
-                            tint = if (uiState.isFavorite) {
-                                colorFromHex("EF6797")
-                            } else {
-                                if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = {
+                            PlainTooltip {
+                                Text(stringResource(Res.string.cafe_favorite_tooltip))
                             }
-                        )
+                        },
+                        state = favoriteTooltipState
+                    ) {
+                        IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
+                            Icon(
+                                imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = stringResource(Res.string.cafe_accessibility_favorite),
+                                tint = if (uiState.isFavorite) {
+                                    colorFromHex("EF6797")
+                                } else {
+                                    if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -567,6 +591,8 @@ private fun CafeTabContent(
         )
     }
 }
+
+private const val DETAIL_TOOLTIP_DURATION_MILLIS = 5_000L
 
 
 

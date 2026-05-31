@@ -12,7 +12,8 @@ data class CastUiState(
     val isFollowing: Boolean = false,
     val isLoggedIn: Boolean = false,
     val todayAttendanceStatus: CastAttendanceStatus = CastAttendanceStatus.OFF,
-    val isSelfCast: Boolean = false
+    val isSelfCast: Boolean = false,
+    val shouldShowFollowTooltip: Boolean = false
 ) {
     companion object {
         fun empty(): CastUiState {

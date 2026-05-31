@@ -134,6 +134,10 @@ import com.hhp227.concafe.domain.usecase.DeleteCommunityCommentUseCase
 import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
+import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
 import com.hhp227.concafe.domain.usecase.ToggleCafeEventLikeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
 import org.koin.core.KoinApplication
@@ -829,6 +833,34 @@ fun resolveObserveCurrentUserUseCase(): ObserveCurrentUserUseCase {
 }
 
 fun resolveObserveNetworkAlertStateUseCase(): ObserveNetworkAlertStateUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveObserveThemeModeUseCase(): ObserveThemeModeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSetThemeModeUseCase(): SetThemeModeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveShouldShowDetailTooltipUseCase(): ShouldShowDetailTooltipUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveMarkDetailTooltipShownUseCase(): MarkDetailTooltipShownUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

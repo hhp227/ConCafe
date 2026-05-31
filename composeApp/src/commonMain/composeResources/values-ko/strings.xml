@@ -762,6 +762,7 @@
     <string name="cafe_tab_notices">공지</string>
     <string name="cafe_accessibility_back">뒤로가기</string>
     <string name="cafe_accessibility_favorite">즐겨찾기</string>
+    <string name="cafe_favorite_tooltip">카페를 즐겨찾기에 등록하여 이벤트, 테이블 카운트, 공지사항등 카페 소식을 알림으로 받아보세요. (매장별 정보는 차이가 있을수 있습니다.)</string>
     <string name="cafe_accessibility_more">더보기</string>
     <string name="cafe_action_write_review">리뷰 작성</string>
     <string name="cafe_action_refresh">새로고침</string>
@@ -797,6 +798,7 @@
     <string name="cast_action_refresh">새로고침</string>
     <string name="cast_error_detail_load_failed">캐스트 상세 데이터를 불러오지 못했습니다.</string>
     <string name="cast_follow">팔로우</string>
+    <string name="cast_follow_tooltip">캐스트를 팔로우하고 출근 알림 등 소식을 받아보세요.</string>
     <string name="cast_following">팔로잉</string>
     <string name="cast_follower_label">팔로워</string>
     <string name="cast_follower_count">%1$d명</string>

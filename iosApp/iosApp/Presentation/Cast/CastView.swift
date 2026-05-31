@@ -9,6 +9,7 @@ import SwiftUI
 import Shared
 
 private let castSummaryTitleTriggerOffset: CGFloat = 22
+private let detailTooltipDurationNanoseconds: UInt64 = 5_000_000_000
 
 struct CastView: View {
     let onNavigationAction: (NavigationAction) -> Void
@@ -81,6 +82,7 @@ private struct CastContentView: View {
                         detail: detail,
                         isFollowing: uiState.isFollowing,
                         isSelfCast: uiState.isSelfCast,
+                        shouldShowFollowTooltip: uiState.shouldShowFollowTooltip,
                         onAction: onAction
                     )
                         .background(summaryOffsetReader)
@@ -258,47 +260,50 @@ private struct CastSummarySection: View {
 
     let isSelfCast: Bool
 
+    let shouldShowFollowTooltip: Bool
+
     let onAction: (CastAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Text(detail.cast.name)
-                            .font(.title2.bold())
-                        if let linkedUserId = detail.cast.linkedUserId, !linkedUserId.isEmpty {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundStyle(Color(hex: "9333EA"))
-                                .font(.title2)
+            ZStack(alignment: .topTrailing) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Text(detail.cast.name)
+                                .font(.title2.bold())
+                            if let linkedUserId = detail.cast.linkedUserId, !linkedUserId.isEmpty {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundStyle(Color(hex: "9333EA"))
+                                    .font(.title2)
+                            }
+                        }
+                        Text(detail.cast.conceptRole.capitalized)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color(hex: "C9527E"))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Color(hex: "FFE7F1")))
+                        Button {
+                            onAction(.cafeTapped)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "mappin.and.ellipse")
+                                Text("\(detail.cafe.name) · \(detail.cafe.region.city)")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondary)
                         }
                     }
-                    Text(detail.cast.conceptRole.capitalized)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "C9527E"))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Capsule().fill(Color(hex: "FFE7F1")))
+                    Spacer()
                     Button {
-                        onAction(.cafeTapped)
+                        onAction(.followTapped)
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "mappin.and.ellipse")
-                            Text("\(detail.cafe.name) · \(detail.cafe.region.city)")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(Color.secondary)
-                    }
-                }
-                Spacer()
-                Button {
-                    onAction(.followTapped)
-                } label: {
-                    Text(
-                        isFollowing
-                        ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
-                        : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
-                    )
+                        Text(
+                            isFollowing
+                            ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
+                            : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
+                        )
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
                         .padding(.horizontal, 18)
@@ -307,9 +312,28 @@ private struct CastSummarySection: View {
                             Capsule()
                                 .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
                         )
+                    }
+                    .disabled(isSelfCast)
+                    .opacity(isSelfCast ? 0.5 : 1.0)
                 }
-                .disabled(isSelfCast)
-                .opacity(isSelfCast ? 0.5 : 1.0)
+                if shouldShowFollowTooltip {
+                    DetailTooltipBubble(
+                        text: String(
+                            localized: String.LocalizationValue("cast_follow_tooltip"),
+                            table: "Localizable"
+                        )
+                    )
+                    .offset(x: 0, y: 48)
+                    .onAppear {
+                        onAction(.followTooltipShown)
+                    }
+                    .task(id: shouldShowFollowTooltip) {
+                        try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
+                        if !Task.isCancelled {
+                            onAction(.dismissFollowTooltip)
+                        }
+                    }
+                }
             }
             HStack(spacing: 18) {
                 statItem(

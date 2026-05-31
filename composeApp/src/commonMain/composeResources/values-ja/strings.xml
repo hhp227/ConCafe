@@ -747,6 +747,7 @@
     <string name="cafe_tab_notices">お知らせ</string>
     <string name="cafe_accessibility_back">戻る</string>
     <string name="cafe_accessibility_favorite">お気に入り</string>
+    <string name="cafe_favorite_tooltip">カフェをお気に入りに登録すると、イベント、テーブル数、お知らせなどのカフェ情報を通知で受け取れます。（店舗ごとに情報が異なる場合があります。）</string>
     <string name="cafe_accessibility_more">もっと見る</string>
     <string name="cafe_action_write_review">レビュー作成</string>
     <string name="cafe_action_refresh">再読み込み</string>
@@ -779,6 +780,7 @@
     <string name="cast_action_refresh">再読み込み</string>
     <string name="cast_error_detail_load_failed">キャスト詳細データの読み込みに失敗しました。</string>
     <string name="cast_follow">フォロー</string>
+    <string name="cast_follow_tooltip">キャストをフォローすると、出勤通知などのお知らせを受け取れます。</string>
     <string name="cast_following">フォロー中</string>
     <string name="cast_follower_label">フォロワー</string>
     <string name="cast_follower_count">%1$d人</string>

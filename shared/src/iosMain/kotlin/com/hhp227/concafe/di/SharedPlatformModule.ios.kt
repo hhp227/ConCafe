@@ -2,6 +2,8 @@ package com.hhp227.concafe.di
 
 import com.hhp227.concafe.data.source.NativeAdDataSource
 import com.hhp227.concafe.data.source.local.CafeExternalLinkLocalStore
+import com.hhp227.concafe.data.source.local.IosUserPreferenceLocalDataSource
+import com.hhp227.concafe.data.source.local.UserPreferenceLocalDataSource
 import org.koin.core.KoinApplication
 import com.hhp227.concafe.data.source.local.IosCafeExternalLinkLocalStore
 import com.hhp227.concafe.data.source.firestore.FirebaseAuthRestTokenProvider
@@ -26,6 +28,7 @@ actual fun sharedPlatformModules(): List<Module> {
         module {
             single { createPlatformHttpClient() }
             single<CafeExternalLinkLocalStore> { IosCafeExternalLinkLocalStore() }
+            single<UserPreferenceLocalDataSource> { IosUserPreferenceLocalDataSource() }
             single<FirestoreRestApi> {
                 KtorFirestoreRestApi(get(), FIREBASE_IOS_API_KEY)
             }

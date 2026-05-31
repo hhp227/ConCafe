@@ -16,13 +16,18 @@ import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
+import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase,
+    private val shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase,
+    private val markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase,
     private val castEventPublisher: CastEventPublisher,
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
@@ -89,7 +94,10 @@ class CastViewModel(
                         isFollowing = result.data.isFollowing,
                         isLoggedIn = result.data.isLoggedIn,
                         todayAttendanceStatus = result.data.todayAttendanceStatus,
-                        isSelfCast = result.data.isSelfCast
+                        isSelfCast = result.data.isSelfCast,
+                        shouldShowFollowTooltip = (_uiState.value.shouldShowFollowTooltip ||
+                                shouldShowDetailTooltipUseCase.invoke(DetailTooltipType.CAST_FOLLOW)) &&
+                                !result.data.isSelfCast
                     )
                 }
                 is AppResult.Failure -> {
@@ -129,6 +137,12 @@ class CastViewModel(
             when (action) {
                 CastAction.ClickBack -> _event.emit(CastEvent.NavigateBack)
                 CastAction.ClickFollow -> toggleFollow()
+                CastAction.MarkFollowTooltipShown -> {
+                    markDetailTooltipShownUseCase.invoke(DetailTooltipType.CAST_FOLLOW)
+                }
+                CastAction.DismissFollowTooltip -> {
+                    _uiState.update { it.copy(shouldShowFollowTooltip = false) }
+                }
                 CastAction.Refresh -> loadCastDetail()
                 CastAction.ClickCafe -> {
                     val cafeId = _uiState.value.detail?.cafe?.id ?: return@launch

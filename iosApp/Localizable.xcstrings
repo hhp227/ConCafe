@@ -3772,6 +3772,28 @@
         }
       }
     },
+    "cafe_favorite_tooltip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a cafe to your favorites to receive notifications about events, table counts, notices, and other cafe updates. (Information may vary by location.)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェをお気に入りに登録すると、イベント、テーブル数、お知らせなどのカフェ情報を通知で受け取れます。（店舗ごとに情報が異なる場合があります。）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페를 즐겨찾기에 등록하여 이벤트, 테이블 카운트, 공지사항등 카페 소식을 알림으로 받아보세요. (매장별 정보는 차이가 있을수 있습니다.)"
+          }
+        }
+      }
+    },
     "cafe_accessibility_more" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6294,6 +6316,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "팔로우"
+          }
+        }
+      }
+    },
+    "cast_follow_tooltip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow a cast member to receive shift notifications and other updates."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャストをフォローすると、出勤通知などのお知らせを受け取れます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐스트를 팔로우하고 출근 알림 등 소식을 받아보세요."
           }
         }
       }

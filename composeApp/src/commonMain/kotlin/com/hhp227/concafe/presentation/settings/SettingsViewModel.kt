@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.presentation.theme.AppThemeMode
-import com.hhp227.concafe.presentation.theme.ThemePreferenceStore
+import com.hhp227.concafe.presentation.theme.toDomainThemeMode
+import com.hhp227.concafe.presentation.theme.toPresentationThemeMode
 import kotlinx.coroutines.Job
 
 class SettingsViewModel(
     private val signOutUseCase: SignOutUseCase,
-    private val themePreferenceStore: ThemePreferenceStore
+    private val observeThemeModeUseCase: ObserveThemeModeUseCase,
+    private val setThemeModeUseCase: SetThemeModeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -78,15 +82,15 @@ class SettingsViewModel(
     }
 
     private fun selectThemeMode(themeMode: AppThemeMode) {
-        themePreferenceStore.setThemeMode(themeMode)
+        setThemeModeUseCase.invoke(themeMode.toDomainThemeMode())
         _uiState.update { it.copy(themeMode = themeMode) }
     }
 
     private fun observeThemeMode() {
         jobs[JobKey.OBSERVE_THEME]?.cancel()
         jobs[JobKey.OBSERVE_THEME] = viewModelScope.launch {
-            themePreferenceStore.themeMode.collect { themeMode ->
-                _uiState.update { it.copy(themeMode = themeMode) }
+            observeThemeModeUseCase.invoke().collect { themeMode ->
+                _uiState.update { it.copy(themeMode = themeMode.toPresentationThemeMode()) }
             }
         }
     }

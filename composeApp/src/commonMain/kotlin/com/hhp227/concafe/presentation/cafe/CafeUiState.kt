@@ -30,7 +30,8 @@ data class CafeUiState(
     val isLoggedIn: Boolean = false,
     val isVisitVerified: Boolean = false,
     val shouldScrollToTopOnReturn: Boolean = false,
-    val currentUserId: String? = null
+    val currentUserId: String? = null,
+    val shouldShowFavoriteTooltip: Boolean = false
 ) {
     enum class TabType {
         INFO,

@@ -8,12 +8,15 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
     private let signOutUseCase: SignOutUseCase
 
-    private let themePreferences: AppThemePreferences
+    private let observeThemeModeUseCase: ObserveThemeModeUseCase
+
+    private let setThemeModeUseCase: SetThemeModeUseCase
 
     @Published private(set) var uiState = SettingsUiState.empty
 
@@ -67,15 +70,19 @@ final class SettingsViewModel: ObservableObject {
     }
 
     private func selectThemeMode(_ themeMode: AppThemeMode) {
-        themePreferences.setThemeMode(themeMode)
+        setThemeModeUseCase.invoke(themeMode: themeMode.sharedThemeMode)
         uiState.themeMode = themeMode
     }
 
     private func observeThemeMode() {
         tasks[.observeTheme]?.cancel()
         tasks[.observeTheme] = Task {
-            for await themeMode in themePreferences.observeThemeMode() {
-                uiState.themeMode = themeMode
+            do {
+                for try await themeMode in asyncSequence(for: observeThemeModeUseCase.invoke()) {
+                    uiState.themeMode = AppThemeMode(themeMode: themeMode)
+                }
+            } catch {
+                uiState.themeMode = .light
             }
         }
     }
@@ -103,10 +110,12 @@ final class SettingsViewModel: ObservableObject {
 
     init(
         signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
-        themePreferences: AppThemePreferences = .shared
+        observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase(),
+        setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase()
     ) {
         self.signOutUseCase = signOutUseCase
-        self.themePreferences = themePreferences
+        self.observeThemeModeUseCase = observeThemeModeUseCase
+        self.setThemeModeUseCase = setThemeModeUseCase
 
         observeThemeMode()
     }

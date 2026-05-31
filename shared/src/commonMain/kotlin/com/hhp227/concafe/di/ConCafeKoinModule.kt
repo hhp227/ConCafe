@@ -85,6 +85,7 @@ val repositoryModule = module {
     single<NativeAdRepository> { NativeAdRepositoryImpl(get()) }
     single<CommunityPostRepository> { CommunityPostRepositoryImpl(get()) }
     single<AppUpdateRepository> { AppUpdateRepositoryImpl(get()) }
+    single<UserPreferenceRepository> { UserPreferenceRepositoryImpl(get()) }
 }
 
 val eventModule = module {
@@ -181,6 +182,10 @@ val useCaseModule = module {
     factory { UpdateNotificationSettingsUseCase(get(), get()) }
     factory { ObserveCurrentUserUseCase(get()) }
     factory { ObserveNetworkAlertStateUseCase(get()) }
+    factory { ObserveThemeModeUseCase(get()) }
+    factory { SetThemeModeUseCase(get()) }
+    factory { ShouldShowDetailTooltipUseCase(get()) }
+    factory { MarkDetailTooltipShownUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
     factory { SignInUseCase(get()) }
     factory { SignInWithAppleIdTokenUseCase(get()) }

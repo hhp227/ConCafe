@@ -17,6 +17,7 @@ struct CastUiState {
     var isLoggedIn: Bool
     var todayAttendanceStatus: CastAttendanceStatus
     var isSelfCast: Bool
+    var shouldShowFollowTooltip: Bool
 
     static let empty = CastUiState(
         isLoading: false,
@@ -26,6 +27,7 @@ struct CastUiState {
         isFollowing: false,
         isLoggedIn: false,
         todayAttendanceStatus: .off,
-        isSelfCast: false
+        isSelfCast: false,
+        shouldShowFollowTooltip: false
     )
 }

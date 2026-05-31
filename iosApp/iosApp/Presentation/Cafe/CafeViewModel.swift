@@ -30,6 +30,10 @@ final class CafeViewModel: ObservableObject {
 
     private let deleteReviewUseCase: DeleteReviewUseCase
 
+    private let shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase
+
+    private let markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
@@ -135,7 +139,9 @@ final class CafeViewModel: ObservableObject {
                         isLoggedIn: feed.isLoggedIn,
                         isVisitVerified: feed.isVisitVerified,
                         shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn,
-                        currentUserId: feed.currentUserId
+                        currentUserId: feed.currentUserId,
+                        shouldShowFavoriteTooltip: uiState.shouldShowFavoriteTooltip ||
+                            shouldShowDetailTooltipUseCase.invoke(type: .cafeFavorite)
                     )
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
@@ -410,6 +416,10 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
             toggleFavorite()
+        case .favoriteTooltipShown:
+            markDetailTooltipShownUseCase.invoke(type: .cafeFavorite)
+        case .dismissFavoriteTooltip:
+            uiState.shouldShowFavoriteTooltip = false
         case .writeReviewTapped:
             writeReview()
         case .loadMoreCasts:
@@ -447,6 +457,8 @@ final class CafeViewModel: ObservableObject {
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
         deleteReviewUseCase: DeleteReviewUseCase = KoinInitializerKt.resolveDeleteReviewUseCase(),
+        shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase = KoinInitializerKt.resolveShouldShowDetailTooltipUseCase(),
+        markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase = KoinInitializerKt.resolveMarkDetailTooltipShownUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
@@ -459,6 +471,8 @@ final class CafeViewModel: ObservableObject {
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
         self.deleteReviewUseCase = deleteReviewUseCase
+        self.shouldShowDetailTooltipUseCase = shouldShowDetailTooltipUseCase
+        self.markDetailTooltipShownUseCase = markDetailTooltipShownUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.reviewEventPublisher = reviewEventPublisher
 
