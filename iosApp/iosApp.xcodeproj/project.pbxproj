@@ -27,7 +27,6 @@
 		0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */; };
 		0A1613FF2F802D0D00088B82 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = ADA100052F90000100AAA001 /* GoogleMobileAds */; };
 		0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1614002F802D5A00088B82 /* RankingNativeAd.swift */; };
-		0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000001 /* DetailTooltipBox.swift */; };
 		0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D72F614BF700573900 /* CastManagementUiState.swift */; };
 		0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D92F614C1400573900 /* CastManagementAction.swift */; };
 		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
@@ -258,6 +257,7 @@
 		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
 		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
 		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
+		0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000001 /* DetailTooltipBox.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
@@ -449,7 +449,6 @@
 		0A7E61742FA097E6005E1311 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		0A7E61762FA0980A005E1311 /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingBox.swift; sourceTree = "<group>"; };
-		0B3000002FCF000000000001 /* DetailTooltipBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTooltipBox.swift; sourceTree = "<group>"; };
 		0A87EED82F9FA6CA009E58ED /* CommunityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityView.swift; sourceTree = "<group>"; };
 		0A87EEDA2F9FA6F0009E58ED /* CommunityUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityUiState.swift; sourceTree = "<group>"; };
 		0A87EEDC2F9FA71C009E58ED /* CommunityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityViewModel.swift; sourceTree = "<group>"; };
@@ -519,6 +518,7 @@
 		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
 		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
 		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
+		0B3000002FCF000000000001 /* DetailTooltipBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTooltipBox.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1726,7 +1726,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1751,7 +1751,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.21;
+				MARKETING_VERSION = 1.22;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -1774,7 +1774,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/ConCafePush.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = W345THX6Y6;
 				ENABLE_PREVIEWS = YES;
@@ -1799,7 +1799,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.21;
+				MARKETING_VERSION = 1.22;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
