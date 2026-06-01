@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.main.cafemanagement.schedule
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
@@ -231,7 +232,7 @@ class ScheduleViewModel(
             ScheduleAction.SubmitEditDay -> {
                 val currentState = _uiState.value
                 val editingId = currentState.editingScheduleId ?: return
-                if (currentState.editStatus == CastScheduleStatus.WORK && currentState.editStartTime >= currentState.editEndTime) {
+                if (currentState.editStatus == CastScheduleStatus.WORK && TimeUtils.computeDurationMinutes(currentState.editStartTime, currentState.editEndTime) <= 0) {
                     _uiState.update { it.copy(errorMessage = "schedule_error_end_after_start") }
                     return
                 }

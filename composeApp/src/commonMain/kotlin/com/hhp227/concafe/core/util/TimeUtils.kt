@@ -185,10 +185,18 @@ object TimeUtils {
         return options
     }
 
+    fun defaultHourlyTimeOptions(startHour: Int = 8, endHour: Int = 27): List<String> {
+        return (startHour..endHour).map { hour ->
+            val displayHour = if (hour == 24) 24 else hour % 24
+            "%02d:00".format(displayHour)
+        }
+    }
+
     fun computeDurationMinutes(start: String, end: String): Int {
         val startMinutes = parseTimeToMinutes(start)
         val endMinutes = parseTimeToMinutes(end)
-        return (endMinutes - startMinutes).coerceAtLeast(0)
+        val durationMinutes = endMinutes - startMinutes
+        return if (durationMinutes < 0) durationMinutes + 24 * 60 else durationMinutes
     }
 
     private fun dayOfWeekIndexFromIsoDateOrNull(date: String): Int? {

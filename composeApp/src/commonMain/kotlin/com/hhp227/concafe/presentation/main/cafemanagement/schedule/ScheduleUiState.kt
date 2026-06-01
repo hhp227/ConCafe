@@ -83,7 +83,7 @@ data class ScheduleUiState(
         const val DEFAULT_START_TIME = "14:00"
         const val DEFAULT_END_TIME = "22:00"
 
-        private fun defaultTimeOptions(): List<String> = TimeUtils.defaultHalfHourTimeOptions()
+        private fun defaultTimeOptions(): List<String> = TimeUtils.defaultHourlyTimeOptions()
     }
 }
 

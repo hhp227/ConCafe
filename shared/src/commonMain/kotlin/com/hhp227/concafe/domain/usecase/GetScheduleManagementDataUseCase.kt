@@ -9,6 +9,7 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.util.computeScheduleDurationMinutes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -193,7 +194,5 @@ private fun LocalDate.toKoreanDayLabel(): String {
 }
 
 private fun calculateHourLabel(startTime: String, endTime: String): String {
-    val startHour = startTime.substringBefore(':').toIntOrNull() ?: return "0시간"
-    val endHour = endTime.substringBefore(':').toIntOrNull() ?: return "0시간"
-    return "${(endHour - startHour).coerceAtLeast(0)}시간"
+    return "${computeScheduleDurationMinutes(startTime, endTime) / 60}시간"
 }

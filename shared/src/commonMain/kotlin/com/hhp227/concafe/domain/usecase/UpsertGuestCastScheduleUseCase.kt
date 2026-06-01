@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.util.isScheduleEndAfterStart
 
 class UpsertGuestCastScheduleUseCase(
     private val authRepository: AuthRepository,
@@ -28,7 +29,7 @@ class UpsertGuestCastScheduleUseCase(
             if (input.endTime.isBlank()) {
                 return AppResult.Failure(AppError.ValidationFailed("end time is required"))
             }
-            if (input.startTime >= input.endTime) {
+            if (!isScheduleEndAfterStart(input.startTime, input.endTime)) {
                 return AppResult.Failure(AppError.ValidationFailed("end time must be after start time"))
             }
             AppResult.Success(castRepository.upsertGuestCastSchedule(input))

@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -248,7 +247,8 @@ fun CafeContentScreen(
         val topBarInsetPx = with(LocalDensity.current) { topBarInset.roundToPx() }
         val tabHeaderItemInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 2 }
         val isTabPinned = uiState.detail != null && (
-                tabHeaderItemInfo == null || tabHeaderItemInfo.offset <= topBarInsetPx
+                listState.firstVisibleItemIndex > 2 ||
+                        tabHeaderItemInfo?.offset?.let { it <= topBarInsetPx } == true
                 )
 
         Box(
@@ -339,24 +339,25 @@ fun CafeContentScreen(
                     }
                 }
             }
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = topBarInset)
-                    .zIndex(1f)
-                    .align(Alignment.TopCenter)
-                    .alpha(if (isTabPinned) 1f else 0f)
-            ) {
-                ScrollableConCafeTabBar(
-                    labels = tabLabels,
-                    selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    onTabSelected = { index ->
-                        onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
-                    }
-                )
+            if (isTabPinned) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = topBarInset)
+                        .zIndex(1f)
+                        .align(Alignment.TopCenter)
+                ) {
+                    ScrollableConCafeTabBar(
+                        labels = tabLabels,
+                        selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = MaterialTheme.colorScheme.surface,
+                        onTabSelected = { index ->
+                            onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
+                        }
+                    )
+                }
             }
         }
     }
