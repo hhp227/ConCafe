@@ -9,8 +9,6 @@ import SwiftUI
 import Shared
 
 private let castSummaryTitleTriggerOffset: CGFloat = 22
-private let detailTooltipDurationNanoseconds: UInt64 = 5_000_000_000
-
 struct CastView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
@@ -296,43 +294,41 @@ private struct CastSummarySection: View {
                         }
                     }
                     Spacer()
-                    Button {
-                        onAction(.followTapped)
-                    } label: {
-                        Text(
-                            isFollowing
-                            ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
-                            : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
-                        )
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
-                        .padding(.horizontal, 18)
-                        .frame(height: 40)
-                        .background(
-                            Capsule()
-                                .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
-                        )
-                    }
-                    .disabled(isSelfCast)
-                    .opacity(isSelfCast ? 0.5 : 1.0)
-                }
-                if shouldShowFollowTooltip {
-                    DetailTooltipBubble(
+                    DetailTooltipBox(
+                        visible: shouldShowFollowTooltip,
                         text: String(
                             localized: String.LocalizationValue("cast_follow_tooltip"),
                             table: "Localizable"
-                        )
-                    )
-                    .offset(x: 0, y: 48)
-                    .onAppear {
-                        onAction(.followTooltipShown)
-                    }
-                    .task(id: shouldShowFollowTooltip) {
-                        try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
-                        if !Task.isCancelled {
+                        ),
+                        offset: CGSize(width: 0, height: 48),
+                        onShown: {
+                            onAction(.followTooltipShown)
+                        },
+                        onDismiss: {
                             onAction(.dismissFollowTooltip)
                         }
+                    ) {
+                        Button {
+                            onAction(.followTapped)
+                        } label: {
+                            Text(
+                                isFollowing
+                                ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
+                                : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
+                            )
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
+                            .padding(.horizontal, 18)
+                            .frame(height: 40)
+                            .background(
+                                Capsule()
+                                    .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
+                            )
+                        }
+                        .disabled(isSelfCast)
+                        .opacity(isSelfCast ? 0.5 : 1.0)
                     }
+                    .zIndex(1)
                 }
             }
             HStack(spacing: 18) {

@@ -229,8 +229,18 @@ final class TimeUtils {
         return options
     }
 
+    static func defaultHourlyTimeOptions(startHour: Int = 8, endHour: Int = 27) -> [String] {
+        (startHour...endHour).map { hour in
+            let displayHour = hour == 24 ? 24 : hour % 24
+            return String(format: "%02d:00", displayHour)
+        }
+    }
+
     static func computeDurationMinutes(start: String, end: String) -> Int {
-        max(parseTimeMinutes(end) - parseTimeMinutes(start), 0)
+        let startMinutes = parseTimeMinutes(start)
+        let endMinutes = parseTimeMinutes(end)
+        let duration = endMinutes - startMinutes
+        return duration < 0 ? duration + 24 * 60 : duration
     }
 
     private static func dayOfWeekIndex(fromIsoDate date: String) -> Int? {

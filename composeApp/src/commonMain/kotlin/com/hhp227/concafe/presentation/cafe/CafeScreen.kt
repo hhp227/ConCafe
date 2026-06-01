@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -34,13 +33,13 @@ import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.DetailTooltipBox
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -107,7 +106,6 @@ fun CafeContentScreen(
 ) {
     val noticesTabLabel = stringResource(Res.string.cafe_tab_notices)
     val eventTabLabel = stringResource(Res.string.noticeevent_tab_event)
-    val favoriteTooltipState = rememberTooltipState(isPersistent = true)
     val tabLabels = listOf(
         stringResource(Res.string.cafe_tab_info),
         stringResource(Res.string.cafe_tab_casts),
@@ -174,12 +172,8 @@ fun CafeContentScreen(
     LaunchedEffect(uiState.shouldShowFavoriteTooltip) {
         if (uiState.shouldShowFavoriteTooltip) {
             onAction(CafeAction.MarkFavoriteTooltipShown)
-            launch { favoriteTooltipState.show() }
             delay(DETAIL_TOOLTIP_DURATION_MILLIS)
-            favoriteTooltipState.dismiss()
             onAction(CafeAction.DismissFavoriteTooltip)
-        } else {
-            favoriteTooltipState.dismiss()
         }
     }
     Scaffold(
@@ -204,14 +198,9 @@ fun CafeContentScreen(
                     }
                 },
                 actions = {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            PlainTooltip {
-                                Text(stringResource(Res.string.cafe_favorite_tooltip))
-                            }
-                        },
-                        state = favoriteTooltipState
+                    DetailTooltipBox(
+                        visible = uiState.shouldShowFavoriteTooltip,
+                        text = stringResource(Res.string.cafe_favorite_tooltip)
                     ) {
                         IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
                             Icon(
@@ -258,7 +247,8 @@ fun CafeContentScreen(
         val topBarInsetPx = with(LocalDensity.current) { topBarInset.roundToPx() }
         val tabHeaderItemInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 2 }
         val isTabPinned = uiState.detail != null && (
-                tabHeaderItemInfo == null || tabHeaderItemInfo.offset <= topBarInsetPx
+                listState.firstVisibleItemIndex > 2 ||
+                        tabHeaderItemInfo?.offset?.let { it <= topBarInsetPx } == true
                 )
 
         Box(
@@ -349,24 +339,25 @@ fun CafeContentScreen(
                     }
                 }
             }
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = topBarInset)
-                    .zIndex(1f)
-                    .align(Alignment.TopCenter)
-                    .alpha(if (isTabPinned) 1f else 0f)
-            ) {
-                ScrollableConCafeTabBar(
-                    labels = tabLabels,
-                    selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    onTabSelected = { index ->
-                        onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
-                    }
-                )
+            if (isTabPinned) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = topBarInset)
+                        .zIndex(1f)
+                        .align(Alignment.TopCenter)
+                ) {
+                    ScrollableConCafeTabBar(
+                        labels = tabLabels,
+                        selectedIndex = CafeUiState.TabType.entries.indexOf(uiState.selectedTab),
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = MaterialTheme.colorScheme.surface,
+                        onTabSelected = { index ->
+                            onAction(CafeAction.ChangeTab(CafeUiState.TabType.entries[index]))
+                        }
+                    )
+                }
             }
         }
     }

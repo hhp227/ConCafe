@@ -3,6 +3,7 @@ package com.hhp227.concafe.data.source.firestore
 import com.hhp227.concafe.data.source.*
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.*
+import com.hhp227.concafe.domain.util.isScheduleEndAfterStart
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -719,7 +720,7 @@ class FirestoreCastRemoteDataSource(
                     ?: throw IllegalArgumentException("start time is required")
                 val endTime = update.endTime?.trim()?.takeIf { it.isNotEmpty() }
                     ?: throw IllegalArgumentException("end time is required")
-                require(startTime < endTime) { "end time must be after start time" }
+                require(isScheduleEndAfterStart(startTime, endTime)) { "end time must be after start time" }
                 val scheduleBody = firestoreDocumentBody(
                     mapOf(
                         "castId" to firestoreString(update.castId),
@@ -773,7 +774,7 @@ class FirestoreCastRemoteDataSource(
         val startTime = input.startTime.trim().takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("start time is required")
         val endTime = input.endTime.trim().takeIf { it.isNotEmpty() } ?: throw IllegalArgumentException("end time is required")
         require(cafeId.isNotBlank()) { "cafeId is required" }
-        require(startTime < endTime) { "end time must be after start time" }
+        require(isScheduleEndAfterStart(startTime, endTime)) { "end time must be after start time" }
 
         val idToken = tokenProvider.getIdToken()
         val currentUserId = tokenProvider.getCurrentUserId()?.takeIf { it.isNotBlank() }

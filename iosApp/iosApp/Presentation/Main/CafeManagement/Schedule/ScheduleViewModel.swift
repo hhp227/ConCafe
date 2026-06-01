@@ -236,7 +236,7 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editEndTime = value
         case .submitEditDay:
             guard let editingId = uiState.editingScheduleId else { return }
-            if uiState.editStatus == .work && uiState.editStartTime >= uiState.editEndTime {
+            if uiState.editStatus == .work && ScheduleUiState.computeDurationMinutes(start: uiState.editStartTime, end: uiState.editEndTime) <= 0 {
                 uiState.errorMessage = "schedule_error_end_after_start"
                 return
             }

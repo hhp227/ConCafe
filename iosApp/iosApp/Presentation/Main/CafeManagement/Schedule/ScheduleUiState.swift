@@ -70,7 +70,7 @@ struct ScheduleUiState {
     }
 
     static func defaultTimeOptions() -> [String] {
-        TimeUtils.defaultHalfHourTimeOptions()
+        TimeUtils.defaultHourlyTimeOptions()
     }
 
     static let defaultStartTime = "14:00"
