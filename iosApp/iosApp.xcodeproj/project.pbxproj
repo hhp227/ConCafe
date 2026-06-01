@@ -27,6 +27,7 @@
 		0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */; };
 		0A1613FF2F802D0D00088B82 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = ADA100052F90000100AAA001 /* GoogleMobileAds */; };
 		0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1614002F802D5A00088B82 /* RankingNativeAd.swift */; };
+		0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000001 /* DetailTooltipBox.swift */; };
 		0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D72F614BF700573900 /* CastManagementUiState.swift */; };
 		0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D92F614C1400573900 /* CastManagementAction.swift */; };
 		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
@@ -448,6 +449,7 @@
 		0A7E61742FA097E6005E1311 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		0A7E61762FA0980A005E1311 /* PostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailView.swift; sourceTree = "<group>"; };
 		0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingBox.swift; sourceTree = "<group>"; };
+		0B3000002FCF000000000001 /* DetailTooltipBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTooltipBox.swift; sourceTree = "<group>"; };
 		0A87EED82F9FA6CA009E58ED /* CommunityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityView.swift; sourceTree = "<group>"; };
 		0A87EEDA2F9FA6F0009E58ED /* CommunityUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityUiState.swift; sourceTree = "<group>"; };
 		0A87EEDC2F9FA71C009E58ED /* CommunityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityViewModel.swift; sourceTree = "<group>"; };
@@ -1119,6 +1121,7 @@
 				0A7E6AA62F78C65E00A03E42 /* RatingBox.swift */,
 				0A1614002F802D5A00088B82 /* RankingNativeAd.swift */,
 				0A2BC2AC2F8693BD005B3087 /* CheckInCafeMapView.swift */,
+				0B3000002FCF000000000001 /* DetailTooltipBox.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1570,6 +1573,7 @@
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
+				0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */,
 				0AA7620D2F8BB08C00092934 /* CheckInQrScannerView.swift in Sources */,
 				0A3470732F611AD6005F9A8C /* ExternalLinkView.swift in Sources */,
 				0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */,

@@ -153,7 +153,6 @@ struct CafeView: View {
 private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
 private let cafeTabPinnedResetScrollOffset: CGFloat = -8
 private let cafeCastPagingLayoutLockDelay: TimeInterval = 0.45
-private let detailTooltipDurationNanoseconds: UInt64 = 5_000_000_000
 
 private struct CafeContentView: View {
     let uiState: CafeUiState
@@ -212,8 +211,8 @@ private struct CafeContentView: View {
                         onAction(.favoriteTapped)
                     } label: {
                         Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
-                        .font(.headline)
-                        .frame(width: 36, height: 36)
+                            .font(.headline)
+                            .frame(width: 36, height: 36)
                     }
                 }
             }
@@ -221,21 +220,22 @@ private struct CafeContentView: View {
                 if uiState.shouldShowFavoriteTooltip {
                     HStack {
                         Spacer()
-                        DetailTooltipBubble(
-                            text: String(localized: String.LocalizationValue("cafe_favorite_tooltip"), table: "Localizable")
-                        )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .zIndex(4)
-                            .onAppear {
+                        DetailTooltipBox(
+                            visible: uiState.shouldShowFavoriteTooltip,
+                            text: String(localized: String.LocalizationValue("cafe_favorite_tooltip"), table: "Localizable"),
+                            onShown: {
                                 onAction(.favoriteTooltipShown)
+                            },
+                            onDismiss: {
+                                onAction(.dismissFavoriteTooltip)
                             }
-                            .task(id: uiState.shouldShowFavoriteTooltip) {
-                                try? await Task.sleep(nanoseconds: detailTooltipDurationNanoseconds)
-                                if !Task.isCancelled {
-                                    onAction(.dismissFavoriteTooltip)
-                                }
-                            }
-                            .padding(.trailing, 8)
+                        ) {
+                            Color.clear
+                                .frame(width: 0, height: 0)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .zIndex(4)
+                        .padding(.trailing, 8)
                     }
                 }
             }
@@ -576,42 +576,5 @@ struct CafeView_Previews: PreviewProvider {
             cafeId: "cafe-1",
             onNavigationAction: { _ in }
         )
-    }
-}
-
-struct DetailTooltipBubble: View {
-    let text: String
-
-    var body: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            DetailTooltipTriangle()
-                .fill(Color(uiColor: .label))
-                .frame(width: 14, height: 8)
-                .padding(.trailing, 18)
-            Text(text)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(uiColor: .systemBackground))
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .frame(maxWidth: 280, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(uiColor: .label))
-                )
-                .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
-        }
-    }
-}
-
-private struct DetailTooltipTriangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
     }
 }

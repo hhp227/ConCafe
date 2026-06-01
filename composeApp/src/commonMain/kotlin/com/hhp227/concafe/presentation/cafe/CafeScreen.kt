@@ -34,13 +34,13 @@ import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.DetailTooltipBox
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
@@ -107,7 +107,6 @@ fun CafeContentScreen(
 ) {
     val noticesTabLabel = stringResource(Res.string.cafe_tab_notices)
     val eventTabLabel = stringResource(Res.string.noticeevent_tab_event)
-    val favoriteTooltipState = rememberTooltipState(isPersistent = true)
     val tabLabels = listOf(
         stringResource(Res.string.cafe_tab_info),
         stringResource(Res.string.cafe_tab_casts),
@@ -174,12 +173,8 @@ fun CafeContentScreen(
     LaunchedEffect(uiState.shouldShowFavoriteTooltip) {
         if (uiState.shouldShowFavoriteTooltip) {
             onAction(CafeAction.MarkFavoriteTooltipShown)
-            launch { favoriteTooltipState.show() }
             delay(DETAIL_TOOLTIP_DURATION_MILLIS)
-            favoriteTooltipState.dismiss()
             onAction(CafeAction.DismissFavoriteTooltip)
-        } else {
-            favoriteTooltipState.dismiss()
         }
     }
     Scaffold(
@@ -204,14 +199,9 @@ fun CafeContentScreen(
                     }
                 },
                 actions = {
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                        tooltip = {
-                            PlainTooltip {
-                                Text(stringResource(Res.string.cafe_favorite_tooltip))
-                            }
-                        },
-                        state = favoriteTooltipState
+                    DetailTooltipBox(
+                        visible = uiState.shouldShowFavoriteTooltip,
+                        text = stringResource(Res.string.cafe_favorite_tooltip)
                     ) {
                         IconButton(onClick = { onAction(CafeAction.ClickFavorite) }) {
                             Icon(
