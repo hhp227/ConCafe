@@ -24,28 +24,51 @@ actual fun compressImageForUpload(localPath: String, maxBytes: Int): CompressedI
     }
 
     val loadedImage = ImageIO.read(sourceFile) ?: throw IllegalArgumentException("invalid image file: $path")
-    var currentImage = if (loadedImage.type == BufferedImage.TYPE_INT_RGB) loadedImage else convertToRgb(loadedImage)
+    var currentImage = downsampleIfNeeded(if (loadedImage.type == BufferedImage.TYPE_INT_RGB) loadedImage else convertToRgb(loadedImage))
     var quality = 0.9f
+    var bestBytes: ByteArray? = null
     var attempt = 0
 
-    while (attempt < 12) {
+    while (attempt < MAX_COMPRESS_ATTEMPTS) {
         val compressed = encodeJpeg(currentImage, quality)
+
+        if (bestBytes == null || compressed.size < bestBytes.size) {
+            bestBytes = compressed
+        }
         if (compressed.size < maxBytes) {
             return CompressedImageData(bytes = compressed, fileName = ensureJpegName(fileName))
         }
 
         if (quality > 0.55f) {
             quality -= 0.05f
-        } else {
-            val nextWidth = max((currentImage.width * 0.85f).toInt(), 480)
-            val nextHeight = max((currentImage.height * 0.85f).toInt(), 480)
+        } else if (currentImage.width > MIN_DIMENSION_PX || currentImage.height > MIN_DIMENSION_PX) {
+            val nextWidth = max((currentImage.width * 0.7f).toInt(), MIN_DIMENSION_PX)
+            val nextHeight = max((currentImage.height * 0.7f).toInt(), MIN_DIMENSION_PX)
             currentImage = resizeImage(currentImage, nextWidth, nextHeight)
-            quality = 0.85f
+            quality = 0.8f
+        } else {
+            break
         }
         attempt += 1
     }
 
-    throw IllegalArgumentException("failed to compress image under ${maxBytes}bytes")
+    // 압축 목표에 도달하지 못해도 업로드 자체가 실패하지 않도록 최선 결과를 반환한다
+    return CompressedImageData(bytes = bestBytes ?: originalBytes, fileName = ensureJpegName(fileName))
+}
+
+private fun downsampleIfNeeded(source: BufferedImage): BufferedImage {
+    val pixelCount = source.width.toLong() * source.height
+
+    return if (pixelCount > MAX_DECODE_PIXELS) {
+        val scaleFactor = kotlin.math.sqrt(MAX_DECODE_PIXELS.toDouble() / pixelCount)
+        resizeImage(
+            source = source,
+            width = max((source.width * scaleFactor).toInt(), MIN_DIMENSION_PX),
+            height = max((source.height * scaleFactor).toInt(), MIN_DIMENSION_PX)
+        )
+    } else {
+        source
+    }
 }
 
 private fun convertToRgb(source: BufferedImage): BufferedImage {
@@ -89,3 +112,7 @@ private fun ensureJpegName(fileName: String): String {
         fileName.substringBeforeLast('.') + ".jpg"
     }
 }
+
+private const val MAX_COMPRESS_ATTEMPTS = 20
+private const val MAX_DECODE_PIXELS = 4_000_000L
+private const val MIN_DIMENSION_PX = 480

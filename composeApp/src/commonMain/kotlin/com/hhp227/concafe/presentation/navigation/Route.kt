@@ -57,6 +57,9 @@ sealed interface Route {
     data class CastManagement(val cafeId: String, val cafeName: String) : Route
 
     @Serializable
+    data class CastList(val cafeId: String) : Route
+
+    @Serializable
     data class MenuGoods(val param: String) : Route
 
     @Serializable

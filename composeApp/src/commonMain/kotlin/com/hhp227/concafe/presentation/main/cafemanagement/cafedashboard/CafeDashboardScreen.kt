@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -85,6 +86,9 @@ fun CafeDashboardScreen(
                 }
                 is CafeDashboardEvent.NavigateToCastEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
+                }
+                is CafeDashboardEvent.NavigateToCastList -> {
+                    onNavigationAction(NavigationAction.NavigateToCastList(event.cafeId))
                 }
                 is CafeDashboardEvent.NavigateToSchedule -> {
                     onNavigationAction(NavigationAction.NavigateToSchedule(event.castId))
@@ -315,6 +319,9 @@ private fun CafeDashboardContentScreen(
                                 },
                                 onLoadMoreClick = {
                                     onAction(CafeDashboardAction.ClickLoadMoreCasts)
+                                },
+                                onCastListDetailClick = {
+                                    onAction(CafeDashboardAction.ClickCastListDetail)
                                 }
                             )
                         }
@@ -1369,7 +1376,8 @@ private fun CastManagementSection(
     onScheduleClick: () -> Unit,
     selectedCastId: String?,
     onCastScheduleSelect: (String) -> Unit,
-    onLoadMoreClick: () -> Unit
+    onLoadMoreClick: () -> Unit,
+    onCastListDetailClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -1454,6 +1462,38 @@ private fun CastManagementSection(
                             onClick = onLoadMoreClick
                         )
                     }
+                }
+            }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = colorFromHex("FCE6EF"),
+                onClick = onCastListDetailClick
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = null,
+                        tint = colorFromHex("EF6797"),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(Res.string.dashboard_action_cast_list_detail),
+                        modifier = Modifier.padding(start = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorFromHex("EF6797"),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = colorFromHex("EF6797"),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

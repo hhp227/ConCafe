@@ -132,6 +132,8 @@ struct CafeDashboardView: View {
                 onNavigationAction(.navigateToMenuGoods(id: cafeId))
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
+            case .navigateToCastList(let cafeId):
+                onNavigationAction(.navigateToCastList(cafeId: cafeId))
             case .navigateToSchedule(let castId):
                 onNavigationAction(.navigateToSchedule(castId: castId))
             case .navigateToExternalLink(let title, let url):
@@ -601,6 +603,24 @@ private struct CafeDashboardContentView: View {
                 }
                 .padding(.vertical, 2)
             }
+            Button {
+                onAction(.clickCastListDetail)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.2")
+                        .font(.caption)
+                    Text(String(localized: String.LocalizationValue("dashboard_action_cast_list_detail"), table: "Localizable"))
+                        .font(.caption.weight(.bold))
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.bold))
+                }
+                .foregroundStyle(Color(hex: "EF6797"))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color(hex: "FCE6EF"))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
         .padding(18)
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))

@@ -33,6 +33,7 @@ import com.hhp227.concafe.presentation.main.cafemanagement.externallink.External
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoods.MenuGoodsScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.menugoodsedit.MenuGoodsEditScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.noticeevent.NoticeEventScreen
+import com.hhp227.concafe.presentation.main.cafemanagement.castlist.CastListScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.schedule.ScheduleScreen
 import com.hhp227.concafe.presentation.main.checkin.map.MapScreen
@@ -199,6 +200,14 @@ fun NavigationScreen(
             CastManagementScreen(
                 cafeId = route.cafeId,
                 cafeName = route.cafeName,
+                onNavigationAction = viewModel::onAction
+            )
+        }
+        composable<Route.CastList> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.CastList>()
+
+            CastListScreen(
+                cafeId = route.cafeId,
                 onNavigationAction = viewModel::onAction
             )
         }

@@ -194,6 +194,10 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func clickCastListDetail() {
+        event.send(.navigateToCastList(cafeId: cafeId))
+    }
+
     private func clickCreateBanner() {
         event.send(.navigateToBannerEdit)
     }
@@ -904,6 +908,8 @@ final class CafeDashboardViewModel: ObservableObject {
             clickDeleteExternalLink(linkId)
         case .clickCastSchedule(let castId):
             clickCastSchedule(castId)
+        case .clickCastListDetail:
+            clickCastListDetail()
         case .clickDeleteCast:
             clickDeleteCast()
         case .confirmDeleteCast:

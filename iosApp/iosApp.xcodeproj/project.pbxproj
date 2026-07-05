@@ -32,6 +32,11 @@
 		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
 		0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DD2F614C4600573900 /* CastManagementEvent.swift */; };
 		0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DF2F614C6100573900 /* CastManagementView.swift */; };
+		0AFA5C022F80A00200573900 /* CastListUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA5C012F80A00100573900 /* CastListUiState.swift */; };
+		0AFA5C042F80A00400573900 /* CastListAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA5C032F80A00300573900 /* CastListAction.swift */; };
+		0AFA5C062F80A00600573900 /* CastListEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA5C052F80A00500573900 /* CastListEvent.swift */; };
+		0AFA5C082F80A00800573900 /* CastListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA5C072F80A00700573900 /* CastListViewModel.swift */; };
+		0AFA5C0A2F80A00A00573900 /* CastListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFA5C092F80A00900573900 /* CastListView.swift */; };
 		0A27C8E32F614C9000573900 /* ScheduleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E22F614C9000573900 /* ScheduleViewModel.swift */; };
 		0A27C8E52F614CD100573900 /* ScheduleUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E42F614CD100573900 /* ScheduleUiState.swift */; };
 		0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8E62F614CDD00573900 /* ScheduleAction.swift */; };
@@ -293,6 +298,11 @@
 		0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementViewModel.swift; sourceTree = "<group>"; };
 		0A27C8DD2F614C4600573900 /* CastManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementEvent.swift; sourceTree = "<group>"; };
 		0A27C8DF2F614C6100573900 /* CastManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementView.swift; sourceTree = "<group>"; };
+		0AFA5C012F80A00100573900 /* CastListUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListUiState.swift; sourceTree = "<group>"; };
+		0AFA5C032F80A00300573900 /* CastListAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListAction.swift; sourceTree = "<group>"; };
+		0AFA5C052F80A00500573900 /* CastListEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListEvent.swift; sourceTree = "<group>"; };
+		0AFA5C072F80A00700573900 /* CastListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListViewModel.swift; sourceTree = "<group>"; };
+		0AFA5C092F80A00900573900 /* CastListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListView.swift; sourceTree = "<group>"; };
 		0A27C8E22F614C9000573900 /* ScheduleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleViewModel.swift; sourceTree = "<group>"; };
 		0A27C8E42F614CD100573900 /* ScheduleUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleUiState.swift; sourceTree = "<group>"; };
 		0A27C8E62F614CDD00573900 /* ScheduleAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleAction.swift; sourceTree = "<group>"; };
@@ -565,6 +575,7 @@
 				0A341CAA2F6035AB00CC07CF /* CafeDashboard */,
 				0A6B6ABE2F60701300E395C2 /* CafeInfoEdit */,
 				0A27C8D62F614BD300573900 /* CastManagement */,
+				0AFA5C0B2F80A00B00573900 /* CastList */,
 				0A3470712F611ABE005F9A8C /* ExternalLink */,
 				0A6B33442F610B0B0074940F /* MenuGoods */,
 				0A34707C2F611CF9005F9A8C /* MenuGoodsEdit */,
@@ -626,6 +637,18 @@
 				0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */,
 			);
 			path = SignUp;
+			sourceTree = "<group>";
+		};
+		0AFA5C0B2F80A00B00573900 /* CastList */ = {
+			isa = PBXGroup;
+			children = (
+				0AFA5C012F80A00100573900 /* CastListUiState.swift */,
+				0AFA5C032F80A00300573900 /* CastListAction.swift */,
+				0AFA5C052F80A00500573900 /* CastListEvent.swift */,
+				0AFA5C072F80A00700573900 /* CastListViewModel.swift */,
+				0AFA5C092F80A00900573900 /* CastListView.swift */,
+			);
+			path = CastList;
 			sourceTree = "<group>";
 		};
 		0A27C8D62F614BD300573900 /* CastManagement */ = {
@@ -1452,6 +1475,11 @@
 				0A8ABA722F5C1D2A00265D4F /* SettingsView.swift in Sources */,
 				0A8ABA692F5C1C8500265D4F /* FanManagementViewModel.swift in Sources */,
 				0A27C8E02F614C6100573900 /* CastManagementView.swift in Sources */,
+				0AFA5C022F80A00200573900 /* CastListUiState.swift in Sources */,
+				0AFA5C042F80A00400573900 /* CastListAction.swift in Sources */,
+				0AFA5C062F80A00600573900 /* CastListEvent.swift in Sources */,
+				0AFA5C082F80A00800573900 /* CastListViewModel.swift in Sources */,
+				0AFA5C0A2F80A00A00573900 /* CastListView.swift in Sources */,
 				0ABE84D42F6FC6990014281C /* CachedAsyncImage.swift in Sources */,
 				0A45CA2E2F7DA44C00A7F8F7 /* ContentAction.swift in Sources */,
 				0A45CA2F2F7DA44C00A7F8F7 /* ContentViewModel.swift in Sources */,

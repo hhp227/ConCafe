@@ -12,6 +12,7 @@ import com.hhp227.concafe.presentation.main.MainViewModel
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsViewModel
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementViewModel
+import com.hhp227.concafe.presentation.main.cafemanagement.castlist.CastListViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditViewModel
@@ -68,6 +69,7 @@ private val composeAppPresentationModule = module {
     }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, cafeName: String) -> CastManagementViewModel(cafeId, cafeName, get()) }
+    factory { (cafeId: String) -> CastListViewModel(cafeId, get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, isRegistrationMode: Boolean) -> CafeInfoEditViewModel(cafeId, isRegistrationMode, get(), get(), get(), get()) }
     factory { (title: String, url: String) -> ExternalLinkViewModel(title, url) }
