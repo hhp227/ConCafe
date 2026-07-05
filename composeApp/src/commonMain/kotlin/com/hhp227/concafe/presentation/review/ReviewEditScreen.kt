@@ -28,7 +28,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_close
@@ -125,7 +125,7 @@ private fun ReviewEditContentScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .keyboardBottomInsets()
+                            .fixedBottomBarInsets()
                             .padding(horizontal = 16.dp, vertical = 14.dp)
                     ) {
                         Button(
@@ -165,6 +165,8 @@ private fun ReviewEditContentScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 12.dp)
         ) {

@@ -36,7 +36,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.castedit_accessibility_back
@@ -137,7 +137,7 @@ private fun CastEditContentScreen(
         bottomBar = {
             Surface(
                 modifier = Modifier
-                    .keyboardBottomInsets(),
+                    .fixedBottomBarInsets(),
                 color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
@@ -191,6 +191,8 @@ private fun CastEditContentScreen(
                     }
                 )
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
         ) {
             if (uiState.isLoading) {
                 Box(

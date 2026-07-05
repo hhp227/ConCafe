@@ -35,7 +35,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_close
@@ -139,7 +139,7 @@ private fun MenuGoodsEditContentScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .keyboardBottomInsets()
+                        .fixedBottomBarInsets()
                         .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
@@ -184,6 +184,8 @@ private fun MenuGoodsEditContentScreen(
                     }
                 )
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),

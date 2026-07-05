@@ -718,8 +718,7 @@ private fun NoticeEventFormSheetContent(
             }
         }
         Surface(
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.imePadding()
+            color = MaterialTheme.colorScheme.surface
         ) {
             Box(
                 modifier = Modifier

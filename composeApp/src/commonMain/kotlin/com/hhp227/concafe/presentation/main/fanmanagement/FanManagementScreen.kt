@@ -28,7 +28,6 @@ import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.datetime.Clock
@@ -511,7 +510,7 @@ private fun CastClaimSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .keyboardBottomInsets()
+            .navigationBarsPadding()
     ) {
         LazyColumn(
             modifier = Modifier

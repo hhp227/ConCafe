@@ -33,7 +33,6 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.schedule_action_close
 import concafe.composeapp.generated.resources.schedule_apply_edit
@@ -171,7 +170,7 @@ private fun ScheduleEditSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .keyboardBottomInsets()
+            .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

@@ -34,7 +34,6 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
 import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -380,7 +379,7 @@ private fun ExternalLinkSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -440,7 +439,7 @@ private fun SocialMediaSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -518,7 +517,7 @@ private fun ReservationSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -578,7 +577,7 @@ private fun TableCountSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -646,7 +645,7 @@ private fun GuestScheduleSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("게스트 출연 추가", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

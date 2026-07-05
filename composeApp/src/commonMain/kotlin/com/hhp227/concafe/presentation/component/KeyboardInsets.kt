@@ -13,3 +13,9 @@ fun Modifier.keyboardBottomInsets(): Modifier {
         windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
     }
 }
+
+fun Modifier.fixedBottomBarInsets(): Modifier {
+    return composed {
+        windowInsetsPadding(WindowInsets.navigationBars)
+    }
+}
