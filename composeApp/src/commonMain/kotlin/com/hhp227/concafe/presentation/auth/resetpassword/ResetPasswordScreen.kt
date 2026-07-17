@@ -72,6 +72,7 @@ import concafe.composeapp.generated.resources.reset_password_title
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,7 +134,7 @@ private fun ResetPasswordContentScreen(
                             MaterialTheme.colorScheme.surfaceVariant
                         )
                     } else {
-                        listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                        listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint)
                     }
                 )
             )
@@ -153,7 +154,7 @@ private fun ResetPasswordContentScreen(
                         .fillMaxWidth()
                         .background(
                             Brush.linearGradient(
-                                listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
+                                listOf(ConCafeColors.primary, ConCafeColors.secondary)
                             ),
                             shape = MaterialTheme.shapes.extraLarge
                         )
@@ -230,8 +231,8 @@ private fun ResetPasswordContentScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("FFD1DC"),
-                    contentColor = colorFromHex("2B2330")
+                    containerColor = ConCafeColors.primaryContainer,
+                    contentColor = ConCafeColors.textPrimary
                 )
             ) {
                 Text(
@@ -265,7 +266,7 @@ private fun ResetPasswordGuideRow(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = colorFromHex("EF6797"),
+                tint = ConCafeColors.primary,
                 modifier = Modifier.size(18.dp)
             )
             Text(

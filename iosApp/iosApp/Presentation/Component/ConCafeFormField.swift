@@ -31,7 +31,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.textSecondary)
             HStack(spacing: 8) {
                 leadingContent()
                 if isSecure {
@@ -57,7 +57,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
                     .stroke(
                         colorScheme == .dark
                             ? Color.white.opacity(0.08)
-                            : Color(hex: "FFD1DC").opacity(0.3),
+                            : ConCafeColors.primaryContainer.opacity(0.3),
                         lineWidth: 1
                     )
             )
@@ -70,7 +70,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
             EmptyView()
         } else {
             Text(placeholder)
-                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "AA98A4"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : ConCafeColors.textMuted)
         }
     }
 }
@@ -150,14 +150,14 @@ struct ConCafeFormEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.textSecondary)
             ZStack(alignment: .topLeading) {
                 ConCafeMultilineTextView(text: $text)
                     .frame(minHeight: 120)
                     .padding(12)
                 if text.isEmpty, !placeholder.isEmpty {
                     Text(placeholder)
-                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : Color(hex: "AA98A4"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : ConCafeColors.textMuted)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 20)
                 }
@@ -169,7 +169,7 @@ struct ConCafeFormEditor: View {
                     .stroke(
                         colorScheme == .dark
                             ? Color.white.opacity(0.08)
-                            : Color(hex: "FFD1DC").opacity(0.3),
+                            : ConCafeColors.primaryContainer.opacity(0.3),
                         lineWidth: 1
                     )
             )

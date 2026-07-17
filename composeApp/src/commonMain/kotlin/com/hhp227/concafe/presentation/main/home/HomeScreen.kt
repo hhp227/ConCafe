@@ -96,6 +96,7 @@ import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -340,8 +341,8 @@ fun HomeContentScreen(
                                         .background(
                                             Brush.verticalGradient(
                                                 listOf(
-                                                    colorFromHex("FFD3E2"),
-                                                    colorFromHex("FFB6D0")
+                                                    ConCafeColors.primaryContainer,
+                                                    ConCafeColors.primaryContainer
                                                 )
                                             )
                                         )
@@ -383,7 +384,7 @@ fun HomeContentScreen(
                 .background(screenBackgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = colorFromHex("EF6797"))
+            CircularProgressIndicator(color = ConCafeColors.primary)
         }
     }
 }
@@ -499,7 +500,7 @@ private fun HomeCafeEventCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
+                        .background(Brush.linearGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
                 )
             }
         }
@@ -509,7 +510,7 @@ private fun HomeCafeEventCard(
         ) {
             Text(
                 text = event.cafeName,
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -582,8 +583,8 @@ private fun HomeBannerSection(
                                 )
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(
-                                    if (pagerState.currentPage == page) colorFromHex("EF6797")
-                                    else colorFromHex("D8D8D8")
+                                    if (pagerState.currentPage == page) ConCafeColors.primary
+                                    else ConCafeColors.outline
                                 )
                         )
                     }
@@ -708,7 +709,7 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(colorFromHex("EDE7EA"), colorFromHex("F6F2F4"))
+                        listOf(ConCafeColors.outline, ConCafeColors.surfaceTint)
                     )
                 )
                 .padding(18.dp),
@@ -776,7 +777,7 @@ private fun SectionTitle(
         if (actionLabel != null && onAction != null) {
             Text(
                 text = actionLabel,
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -802,7 +803,7 @@ private fun NearByCafeItem(
             modifier = Modifier
                 .size(92.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(Brush.verticalGradient(listOf(colorFromHex("FFE1C7"), colorFromHex("FFCEAE"))))
+                .background(Brush.verticalGradient(listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)))
         ) {
             val resolvedThumbnailImage = cafe.thumbnailImage?.trim().orEmpty()
 
@@ -827,7 +828,7 @@ private fun NearByCafeItem(
                 Text(
                     text = conceptLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -906,7 +907,7 @@ private fun HomeCommunityPostCard(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
+                                listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -915,7 +916,7 @@ private fun HomeCommunityPostCard(
                         text = post.userNickname.firstOrNull()?.toString() ?: "?",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("EF6797")
+                        color = ConCafeColors.primary
                     )
                 }
                 Text(
@@ -947,7 +948,7 @@ private fun HomeCommunityPostCard(
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
-            Divider(color = colorFromHex("FFD1DC").copy(alpha = 0.3f))
+            Divider(color = ConCafeColors.primaryContainer.copy(alpha = 0.3f))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

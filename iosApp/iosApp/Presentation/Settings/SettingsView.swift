@@ -48,6 +48,10 @@ private struct SettingsContentView: View {
                     selectedThemeMode: uiState.themeMode,
                     onSelect: { onAction(.themeModeSelected($0)) }
                 )
+                BrandThemePickerRow(
+                    selectedBrandTheme: uiState.brandTheme,
+                    onSelect: { onAction(.brandThemeSelected($0)) }
+                )
             }
             Section {
                 SettingsRow(item: .account)
@@ -87,7 +91,7 @@ private struct ThemePickerRow: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(systemName: "paintpalette")
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .frame(width: 24)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(String(localized: String.LocalizationValue("settings_theme_title"), table: "Localizable"))
@@ -106,6 +110,42 @@ private struct ThemePickerRow: View {
                 ForEach(AppThemeMode.allCases) { themeMode in
                     Text(themeMode.title)
                         .tag(themeMode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct BrandThemePickerRow: View {
+    let selectedBrandTheme: AppBrandTheme
+
+    let onSelect: (AppBrandTheme) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(ConCafeColors.primary)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("settings_brand_theme_title"), table: "Localizable"))
+                        .font(.subheadline)
+                        .bold()
+                    Text(String(localized: String.LocalizationValue("settings_brand_theme_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            Picker(String(localized: String.LocalizationValue("settings_brand_theme_title"), table: "Localizable"), selection: Binding(
+                get: { selectedBrandTheme },
+                set: { onSelect($0) }
+            )) {
+                ForEach(AppBrandTheme.allCases) { brandTheme in
+                    Text(brandTheme.title)
+                        .tag(brandTheme)
                 }
             }
             .pickerStyle(.segmented)
@@ -152,7 +192,7 @@ private struct SettingsItem {
         icon: "person.crop.circle",
         title: String(localized: String.LocalizationValue("settings_account_title"), table: "Localizable"),
         description: String(localized: String.LocalizationValue("settings_account_desc"), table: "Localizable"),
-        foregroundColor: Color(hex: "EF6797"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
@@ -160,7 +200,7 @@ private struct SettingsItem {
         icon: "bell.badge",
         title: String(localized: String.LocalizationValue("settings_notification_title"), table: "Localizable"),
         description: String(localized: String.LocalizationValue("settings_notification_desc"), table: "Localizable"),
-        foregroundColor: Color(hex: "EF6797"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
@@ -169,7 +209,7 @@ private struct SettingsItem {
             icon: "info.circle",
             title: String(localized: String.LocalizationValue("settings_app_info_title"), table: "Localizable"),
             description: String(localized: String.LocalizationValue("settings_app_info_desc"), table: "Localizable"),
-            foregroundColor: Color(hex: "EF6797"),
+            foregroundColor: ConCafeColors.primary,
             trailingText: "v\(version)"
         )
     }
@@ -178,7 +218,7 @@ private struct SettingsItem {
         icon: "bubble.left.and.text.bubble.right",
         title: String(localized: String.LocalizationValue("settings_inquiry_title"), table: "Localizable"),
         description: String(localized: String.LocalizationValue("settings_inquiry_desc"), table: "Localizable"),
-        foregroundColor: Color(hex: "EF6797"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
@@ -186,7 +226,7 @@ private struct SettingsItem {
         icon: "lock.doc",
         title: String(localized: String.LocalizationValue("settings_privacy_title"), table: "Localizable"),
         description: String(localized: String.LocalizationValue("settings_privacy_desc"), table: "Localizable"),
-        foregroundColor: Color(hex: "EF6797"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 

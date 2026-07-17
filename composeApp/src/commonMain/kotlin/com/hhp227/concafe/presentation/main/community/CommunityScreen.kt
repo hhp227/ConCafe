@@ -34,6 +34,7 @@ import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CommunityScreen(
@@ -85,7 +86,7 @@ private fun CommunityContentScreen(
     }
 
     Scaffold(
-        containerColor = colorFromHex("F8F5F6"),
+        containerColor = ConCafeColors.surfaceVariant,
         contentWindowInsets = if (showTopBar) {
             ScaffoldDefaults.contentWindowInsets
         } else {
@@ -103,7 +104,7 @@ private fun CommunityContentScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.White,
-                        titleContentColor = colorFromHex("2B2330")
+                        titleContentColor = ConCafeColors.textPrimary
                     )
                 )
             }
@@ -111,7 +112,7 @@ private fun CommunityContentScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onAction(CommunityAction.ClickWritePost) },
-                containerColor = colorFromHex("EF6797"),
+                containerColor = ConCafeColors.primary,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.size(56.dp)
@@ -126,7 +127,7 @@ private fun CommunityContentScreen(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = colorFromHex("EF6797"))
+                    CircularProgressIndicator(color = ConCafeColors.primary)
                 }
             }
             uiState.posts.isEmpty() -> {
@@ -136,7 +137,7 @@ private fun CommunityContentScreen(
                 ) {
                     Text(
                         text = stringResource(Res.string.community_empty),
-                        color = colorFromHex("8C7E87"),
+                        color = ConCafeColors.textMuted,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 22.sp
@@ -186,7 +187,7 @@ private fun CommunityContentScreen(
                                 ) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(24.dp),
-                                        color = colorFromHex("EF6797"),
+                                        color = ConCafeColors.primary,
                                         strokeWidth = 2.dp
                                     )
                                 }
@@ -298,7 +299,7 @@ private fun CommunityPostCard(
                             .clip(CircleShape)
                             .background(
                                 Brush.linearGradient(
-                                    colors = listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
+                                    colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -307,20 +308,20 @@ private fun CommunityPostCard(
                             text = post.userNickname.firstOrNull()?.toString() ?: "?",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = colorFromHex("EF6797")
+                            color = ConCafeColors.primary
                         )
                     }
                     Text(
                         text = post.userNickname.ifBlank { "익명" },
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = colorFromHex("665A63")
+                        color = ConCafeColors.textSecondary
                     )
                 }
                 Text(
                     text = post.displayDate,
                     fontSize = 12.sp,
-                    color = colorFromHex("B1A3AC")
+                    color = ConCafeColors.outlineStrong
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -328,7 +329,7 @@ private fun CommunityPostCard(
                 text = post.title,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("2B2330"),
+                color = ConCafeColors.textPrimary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -337,7 +338,7 @@ private fun CommunityPostCard(
                 Text(
                     text = post.content,
                     fontSize = 13.sp,
-                    color = colorFromHex("665A63"),
+                    color = ConCafeColors.textSecondary,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 20.sp
@@ -377,7 +378,7 @@ private fun CommunityPostCard(
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Divider(color = colorFromHex("FFD1DC").copy(alpha = 0.3f))
+            Divider(color = ConCafeColors.primaryContainer.copy(alpha = 0.3f))
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(
@@ -387,13 +388,13 @@ private fun CommunityPostCard(
                     Icon(
                         imageVector = Icons.Default.FavoriteBorder,
                         contentDescription = null,
-                        tint = colorFromHex("B1A3AC"),
+                        tint = ConCafeColors.outlineStrong,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.community_post_like_count, post.likeCount),
                         fontSize = 12.sp,
-                        color = colorFromHex("8C7E87")
+                        color = ConCafeColors.textMuted
                     )
                 }
                 Row(
@@ -403,13 +404,13 @@ private fun CommunityPostCard(
                     Icon(
                         imageVector = Icons.Default.ChatBubbleOutline,
                         contentDescription = null,
-                        tint = colorFromHex("B1A3AC"),
+                        tint = ConCafeColors.outlineStrong,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.community_post_comment_count, post.commentCount),
                         fontSize = 12.sp,
-                        color = colorFromHex("8C7E87")
+                        color = ConCafeColors.textMuted
                     )
                 }
             }

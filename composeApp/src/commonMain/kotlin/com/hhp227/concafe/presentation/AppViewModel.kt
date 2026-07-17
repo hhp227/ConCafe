@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
+import com.hhp227.concafe.presentation.theme.toPresentationBrandTheme
 import com.hhp227.concafe.presentation.theme.toPresentationThemeMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,7 +28,8 @@ class AppViewModel(
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
     private val getNotificationFeedUseCase: GetNotificationFeedUseCase,
-    private val observeThemeModeUseCase: ObserveThemeModeUseCase
+    private val observeThemeModeUseCase: ObserveThemeModeUseCase,
+    private val observeBrandThemeUseCase: ObserveBrandThemeUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState = _uiState.asStateFlow()
@@ -50,6 +53,15 @@ class AppViewModel(
         jobs[JobKey.OBSERVE_THEME] = viewModelScope.launch {
             observeThemeModeUseCase.invoke().collect { themeMode ->
                 _uiState.update { it.copy(themeMode = themeMode.toPresentationThemeMode()) }
+            }
+        }
+    }
+
+    private fun observeBrandTheme() {
+        jobs[JobKey.OBSERVE_BRAND_THEME]?.cancel()
+        jobs[JobKey.OBSERVE_BRAND_THEME] = viewModelScope.launch {
+            observeBrandThemeUseCase.invoke().collect { brandTheme ->
+                _uiState.update { it.copy(brandTheme = brandTheme.toPresentationBrandTheme()) }
             }
         }
     }
@@ -123,12 +135,14 @@ class AppViewModel(
     init {
         observeNetworkAlertState()
         observeThemeMode()
+        observeBrandTheme()
         observeSessionAndSyncPushToken()
     }
 
     private enum class JobKey {
         OBSERVE_NETWORK_ALERT,
         OBSERVE_THEME,
+        OBSERVE_BRAND_THEME,
         OBSERVE_CURRENT_USER,
         UNREAD_NOTIFICATION_POLL
     }

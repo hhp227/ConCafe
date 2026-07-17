@@ -33,6 +33,7 @@ import concafe.composeapp.generated.resources.cafe_review_empty
 import concafe.composeapp.generated.resources.cafe_review_load_more_hint
 import concafe.composeapp.generated.resources.cafe_review_verified
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeReviewScreen(
@@ -60,7 +61,7 @@ fun CafeReviewScreen(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = colorFromHex("FFC107"),
+                    tint = ConCafeColors.gold,
                     modifier = Modifier.size(28.dp)
                 )
                 Column {
@@ -110,7 +111,7 @@ fun CafeReviewScreen(
                                     Row(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(colorFromHex("EF6797"))
+                                            .background(ConCafeColors.primary)
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                         verticalAlignment = Alignment.CenterVertically
@@ -187,7 +188,7 @@ fun CafeReviewScreen(
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
-                                    tint = if (index < review.rating.toInt()) colorFromHex("FFC107") else colorFromHex("E1E1E1"),
+                                    tint = if (index < review.rating.toInt()) ConCafeColors.gold else ConCafeColors.outline,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -199,9 +200,9 @@ fun CafeReviewScreen(
                                         text = castName,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(Color(0x1AFFD1DC))
+                                            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                             .padding(horizontal = 10.dp, vertical = 5.dp),
-                                        color = colorFromHex("C9527E"),
+                                        color = ConCafeColors.primary,
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -271,7 +272,7 @@ private fun EmptyContent(text: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
+            .border(width = 1.dp, color = ConCafeColors.primaryContainer, shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {

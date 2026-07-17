@@ -25,6 +25,7 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeMenuScreen(
@@ -41,7 +42,7 @@ fun CafeMenuScreen(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 strokeWidth = 2.dp
             )
         }
@@ -90,9 +91,9 @@ private fun MenuSection(menus: List<CafeMenu>) {
                             .background(
                                 Brush.verticalGradient(
                                     colors = if (!menu.image.isNullOrBlank()) {
-                                        listOf(colorFromHex("FFD8E8"), colorFromHex("F5AFCC"))
+                                        listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                                     } else {
-                                        listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
+                                        listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
                                     }
                                 )
                             )
@@ -109,8 +110,8 @@ private fun MenuSection(menus: List<CafeMenu>) {
                                     .background(
                                         Brush.verticalGradient(
                                             colors = listOf(
-                                                colorFromHex("FFD8E8").copy(alpha = 0.28f),
-                                                colorFromHex("F5AFCC").copy(alpha = 0.28f)
+                                                ConCafeColors.primaryContainer.copy(alpha = 0.28f),
+                                                ConCafeColors.secondaryContainer.copy(alpha = 0.28f)
                                             )
                                         )
                                     )
@@ -127,7 +128,7 @@ private fun MenuSection(menus: List<CafeMenu>) {
                         )
                         Text(
                             text = stringResource(Res.string.cafe_menu_price, menu.price),
-                            color = colorFromHex("EF6797"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
@@ -174,9 +175,9 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
                 .background(
                     Brush.verticalGradient(
                         colors = if (!good.image.isNullOrBlank()) {
-                            listOf(colorFromHex("FFD8E8"), colorFromHex("F5AFCC"))
+                            listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                         } else {
-                            listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
+                            listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
                         }
                     )
                 )
@@ -197,7 +198,7 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
                 ) {
                     Text(
                         text = soldOutLabel,
-                        color = colorFromHex("2B2330"),
+                        color = ConCafeColors.textPrimary,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
@@ -225,7 +226,7 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
             ) {
                 Text(
                     text = stringResource(Res.string.cafe_menu_price, good.price),
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -237,12 +238,12 @@ private fun GoodsTile(good: Goods, modifier: Modifier = Modifier) {
                         Icon(
                             imageVector = Icons.Default.ShoppingBag,
                             contentDescription = null,
-                            tint = colorFromHex("16A34A"),
+                            tint = ConCafeColors.success,
                             modifier = Modifier.size(12.dp)
                         )
                         Text(
                             text = inStockLabel,
-                            color = colorFromHex("16A34A"),
+                            color = ConCafeColors.success,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -259,7 +260,7 @@ private fun SectionTitle(text: String) {
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
+        color = if (isSystemInDarkTheme()) Color.White else ConCafeColors.textPrimary
     )
 }
 
@@ -270,7 +271,7 @@ private fun EmptyContent(text: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
+            .border(width = 1.dp, color = ConCafeColors.primaryContainer, shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {

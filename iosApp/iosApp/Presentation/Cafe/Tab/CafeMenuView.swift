@@ -65,8 +65,8 @@ struct CafeMenuView: View {
                 ZStack {
                     LinearGradient(
                         colors: resolvedUrl == nil
-                            ? [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")]
-                            : [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
+                            ? [ConCafeColors.warningContainer, ConCafeColors.warningContainer]
+                            : [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -75,7 +75,7 @@ struct CafeMenuView: View {
                             .frame(width: imageSize.width, height: imageSize.height)
                             .clipped()
                         LinearGradient(
-                            colors: [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
+                            colors: [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -97,7 +97,7 @@ struct CafeMenuView: View {
                     )
                 )
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 Text(menu.desc)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -134,8 +134,8 @@ struct CafeMenuView: View {
             ZStack {
                 LinearGradient(
                     colors: imageUrl == nil
-                        ? [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")]
-                        : [Color(hex: "FFD8E8"), Color(hex: "F5AFCC")],
+                        ? [ConCafeColors.warningContainer, ConCafeColors.warningContainer]
+                        : [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -147,7 +147,7 @@ struct CafeMenuView: View {
                     Color.black.opacity(0.5)
                     Text(String(localized: String.LocalizationValue("menugoods_sold_out"), table: "Localizable"))
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(ConCafeColors.textPrimary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Color.white)
@@ -169,16 +169,16 @@ struct CafeMenuView: View {
                         )
                     )
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     Spacer(minLength: 0)
                     if isInStock {
                         HStack(spacing: 2) {
                             Image(systemName: "bag.fill")
                                 .font(.system(size: 10))
-                                .foregroundStyle(Color(hex: "16A34A"))
+                                .foregroundStyle(ConCafeColors.success)
                             Text(String(localized: String.LocalizationValue("cafe_goods_in_stock"), table: "Localizable"))
                                 .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(Color(hex: "16A34A"))
+                                .foregroundStyle(ConCafeColors.success)
                         }
                     }
                 }
@@ -190,7 +190,7 @@ struct CafeMenuView: View {
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
             .font(.headline.weight(.bold))
-            .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
+            .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : ConCafeColors.textPrimary)
     }
 
     private func emptyCard(_ text: String) -> some View {

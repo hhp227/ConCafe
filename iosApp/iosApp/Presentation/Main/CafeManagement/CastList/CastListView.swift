@@ -33,7 +33,7 @@ struct CastListView: View {
                         Text(String(localized: String.LocalizationValue("castlist_action_add"), table: "Localizable"))
                             .font(.subheadline.weight(.bold))
                     }
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 }
             }
         }
@@ -104,7 +104,7 @@ private struct CastListContentView: View {
             if uiState.isLoading {
                 Spacer()
                 ProgressView()
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                 Spacer()
             } else if uiState.filteredCasts.isEmpty {
                 Spacer()
@@ -114,7 +114,7 @@ private struct CastListContentView: View {
                     : String(localized: String.LocalizationValue("castlist_empty"), table: "Localizable")
                 )
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
                 Spacer()
@@ -133,7 +133,7 @@ private struct CastListContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var searchField: some View {
@@ -143,7 +143,7 @@ private struct CastListContentView: View {
                 .foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Color(hex: "8F848F"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 TextField(
                     String(localized: String.LocalizationValue("castlist_search_placeholder"), table: "Localizable"),
                     text: Binding(
@@ -160,7 +160,7 @@ private struct CastListContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.7), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.7), lineWidth: 1)
             )
         }
     }
@@ -174,7 +174,7 @@ private struct CastListContentView: View {
                     GeometryReader { proxy in
                         ZStack {
                             LinearGradient(
-                                colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
+                                colors: [ConCafeColors.primaryContainer, ConCafeColors.background],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -193,7 +193,7 @@ private struct CastListContentView: View {
                     }
                     .frame(width: 52, height: 52)
                     Circle()
-                        .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
+                        .fill(cast.isOnShift ? ConCafeColors.success : ConCafeColors.outlineStrong)
                         .frame(width: 14, height: 14)
                 }
                 VStack(alignment: .leading, spacing: 4) {
@@ -208,9 +208,9 @@ private struct CastListContentView: View {
                 } label: {
                     Image(systemName: "calendar")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .frame(width: 34, height: 34)
-                        .background(Color(hex: "FCE6EF"))
+                        .background(ConCafeColors.surfaceTint)
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -219,9 +219,9 @@ private struct CastListContentView: View {
                 } label: {
                     Image(systemName: "trash")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .frame(width: 34, height: 34)
-                        .background(Color(hex: "F6EEF2"))
+                        .background(ConCafeColors.surfaceTint)
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -232,7 +232,7 @@ private struct CastListContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -245,14 +245,14 @@ private struct CastListContentView: View {
             : String(localized: String.LocalizationValue("castlist_off_shift"), table: "Localizable")
         )
         .font(.caption2.weight(.bold))
-        .foregroundStyle(isOnShift ? Color(hex: "1F8B5F") : Color(hex: "8F848F"))
+        .foregroundStyle(isOnShift ? ConCafeColors.success : ConCafeColors.textMuted)
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
-        .background(isOnShift ? Color(hex: "ECFFF5") : Color(hex: "F4F1F4"))
+        .background(isOnShift ? ConCafeColors.successContainer : ConCafeColors.surfaceVariant)
         .clipShape(Capsule())
         .overlay(
             Capsule()
-                .stroke(isOnShift ? Color(hex: "C8EFD9") : Color(hex: "E3DCE3"), lineWidth: 1)
+                .stroke(isOnShift ? ConCafeColors.successContainer : ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -263,20 +263,20 @@ private struct CastListContentView: View {
             Group {
                 if uiState.isLoadingMore {
                     ProgressView()
-                        .tint(Color(hex: "EF6797"))
+                        .tint(ConCafeColors.primary)
                 } else {
                     Text(String(localized: String.LocalizationValue("castlist_action_load_more"), table: "Localizable"))
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "8C7A83"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color(hex: "F7F2F6"))
+            .background(ConCafeColors.surfaceTint)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: "E3DCE3"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -286,7 +286,7 @@ private struct CastListContentView: View {
         HStack(spacing: 12) {
             Image(systemName: "info.circle.fill")
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -296,13 +296,13 @@ private struct CastListContentView: View {
             } label: {
                 Text(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Color(hex: "FFD1DC").opacity(0.08))
+        .background(ConCafeColors.primaryContainer.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }

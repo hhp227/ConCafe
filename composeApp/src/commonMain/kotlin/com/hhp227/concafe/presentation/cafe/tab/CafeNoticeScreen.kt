@@ -31,6 +31,7 @@ import concafe.composeapp.generated.resources.noticeevent_empty_event
 import concafe.composeapp.generated.resources.noticeevent_tab_event
 import concafe.composeapp.generated.resources.noticeevent_tab_notice
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +58,7 @@ fun CafeNoticeScreen(
                 text = stringResource(Res.string.noticeevent_tab_event),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
+                color = if (isSystemInDarkTheme()) Color.White else ConCafeColors.textPrimary
             )
             if (events.isNotEmpty()) {
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -85,7 +86,7 @@ fun CafeNoticeScreen(
                 text = stringResource(Res.string.noticeevent_tab_notice),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isSystemInDarkTheme()) Color.White else colorFromHex("1F1A22")
+                color = if (isSystemInDarkTheme()) Color.White else ConCafeColors.textPrimary
             )
             if (notices.isEmpty()) {
                 EmptyContent(
@@ -115,7 +116,7 @@ fun CafeNoticeScreen(
                         if (isLoadingMore) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = colorFromHex("EF6797")
+                                color = ConCafeColors.primary
                             )
                         } else {
                             Spacer(modifier = Modifier.height(1.dp))
@@ -157,7 +158,7 @@ private fun CafeEventCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
+                        .background(Brush.linearGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
                 )
             }
         }
@@ -256,7 +257,7 @@ fun NoticeLoadMoreFooter(
             if (isLoadingMore) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
             } else if (canLoadMore) {
                 Spacer(modifier = Modifier.height(1.dp))
@@ -275,7 +276,7 @@ private fun EmptyContent(
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
+            .border(width = 1.dp, color = ConCafeColors.primaryContainer, shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {

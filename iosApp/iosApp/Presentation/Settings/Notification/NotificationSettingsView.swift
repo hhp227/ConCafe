@@ -64,8 +64,8 @@ private struct NotificationSettingsContentView: View {
                 settingsCard(title: String(localized: String.LocalizationValue("notification_settings_basic_title"), table: "Localizable")) {
                     NotificationToggleRow(
                         symbol: "bell.badge.fill",
-                        iconBackground: Color(hex: "FFE6F1"),
-                        iconForeground: Color(hex: "EB5F97"),
+                        iconBackground: ConCafeColors.surfaceTint,
+                        iconForeground: ConCafeColors.primary,
                         title: String(localized: String.LocalizationValue("notification_settings_push_title"), table: "Localizable"),
                         description: String(localized: String.LocalizationValue("notification_settings_push_desc"), table: "Localizable"),
                         isOn: uiState.isPushNotificationsEnabled,
@@ -77,8 +77,8 @@ private struct NotificationSettingsContentView: View {
                     VStack(spacing: 12) {
                         NotificationToggleRow(
                             symbol: "figure.walk.motion",
-                            iconBackground: Color(hex: "E4F7EC"),
-                            iconForeground: Color(hex: "2E9E5B"),
+                            iconBackground: ConCafeColors.successContainer,
+                            iconForeground: ConCafeColors.success,
                             title: String(localized: String.LocalizationValue("notification_settings_shift_title"), table: "Localizable"),
                             description: String(localized: String.LocalizationValue("notification_settings_shift_desc"), table: "Localizable"),
                             isOn: uiState.isShiftNotificationsEnabled,
@@ -87,8 +87,8 @@ private struct NotificationSettingsContentView: View {
                         )
                         NotificationToggleRow(
                             symbol: "birthday.cake.fill",
-                            iconBackground: Color(hex: "FFE6F1"),
-                            iconForeground: Color(hex: "EB5F97"),
+                            iconBackground: ConCafeColors.surfaceTint,
+                            iconForeground: ConCafeColors.primary,
                             title: String(localized: String.LocalizationValue("notification_settings_birthday_title"), table: "Localizable"),
                             description: String(localized: String.LocalizationValue("notification_settings_birthday_desc"), table: "Localizable"),
                             isOn: uiState.isBirthdayNotificationsEnabled,
@@ -97,8 +97,8 @@ private struct NotificationSettingsContentView: View {
                         )
                         NotificationToggleRow(
                             symbol: "megaphone.fill",
-                            iconBackground: Color(hex: "E8F0FF"),
-                            iconForeground: Color(hex: "4A79E8"),
+                            iconBackground: ConCafeColors.infoContainer,
+                            iconForeground: ConCafeColors.info,
                             title: String(localized: String.LocalizationValue("notification_settings_notice_title"), table: "Localizable"),
                             description: String(localized: String.LocalizationValue("notification_settings_notice_desc"), table: "Localizable"),
                             isOn: uiState.isNoticeNotificationsEnabled,
@@ -108,8 +108,8 @@ private struct NotificationSettingsContentView: View {
                         if uiState.isCastRole {
                             NotificationToggleRow(
                                 symbol: "person.badge.plus.fill",
-                                iconBackground: Color(hex: "F1E8FF"),
-                                iconForeground: Color(hex: "8A52E2"),
+                                iconBackground: ConCafeColors.primaryContainer,
+                                iconForeground: ConCafeColors.primary,
                                 title: String(localized: String.LocalizationValue("notification_settings_follow_title"), table: "Localizable"),
                                 description: String(localized: String.LocalizationValue("notification_settings_follow_desc"), table: "Localizable"),
                                 isOn: uiState.isFollowNotificationsEnabled,
@@ -119,8 +119,8 @@ private struct NotificationSettingsContentView: View {
                         }
                         NotificationToggleRow(
                             symbol: "party.popper.fill",
-                            iconBackground: Color(hex: "FFF4E2"),
-                            iconForeground: Color(hex: "E29B35"),
+                            iconBackground: ConCafeColors.warningContainer,
+                            iconForeground: ConCafeColors.warning,
                             title: String(localized: String.LocalizationValue("notification_settings_event_title"), table: "Localizable"),
                             description: String(localized: String.LocalizationValue("notification_settings_event_desc"), table: "Localizable"),
                             isOn: uiState.isEventNotificationsEnabled,
@@ -129,8 +129,8 @@ private struct NotificationSettingsContentView: View {
                         )
                         NotificationToggleRow(
                             symbol: "bubble.left.and.bubble.right.fill",
-                            iconBackground: Color(hex: "E9F7F8"),
-                            iconForeground: Color(hex: "228B96"),
+                            iconBackground: ConCafeColors.infoContainer,
+                            iconForeground: ConCafeColors.info,
                             title: String(localized: String.LocalizationValue("notification_settings_community_title"), table: "Localizable"),
                             description: String(localized: String.LocalizationValue("notification_settings_community_desc"), table: "Localizable"),
                             isOn: uiState.isCommunityNotificationsEnabled,
@@ -149,7 +149,7 @@ private struct NotificationSettingsContentView: View {
                         if let errorMessage = uiState.errorMessage {
                             Text(errorMessage)
                                 .font(.caption)
-                                .foregroundStyle(Color(hex: "C33E6A"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                     }
                 }
@@ -157,7 +157,7 @@ private struct NotificationSettingsContentView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var heroCard: some View {
@@ -184,7 +184,7 @@ private struct NotificationSettingsContentView: View {
         .padding(20)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -203,22 +203,22 @@ private struct NotificationSettingsContentView: View {
                         Text(option.titleText)
                             .font(.subheadline)
                             .bold()
-                            .foregroundStyle(uiState.quietHoursOption == option ? Color(hex: "B84473") : .primary)
+                            .foregroundStyle(uiState.quietHoursOption == option ? ConCafeColors.primary : .primary)
                         Spacer()
                         if uiState.quietHoursOption == option {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
-                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                    .background(uiState.quietHoursOption == option ? ConCafeColors.background : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
-                                uiState.quietHoursOption == option ? Color(hex: "FFD6E5") : Color(hex: "F0E8ED"),
+                                uiState.quietHoursOption == option ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer,
                                 lineWidth: 1
                             )
                     )
@@ -234,18 +234,18 @@ private struct NotificationSettingsContentView: View {
             Text(uiState.quietHoursOption.titleText)
                 .font(.subheadline)
                 .bold()
-                .foregroundStyle(Color(hex: "B84473"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(uiState.quietHoursOption.descriptionText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "FFF6FA"))
+        .background(ConCafeColors.background)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "FFD6E5"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -329,7 +329,7 @@ private struct NotificationToggleRow: View {
                 set: onToggle
             ))
             .labelsHidden()
-            .tint(Color(hex: "EF6797"))
+            .tint(ConCafeColors.primary)
             .disabled(!isEnabled)
         }
     }

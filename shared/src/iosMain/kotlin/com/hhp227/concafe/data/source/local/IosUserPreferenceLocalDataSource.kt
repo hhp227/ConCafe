@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.source.local
 
+import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,8 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
     private val defaults = NSUserDefaults.standardUserDefaults
 
     private val themeMode = MutableStateFlow(loadThemeMode())
+
+    private val brandTheme = MutableStateFlow(loadBrandTheme())
 
     private val DetailTooltipType.preferenceKey: String
         get() = when (this) {
@@ -26,6 +29,16 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
         defaults.setObject(themeMode.name, forKey = KEY_THEME_MODE)
         defaults.synchronize()
         this.themeMode.value = themeMode
+    }
+
+    override fun observeBrandTheme(): Flow<BrandTheme> {
+        return brandTheme.asStateFlow()
+    }
+
+    override fun setBrandTheme(brandTheme: BrandTheme) {
+        defaults.setObject(brandTheme.name, forKey = KEY_BRAND_THEME)
+        defaults.synchronize()
+        this.brandTheme.value = brandTheme
     }
 
     override fun hasShownDetailTooltip(type: DetailTooltipType): Boolean {
@@ -45,8 +58,14 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
             ?: ThemeMode.LIGHT
     }
 
+    private fun loadBrandTheme(): BrandTheme {
+        val storedValue = defaults.stringForKey(KEY_BRAND_THEME)
+        return BrandTheme.entries.firstOrNull { it.name == storedValue } ?: BrandTheme.MAID_CAFE
+    }
+
     private companion object {
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_BRAND_THEME = "brand_theme"
         private const val LEGACY_KEY_THEME_MODE = "concafe.theme.mode"
         private const val KEY_CAFE_FAVORITE_TOOLTIP_SHOWN = "cafe_favorite_tooltip_shown"
         private const val KEY_CAST_FOLLOW_TOOLTIP_SHOWN = "cast_follow_tooltip_shown"

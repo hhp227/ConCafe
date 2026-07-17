@@ -222,7 +222,7 @@ private struct CafeDashboardContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var heroCard: some View {
@@ -253,7 +253,7 @@ private struct CafeDashboardContentView: View {
         .padding(22)
         .background(
             LinearGradient(
-                colors: [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")],
+                colors: [ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -265,23 +265,23 @@ private struct CafeDashboardContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "6B5320"))
+                    .foregroundStyle(ConCafeColors.goldDeep)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
@@ -293,12 +293,12 @@ private struct CafeDashboardContentView: View {
                 subtitle: String(localized: String.LocalizationValue("dashboard_section_metrics_subtitle"), table: "Localizable")
             )
             HStack(spacing: 12) {
-                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_checkin"), table: "Localizable"), value: "\(cafe.todayCheckIns)", accent: Color(hex: "EF6797"))
-                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_follower"), table: "Localizable"), value: "\(cafe.followerCount)", accent: Color(hex: "47A88B"))
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_today_checkin"), table: "Localizable"), value: "\(cafe.todayCheckIns)", accent: ConCafeColors.primary)
+                dashboardMetricCard(title: String(localized: String.LocalizationValue("dashboard_metric_follower"), table: "Localizable"), value: "\(cafe.followerCount)", accent: ConCafeColors.success)
                 dashboardMetricCard(
                     title: String(localized: String.LocalizationValue("dashboard_metric_table_count"), table: "Localizable"),
                     value: "\(cafe.tableCounts.current)/\(cafe.tableCounts.total)",
-                    accent: Color(hex: "7C3AED"),
+                    accent: ConCafeColors.primary,
                     onTap: { onAction(.clickTableCountMetric) }
                 )
             }
@@ -317,12 +317,12 @@ private struct CafeDashboardContentView: View {
                         Spacer()
                         Text(claim.requestedAtLabel)
                             .font(.caption2)
-                            .foregroundStyle(Color(hex: "8A808A"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                     }
                     if let message = claim.message {
                         Text(message)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "5C5760"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                     }
                     HStack(spacing: 10) {
                         Button(String(localized: String.LocalizationValue("dashboard_action_approve"), table: "Localizable")) {
@@ -331,7 +331,7 @@ private struct CafeDashboardContentView: View {
                         .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(hex: "FFD1DC"))
+                        .background(ConCafeColors.primaryContainer)
                         .foregroundStyle(.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         Button(String(localized: String.LocalizationValue("dashboard_action_reject"), table: "Localizable")) {
@@ -341,10 +341,10 @@ private struct CafeDashboardContentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-                        .foregroundStyle(Color(hex: "6F6670"))
+                        .foregroundStyle(ConCafeColors.textSecondary)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                                .stroke(ConCafeColors.outline, lineWidth: 1)
                         )
                     }
                 }
@@ -374,7 +374,7 @@ private struct CafeDashboardContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
         return Group {
             if let onTap {
@@ -438,10 +438,10 @@ private struct CafeDashboardContentView: View {
                 HStack(spacing: 10) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(hex: "FCE6EF"))
+                            .fill(ConCafeColors.surfaceTint)
                             .frame(width: 40, height: 40)
                         Image(systemName: "qrcode")
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(localized: String.LocalizationValue("dashboard_metric_checkin_qr"), table: "Localizable"))
@@ -455,7 +455,7 @@ private struct CafeDashboardContentView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color(hex: "B8ACB4"))
+                    .foregroundStyle(ConCafeColors.outlineStrong)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -463,7 +463,7 @@ private struct CafeDashboardContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -489,10 +489,10 @@ private struct CafeDashboardContentView: View {
             VStack(alignment: .leading, spacing: 10) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(hex: "FCE6EF"))
+                        .fill(ConCafeColors.surfaceTint)
                         .frame(width: 40, height: 40)
                     Image(systemName: iconName)
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
                 Text(String(localized: String.LocalizationValue(shortcut.title), table: "Localizable"))
                     .font(.subheadline.weight(.semibold))
@@ -505,7 +505,7 @@ private struct CafeDashboardContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -516,16 +516,16 @@ private struct CafeDashboardContentView: View {
             HStack {
                 Text(String(localized: String.LocalizationValue("dashboard_section_cast_management"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "8C7A83"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 Spacer()
                 Button {
                     onAction(.clickDeleteCast)
                 } label: {
                     Image(systemName: "trash")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .frame(width: 34, height: 34)
-                        .background(Color(hex: "FCE6EF"))
+                        .background(ConCafeColors.surfaceTint)
                         .clipShape(Circle())
                         .opacity(uiState.selectedCastId == nil ? 0.45 : 1)
                 }
@@ -540,10 +540,10 @@ private struct CafeDashboardContentView: View {
                         Text(String(localized: String.LocalizationValue("dashboard_action_schedule_management"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                     }
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color(hex: "FCE6EF"))
+                    .background(ConCafeColors.surfaceTint)
                     .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
@@ -556,14 +556,14 @@ private struct CafeDashboardContentView: View {
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
-                                    .strokeBorder(Color(hex: "E3DCE3"), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                                    .strokeBorder(ConCafeColors.outline, style: StrokeStyle(lineWidth: 2, dash: [5]))
                                     .frame(width: 72, height: 72)
                                 Image(systemName: "plus")
-                                    .foregroundStyle(Color(hex: "B8AEB7"))
+                                    .foregroundStyle(ConCafeColors.outlineStrong)
                             }
                             Text(String(localized: String.LocalizationValue("dashboard_action_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "8F848F"))
+                                .foregroundStyle(ConCafeColors.textMuted)
                         }
                         .frame(width: 80)
                     }
@@ -578,14 +578,14 @@ private struct CafeDashboardContentView: View {
                             VStack(spacing: 8) {
                                 ZStack {
                                     Circle()
-                                        .fill(Color(hex: "F7F2F6"))
+                                        .fill(ConCafeColors.surfaceTint)
                                         .frame(width: 72, height: 72)
                                     if uiState.isLoadingMoreCasts {
                                         ProgressView()
-                                            .tint(Color(hex: "B8AEB7"))
+                                            .tint(ConCafeColors.outlineStrong)
                                     } else {
                                         Image(systemName: "chevron.right")
-                                            .foregroundStyle(Color(hex: "8F848F"))
+                                            .foregroundStyle(ConCafeColors.textMuted)
                                     }
                                 }
                                 Text(
@@ -594,7 +594,7 @@ private struct CafeDashboardContentView: View {
                                     : String(localized: String.LocalizationValue("dashboard_action_load_more"), table: "Localizable")
                                 )
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "8F848F"))
+                                    .foregroundStyle(ConCafeColors.textMuted)
                             }
                             .frame(width: 80)
                         }
@@ -614,10 +614,10 @@ private struct CafeDashboardContentView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.bold))
                 }
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color(hex: "FCE6EF"))
+                .background(ConCafeColors.surfaceTint)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -627,7 +627,7 @@ private struct CafeDashboardContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -639,13 +639,13 @@ private struct CafeDashboardContentView: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Color(hex: "EF6797") : .clear, lineWidth: 2)
+                        .stroke(isSelected ? ConCafeColors.primary : .clear, lineWidth: 2)
                         .frame(width: 78, height: 78)
                     ZStack(alignment: .topTrailing) {
                         GeometryReader { proxy in
                             ZStack {
                                 LinearGradient(
-                                    colors: [Color(hex: "FFD7E3"), Color(hex: "FFF0F5")],
+                                    colors: [ConCafeColors.primaryContainer, ConCafeColors.background],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -665,7 +665,7 @@ private struct CafeDashboardContentView: View {
                         .frame(width: 72, height: 72)
                         if isSelected {
                             Circle()
-                                .fill(Color(hex: "EF6797"))
+                                .fill(ConCafeColors.primary)
                                 .frame(width: 22, height: 22)
                                 .overlay {
                                     Image(systemName: "checkmark")
@@ -675,14 +675,14 @@ private struct CafeDashboardContentView: View {
                         }
                     }
                     Circle()
-                        .fill(cast.isOnShift ? Color(hex: "35C26B") : Color(hex: "C7CBD3"))
+                        .fill(cast.isOnShift ? ConCafeColors.success : ConCafeColors.outlineStrong)
                         .frame(width: 16, height: 16)
                         .offset(x: 24, y: 24)
                 }
                 .frame(width: 78, height: 78)
                 Text(cast.name)
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(isSelected ? Color(hex: "EF6797") : .primary)
+                    .foregroundStyle(isSelected ? ConCafeColors.primary : .primary)
             }
             .frame(width: 80)
         }
@@ -695,7 +695,7 @@ private struct CafeDashboardContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("게스트 캐스트 관리")
                         .font(.headline.weight(.bold))
-                        .foregroundStyle(Color(hex: "8C7A83"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                     Text("소속 캐스트가 아닌 출연자를 관리합니다")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -710,10 +710,10 @@ private struct CafeDashboardContentView: View {
                             .fontWeight(.bold)
                     }
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color(hex: "FCE6EF"))
+                    .background(ConCafeColors.surfaceTint)
                     .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
@@ -724,7 +724,7 @@ private struct CafeDashboardContentView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
-                    .background(Color(hex: "F8F2F6"))
+                    .background(ConCafeColors.surfaceTint)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
                 VStack(spacing: 8) {
@@ -739,14 +739,14 @@ private struct CafeDashboardContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 
     private func guestManagementRow(_ guest: GuestCastSchedule) -> some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Color(hex: "FFE2EC"))
+                .fill(ConCafeColors.surfaceTint)
                 .frame(width: 46, height: 46)
                 .overlay {
                     if let rawImageUrl = guest.profileImage,
@@ -756,7 +756,7 @@ private struct CafeDashboardContentView: View {
                     } else {
                         Text(String(guest.name.prefix(2)))
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color(hex: "8B3154"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 }
             VStack(alignment: .leading, spacing: 3) {
@@ -765,10 +765,10 @@ private struct CafeDashboardContentView: View {
                         .font(.subheadline.weight(.bold))
                     Text("게스트")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 2)
-                        .background(Color(hex: "FCE6EF"))
+                        .background(ConCafeColors.surfaceTint)
                         .clipShape(Capsule())
                 }
                 Text("\(guest.date) · \(guest.startTime) - \(guest.endTime)")
@@ -785,17 +785,17 @@ private struct CafeDashboardContentView: View {
                 onAction(.deleteGuest(guest.id))
             } label: {
                 Image(systemName: "trash")
-                    .foregroundStyle(Color(hex: "C15A7B"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
         }
         .padding(12)
-        .background(Color(hex: "FFF8FB"))
+        .background(ConCafeColors.background)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(hex: "F0D9E4"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -805,13 +805,13 @@ private struct CafeDashboardContentView: View {
             HStack {
                 Text(String(localized: String.LocalizationValue("dashboard_section_home_banner"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "8C7A83"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 Spacer()
                 Button(String(localized: String.LocalizationValue("dashboard_action_view_all"), table: "Localizable")) {
                     onAction(.clickShortcut(.homeBanner))
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             }
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
@@ -822,7 +822,7 @@ private struct CafeDashboardContentView: View {
 
                         ZStack {
                             LinearGradient(
-                                colors: [Color(hex: "FFD1DC"), Color(hex: "FFE4EC")],
+                                colors: [ConCafeColors.primaryContainer, ConCafeColors.surfaceTint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -861,7 +861,7 @@ private struct CafeDashboardContentView: View {
                             }()
                         )
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "7E7480"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                         Text(
                             {
                                 let statusLabel = cafe.homeBannerPreview.statusLabel
@@ -876,10 +876,10 @@ private struct CafeDashboardContentView: View {
                             }()
                         )
                             .font(.caption2.weight(.bold))
-                            .foregroundStyle(Color(hex: "2F8B57"))
+                            .foregroundStyle(ConCafeColors.success)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color(hex: "E8F7EE"))
+                            .background(ConCafeColors.successContainer)
                             .clipShape(Capsule())
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -895,7 +895,7 @@ private struct CafeDashboardContentView: View {
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -905,7 +905,7 @@ private struct CafeDashboardContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(hex: "F0E6EC"), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
             )
         }
         .padding(18)
@@ -913,7 +913,7 @@ private struct CafeDashboardContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -924,7 +924,7 @@ private struct CafeDashboardContentView: View {
                 .foregroundStyle(.primary)
             Text(subtitle)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "786E7A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -942,17 +942,17 @@ private struct CafeDashboardContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(String(localized: String.LocalizationValue("dashboard_shortcut_external_links"), table: "Localizable"))
                         .font(.headline.weight(.bold))
-                        .foregroundStyle(Color(hex: "8C7A83"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                     Text(String(localized: String.LocalizationValue("dashboard_external_link_section_subtitle"), table: "Localizable"))
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "7E7480"))
+                        .foregroundStyle(ConCafeColors.textSecondary)
                 }
                 Spacer()
                 Button(String(localized: String.LocalizationValue("dashboard_action_add"), table: "Localizable")) {
                     onAction(.clickShortcut(.externalLinks))
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             }
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(uiState.externalLinks) { link in
@@ -963,7 +963,7 @@ private struct CafeDashboardContentView: View {
                             HStack(spacing: 14) {
                                 ZStack {
                                     LinearGradient(
-                                        colors: [Color(hex: "FFD1DC"), Color(hex: "FFE4EC")],
+                                        colors: [ConCafeColors.primaryContainer, ConCafeColors.surfaceTint],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -984,14 +984,14 @@ private struct CafeDashboardContentView: View {
                             onAction(.clickEditExternalLink(link.id))
                         } label: {
                             Image(systemName: "pencil")
-                                .foregroundStyle(Color(hex: "8F848F"))
+                                .foregroundStyle(ConCafeColors.textMuted)
                         }
                         .buttonStyle(.plain)
                         Button {
                             onAction(.clickDeleteExternalLink(link.id))
                         } label: {
                             Image(systemName: "trash")
-                                .foregroundStyle(Color(hex: "8F848F"))
+                                .foregroundStyle(ConCafeColors.textMuted)
                         }
                         .buttonStyle(.plain)
                     }
@@ -1001,7 +1001,7 @@ private struct CafeDashboardContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color(hex: "F0E6EC"), lineWidth: 1)
+                            .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
                     )
                 }
                 Button {
@@ -1012,7 +1012,7 @@ private struct CafeDashboardContentView: View {
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(Color(hex: "FFD1DC"))
+                        .background(ConCafeColors.primaryContainer)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -1022,7 +1022,7 @@ private struct CafeDashboardContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(hex: "F0E6EC"), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
             )
         }
         .padding(18)
@@ -1030,7 +1030,7 @@ private struct CafeDashboardContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 }
@@ -1054,7 +1054,7 @@ private struct DashboardQrSheetView: View {
                     .fill(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(Color(hex: "FFD1DC").opacity(0.1), lineWidth: 1)
+                            .stroke(ConCafeColors.primaryContainer.opacity(0.1), lineWidth: 1)
                     )
                 DashboardQrCodeImageView(payload: payload)
                     .frame(width: 240, height: 240)
@@ -1071,7 +1071,7 @@ private struct DashboardQrSheetView: View {
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -1141,7 +1141,7 @@ private struct ExternalLinkInputSheet: View {
                         .font(.headline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(uiState.isExternalLinkSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
+                        .background(uiState.isExternalLinkSubmitEnabled ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                         .foregroundStyle(uiState.isExternalLinkSubmitEnabled ? .primary : .secondary)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
@@ -1219,7 +1219,7 @@ private struct SocialMediaInputSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(uiState.isSavingSocialMedia ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .background(uiState.isSavingSocialMedia ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
@@ -1273,7 +1273,7 @@ private struct ReservationInputSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(uiState.isSavingReservation ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .background(uiState.isSavingReservation ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
@@ -1337,7 +1337,7 @@ private struct TableCountInputSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(!uiState.isTableCountSubmitEnabled || uiState.isSavingTableCounts ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .background(!uiState.isTableCountSubmitEnabled || uiState.isSavingTableCounts ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
@@ -1418,7 +1418,7 @@ private struct GuestScheduleInputSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(!uiState.isGuestSubmitEnabled || uiState.isGuestSaving ? Color(hex: "F4D7DF") : Color(hex: "FFD1DC"))
+                    .background(!uiState.isGuestSubmitEnabled || uiState.isGuestSaving ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .foregroundStyle(.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }

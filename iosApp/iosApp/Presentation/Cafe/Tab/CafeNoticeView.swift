@@ -38,7 +38,7 @@ struct CafeNoticeView: View {
             LazyVStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : ConCafeColors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 if !events.isEmpty {
@@ -63,7 +63,7 @@ struct CafeNoticeView: View {
                     .frame(height: 6)
                 Text(String(localized: String.LocalizationValue("noticeevent_tab_notice"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : Color(hex: "1F1A22"))
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : ConCafeColors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, contentPadding)
                 ForEach(notices, id: \.id) { notice in
@@ -137,7 +137,7 @@ struct CafeNoticeView: View {
                     }
                 } else {
                     LinearGradient(
-                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -154,10 +154,10 @@ struct CafeNoticeView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
                         .font(.caption2)
-                        .foregroundStyle(Color(hex: "8A7F8B"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                     Text(event.periodText)
                         .font(.caption2)
-                        .foregroundStyle(Color(hex: "8A7F8B"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                         .lineLimit(1)
                 }
             }

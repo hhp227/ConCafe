@@ -44,6 +44,7 @@ import concafe.composeapp.generated.resources.social_x_icon
 import concafe.composeapp.generated.resources.social_youtube_icon
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeInfoScreen(detail: CafeDetail) {
@@ -110,7 +111,7 @@ private fun InfoRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = colorFromHex("EF6797"),
+            tint = ConCafeColors.primary,
             modifier = Modifier.padding(top = 2.dp)
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -161,7 +162,7 @@ private fun SocialMediaCard(detail: CafeDetail) {
             add(SocialMediaItem("Instagram", "https://instagram.com/$it", colorFromHex("E1306C"), SocialPlatform.Instagram))
         }
         socialMedia["youtube"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
-            add(SocialMediaItem("YouTube", "https://youtube.com/@$it", colorFromHex("FF0000"), SocialPlatform.YouTube))
+            add(SocialMediaItem("YouTube", "https://youtube.com/@$it", ConCafeColors.error, SocialPlatform.YouTube))
         }
         socialMedia["twitter"]?.trim()?.takeIf { it.isNotEmpty() }?.let {
             add(SocialMediaItem("X", "https://x.com/$it", colorFromHex("111111"), SocialPlatform.X))
@@ -232,7 +233,7 @@ private fun SocialMediaChip(
 ) {
     Box(
         modifier = modifier
-            .background(color = colorFromHex("F5EDF4"), shape = RoundedCornerShape(12.dp))
+            .background(color = ConCafeColors.surfaceTint, shape = RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
@@ -289,10 +290,10 @@ private fun ReservationButton(reservationUrl: String?, onClick: (String) -> Unit
             .height(56.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = colorFromHex("FFD1DC"),
-            contentColor = colorFromHex("2B2330"),
-            disabledContainerColor = colorFromHex("F4D7DF"),
-            disabledContentColor = Color(0x802B2330)
+            containerColor = ConCafeColors.primaryContainer,
+            contentColor = ConCafeColors.textPrimary,
+            disabledContainerColor = ConCafeColors.primaryContainer,
+            disabledContentColor = ConCafeColors.textPrimary.copy(alpha = 0.5f)
         )
     ) {
         Text(

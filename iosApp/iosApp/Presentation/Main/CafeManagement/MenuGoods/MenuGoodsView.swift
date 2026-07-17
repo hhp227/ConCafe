@@ -125,10 +125,10 @@ private struct MenuGoodsContentView: View {
         .background(
             Group {
                 if UITraitCollection.current.userInterfaceStyle == .dark {
-                    Color(hex: "FFF9FC")
+                    ConCafeColors.background
                 } else {
                     LinearGradient(
-                        colors: [Color(hex: "FFF8FB"), Color(hex: "FFF2F6"), Color(hex: "FFFCFD")],
+                        colors: [ConCafeColors.background, ConCafeColors.background, ConCafeColors.background],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -146,12 +146,12 @@ private struct MenuGoodsContentView: View {
                         Text(String(localized: String.LocalizationValue("menugoods_add_new_item"), table: "Localizable"))
                             .font(.subheadline.weight(.bold))
                     }
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 14)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(Capsule())
-                    .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+                    .shadow(color: ConCafeColors.primaryContainer.opacity(0.45), radius: 12, x: 0, y: 6)
                 }
                 .buttonStyle(.plain)
             }
@@ -174,7 +174,7 @@ private struct MenuGoodsContentView: View {
         .padding(20)
         .background(
             LinearGradient(
-                colors: [Color(hex: "351B42"), Color(hex: "7B3F68"), Color(hex: "F28EB5")],
+                colors: [ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.secondaryContainer],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -188,7 +188,7 @@ private struct MenuGoodsContentView: View {
             collectionTabButton(title: String(localized: String.LocalizationValue("menugoods_tab_goods"), table: "Localizable"), tab: .goods)
         }
         .padding(4)
-        .background(Color(hex: "FFD1DC").opacity(0.12))
+        .background(ConCafeColors.primaryContainer.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -199,10 +199,10 @@ private struct MenuGoodsContentView: View {
         } label: {
             Text(title)
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(selected ? Color(hex: "2B2330") : Color(hex: "7A6671"))
+                .foregroundStyle(selected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(selected ? Color(hex: "FFD1DC") : .clear)
+                .background(selected ? ConCafeColors.primaryContainer : .clear)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -211,7 +211,7 @@ private struct MenuGoodsContentView: View {
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(Color(hex: "9A7D8E"))
+                .foregroundStyle(ConCafeColors.textMuted)
             TextField(
                 String(localized: String.LocalizationValue("menugoods_search_placeholder"), table: "Localizable"),
                 text: Binding(
@@ -228,7 +228,7 @@ private struct MenuGoodsContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color(hex: "F1D9E4"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -247,10 +247,10 @@ private struct MenuGoodsContentView: View {
                             Text(chip.label)
                                 .font(.subheadline.weight(.semibold))
                         }
-                        .foregroundStyle(selected ? Color(hex: "2B2330") : Color(hex: "6F5E68"))
+                        .foregroundStyle(selected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
-                        .background(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.2))
+                        .background(selected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.2))
                         .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -263,36 +263,36 @@ private struct MenuGoodsContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "6B5320"))
+                    .foregroundStyle(ConCafeColors.goldDeep)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
     private var loadingCard: some View {
         ProgressView()
-            .tint(Color(hex: "EF6797"))
+            .tint(ConCafeColors.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 48)
             .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color(hex: "F0E2E9"), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
             )
     }
 
@@ -300,20 +300,20 @@ private struct MenuGoodsContentView: View {
         VStack(spacing: 10) {
             Image(systemName: "shippingbox")
                 .font(.title2.weight(.bold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .frame(width: 44, height: 44)
-                .background(Color(hex: "FCE7EF"))
+                .background(ConCafeColors.surfaceTint)
                 .clipShape(Circle())
             Text(uiState.searchQuery.isEmpty ? String(localized: String.LocalizationValue("menugoods_empty_default_title"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_empty_search_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
             Text(
                 uiState.searchQuery.isEmpty
                     ? String(localized: String.LocalizationValue("menugoods_empty_default_desc"), table: "Localizable")
                     : String(localized: String.LocalizationValue("menugoods_empty_search_desc"), table: "Localizable")
             )
             .font(.subheadline)
-            .foregroundStyle(Color(hex: "7B6B75"))
+            .foregroundStyle(ConCafeColors.textSecondary)
             .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -323,7 +323,7 @@ private struct MenuGoodsContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "F0E2E9"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -342,11 +342,11 @@ private struct MenuGoodsContentView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(item.name)
                             .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: "2B2330"))
+                            .foregroundStyle(ConCafeColors.textPrimary)
                             .lineLimit(1)
                         Text(formatPrice(item.price))
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                     Spacer(minLength: 8)
                     HStack(spacing: 0) {
@@ -354,7 +354,7 @@ private struct MenuGoodsContentView: View {
                             onAction(.clickEditItem(item.id))
                         } label: {
                             Image(systemName: "square.and.pencil")
-                                .foregroundStyle(Color(hex: "7A6671"))
+                                .foregroundStyle(ConCafeColors.textSecondary)
                                 .frame(width: 36, height: 36)
                         }
                         .buttonStyle(.plain)
@@ -362,7 +362,7 @@ private struct MenuGoodsContentView: View {
                             onAction(.clickDeleteItem(item.id))
                         } label: {
                             Image(systemName: "trash")
-                                .foregroundStyle(Color(hex: "D96B7A"))
+                                .foregroundStyle(ConCafeColors.tertiary)
                                 .frame(width: 36, height: 36)
                         }
                         .buttonStyle(.plain)
@@ -370,28 +370,28 @@ private struct MenuGoodsContentView: View {
                 }
                 Text(categoryLabel)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "B64A79"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color(hex: "FCE7EF"))
+                    .background(ConCafeColors.surfaceTint)
                     .clipShape(Capsule())
                 Text(item.desc)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7B6B75"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .lineLimit(2)
                 Divider()
-                    .overlay(Color(hex: "F4E7EE"))
+                    .overlay(ConCafeColors.surfaceTint)
                 HStack {
                     Text(isAvailable ? String(localized: String.LocalizationValue("menugoods_available"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_sold_out"), table: "Localizable"))
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
+                        .foregroundStyle(isAvailable ? ConCafeColors.success : ConCafeColors.textMuted)
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { isAvailable },
                         set: { _ in onAction(.toggleItemAvailability(item.id)) }
                     ))
                     .labelsHidden()
-                    .tint(Color(hex: "FFD1DC"))
+                    .tint(ConCafeColors.primaryContainer)
                 }
             }
         }
@@ -400,7 +400,7 @@ private struct MenuGoodsContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "F0E2E9"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -419,11 +419,11 @@ private struct MenuGoodsContentView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(item.name)
                             .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: "2B2330"))
+                            .foregroundStyle(ConCafeColors.textPrimary)
                             .lineLimit(1)
                         Text(formatPrice(item.price))
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                     Spacer(minLength: 8)
                     HStack(spacing: 0) {
@@ -431,7 +431,7 @@ private struct MenuGoodsContentView: View {
                             onAction(.clickEditItem(item.id))
                         } label: {
                             Image(systemName: "square.and.pencil")
-                                .foregroundStyle(Color(hex: "7A6671"))
+                                .foregroundStyle(ConCafeColors.textSecondary)
                                 .frame(width: 36, height: 36)
                         }
                         .buttonStyle(.plain)
@@ -439,7 +439,7 @@ private struct MenuGoodsContentView: View {
                             onAction(.clickDeleteItem(item.id))
                         } label: {
                             Image(systemName: "trash")
-                                .foregroundStyle(Color(hex: "D96B7A"))
+                                .foregroundStyle(ConCafeColors.tertiary)
                                 .frame(width: 36, height: 36)
                         }
                         .buttonStyle(.plain)
@@ -447,14 +447,14 @@ private struct MenuGoodsContentView: View {
                 }
                 Text(categoryLabel)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "B64A79"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color(hex: "FCE7EF"))
+                    .background(ConCafeColors.surfaceTint)
                     .clipShape(Capsule())
                 Text(String(localized: String.LocalizationValue("menugoods_goods_desc"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7B6B75"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .lineLimit(2)
                 Text(
                     String(
@@ -464,20 +464,20 @@ private struct MenuGoodsContentView: View {
                     )
                 )
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color(hex: "8B7A84"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 Divider()
-                    .overlay(Color(hex: "F4E7EE"))
+                    .overlay(ConCafeColors.surfaceTint)
                 HStack {
                     Text(isAvailable ? String(localized: String.LocalizationValue("menugoods_available"), table: "Localizable") : String(localized: String.LocalizationValue("menugoods_sold_out"), table: "Localizable"))
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isAvailable ? Color(hex: "3B7B5A") : Color(hex: "8A7A82"))
+                        .foregroundStyle(isAvailable ? ConCafeColors.success : ConCafeColors.textMuted)
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { isAvailable },
                         set: { _ in onAction(.toggleItemAvailability(item.id)) }
                     ))
                     .labelsHidden()
-                    .tint(Color(hex: "FFD1DC"))
+                    .tint(ConCafeColors.primaryContainer)
                 }
             }
         }
@@ -486,7 +486,7 @@ private struct MenuGoodsContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "F0E2E9"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -495,12 +495,12 @@ private struct MenuGoodsContentView: View {
 
         if isMenu {
             colors = isAvailable
-                ? [Color(hex: "FFE0EA"), Color(hex: "FAB6D0")]
-                : [Color(hex: "F1E2EA"), Color(hex: "D7C1CE")]
+                ? [ConCafeColors.surfaceTint, ConCafeColors.secondaryContainer]
+                : [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer]
         } else {
             colors = isAvailable
-                ? [Color(hex: "FFEBCB"), Color(hex: "FFD7A1")]
-                : [Color(hex: "E7E1DA"), Color(hex: "CBC0B2")]
+                ? [ConCafeColors.warningContainer, ConCafeColors.warningContainer]
+                : [ConCafeColors.outline, ConCafeColors.outlineStrong]
         }
         return GeometryReader { proxy in
             let imageSize = proxy.size
@@ -523,10 +523,10 @@ private struct MenuGoodsContentView: View {
                 .opacity(resolvedUrl == nil ? 1 : 0.28)
                 VStack(spacing: 6) {
                     Image(systemName: isMenu ? "storefront" : "shippingbox")
-                        .foregroundStyle(Color(hex: "704A5F"))
+                        .foregroundStyle(ConCafeColors.primary)
                     Text(String(name.prefix(1)))
                         .font(.title.weight(.bold))
-                        .foregroundStyle(Color(hex: "704A5F"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
             }
         }

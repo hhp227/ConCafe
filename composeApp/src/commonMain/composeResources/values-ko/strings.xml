@@ -178,6 +178,10 @@
     <string name="settings_theme_desc">화면 테마를 선택할 수 있습니다.</string>
     <string name="settings_theme_light">라이트모드</string>
     <string name="settings_theme_dark">다크모드</string>
+    <string name="settings_brand_theme_title">테마 스타일</string>
+    <string name="settings_brand_theme_desc">앱의 색상 분위기를 선택할 수 있습니다.</string>
+    <string name="settings_brand_theme_maid">메이드카페</string>
+    <string name="settings_brand_theme_mens">맨즈콘카페</string>
     <string name="settings_account_title">계정 관리</string>
     <string name="settings_account_desc">프로필과 로그인 정보를 관리합니다.</string>
     <string name="settings_notification_title">알림 설정</string>

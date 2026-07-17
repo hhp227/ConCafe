@@ -79,14 +79,14 @@ actual fun CompatImageDisplay(
             Icon(
                 painter = rememberVectorPainter(Icons.Default.Image),
                 contentDescription = null,
-                tint = Color(0xFF8C7A85),
+                tint = ConCafeColors.textMuted,
                 modifier = Modifier.fillMaxSize(0.36f)
             )
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .background(
-                        Color(0x1A8B6F7A),
+                        ConCafeColors.textSecondary.copy(alpha = 0.1f),
                         if (applyRoundedClip) RoundedCornerShape(20.dp) else RoundedCornerShape(0.dp)
                     )
             )

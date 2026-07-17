@@ -87,6 +87,7 @@ import concafe.composeapp.generated.resources.cafemgmt_section_my_cafe_title
 import concafe.composeapp.generated.resources.common_close
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeManagementScreen(
@@ -132,7 +133,7 @@ private fun CafeManagementContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFFBFD"))
+                .background(ConCafeColors.background)
         ) {
             if (!uiState.isLoading) {
                 LazyColumn(
@@ -279,7 +280,7 @@ private fun AddCafeCard(
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -294,13 +295,13 @@ private fun AddCafeCard(
             Text(
                 text = stringResource(Res.string.cafemgmt_add_cafe_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorFromHex("786E7A")
+                color = ConCafeColors.textSecondary
             )
             Button(
                 onClick = onCreateCafe,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("F6EDF4"),
-                    contentColor = colorFromHex("6A5666")
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.textSecondary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -324,7 +325,7 @@ private fun CafeManagementHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(colorFromHex("2F1B3A"), colorFromHex("7C3F67"), colorFromHex("F06A9D"))
+                        colors = listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
                     )
                 )
                 .padding(22.dp)
@@ -369,8 +370,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -383,10 +384,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = colorFromHex("6B5320"))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = ConCafeColors.goldDeep)
             }
         }
     }
@@ -407,7 +408,7 @@ private fun SectionHeader(
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("786E7A")
+            color = ConCafeColors.textSecondary
         )
     }
 }
@@ -443,9 +444,9 @@ private fun CompactOwnedCafeCard(
                     .background(
                         Brush.linearGradient(
                             colors = if (cafe.isApproved) {
-                                listOf(colorFromHex("2F1B3A"), colorFromHex("7C3F67"), colorFromHex("F06A9D"))
+                                listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
                             } else {
-                                listOf(colorFromHex("3A3240"), colorFromHex("6F6272"), colorFromHex("B8A8B2"))
+                                listOf(ConCafeColors.textPrimary, ConCafeColors.textSecondary, ConCafeColors.outlineStrong)
                             }
                         )
                     )
@@ -516,8 +517,8 @@ private fun ExpandOwnedCafeButton(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = colorFromHex("F7F2F6")),
-        border = BorderStroke(1.dp, colorFromHex("E5DCE5")),
+        colors = CardDefaults.cardColors(containerColor = ConCafeColors.surfaceTint),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Row(
@@ -535,12 +536,12 @@ private fun ExpandOwnedCafeButton(
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("5E4F5D")
+                color = ConCafeColors.textSecondary
             )
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
-                tint = colorFromHex("7C6B79")
+                tint = ConCafeColors.textSecondary
             )
         }
     }
@@ -564,7 +565,7 @@ private fun SearchCafeSection(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             color = Color.White,
-            border = BorderStroke(1.dp, colorFromHex("E4DDE5"))
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Row(
                 modifier = Modifier
@@ -576,7 +577,7 @@ private fun SearchCafeSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = colorFromHex("8E8794")
+                    tint = ConCafeColors.textMuted
                 )
                 BasicTextField(
                     value = searchQuery,
@@ -589,7 +590,7 @@ private fun SearchCafeSection(
                             Text(
                                 text = stringResource(Res.string.cafemgmt_search_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = colorFromHex("8E8794")
+                                color = ConCafeColors.textMuted
                             )
                         }
                         innerTextField()
@@ -602,14 +603,14 @@ private fun SearchCafeSection(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, colorFromHex("E4DDE5"))
+                border = BorderStroke(1.dp, ConCafeColors.outline)
             ) {
                 Column {
                     if (visibleSearchResults.isEmpty()) {
                         Text(
                             text = stringResource(Res.string.cafemgmt_search_no_result),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-                            color = colorFromHex("8E8794")
+                            color = ConCafeColors.textMuted
                         )
                     } else {
                         visibleSearchResults.forEachIndexed { index, cafe ->
@@ -618,7 +619,7 @@ private fun SearchCafeSection(
                                 onClaimClick = { onClaimCafe(cafe.id) }
                             )
                             if (index < visibleSearchResults.lastIndex) {
-                                Divider(color = colorFromHex("F1EAF1"))
+                                Divider(color = ConCafeColors.surfaceTint)
                             }
                         }
                     }
@@ -636,7 +637,7 @@ private fun EmptyStateCard(
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -644,12 +645,12 @@ private fun EmptyStateCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = colorFromHex("FCE6EF")
+                color = ConCafeColors.surfaceTint
             ) {
                 Icon(
                     imageVector = Icons.Default.AddBusiness,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797"),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.padding(14.dp)
                 )
             }
@@ -662,13 +663,13 @@ private fun EmptyStateCard(
             Text(
                 text = stringResource(Res.string.cafemgmt_empty_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorFromHex("786E7A")
+                color = ConCafeColors.textSecondary
             )
             Button(
                 onClick = onCreateCafe,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("F6EDF4"),
-                    contentColor = colorFromHex("6A5666")
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.textSecondary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -714,12 +715,12 @@ private fun SearchCafeItem(
             Text(
                 text = cafe.location,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8E8794")
+                color = ConCafeColors.textMuted
             )
         }
         Button(
             onClick = onClaimClick,
-            colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797")),
+            colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary),
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(stringResource(Res.string.cafemgmt_register))
@@ -733,8 +734,8 @@ private fun PendingClaimCard(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF8EA"),
-        border = BorderStroke(1.dp, colorFromHex("F0DEB1"))
+        color = ConCafeColors.warningContainer,
+        border = BorderStroke(1.dp, ConCafeColors.warningContainer)
     ) {
         Column(
             modifier = Modifier
@@ -755,12 +756,12 @@ private fun PendingClaimCard(
                 )
                 Surface(
                     shape = CircleShape,
-                    color = colorFromHex("FFE8B8")
+                    color = ConCafeColors.warningContainer
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = stringResource(Res.string.cafemgmt_claim_pending_content_description),
-                        tint = colorFromHex("9A6A11"),
+                        tint = ConCafeColors.goldDeep,
                         modifier = Modifier.padding(7.dp)
                     )
                 }
@@ -768,12 +769,12 @@ private fun PendingClaimCard(
             Text(
                 text = "${claim.status} · ${claim.requestedAt}",
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8B774C")
+                color = ConCafeColors.goldDeep
             )
             Text(
                 text = claim.message,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6E6248")
+                color = ConCafeColors.goldDeep
             )
         }
     }

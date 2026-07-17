@@ -24,6 +24,8 @@ final class ContentViewModel: ObservableObject {
 
     private let observeThemeModeUseCase: ObserveThemeModeUseCase
 
+    private let observeBrandThemeUseCase: ObserveBrandThemeUseCase
+
     @Published private(set) var uiState = ContentUiState()
 
     let event = PassthroughSubject<ContentEvent, Never>()
@@ -52,6 +54,22 @@ final class ContentViewModel: ObservableObject {
                 }
             } catch {
                 uiState.themeMode = .light
+            }
+        }
+    }
+
+    private func observeBrandTheme() {
+        tasks[.observeBrandTheme]?.cancel()
+        tasks[.observeBrandTheme] = Task {
+            do {
+                for try await brandTheme in asyncSequence(for: observeBrandThemeUseCase.invoke()) {
+                    let presentationBrandTheme = AppBrandTheme(brandTheme: brandTheme)
+                    ConCafeColors.brandTheme = presentationBrandTheme
+                    uiState.brandTheme = presentationBrandTheme
+                }
+            } catch {
+                ConCafeColors.brandTheme = .maidCafe
+                uiState.brandTheme = .maidCafe
             }
         }
     }
@@ -150,7 +168,8 @@ final class ContentViewModel: ObservableObject {
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         registerPushTokenUseCase: RegisterPushTokenUseCase = KoinInitializerKt.resolveRegisterPushTokenUseCase(),
         getNotificationFeedUseCase: GetNotificationFeedUseCase = KoinInitializerKt.resolveGetNotificationFeedUseCase(),
-        observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase()
+        observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase(),
+        observeBrandThemeUseCase: ObserveBrandThemeUseCase = KoinInitializerKt.resolveObserveBrandThemeUseCase()
     ) {
         self.checkAppUpdateUseCase = checkAppUpdateUseCase
         self.observeNetworkAlertStateUseCase = observeNetworkAlertStateUseCase
@@ -158,9 +177,11 @@ final class ContentViewModel: ObservableObject {
         self.registerPushTokenUseCase = registerPushTokenUseCase
         self.getNotificationFeedUseCase = getNotificationFeedUseCase
         self.observeThemeModeUseCase = observeThemeModeUseCase
+        self.observeBrandThemeUseCase = observeBrandThemeUseCase
 
         observeNetworkAlertState()
         observeThemeMode()
+        observeBrandTheme()
         observeSessionAndSyncPushToken()
     }
 
@@ -173,6 +194,7 @@ final class ContentViewModel: ObservableObject {
         case checkAppUpdate
         case observeNetworkAlert
         case observeTheme
+        case observeBrandTheme
         case observeCurrentUser
         case unreadNotificationPoll
     }

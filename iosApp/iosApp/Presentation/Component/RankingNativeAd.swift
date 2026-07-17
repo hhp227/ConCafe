@@ -121,7 +121,7 @@ struct RankingNativeAdCard: View {
                         )
                     )
                     .font(.caption2)
-                    .foregroundStyle(Color(hex: "7E5A6E"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(20)
@@ -196,7 +196,7 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
             badgeLabel.text = "광고"
         }
         badgeLabel.font = .systemFont(ofSize: 12, weight: .bold)
-        badgeLabel.textColor = UIColor(Color(hex: "B74D73"))
+        badgeLabel.textColor = UIColor(ConCafeColors.primary)
         badgeLabel.textAlignment = .center
         badgeLabel.translatesAutoresizingMaskIntoConstraints = false
         badgeLabel.setContentHuggingPriority(.required, for: .horizontal)
@@ -214,21 +214,21 @@ private struct RankingNativeAdRepresentable: UIViewRepresentable {
         ])
 
         sponsorLabel.font = .systemFont(ofSize: 11, weight: .medium)
-        sponsorLabel.textColor = UIColor(Color(hex: "927D8A"))
+        sponsorLabel.textColor = UIColor(ConCafeColors.textMuted)
         sponsorLabel.numberOfLines = 1
 
         headlineLabel.font = .systemFont(ofSize: 19, weight: .bold)
-        headlineLabel.textColor = UIColor(Color(hex: "2B2330"))
+        headlineLabel.textColor = UIColor(ConCafeColors.textPrimary)
         headlineLabel.numberOfLines = 2
         headlineLabel.lineBreakMode = .byTruncatingTail
 
         bodyLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        bodyLabel.textColor = UIColor(Color(hex: "6F6670"))
+        bodyLabel.textColor = UIColor(ConCafeColors.textSecondary)
         bodyLabel.numberOfLines = 3
 
         callToActionButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
-        callToActionButton.setTitleColor(UIColor(Color(hex: "2B2330")), for: .normal)
-        callToActionButton.backgroundColor = UIColor(Color(hex: "FFD1DC"))
+        callToActionButton.setTitleColor(UIColor(ConCafeColors.textPrimary), for: .normal)
+        callToActionButton.backgroundColor = UIColor(ConCafeColors.primaryContainer)
         callToActionButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         callToActionButton.layer.cornerRadius = 16
         callToActionButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
@@ -315,7 +315,7 @@ private struct RankingNativeAdCard: View {
                 )
             )
                 .font(.caption2.weight(.bold))
-                .foregroundStyle(Color(hex: "B74D73"))
+                .foregroundStyle(ConCafeColors.primary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.46))
@@ -328,7 +328,7 @@ private struct RankingNativeAdCard: View {
                 )
             )
                 .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
             Text(
                 String(
                     localized: "ranking_native_ad_desc",
@@ -337,7 +337,7 @@ private struct RankingNativeAdCard: View {
                 )
             )
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6F6670"))
+                .foregroundStyle(ConCafeColors.textSecondary)
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

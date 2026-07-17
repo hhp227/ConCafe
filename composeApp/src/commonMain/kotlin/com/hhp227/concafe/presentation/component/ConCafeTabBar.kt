@@ -21,11 +21,11 @@ fun ConCafeTabBar(
         selectedTabIndex = selectedIndex,
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
-        contentColor = colorFromHex("EF6797"),
+        contentColor = ConCafeColors.primary,
         indicator = { tabPositions ->
             TabRowDefaults.Indicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                color = colorFromHex("EF6797")
+                color = ConCafeColors.primary
             )
         },
         divider = {}
@@ -37,7 +37,7 @@ fun ConCafeTabBar(
                 text = {
                     Text(
                         text = label,
-                        color = if (index == selectedIndex) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (index == selectedIndex) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (index == selectedIndex) FontWeight.Bold else FontWeight.Normal,
                         style = MaterialTheme.typography.bodyMedium
                     )

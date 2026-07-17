@@ -18,7 +18,7 @@ struct UserManagementView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .navigationTitle("유저 관리")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -35,10 +35,10 @@ struct UserManagementView: View {
                             Text(chip.label)
                         }
                         .font(.subheadline.weight(chip.isSelected ? .bold : .medium))
-                        .foregroundStyle(chip.isSelected ? Color(hex: "2B2330") : Color(hex: "6F6670"))
+                        .foregroundStyle(chip.isSelected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
-                        .background(chip.isSelected ? Color(hex: "FFD1DC") : Color(hex: "F5F2F4"))
+                        .background(chip.isSelected ? ConCafeColors.primaryContainer : ConCafeColors.surfaceVariant)
                         .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -56,7 +56,7 @@ struct UserManagementView: View {
         } else if viewModel.uiState.users.isEmpty {
             Text("\(viewModel.uiState.selectedFilter.label) 목록이 없습니다.")
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
                 .background(cardBackground)
@@ -79,7 +79,7 @@ struct UserManagementView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Color(hex: "F5F2F4"))
+                    .background(ConCafeColors.surfaceVariant)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -94,11 +94,11 @@ struct UserManagementView: View {
                 image.resizable().scaledToFill()
             } placeholder: {
                 Circle()
-                    .fill(Color(hex: "FFE7EF"))
+                    .fill(ConCafeColors.surfaceTint)
                     .overlay {
                         Text(String(user.nickname.prefix(1)))
                             .font(.headline.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
             }
             .frame(width: 48, height: 48)
@@ -110,19 +110,19 @@ struct UserManagementView: View {
                         .lineLimit(1)
                     Text(user.banned ? "차단" : "운영자")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(user.banned ? Color(hex: "BE123C") : Color(hex: "6D28D9"))
+                        .foregroundStyle(user.banned ? ConCafeColors.error : ConCafeColors.primary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(user.banned ? Color(hex: "FFE4E6") : Color(hex: "EDE9FE"))
+                        .background(user.banned ? ConCafeColors.errorContainer : ConCafeColors.primaryContainer)
                         .clipShape(Capsule())
                 }
                 Text(user.email)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "6F6670"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .lineLimit(1)
                 Text("가입일 \(String(user.createdAt.prefix(10)))")
                     .font(.caption2)
-                    .foregroundStyle(Color(hex: "8B7F8A"))
+                    .foregroundStyle(ConCafeColors.textMuted)
             }
             Spacer()
         }
@@ -139,16 +139,16 @@ struct UserManagementView: View {
         HStack {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
             Spacer()
             Button("닫기") {
                 viewModel.onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(14)
-        .background(Color(hex: "FFF4CC"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 

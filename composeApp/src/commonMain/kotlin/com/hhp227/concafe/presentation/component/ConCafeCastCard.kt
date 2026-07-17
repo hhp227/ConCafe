@@ -56,7 +56,7 @@ fun ConCafeCastCard(
                         .matchParentSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(colorFromHex("FFDCE8"), colorFromHex("FFC4D8"))
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         )
                 )
@@ -82,7 +82,7 @@ fun ConCafeCastCard(
                             color = Color.White,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(colorFromHex("35B56A"))
+                                .background(ConCafeColors.success)
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold
@@ -121,7 +121,7 @@ fun ConCafeCastCard(
             if (!metaText.isNullOrBlank()) {
                 Text(
                     text = metaText,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     style = MaterialTheme.typography.bodySmall
                 )
             }

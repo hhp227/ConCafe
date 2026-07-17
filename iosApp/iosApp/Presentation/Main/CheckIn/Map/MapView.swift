@@ -52,7 +52,7 @@ struct MapView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "mappin.and.ellipse")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                             Text(viewModel.uiState.selectedRegion == .all ? String(localized: String.LocalizationValue("checkin_nearby_label"), table: "Localizable") : viewModel.uiState.selectedRegion.label)
                                 .font(.caption.weight(.semibold))
                             Image(systemName: "chevron.down")

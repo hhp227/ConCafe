@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.theme.AppBrandTheme
 import com.hhp227.concafe.presentation.theme.AppThemeMode
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.settings_account_desc
@@ -40,6 +41,10 @@ import concafe.composeapp.generated.resources.settings_privacy_desc
 import concafe.composeapp.generated.resources.settings_privacy_title
 import concafe.composeapp.generated.resources.settings_sign_out_desc
 import concafe.composeapp.generated.resources.settings_sign_out_title
+import concafe.composeapp.generated.resources.settings_brand_theme_desc
+import concafe.composeapp.generated.resources.settings_brand_theme_maid
+import concafe.composeapp.generated.resources.settings_brand_theme_mens
+import concafe.composeapp.generated.resources.settings_brand_theme_title
 import concafe.composeapp.generated.resources.settings_theme_dark
 import concafe.composeapp.generated.resources.settings_theme_desc
 import concafe.composeapp.generated.resources.settings_theme_light
@@ -47,6 +52,7 @@ import concafe.composeapp.generated.resources.settings_theme_title
 import concafe.composeapp.generated.resources.settings_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +136,7 @@ private fun SettingsContentScreen(
                 Text(
                     text = uiState.errorMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("D1436F")
+                    color = ConCafeColors.primary
                 )
             }
         }
@@ -140,6 +146,7 @@ private fun SettingsContentScreen(
         item {
             SettingsThemeCard(
                 selectedThemeMode = uiState.themeMode,
+                selectedBrandTheme = uiState.brandTheme,
                 onAction = onAction
             )
         }
@@ -169,6 +176,7 @@ private fun SettingsSectionTitle(title: String) {
 @Composable
 private fun SettingsThemeCard(
     selectedThemeMode: AppThemeMode,
+    selectedBrandTheme: AppBrandTheme,
     onAction: (SettingsAction) -> Unit
 ) {
     Card(
@@ -184,7 +192,7 @@ private fun SettingsThemeCard(
                 Icon(
                     imageVector = Icons.Default.Palette,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797")
+                    tint = ConCafeColors.primary
                 )
                 Column(
                     modifier = Modifier
@@ -217,6 +225,32 @@ private fun SettingsThemeCard(
                     selected = selectedThemeMode == AppThemeMode.DARK,
                     modifier = Modifier.weight(1f),
                     onClick = { onAction(SettingsAction.SelectThemeMode(AppThemeMode.DARK)) }
+                )
+            }
+            Text(
+                text = stringResource(Res.string.settings_brand_theme_title),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(Res.string.settings_brand_theme_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_brand_theme_maid),
+                    selected = selectedBrandTheme == AppBrandTheme.MAID_CAFE,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectBrandTheme(AppBrandTheme.MAID_CAFE)) }
+                )
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_brand_theme_mens),
+                    selected = selectedBrandTheme == AppBrandTheme.MENS_CON_CAFE,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectBrandTheme(AppBrandTheme.MENS_CON_CAFE)) }
                 )
             }
         }
@@ -267,7 +301,7 @@ private fun SettingsItemCard(
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                tint = if (item.action == SettingsAction.ClickSignOut) colorFromHex("D1436F") else colorFromHex("EF6797")
+                tint = if (item.action == SettingsAction.ClickSignOut) ConCafeColors.primary else ConCafeColors.primary
             )
             Column(
                 modifier = Modifier
@@ -293,7 +327,7 @@ private fun SettingsItemCard(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = colorFromHex("B3ACB7")
+                        tint = ConCafeColors.outlineStrong
                     )
                 }
             }

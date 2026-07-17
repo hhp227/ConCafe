@@ -82,8 +82,8 @@ private struct SignUpContentView: View {
         .background(
             LinearGradient(
                 colors: UITraitCollection.current.userInterfaceStyle == .dark
-                    ? [Color(hex: "FFF9FC"), Color(hex: "FFF9FC"), Color(hex: "FFF9FC")]
-                    : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
+                    ? [ConCafeColors.background, ConCafeColors.background, ConCafeColors.background]
+                    : [ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -139,7 +139,7 @@ private struct SignUpContentView: View {
                         .foregroundStyle(.secondary)
                     Text(type.badge)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "DA4E84"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
                 Spacer()
             }
@@ -149,7 +149,7 @@ private struct SignUpContentView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(
-                        UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E7DFE8"),
+                        UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline,
                         lineWidth: 1
                     )
             )
@@ -248,13 +248,13 @@ private struct SignUpContentView: View {
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "D1436F"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let infoMessage = uiState.infoMessage {
                 Text(infoMessage)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "2E8B57"))
+                    .foregroundStyle(ConCafeColors.success)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             Button {
@@ -262,10 +262,10 @@ private struct SignUpContentView: View {
             } label: {
                 Text(uiState.isLoading ? String(localized: String.LocalizationValue("signup_processing"), table: "Localizable") : type.submitLabel)
                     .font(.headline)
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(uiState.isLoading)
@@ -301,7 +301,7 @@ private struct SignUpContentView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                            .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline, lineWidth: 1)
                     )
                 }
                 Button(uiState.isPhoneVerified ? String(localized: String.LocalizationValue("signup_phone_verified"), table: "Localizable") : String(localized: String.LocalizationValue("signup_phone_request"), table: "Localizable")) {
@@ -311,7 +311,7 @@ private struct SignUpContentView: View {
                 .foregroundStyle(.white)
                 .frame(height: 52)
                 .padding(.horizontal, 16)
-                .background(Color(hex: "EF6797"))
+                .background(ConCafeColors.primary)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .disabled(uiState.isPhoneVerified || uiState.phone.isEmpty)
             }
@@ -330,25 +330,25 @@ private struct SignUpContentView: View {
                         onAction(.verifyCodeTapped)
                     }
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "6B3050"))
+                    .foregroundStyle(ConCafeColors.onPrimaryContainer)
                     .frame(height: 52)
                     .padding(.horizontal, 20)
-                    .background(Color(hex: "F7D2E1"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
             if uiState.isPhoneVerified {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color(hex: "2E8B57"))
+                        .foregroundStyle(ConCafeColors.success)
                     Text(String(localized: String.LocalizationValue("signup_phone_verified_message"), table: "Localizable"))
-                        .foregroundStyle(Color(hex: "2E8B57"))
+                        .foregroundStyle(ConCafeColors.success)
                         .font(.subheadline.weight(.semibold))
                     Spacer()
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Color(hex: "EAF8EF"))
+                .background(ConCafeColors.successContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
@@ -358,19 +358,19 @@ private struct SignUpContentView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(String(localized: String.LocalizationValue("signup_owner_cafe_guide_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5F3AA2"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(String(localized: String.LocalizationValue("signup_owner_cafe_guide_message"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5A82"))
+                .foregroundStyle(ConCafeColors.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color(hex: "F6F0FF"))
+        .background(ConCafeColors.primaryContainer)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(hex: "E6D9FA"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
@@ -394,7 +394,7 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline, lineWidth: 1)
                 )
             }
             if uiState.selectedCafe != nil {
@@ -443,7 +443,7 @@ private struct SignUpContentView: View {
                                                 .foregroundStyle(.white)
                                                 .padding(.horizontal, 10)
                                                 .padding(.vertical, 6)
-                                                .background(Color(hex: "EF6797"))
+                                                .background(ConCafeColors.primary)
                                                 .clipShape(Capsule())
                                         }
                                     }
@@ -530,7 +530,7 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline, lineWidth: 1)
                 )
         }
     }
@@ -551,7 +551,7 @@ private struct SignUpContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline, lineWidth: 1)
                 )
         }
     }
@@ -559,22 +559,22 @@ private struct SignUpContentView: View {
     private func accentColor(for type: SignUpUiState.UserType) -> Color {
         switch type {
         case .visitor:
-            return Color(hex: "4F8EF7")
+            return ConCafeColors.info
         case .cast:
-            return Color(hex: "F06292")
+            return ConCafeColors.primary
         case .cafeOwner:
-            return Color(hex: "8B5CF6")
+            return ConCafeColors.primary
         }
     }
 
     private func gradientColors(for type: SignUpUiState.UserType) -> [Color] {
         switch type {
         case .visitor:
-            return [Color(hex: "60A5FA"), Color(hex: "3B82F6")]
+            return [ConCafeColors.info, ConCafeColors.info]
         case .cast:
-            return [Color(hex: "F472B6"), Color(hex: "EC4899")]
+            return [ConCafeColors.primary, ConCafeColors.primary]
         case .cafeOwner:
-            return [Color(hex: "A78BFA"), Color(hex: "8B5CF6")]
+            return [ConCafeColors.secondary, ConCafeColors.primary]
         }
     }
 

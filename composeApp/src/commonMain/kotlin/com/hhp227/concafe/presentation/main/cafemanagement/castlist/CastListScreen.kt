@@ -79,6 +79,7 @@ import concafe.composeapp.generated.resources.dashboard_delete_cast_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CastListScreen(
@@ -158,13 +159,13 @@ private fun CastListContentScreen(
                         Icon(
                             imageVector = Icons.Default.PersonAdd,
                             contentDescription = null,
-                            tint = colorFromHex("EF6797"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = stringResource(Res.string.castlist_action_add),
                             modifier = Modifier.padding(start = 4.dp),
-                            color = colorFromHex("EF6797"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -175,7 +176,7 @@ private fun CastListContentScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFFBFD"))
+                .background(ConCafeColors.background)
                 .padding(innerPadding)
         ) {
             ConCafeFormField(
@@ -190,7 +191,7 @@ private fun CastListContentScreen(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
-                        tint = colorFromHex("8F848F")
+                        tint = ConCafeColors.textMuted
                     )
                 }
             )
@@ -212,7 +213,7 @@ private fun CastListContentScreen(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = colorFromHex("EF6797")
+                        color = ConCafeColors.primary
                     )
                 } else if (uiState.filteredCasts.isEmpty()) {
                     Text(
@@ -224,7 +225,7 @@ private fun CastListContentScreen(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .padding(horizontal = 32.dp),
-                        color = colorFromHex("8F848F"),
+                        color = ConCafeColors.textMuted,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -270,7 +271,7 @@ private fun CastListItemCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Row(
             modifier = Modifier
@@ -285,7 +286,7 @@ private fun CastListItemCard(
                         .fillMaxSize()
                         .background(
                             brush = Brush.linearGradient(
-                                colors = listOf(colorFromHex("FFD7E3"), colorFromHex("FFF0F5"))
+                                colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.background)
                             ),
                             shape = CircleShape
                         )
@@ -303,7 +304,7 @@ private fun CastListItemCard(
                         .align(Alignment.BottomEnd)
                         .size(14.dp)
                         .background(
-                            if (cast.isOnShift) colorFromHex("35C26B") else colorFromHex("C7CBD3"),
+                            if (cast.isOnShift) ConCafeColors.success else ConCafeColors.outlineStrong,
                             CircleShape
                         )
                 )
@@ -323,8 +324,8 @@ private fun CastListItemCard(
             IconButton(
                 onClick = onScheduleClick,
                 colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = colorFromHex("FCE6EF"),
-                    contentColor = colorFromHex("EF6797")
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.primary
                 )
             ) {
                 Icon(
@@ -336,8 +337,8 @@ private fun CastListItemCard(
             IconButton(
                 onClick = onDeleteClick,
                 colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = colorFromHex("F6EEF2"),
-                    contentColor = colorFromHex("EF6797")
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.primary
                 )
             ) {
                 Icon(
@@ -354,10 +355,10 @@ private fun CastListItemCard(
 private fun CastShiftBadge(isOnShift: Boolean) {
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = if (isOnShift) colorFromHex("ECFFF5") else colorFromHex("F4F1F4"),
+        color = if (isOnShift) ConCafeColors.successContainer else ConCafeColors.surfaceVariant,
         border = BorderStroke(
             1.dp,
-            if (isOnShift) colorFromHex("C8EFD9") else colorFromHex("E3DCE3")
+            if (isOnShift) ConCafeColors.successContainer else ConCafeColors.outline
         )
     ) {
         Text(
@@ -369,7 +370,7 @@ private fun CastShiftBadge(isOnShift: Boolean) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = if (isOnShift) colorFromHex("1F8B5F") else colorFromHex("8F848F")
+            color = if (isOnShift) ConCafeColors.success else ConCafeColors.textMuted
         )
     }
 }
@@ -382,8 +383,8 @@ private fun LoadMoreCastRow(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("F7F2F6"),
-        border = BorderStroke(1.dp, colorFromHex("E3DCE3")),
+        color = ConCafeColors.surfaceTint,
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Box(
@@ -394,14 +395,14 @@ private fun LoadMoreCastRow(
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
             } else {
                 Text(
                     text = stringResource(Res.string.castlist_action_load_more),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("8C7A83")
+                    color = ConCafeColors.textMuted
                 )
             }
         }
@@ -418,7 +419,7 @@ private fun CastListInfoBanner(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(bottom = 8.dp)
-            .background(Color(0x14FFD1DC), RoundedCornerShape(18.dp))
+            .background(ConCafeColors.primaryContainer.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -426,7 +427,7 @@ private fun CastListInfoBanner(
         Icon(
             imageVector = Icons.Default.Info,
             contentDescription = null,
-            tint = colorFromHex("EF6797"),
+            tint = ConCafeColors.primary,
             modifier = Modifier.size(18.dp)
         )
         Text(

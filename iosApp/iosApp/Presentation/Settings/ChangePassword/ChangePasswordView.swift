@@ -32,7 +32,7 @@ struct ChangePasswordView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                        colors: [ConCafeColors.primary, ConCafeColors.secondary],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -82,7 +82,7 @@ struct ChangePasswordView: View {
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(Color(hex: "FFD1DC"))
+                        .background(ConCafeColors.primaryContainer)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -91,7 +91,7 @@ struct ChangePasswordView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -120,7 +120,7 @@ struct ChangePasswordView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(title)
                     .font(.headline)
                     .bold()
@@ -136,7 +136,7 @@ struct ChangePasswordView: View {
     private func guideRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(text)
                 .font(.caption)
                 .foregroundStyle(.secondary)

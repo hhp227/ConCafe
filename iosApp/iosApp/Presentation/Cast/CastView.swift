@@ -56,7 +56,7 @@ private struct CastContentView: View {
         GeometryReader { proxy in
             ZStack(alignment: .top) {
                 content(topSafeArea: proxy.safeAreaInsets.top)
-                    .background(Color(hex: "FFF9FC"))
+                    .background(ConCafeColors.background)
             }
             .ignoresSafeArea(edges: .top)
         }
@@ -109,7 +109,7 @@ private struct CastContentView: View {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -225,9 +225,9 @@ private struct CastHeroSection: View {
     @ViewBuilder
     private func heroPlaceholder(index: Int) -> some View {
         let gradients: [[Color]] = [
-            [Color(hex: "F8A3C5"), Color(hex: "EF6797")],
-            [Color(hex: "FFC6C7"), Color(hex: "FF8E9E")],
-            [Color(hex: "F8D6E9"), Color(hex: "D98AB7")]
+            [ConCafeColors.secondaryContainer, ConCafeColors.primary],
+            [ConCafeColors.errorContainer, ConCafeColors.tertiary],
+            [ConCafeColors.primaryContainer, ConCafeColors.primary]
         ]
         LinearGradient(
             colors: gradients[index % gradients.count],
@@ -272,16 +272,16 @@ private struct CastSummarySection: View {
                                 .font(.title2.bold())
                             if let linkedUserId = detail.cast.linkedUserId, !linkedUserId.isEmpty {
                                 Image(systemName: "checkmark.seal.fill")
-                                    .foregroundStyle(Color(hex: "9333EA"))
+                                    .foregroundStyle(ConCafeColors.primary)
                                     .font(.title2)
                             }
                         }
                         Text(detail.cast.conceptRole.capitalized)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(hex: "C9527E"))
+                            .foregroundStyle(ConCafeColors.primary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(Color(hex: "FFE7F1")))
+                            .background(Capsule().fill(ConCafeColors.surfaceTint))
                         Button {
                             onAction(.cafeTapped)
                         } label: {
@@ -317,12 +317,12 @@ private struct CastSummarySection: View {
                                 : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
                             )
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
+                            .foregroundStyle(isFollowing ? ConCafeColors.primary : .white)
                             .padding(.horizontal, 18)
                             .frame(height: 40)
                             .background(
                                 Capsule()
-                                    .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
+                                    .fill(isFollowing ? ConCafeColors.primaryContainer : ConCafeColors.primary)
                             )
                         }
                         .disabled(isSelfCast)
@@ -351,7 +351,7 @@ private struct CastSummarySection: View {
     private func statItem(systemName: String, label: String, value: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: systemName)
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             HStack(spacing: 4) {
                 Text(label)
                     .font(.caption)
@@ -387,7 +387,7 @@ private struct CastTodaySection: View {
         .padding(.vertical, 18)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F8A3C5")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondaryContainer],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -454,7 +454,7 @@ private struct CastScheduleCard: View {
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(isWorking ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .background(isWorking ? ConCafeColors.primary : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -515,7 +515,7 @@ private struct CastActivityCard: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title3.bold())
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(label)
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
@@ -547,10 +547,10 @@ private struct CastRecentReviewSection: View {
                                     .font(.subheadline.weight(.semibold))
                                 Text(RatingUtils.formatOneDecimal(review.rating))
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "EF6797"))
+                                    .foregroundStyle(ConCafeColors.primary)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                                    .background(ConCafeColors.primaryContainer.opacity(0.12))
                                     .clipShape(Capsule())
                                 Spacer()
                                 Text(review.createdDateLabel)
@@ -563,10 +563,10 @@ private struct CastRecentReviewSection: View {
                                         ForEach(review.taggedCastNames, id: \.self) { castName in
                                             Text(castName)
                                                 .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "C9527E"))
+                                                .foregroundStyle(ConCafeColors.primary)
                                                 .padding(.horizontal, 10)
                                                 .padding(.vertical, 5)
-                                                .background(Color(hex: "FFD1DC").opacity(0.12))
+                                                .background(ConCafeColors.primaryContainer.opacity(0.12))
                                                 .clipShape(Capsule())
                                         }
                                     }

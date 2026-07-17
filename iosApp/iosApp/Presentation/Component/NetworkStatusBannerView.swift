@@ -15,11 +15,11 @@ struct NetworkStatusBannerView: View {
     var body: some View {
         Text(message)
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(isConnected ? Color(hex: "166534") : Color(hex: "991B1B"))
+            .foregroundStyle(isConnected ? ConCafeColors.success : ConCafeColors.error)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(isConnected ? Color(hex: "DCFCE7") : Color(hex: "FEE2E2"))
+            .background(isConnected ? ConCafeColors.successContainer : ConCafeColors.errorContainer)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .padding(.horizontal, 16)
             .padding(.top, 8)

@@ -169,7 +169,7 @@ private struct CafeInfoEditContentView: View {
                 VStack(spacing: 16) {
                     if uiState.isLoading {
                         ProgressView()
-                            .tint(Color(hex: "EF6797"))
+                            .tint(ConCafeColors.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 32)
                     }
@@ -214,7 +214,7 @@ private struct CafeInfoEditContentView: View {
             }
             bottomSaveBar()
         }
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private var basicInformationSection: some View {
@@ -261,7 +261,7 @@ private struct CafeInfoEditContentView: View {
                     Spacer()
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "8A8088"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                 }
                 .frame(height: 52)
                 .padding(.horizontal, 16)
@@ -269,7 +269,7 @@ private struct CafeInfoEditContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -290,7 +290,7 @@ private struct CafeInfoEditContentView: View {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
+                                    colors: [ConCafeColors.primaryContainer, Color(uiColor: .secondarySystemGroupedBackground)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -303,15 +303,15 @@ private struct CafeInfoEditContentView: View {
                                     VStack(spacing: 8) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 32, weight: .semibold))
-                                            .foregroundStyle(Color(hex: "8B5164"))
+                                            .foregroundStyle(ConCafeColors.primary)
                                         Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                             .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "5A4954"))
+                                            .foregroundStyle(ConCafeColors.textSecondary)
                                     }
                                 },
                                 loading: {
                                     ProgressView()
-                                        .tint(Color(hex: "9C7A88"))
+                                        .tint(ConCafeColors.textMuted)
                                 }
                             )
                             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -320,10 +320,10 @@ private struct CafeInfoEditContentView: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "camera.fill")
                                     .font(.system(size: 32, weight: .semibold))
-                                    .foregroundStyle(Color(hex: "8B5164"))
+                                    .foregroundStyle(ConCafeColors.primary)
                                 Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "5A4954"))
+                                    .foregroundStyle(ConCafeColors.textSecondary)
                             }
                         }
                     }
@@ -337,7 +337,7 @@ private struct CafeInfoEditContentView: View {
             .buttonStyle(.plain)
             Text(String(localized: String.LocalizationValue("cafeinfo_representative_hint"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -346,7 +346,7 @@ private struct CafeInfoEditContentView: View {
         editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_gallery"), table: "Localizable"), trailing: {
             Text(String(format: String(localized: String.LocalizationValue("cafeinfo_gallery_limit"), table: "Localizable"), uiState.galleryLimitCount, uiState.galleryMaxCount))
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
         }) {
             LazyVGrid(
                 columns: [
@@ -383,7 +383,7 @@ private struct CafeInfoEditContentView: View {
                         onSearchAddressLocation(uiState.address)
                     } label: {
                         Image(systemName: "location.fill")
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -416,7 +416,7 @@ private struct CafeInfoEditContentView: View {
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color(hex: "FFD1DC").opacity(0.4), lineWidth: 1)
+                                .stroke(ConCafeColors.primaryContainer.opacity(0.4), lineWidth: 1)
                         )
                 }
                 .buttonStyle(.plain)
@@ -424,7 +424,7 @@ private struct CafeInfoEditContentView: View {
             }
             Text(String(format: String(localized: String.LocalizationValue("cafeinfo_selected_coordinate"), table: "Localizable"), formatCoordinate(uiState.mapLatitude), formatCoordinate(uiState.mapLongitude)))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "7E737B"))
+                .foregroundStyle(ConCafeColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .leading, spacing: 8) {
                 Text(String(localized: String.LocalizationValue("cafeinfo_label_contact"), table: "Localizable"))
@@ -443,7 +443,7 @@ private struct CafeInfoEditContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                 )
             }
         }
@@ -481,7 +481,7 @@ private struct CafeInfoEditContentView: View {
                     Text(String(localized: String.LocalizationValue("cafeinfo_action_manage_exception"), table: "Localizable"))
                         .fontWeight(.semibold)
                 }
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
@@ -491,7 +491,7 @@ private struct CafeInfoEditContentView: View {
     private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
             Button {
                 onAction(.clickSave)
@@ -514,7 +514,7 @@ private struct CafeInfoEditContentView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "FFD1DC"))
+            .tint(ConCafeColors.primaryContainer)
             .foregroundStyle(.primary)
             .disabled(uiState.isSaving)
             .padding(.horizontal, 16)
@@ -522,7 +522,7 @@ private struct CafeInfoEditContentView: View {
             .padding(.bottom, 14)
             .background(
                 UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
+                ? ConCafeColors.background
                 : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92)
             )
         }
@@ -548,7 +548,7 @@ private struct CafeInfoEditContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color(hex: "FFD1DC").opacity(0.1), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer.opacity(0.1), lineWidth: 1)
         )
     }
 
@@ -637,13 +637,13 @@ private struct CafeInfoEditContentView: View {
             onGalleryImagePick()
         } label: {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(hex: "FFD1DC").opacity(0.1))
+                .fill(ConCafeColors.primaryContainer.opacity(0.1))
                 .overlay {
                     Circle()
-                        .stroke(Color(hex: "FFD1DC").opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
                         .overlay {
                             Image(systemName: "plus")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                         .padding(22)
                 }
@@ -663,7 +663,7 @@ private struct CafeInfoEditContentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             TimeFieldPicker(text: open)
             Text(String(localized: String.LocalizationValue("cafeinfo_dash"), table: "Localizable"))
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
             TimeFieldPicker(text: close)
         }
         .padding(12)
@@ -675,21 +675,21 @@ private struct CafeInfoEditContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("banneredit_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
@@ -713,14 +713,14 @@ private struct TimeFieldPicker: View {
                     .foregroundStyle(.primary)
                 Image(systemName: "clock")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "7C7480"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
             }
             .frame(width: 108, height: 38)
             .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
