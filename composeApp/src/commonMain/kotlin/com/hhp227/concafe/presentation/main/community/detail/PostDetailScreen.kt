@@ -66,6 +66,7 @@ import concafe.composeapp.generated.resources.post_detail_screen_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun PostDetailScreen(
@@ -101,7 +102,7 @@ private fun PostDetailContentScreen(
     uiState: PostDetailUiState,
     onAction: (PostDetailAction) -> Unit
 ) {
-    val pink = colorFromHex("EF6797")
+    val pink = ConCafeColors.primary
     val textColor = MaterialTheme.colorScheme.onSurface
     val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant
     var localEditText by remember(uiState.editingCommentId) { mutableStateOf(uiState.editCommentText) }
@@ -132,8 +133,8 @@ private fun PostDetailContentScreen(
                     placeholder = { Text(stringResource(Res.string.post_detail_comment_edit_placeholder), fontSize = 14.sp) },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colorFromHex("EF6797"),
-                        unfocusedBorderColor = colorFromHex("FFD1DC")
+                        focusedBorderColor = ConCafeColors.primary,
+                        unfocusedBorderColor = ConCafeColors.primaryContainer
                     ),
                     maxLines = 5,
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -149,7 +150,7 @@ private fun PostDetailContentScreen(
                     Button(
                         onClick = { onAction(PostDetailAction.ConfirmEditComment(localEditText)) },
                         enabled = localEditText.isNotBlank() && !uiState.isUpdatingComment,
-                        colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
+                        colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary)
                     ) {
                         if (uiState.isUpdatingComment) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
@@ -199,7 +200,7 @@ private fun PostDetailContentScreen(
                     onClick = { onAction(PostDetailAction.SubmitReport) },
                     enabled = uiState.selectedReportType != null && !uiState.isSubmittingReport,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
+                    colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary)
                 ) {
                     if (uiState.isSubmittingReport) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
@@ -218,7 +219,7 @@ private fun PostDetailContentScreen(
             text = { Text(stringResource(Res.string.post_detail_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { onAction(PostDetailAction.ConfirmDelete) }) {
-                    Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935"), fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.community_action_delete), color = ConCafeColors.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -259,7 +260,7 @@ private fun PostDetailContentScreen(
                                         onClick = { onAction(PostDetailAction.ClickEdit) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935")) },
+                                        text = { Text(stringResource(Res.string.community_action_delete), color = ConCafeColors.error) },
                                         onClick = { onAction(PostDetailAction.ClickDelete) }
                                     )
                                 } else {
@@ -268,7 +269,7 @@ private fun PostDetailContentScreen(
                                         onClick = { onAction(PostDetailAction.ClickReport) }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(Res.string.community_action_block), color = colorFromHex("E53935")) },
+                                        text = { Text(stringResource(Res.string.community_action_block), color = ConCafeColors.error) },
                                         onClick = { onAction(PostDetailAction.ClickBlock) }
                                     )
                                 }
@@ -328,7 +329,7 @@ private fun PostDetailContentScreen(
                             item {
                                 Divider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = colorFromHex("FFD1DC").copy(alpha = 0.4f)
+                                    color = ConCafeColors.primaryContainer.copy(alpha = 0.4f)
                                 )
                                 Row(
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -424,7 +425,7 @@ private fun PostBody(
     onLike: () -> Unit,
     onImageClick: (String) -> Unit
 ) {
-    val pink = colorFromHex("EF6797")
+    val pink = ConCafeColors.primary
 
     Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
         Row(
@@ -435,7 +436,7 @@ private fun PostBody(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier.size(40.dp).clip(CircleShape).background(
-                        Brush.linearGradient(colors = listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7")))
+                        Brush.linearGradient(colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer))
                     ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -540,7 +541,7 @@ private fun CommentItem(
         ) {
             Box(
                 modifier = Modifier.size(28.dp).clip(CircleShape).background(
-                    Brush.linearGradient(colors = listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7")))
+                    Brush.linearGradient(colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer))
                 ),
                 contentAlignment = Alignment.Center
             ) {
@@ -548,7 +549,7 @@ private fun CommentItem(
                     text = comment.userNickname.firstOrNull()?.toString() ?: "?",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
             }
             Text(
@@ -584,7 +585,7 @@ private fun CommentItem(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.community_action_delete), color = colorFromHex("E53935")) },
+                            text = { Text(stringResource(Res.string.community_action_delete), color = ConCafeColors.error) },
                             onClick = {
                                 isMenuVisible = false
                                 onDelete()
@@ -599,7 +600,7 @@ private fun CommentItem(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(Res.string.community_action_block), color = colorFromHex("E53935")) },
+                            text = { Text(stringResource(Res.string.community_action_block), color = ConCafeColors.error) },
                             onClick = {
                                 isMenuVisible = false
                                 onBlock()
@@ -646,8 +647,8 @@ private fun CommentInputBar(
                 placeholder = { Text(stringResource(Res.string.post_detail_comment_placeholder), fontSize = 14.sp) },
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = colorFromHex("EF6797"),
-                    unfocusedBorderColor = colorFromHex("FFD1DC")
+                    focusedBorderColor = ConCafeColors.primary,
+                    unfocusedBorderColor = ConCafeColors.primaryContainer
                 ),
                 maxLines = 3,
                 textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
@@ -658,7 +659,7 @@ private fun CommentInputBar(
                 modifier = Modifier
                     .size(44.dp)
                     .background(
-                        if (canSend) colorFromHex("EF6797") else colorFromHex("FFD1DC"),
+                        if (canSend) ConCafeColors.primary else ConCafeColors.primaryContainer,
                         shape = CircleShape
                     )
             ) {

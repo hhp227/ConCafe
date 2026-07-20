@@ -30,7 +30,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.banner_action_ok
@@ -102,6 +102,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,13 +202,13 @@ private fun BannerEditContentScreen(
         },
         bottomBar = {
             Surface(
-                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.94f),
-                border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.94f),
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .keyboardBottomInsets()
+                        .fixedBottomBarInsets()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -218,10 +219,10 @@ private fun BannerEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
+                            containerColor = ConCafeColors.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface,
-                            disabledContainerColor = colorFromHex("F4D7DF"),
-                            disabledContentColor = colorFromHex("8B7D83")
+                            disabledContainerColor = ConCafeColors.primaryContainer,
+                            disabledContentColor = ConCafeColors.textMuted
                         )
                     ) {
                         if (uiState.isSaving) {
@@ -252,7 +253,7 @@ private fun BannerEditContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
@@ -265,7 +266,9 @@ private fun BannerEditContentScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -470,7 +473,7 @@ private fun BannerSelectorSheet(
                     .padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = colorFromHex("EF6797"))
+                CircularProgressIndicator(color = ConCafeColors.primary)
             }
         } else if (uiState.activeSelectorItemCount == 0) {
             Box(
@@ -480,7 +483,7 @@ private fun BannerSelectorSheet(
             ) {
                 Text(
                     text = stringResource(Res.string.banneredit_selector_empty),
-                    color = colorFromHex("8F848F")
+                    color = ConCafeColors.textMuted
                 )
             }
         } else {
@@ -545,7 +548,7 @@ private fun BannerImageCard(
                     .fillMaxWidth()
                     .aspectRatio(16f / 10f)
                     .background(
-                        Brush.linearGradient(listOf(colorFromHex("FFD8E6"), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))),
+                        Brush.linearGradient(listOf(ConCafeColors.primaryContainer, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))),
                         RoundedCornerShape(20.dp)
                     )
                     .clip(RoundedCornerShape(20.dp)),
@@ -559,13 +562,13 @@ private fun BannerImageCard(
                         Icon(
                             imageVector = Icons.Default.AddPhotoAlternate,
                             contentDescription = null,
-                            tint = colorFromHex("EF6797"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
                             text = stringResource(Res.string.banneredit_image_placeholder_pick),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colorFromHex("5A4954"),
+                            color = ConCafeColors.textSecondary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -587,14 +590,14 @@ private fun BannerImageCard(
                 Text(
                     text = stringResource(Res.string.banneredit_image_guide),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("8F848F"),
+                    color = ConCafeColors.textMuted,
                     textAlign = TextAlign.Center
                 )
             }
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("FFD1DC"),
+                    containerColor = ConCafeColors.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 shape = RoundedCornerShape(999.dp)
@@ -626,7 +629,7 @@ private fun BannerSectionCard(
                     modifier = Modifier
                         .padding(end = 8.dp)
                         .size(width = 4.dp, height = 18.dp)
-                        .background(colorFromHex("FFD1DC"), RoundedCornerShape(999.dp))
+                        .background(ConCafeColors.primaryContainer, RoundedCornerShape(999.dp))
                 )
                 Text(
                     text = title,
@@ -658,10 +661,10 @@ private fun TargetTypeGrid(
                             .weight(1f)
                             .clickable { onSelect(target) },
                         shape = RoundedCornerShape(14.dp),
-                        color = if (isSelected) Color(0x14FFD1DC) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        color = if (isSelected) ConCafeColors.primaryContainer.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         border = BorderStroke(
                             width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) colorFromHex("FFD1DC") else Color(0x33FFD1DC)
+                            color = if (isSelected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.2f)
                         )
                     ) {
                         Box(
@@ -704,7 +707,7 @@ private fun SelectionFieldCard(
                 .clickable(onClick = onClick),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-            border = BorderStroke(1.dp, Color(0x33FFD1DC))
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -720,11 +723,11 @@ private fun SelectionFieldCard(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = colorFromHex("8F848F")
+                            color = ConCafeColors.textMuted
                         )
                     }
                 }
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = colorFromHex("8F848F"))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = ConCafeColors.textMuted)
             }
         }
     }
@@ -743,7 +746,7 @@ private fun FixedSelectionCard(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-            border = BorderStroke(1.dp, Color(0x33FFD1DC))
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -758,7 +761,7 @@ private fun FixedSelectionCard(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("8F848F")
+                        color = ConCafeColors.textMuted
                     )
                 }
             }
@@ -784,7 +787,7 @@ private fun SelectorOptionCard(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colorFromHex("8F848F"))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = ConCafeColors.textMuted)
         }
     }
 }
@@ -792,13 +795,13 @@ private fun SelectorOptionCard(
 @Composable
 private fun BadgeText(label: String) {
     Surface(
-        color = Color(0x14EF6797),
+        color = ConCafeColors.primary.copy(alpha = 0.08f),
         shape = RoundedCornerShape(999.dp)
     ) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            color = colorFromHex("EF6797"),
+            color = ConCafeColors.primary,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
         )
@@ -813,12 +816,12 @@ private fun InfoBanner(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0x14FFD1DC), RoundedCornerShape(18.dp))
+            .background(ConCafeColors.primaryContainer.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Icon(Icons.Default.Info, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.padding(top = 2.dp))
+        Icon(Icons.Default.Info, contentDescription = null, tint = ConCafeColors.primary, modifier = Modifier.padding(top = 2.dp))
         Text(
             text = message,
             modifier = Modifier.weight(1f),

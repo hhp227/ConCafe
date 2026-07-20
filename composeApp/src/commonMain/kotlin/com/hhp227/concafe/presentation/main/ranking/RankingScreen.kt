@@ -35,6 +35,7 @@ import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.RankingNativeAd
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -43,6 +44,7 @@ import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun RankingScreen(
@@ -184,7 +186,7 @@ fun RankingHeaderSection(
             Icon(
                 imageVector = Icons.Filled.EmojiEvents,
                 contentDescription = null,
-                tint = colorFromHex("EF6797")
+                tint = ConCafeColors.primary
             )
             Text(
                 text = stringResource(Res.string.ranking_title),
@@ -335,7 +337,7 @@ fun RankingPromoBanner(
                                     onClick = {},
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color.White,
-                                        contentColor = colorFromHex("262626")
+                                        contentColor = ConCafeColors.textPrimary
                                     ),
                                     shape = RoundedCornerShape(999.dp)
                                 ) {
@@ -360,9 +362,9 @@ fun RankingPromoBanner(
                             .clip(RoundedCornerShape(999.dp))
                             .background(
                                 when {
-                                    selectedIndex == index && (selectedIndex == 1 || selectedIndex == 2) -> colorFromHex("EF6797")
+                                    selectedIndex == index && (selectedIndex == 1 || selectedIndex == 2) -> ConCafeColors.primary
                                     selectedIndex == index -> Color.White
-                                    selectedIndex == 1 || selectedIndex == 2 -> colorFromHex("E3D9E0")
+                                    selectedIndex == 1 || selectedIndex == 2 -> ConCafeColors.outline
                                     else -> Color.White.copy(alpha = 0.5f)
                                 }
                             )
@@ -423,19 +425,31 @@ fun RankingEntryCard(
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            RankingChangeIndicator(item.change)
             Box(
                 modifier = Modifier.width(36.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (item.rank <= 3) {
-                    Icon(
-                        imageVector = Icons.Filled.EmojiEvents,
-                        contentDescription = null,
-                        tint = rankColor(item.rank),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.EmojiEvents,
+                            contentDescription = null,
+                            tint = rankColor(item.rank),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = item.rank.toString(),
+                            color = rankColor(item.rank),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 } else {
                     Text(
                         text = item.rank.toString(),
@@ -456,11 +470,20 @@ fun RankingEntryCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    item.symbol,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                val resolvedImageUrl = item.imageUrl?.trim().orEmpty()
+                if (resolvedImageUrl.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = resolvedImageUrl,
+                        modifier = Modifier.matchParentSize(),
+                        applyRoundedClip = false
+                    )
+                } else {
+                    Text(
+                        item.symbol,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
             Column(
                 modifier = Modifier.weight(1f),
@@ -480,18 +503,12 @@ fun RankingEntryCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "${item.score} pt",
-                        color = colorFromHex("EF6797"),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    RankingChangeIndicator(item.change)
-                }
+                Text(
+                    text = stringResource(Res.string.ranking_score_format, item.score),
+                    color = ConCafeColors.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -505,9 +522,9 @@ fun RankingChangeIndicator(change: String) {
         else -> null
     }
     val tint = when {
-        change.startsWith("+") -> colorFromHex("34A853")
-        change.startsWith("-") -> colorFromHex("E24B62")
-        else -> colorFromHex("8A8A8A")
+        change.startsWith("+") -> ConCafeColors.success
+        change.startsWith("-") -> ConCafeColors.error
+        else -> ConCafeColors.textMuted
     }
 
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -521,16 +538,16 @@ fun RankingChangeIndicator(change: String) {
         } else {
             Text("-", color = tint, style = MaterialTheme.typography.bodySmall)
         }
-        Text(change, color = colorFromHex("8A8A8A"), style = MaterialTheme.typography.labelSmall)
+        Text(change, color = ConCafeColors.textMuted, style = MaterialTheme.typography.labelSmall)
     }
 }
 
 private fun rankColor(rank: Int): Color {
     return when (rank) {
-        1 -> colorFromHex("E2B11E")
-        2 -> colorFromHex("A2A7B1")
-        3 -> colorFromHex("B8753B")
-        else -> colorFromHex("8A8A8A")
+        1 -> ConCafeColors.gold
+        2 -> ConCafeColors.outlineStrong
+        3 -> ConCafeColors.warning
+        else -> ConCafeColors.textMuted
     }
 }
 

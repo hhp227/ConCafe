@@ -81,7 +81,7 @@ private struct ExploreContentView: View {
                     .padding(.vertical, 12)
                 }
                 .background(ScrollViewKeyboardDismissConfigurator())
-                .background(Color(hex: "FFF9FC"))
+                .background(ConCafeColors.background)
                 .modifier(ExploreKeyboardDismissModifier())
                 .onChange(of: uiState.cafes.count) { newCount in
                     guard countBeforeLoad.cafe != 0, countBeforeLoad.cafe != -1 else { return }
@@ -123,7 +123,7 @@ private struct ExploreContentView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(
-                        isSearchFocused ? Color(hex: "EF6797") : .clear,
+                        isSearchFocused ? ConCafeColors.primary : .clear,
                         lineWidth: isSearchFocused ? 1 : 0
                     )
             )
@@ -156,7 +156,7 @@ private struct ExploreContentView: View {
         ConCafeTabBar(
             labels: ExploreUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: ExploreUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: Color(hex: "FFF9FC"),
+            backgroundColor: ConCafeColors.background,
             onSelect: { index in
                 onAction(.tabChanged(ExploreUiState.TabType.allCases[index]))
             }
@@ -277,7 +277,7 @@ private struct ExploreContentView: View {
             name: cafe.name,
             rating: RatingUtils.formatOneDecimal(cafe.ratingAvg),
             conceptType: localizedCafeConceptType(cafe.conceptType),
-            location: cafe.region.city,
+            location: localizedRegionCity(cafe.region.city),
             thumbnailImage: cafe.thumbnailImage,
             showLocationIcon: false,
             trailingLabel: nil,
@@ -334,6 +334,10 @@ private struct ExploreContentView: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .clipped()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
+                )
             }
             .frame(height: 120)
             VStack(alignment: .leading, spacing: 4) {
@@ -347,7 +351,7 @@ private struct ExploreContentView: View {
                     .lineLimit(1)
                 Text(String(format: String(localized: String.LocalizationValue("explore_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             .padding(.horizontal, 4)
         }
@@ -358,7 +362,7 @@ private struct ExploreContentView: View {
 
     private var placeholderMaidImage: some View {
         LinearGradient(
-            colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .top,
             endPoint: .bottom
         )

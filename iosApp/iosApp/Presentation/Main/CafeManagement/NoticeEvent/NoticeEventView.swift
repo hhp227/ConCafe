@@ -77,7 +77,7 @@ private struct NoticeEventContentView: View {
             ZStack(alignment: .bottomTrailing) {
                 Group {
                     if UITraitCollection.current.userInterfaceStyle == .dark {
-                        Color(hex: "FFF9FC")
+                        ConCafeColors.background
                     } else {
                         LinearGradient(
                             colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
@@ -91,7 +91,7 @@ private struct NoticeEventContentView: View {
                     ConCafeTabBar(
                         labels: NoticeEventTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                         selectedIndex: NoticeEventTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                        backgroundColor: UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
+                        backgroundColor: UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }),
                         onSelect: { index in
                             onAction(.selectTab(NoticeEventTab.allCases[index]))
                         }
@@ -211,7 +211,7 @@ private struct NoticeEventContentView: View {
                             }
                             if uiState.isCurrentTabLoadingMore {
                                 ProgressView()
-                                    .tint(Color(hex: "EF6797"))
+                                    .tint(ConCafeColors.primary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 8)
                             }
@@ -249,9 +249,9 @@ private struct NoticeEventContentView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(Capsule())
-                    .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 14, x: 0, y: 8)
+                    .shadow(color: ConCafeColors.primaryContainer.opacity(0.45), radius: 14, x: 0, y: 8)
                 }
                 .padding(.trailing, 16)
                 .padding(.bottom, 20)
@@ -264,15 +264,15 @@ private struct NoticeEventContentView: View {
             HStack(alignment: .top) {
                 HStack(spacing: 6) {
                     if item.isPinned {
-                        statusChip("PINNED", container: Color(hex: "FFD1DC"), content: .primary)
+                        statusChip("PINNED", container: ConCafeColors.primaryContainer, content: .primary)
                     }
                     switch item.statusAccent {
                     case .published:
-                        statusChip(item.statusLabel, container: Color(hex: "E8F8EC"), content: Color(hex: "2E9E5B"))
+                        statusChip(item.statusLabel, container: ConCafeColors.successContainer, content: ConCafeColors.success)
                     case .draft:
-                        statusChip(item.statusLabel, container: Color(hex: "F2F0F3"), content: .secondary)
+                        statusChip(item.statusLabel, container: ConCafeColors.surfaceVariant, content: .secondary)
                     case .ended:
-                        statusChip(item.statusLabel, container: Color(hex: "F3E8E8"), content: Color(hex: "8C5A5A"))
+                        statusChip(item.statusLabel, container: ConCafeColors.errorContainer, content: ConCafeColors.textSecondary)
                     default:
                         EmptyView()
                     }
@@ -288,7 +288,7 @@ private struct NoticeEventContentView: View {
                 .foregroundStyle(.primary)
             Text(item.displayDate)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
         .padding(18)
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -319,7 +319,7 @@ private struct NoticeEventContentView: View {
             .overlay(alignment: .topLeading) {
                 statusChip(
                     item.statusLabel,
-                    container: item.isDimmed ? Color(hex: "6E6570") : Color(hex: "FFD1DC"),
+                    container: item.isDimmed ? ConCafeColors.textSecondary : ConCafeColors.primaryContainer,
                     content: item.isDimmed ? .white : .primary
                 )
                 .padding(12)
@@ -339,7 +339,7 @@ private struct NoticeEventContentView: View {
                     Text(item.periodText)
                         .font(.caption)
                 }
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
             }
             .padding(18)
         }
@@ -351,7 +351,7 @@ private struct NoticeEventContentView: View {
 
     private var eventImagePlaceholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -395,24 +395,24 @@ private struct NoticeEventContentView: View {
         HStack(spacing: 12) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFF2D8"))
+        .background(ConCafeColors.warningContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var loadingCard: some View {
         ProgressView()
-            .tint(Color(hex: "EF6797"))
+            .tint(ConCafeColors.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 32)
     }
@@ -422,7 +422,7 @@ private struct NoticeEventContentView: View {
             Spacer()
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -446,7 +446,7 @@ private struct NoticeEventFormSheet: View {
         ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 Capsule()
-                    .fill(Color(hex: "D6CED2"))
+                    .fill(ConCafeColors.outline)
                     .frame(width: 48, height: 5)
                     .padding(.top, 12)
                     .padding(.bottom, 6)
@@ -511,7 +511,7 @@ private struct NoticeEventFormSheet: View {
                                         .foregroundStyle(.primary)
                                     Text(String(localized: String.LocalizationValue("noticeevent_pinned_desc"), table: "Localizable"))
                                         .font(.caption)
-                                        .foregroundStyle(Color(hex: "8F848F"))
+                                        .foregroundStyle(ConCafeColors.textMuted)
                                 }
                                 Spacer()
                                 Toggle(
@@ -522,7 +522,7 @@ private struct NoticeEventFormSheet: View {
                                     )
                                 )
                                 .labelsHidden()
-                                .tint(Color(hex: "FFD1DC"))
+                                .tint(ConCafeColors.primaryContainer)
                             }
                             .padding(16)
                             .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -563,7 +563,7 @@ private struct NoticeEventFormSheet: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .stroke(Color(hex: "FFD1DC").opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [6]))
+                                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [6]))
                                 )
                             }
                             .buttonStyle(.plain)
@@ -619,7 +619,7 @@ private struct NoticeEventFormSheet: View {
                                                 .frame(maxWidth: .infinity)
                                         }
                                         .buttonStyle(.borderedProminent)
-                                        .tint(Color(hex: "FFD1DC"))
+                                        .tint(ConCafeColors.primaryContainer)
                                         .foregroundStyle(.primary)
                                     }
                                 }
@@ -674,7 +674,7 @@ private struct NoticeEventFormSheet: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 60)
                     .foregroundStyle(uiState.isFormSubmitEnabled ? .primary : .secondary)
-                    .background(uiState.isFormSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
+                    .background(uiState.isFormSubmitEnabled ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -694,7 +694,7 @@ private struct NoticeEventFormSheet: View {
                         .foregroundStyle(.primary)
                     Text(String(localized: String.LocalizationValue("noticeevent_form_live_performance_desc"), table: "Localizable"))
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "8F848F"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                 }
                 Spacer()
                 Toggle(
@@ -705,7 +705,7 @@ private struct NoticeEventFormSheet: View {
                     )
                 )
                 .labelsHidden()
-                .tint(Color(hex: "FFD1DC"))
+                .tint(ConCafeColors.primaryContainer)
             }
             .padding(16)
             .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -719,7 +719,7 @@ private struct NoticeEventFormSheet: View {
                 if uiState.cafeCasts.isEmpty {
                     Text(String(localized: String.LocalizationValue("noticeevent_form_participant_cast_empty"), table: "Localizable"))
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "8F848F"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                         .padding(.leading, 4)
                 } else {
                     VStack(spacing: 8) {
@@ -747,12 +747,12 @@ private struct NoticeEventFormSheet: View {
         } label: {
             Text(cast.name)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6F6670"))
+                .foregroundStyle(isSelected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: .secondarySystemGroupedBackground))
+                .background(isSelected ? ConCafeColors.primaryContainer : Color(uiColor: .secondarySystemGroupedBackground))
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -769,7 +769,7 @@ private struct NoticeEventFormSheet: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
+                                colors: [ConCafeColors.primaryContainer, Color(uiColor: .secondarySystemGroupedBackground)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -782,10 +782,10 @@ private struct NoticeEventFormSheet: View {
                         VStack(spacing: 8) {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 32, weight: .semibold))
-                                .foregroundStyle(Color(hex: "8B5164"))
+                                .foregroundStyle(ConCafeColors.primary)
                             Text(uiState.formImageTitle)
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "5A4954"))
+                                .foregroundStyle(ConCafeColors.textSecondary)
                         }
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
@@ -794,7 +794,7 @@ private struct NoticeEventFormSheet: View {
                             onAction(.clickRemoveFormImage)
                         }
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "8B5164"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -813,7 +813,7 @@ private struct NoticeEventFormSheet: View {
             }
             Text(uiState.formImageDescription)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -863,7 +863,7 @@ private struct NoticeEventFormImageView: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()
@@ -881,7 +881,7 @@ private struct NoticeEventFormImageView: View {
 
     private var placeholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FFE7EF"), Color(hex: "F6D3E0")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

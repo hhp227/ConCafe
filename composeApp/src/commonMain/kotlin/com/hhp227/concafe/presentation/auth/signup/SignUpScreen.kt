@@ -36,6 +36,7 @@ import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
@@ -99,6 +100,7 @@ import concafe.composeapp.generated.resources.signup_verification_confirm
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun SignUpScreen(
@@ -150,12 +152,12 @@ private fun SignUpContentScreen(
                     Brush.linearGradient(
                         if (isSystemInDarkTheme()) {
                             listOf(
-                                colorFromHex("FFFBFD"),
-                                colorFromHex("FFFBFD"),
-                                colorFromHex("FFFBFD")
+                                ConCafeColors.background,
+                                ConCafeColors.background,
+                                ConCafeColors.background
                             )
                         } else {
-                            listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                            listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint)
                         }
                     )
                 )
@@ -275,7 +277,7 @@ private fun SignUpIntroSection() {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(Res.string.signup_select_type_subtitle),
-            color = colorFromHex("7C7480")
+            color = ConCafeColors.textSecondary
         )
     }
 }
@@ -287,9 +289,9 @@ private fun UserTypeCard(
     onClick: () -> Unit
 ) {
     val accentColor = when (type) {
-        SignUpUiState.UserType.VISITOR -> colorFromHex("4F8EF7")
-        SignUpUiState.UserType.CAST -> colorFromHex("F06292")
-        SignUpUiState.UserType.CAFE_OWNER -> colorFromHex("8B5CF6")
+        SignUpUiState.UserType.VISITOR -> ConCafeColors.info
+        SignUpUiState.UserType.CAST -> ConCafeColors.primary
+        SignUpUiState.UserType.CAFE_OWNER -> ConCafeColors.primary
     }
     val icon = when (type) {
         SignUpUiState.UserType.VISITOR -> Icons.Default.Person
@@ -301,7 +303,7 @@ private fun UserTypeCard(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, colorFromHex("E7DFE8"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Row(
             modifier = Modifier
@@ -323,12 +325,12 @@ private fun UserTypeCard(
                 Text(
                     text = userTypeSubtitle(type),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colorFromHex("6E6671")
+                    color = ConCafeColors.textSecondary
                 )
                 Text(
                     text = userTypeBadge(type),
                     style = MaterialTheme.typography.labelMedium,
-                    color = colorFromHex("DA4E84")
+                    color = ConCafeColors.primary
                 )
             }
         }
@@ -343,9 +345,9 @@ private fun SignUpFormHeader(type: SignUpUiState.UserType) {
         SignUpUiState.UserType.CAFE_OWNER -> Icons.Default.Storefront
     }
     val colors = when (type) {
-        SignUpUiState.UserType.VISITOR -> listOf(colorFromHex("60A5FA"), colorFromHex("3B82F6"))
-        SignUpUiState.UserType.CAST -> listOf(colorFromHex("F472B6"), colorFromHex("EC4899"))
-        SignUpUiState.UserType.CAFE_OWNER -> listOf(colorFromHex("A78BFA"), colorFromHex("8B5CF6"))
+        SignUpUiState.UserType.VISITOR -> listOf(ConCafeColors.info, ConCafeColors.info)
+        SignUpUiState.UserType.CAST -> listOf(ConCafeColors.primary, ConCafeColors.primary)
+        SignUpUiState.UserType.CAFE_OWNER -> listOf(ConCafeColors.secondary, ConCafeColors.primary)
     }
     val description = when (type) {
         SignUpUiState.UserType.VISITOR -> stringResource(Res.string.signup_desc_visitor)
@@ -435,7 +437,7 @@ private fun SignUpFormSection(
                 Text(
                     text = stringResource(Res.string.signup_cast_cafe_approval_required),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("8E8794")
+                    color = ConCafeColors.textMuted
                 )
             }
         }
@@ -458,18 +460,18 @@ private fun SignUpFormSection(
             )
         }
         uiState.errorMessage?.let {
-            Text(text = it, color = colorFromHex("D1436F"), style = MaterialTheme.typography.bodySmall)
+            Text(text = it, color = ConCafeColors.primary, style = MaterialTheme.typography.bodySmall)
         }
         uiState.infoMessage?.let {
-            Text(text = it, color = colorFromHex("2E8B57"), style = MaterialTheme.typography.bodySmall)
+            Text(text = it, color = ConCafeColors.success, style = MaterialTheme.typography.bodySmall)
         }
         Button(
             onClick = { onAction(SignUpAction.ClickSubmit) },
             enabled = !uiState.isLoading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
-                contentColor = colorFromHex("2B2330")
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -481,7 +483,7 @@ private fun SignUpFormSection(
             Text(
                 text = stringResource(Res.string.signup_cast_after_signup_notice),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8E8794")
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -491,8 +493,8 @@ private fun SignUpFormSection(
 private fun OwnerCafeGuideCard() {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = colorFromHex("F6F0FF"),
-        border = BorderStroke(1.dp, colorFromHex("E6D9FA"))
+        color = ConCafeColors.primaryContainer,
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Column(
             modifier = Modifier
@@ -504,12 +506,12 @@ private fun OwnerCafeGuideCard() {
                 text = stringResource(Res.string.signup_owner_cafe_guide_title),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("5F3AA2")
+                color = ConCafeColors.primary
             )
             Text(
                 text = stringResource(Res.string.signup_owner_cafe_guide_message),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5A82")
+                color = ConCafeColors.primary
             )
         }
     }
@@ -537,9 +539,9 @@ private fun SignUpTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
             unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-            focusedBorderColor = colorFromHex("EF6797"),
+            focusedBorderColor = ConCafeColors.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
-            focusedLabelColor = colorFromHex("EF6797"),
+            focusedLabelColor = ConCafeColors.primary,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -578,9 +580,9 @@ private fun PhoneVerificationSection(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                         unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                        focusedBorderColor = colorFromHex("EF6797"),
+                        focusedBorderColor = ConCafeColors.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
-                        focusedLabelColor = colorFromHex("EF6797"),
+                        focusedLabelColor = ConCafeColors.primary,
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -594,7 +596,7 @@ private fun PhoneVerificationSection(
                 onClick = { onAction(SignUpAction.ClickSendVerification) },
                 enabled = !uiState.isPhoneVerified && uiState.phone.isNotBlank(),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797")),
+                colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary),
                 modifier = Modifier.height(56.dp)
             ) {
                 Text(if (uiState.isPhoneVerified) stringResource(Res.string.signup_phone_verified) else stringResource(Res.string.signup_phone_request))
@@ -614,7 +616,7 @@ private fun PhoneVerificationSection(
                 Button(
                     onClick = { onAction(SignUpAction.ClickVerifyCode) },
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("F7D2E1"), contentColor = colorFromHex("6B3050")),
+                    colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primaryContainer, contentColor = ConCafeColors.onPrimaryContainer),
                     modifier = Modifier.height(56.dp)
                 ) {
                     Text(stringResource(Res.string.signup_verification_confirm))
@@ -625,13 +627,13 @@ private fun PhoneVerificationSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colorFromHex("EAF8EF"), RoundedCornerShape(16.dp))
+                    .background(ConCafeColors.successContainer, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colorFromHex("2E8B57"))
-                Text(stringResource(Res.string.signup_phone_verified_message), color = colorFromHex("2E8B57"))
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = ConCafeColors.success)
+                Text(stringResource(Res.string.signup_phone_verified_message), color = ConCafeColors.success)
             }
         }
     }
@@ -703,7 +705,7 @@ private fun CafeSelectionSection(
                         filteredCafes.forEachIndexed { index, cafe ->
                             CafeSearchItem(cafe = cafe, onClick = { onAction(SignUpAction.ClickCafe(cafe)) })
                             if (index < filteredCafes.lastIndex) {
-                                Divider(color = colorFromHex("F1EAF1"))
+                                Divider(color = ConCafeColors.surfaceTint)
                             }
                         }
                     }
@@ -729,15 +731,15 @@ private fun CafeSearchItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold)
             Text(
-                text = cafe.region.city,
+                text = localizedRegionCity(cafe.region.city),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8E8794")
+                color = ConCafeColors.textMuted
             )
         }
         if (cafe.approved) {
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = colorFromHex("EF6797")
+                color = ConCafeColors.primary
             ) {
                 Text(
                     text = stringResource(Res.string.signup_cafe_verified_badge),

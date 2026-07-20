@@ -105,13 +105,13 @@ private struct HomeContentView: View {
                 }
                 .padding(.vertical, 16)
             }
-            .background(Color(hex: "FFF9FC"))
+            .background(ConCafeColors.background)
         } else {
             ZStack {
-                Color(hex: "FFF9FC")
+                ConCafeColors.background
                     .ignoresSafeArea()
                 ProgressView()
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .controlSize(.regular)
             }
         }
@@ -153,9 +153,13 @@ private struct HomeContentView: View {
                 HStack(spacing: 12) {
                     if !uiState.popularCasts.isEmpty {
                         ForEach(Array(uiState.popularCasts.enumerated()), id: \.element.id) { index, maid in
+                            let cafeName = uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId
+                            let cafeRegion = uiState.popularCastCafeRegions[maid.cafeId]?.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let subtitle = (cafeRegion?.isEmpty == false) ? "\(cafeName)(\(localizedRegionCity(cafeRegion!)))" : cafeName
+
                             ConCafeCastCard(
                                 name: maid.name,
-                                subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
+                                subtitle: subtitle,
                                 imageUrl: maid.profileImage,
                                 metaText: String(format: String(localized: String.LocalizationValue("home_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount),
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
@@ -256,7 +260,7 @@ private struct HomeContentView: View {
                             GeometryReader { proxy in
                                 ZStack {
                                     Circle()
-                                        .fill(LinearGradient(colors: [Color(hex: "FFD3E2"), Color(hex: "FFB6D0")], startPoint: .top, endPoint: .bottom))
+                                        .fill(LinearGradient(colors: [ConCafeColors.primaryContainer, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
                                     CachedAsyncImage(
                                         url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
                                         placeholder: birthdayCastFallbackImage,
@@ -270,7 +274,15 @@ private struct HomeContentView: View {
                             .frame(width: 74, height: 74)
                             Text(maid.name)
                                 .font(.caption)
+                                .lineLimit(1)
+                            if let cafeName = uiState.birthdayCastCafeNames[maid.cafeId], !cafeName.isEmpty {
+                                Text(cafeName)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
                         }
+                        .frame(width: 74)
                         .onTapGesture {
                             onAction(.birthdayMaidTapped(id: maid.id))
                         }
@@ -355,7 +367,7 @@ private struct HomeCafeEventCard: View {
                     }
                 } else {
                     LinearGradient(
-                        colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -366,7 +378,7 @@ private struct HomeCafeEventCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(event.cafeName)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Text(event.title)
@@ -423,7 +435,7 @@ private struct HomeBannerSection: View {
                 HStack(spacing: 6) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
                         RoundedRectangle(cornerRadius: 999)
-                            .fill(currentBannerPage == index ? Color(hex: "EF6797") : Color(hex: "D8D8D8"))
+                            .fill(currentBannerPage == index ? ConCafeColors.primary : ConCafeColors.outline)
                             .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
                     }
                 }
@@ -523,45 +535,45 @@ private struct HomeCommunityPostCard: View {
                 ZStack {
                     Circle()
                         .fill(LinearGradient(
-                            colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ))
                     if let initial = post.userNickname.first {
                         Text(String(initial))
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 }
                 .frame(width: 24, height: 24)
                 Text(post.userNickname.isEmpty ? "익명" : post.userNickname)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .lineLimit(1)
                 Spacer()
                 Text(post.displayDate)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "B1A3AC"))
+                    .foregroundStyle(ConCafeColors.outlineStrong)
             }
             Text(post.title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
                 .lineLimit(2)
             let trimmedContent = post.content.trimmingCharacters(in: .whitespacesAndNewlines)
             Text(trimmedContent)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(ConCafeColors.textSecondary)
                 .lineLimit(4)
                 .frame(height: 60, alignment: .topLeading)
             Divider()
-                .overlay(Color(hex: "FFD1DC").opacity(0.3))
+                .overlay(ConCafeColors.primaryContainer.opacity(0.3))
             HStack(spacing: 10) {
                 Label("\(post.likeCount)", systemImage: "heart")
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "8C7E87"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 Label("\(post.commentCount)", systemImage: "bubble.left")
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "8C7E87"))
+                    .foregroundStyle(ConCafeColors.textMuted)
             }
         }
         .padding(14)
@@ -577,17 +589,17 @@ private struct HomeBannerPlaceholderCard: View {
     var body: some View {
         ZStack(alignment: .leading) {
             LinearGradient(
-                colors: [Color(hex: "EDE7EA"), Color(hex: "F6F2F4")],
+                colors: [ConCafeColors.outline, ConCafeColors.surfaceTint],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             VStack(alignment: .leading, spacing: 6) {
                 Text(String(localized: String.LocalizationValue("home_banner_placeholder_title"), table: "Localizable"))
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "6E6671"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 Text(String(localized: String.LocalizationValue("home_banner_placeholder_desc"), table: "Localizable"))
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "8E8794"))
+                    .foregroundStyle(ConCafeColors.textMuted)
             }
             .padding(16)
         }
@@ -606,10 +618,10 @@ private struct HomeSectionPlaceholderCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5C525D"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Text(description)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A7F8B"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
@@ -632,14 +644,14 @@ private struct SectionTitle: View {
         HStack(spacing: 6) {
             Text(title)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 6)
             if let actionTitle, let onAction {
                 Button(actionTitle, action: onAction)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
                     .buttonStyle(.plain)
@@ -662,7 +674,7 @@ private struct NearByCafeItem: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFE1C7"), Color(hex: "FFCEAE")],
+                                colors: [ConCafeColors.warningContainer, ConCafeColors.warningContainer],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -688,10 +700,10 @@ private struct NearByCafeItem: View {
                 if !conceptLabel.isEmpty {
                     Text(conceptLabel)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .lineLimit(1)
                 }
-                Text(cafe.region.city)
+                Text(localizedRegionCity(cafe.region.city))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

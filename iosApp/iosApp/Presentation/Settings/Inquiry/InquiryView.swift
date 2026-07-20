@@ -43,7 +43,7 @@ struct InquiryView: View {
         }
         .navigationTitle(String(localized: String.LocalizationValue("inquiry_screen_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var inquiryTypeSection: some View {
@@ -74,7 +74,7 @@ struct InquiryView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -126,7 +126,7 @@ struct InquiryView: View {
     private var submitButtonBar: some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
             Button {
                 viewModel.onAction(.submitTapped)
@@ -146,7 +146,7 @@ struct InquiryView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "FFD1DC"))
+            .tint(ConCafeColors.primaryContainer)
             .foregroundStyle(.primary)
             .disabled(viewModel.uiState.isSubmitting)
             .padding(.horizontal, 16)

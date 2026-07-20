@@ -88,6 +88,9 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateToCastManagement -> {
                     _event.emit(NavigateTo(CastManagement(action.cafeId, action.cafeName)))
                 }
+                is NavigationAction.NavigateToCastList -> {
+                    _event.emit(NavigateTo(Route.CastList(action.cafeId)))
+                }
                 is NavigationAction.NavigateToMenuGoods -> {
                     _event.emit(NavigateTo(MenuGoods(action.id)))
                 }

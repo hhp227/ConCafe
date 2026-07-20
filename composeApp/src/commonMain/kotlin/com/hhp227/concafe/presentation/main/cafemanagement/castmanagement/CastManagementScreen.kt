@@ -32,6 +32,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +95,7 @@ private fun CastManagementContentScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFFBFD"))
+                .background(ConCafeColors.background)
                 .padding(innerPadding)
         ) {
             ViewModeSelector(
@@ -127,7 +128,7 @@ private fun CastManagementContentScreen(
                     uiState.isLoading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = colorFromHex("EF6797")
+                            color = ConCafeColors.primary
                         )
                     }
                     uiState.errorMessage != null -> {
@@ -187,7 +188,7 @@ private fun ViewModeSelector(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         color = Color.Transparent,
-        border = androidx.compose.foundation.BorderStroke(1.dp, colorFromHex("FFD1DC").copy(alpha = 0.5f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -198,7 +199,7 @@ private fun ViewModeSelector(
                 Surface(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = if (selected) colorFromHex("FFD1DC").copy(alpha = 0.3f) else Color.Transparent,
+                    color = if (selected) ConCafeColors.primaryContainer.copy(alpha = 0.3f) else Color.Transparent,
                     onClick = { onSelect(mode) }
                 ) {
                     Text(
@@ -210,7 +211,7 @@ private fun ViewModeSelector(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (selected) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -253,7 +254,7 @@ private fun WeekDayCard(column: CastManagementUiState.WeekColumn) {
                 modifier = Modifier
                     .size(52.dp)
                     .background(
-                        color = if (isWorking) colorFromHex("FFF0F4") else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isWorking) ConCafeColors.background else MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(10.dp)
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -263,7 +264,7 @@ private fun WeekDayCard(column: CastManagementUiState.WeekColumn) {
                     text = resolveDayLabel(column.dayLabelKey),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 15.sp,
-                    color = if (isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isWorking) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = column.dateLabel,
@@ -310,10 +311,10 @@ private fun resolveDayLabel(key: String): String {
 private fun CastNameChip(name: String, isWorking: Boolean) {
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = if (isWorking) colorFromHex("ECFFF5") else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isWorking) ConCafeColors.successContainer else MaterialTheme.colorScheme.surfaceVariant,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isWorking) colorFromHex("C8EFD9") else MaterialTheme.colorScheme.outlineVariant
+            if (isWorking) ConCafeColors.successContainer else MaterialTheme.colorScheme.outlineVariant
         )
     ) {
         Text(
@@ -321,7 +322,7 @@ private fun CastNameChip(name: String, isWorking: Boolean) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = if (isWorking) colorFromHex("1F8B5F") else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isWorking) ConCafeColors.success else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -403,14 +404,14 @@ private fun MonthDayCell(cell: CastManagementUiState.MonthCell) {
                 text = cell.dayNumber.toString(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = colorFromHex("4A3645")
+                color = ConCafeColors.textPrimary
             )
             cell.castNames.forEach { name ->
                 Text(
                     text = name,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("5D4B55"),
+                    color = ConCafeColors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

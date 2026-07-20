@@ -25,6 +25,7 @@ import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeCastScreen(
@@ -124,7 +125,7 @@ private fun EmptyContent(text: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(width = 1.dp, color = colorFromHex("F0E4EA"), shape = RoundedCornerShape(24.dp))
+            .border(width = 1.dp, color = ConCafeColors.primaryContainer, shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {

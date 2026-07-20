@@ -110,28 +110,28 @@ private struct FanManagementContentView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private func infoBanner(message: String) -> some View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button("닫기") {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
@@ -148,10 +148,10 @@ private struct FanManagementContentView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
             }
-            .foregroundStyle(.primary)
+            .foregroundStyle(ConCafeColors.onPrimaryContainer)
             .padding(.horizontal, 18)
             .padding(.vertical, 16)
-            .background(Color(hex: "FFD1DC"))
+            .background(ConCafeColors.primaryContainer)
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -160,16 +160,16 @@ private struct FanManagementContentView: View {
     private func castClaimStatusCard(_ status: FanManagementUiState.CastClaimStatusCard) -> some View {
         let accentBackground: Color = {
             switch status.accent {
-            case .pending: return Color(hex: "FFD1DC")
-            case .linked: return Color(hex: "EAF8EF")
-            case .rejected: return Color(hex: "F8E9EE")
+            case .pending: return ConCafeColors.primaryContainer
+            case .linked: return ConCafeColors.successContainer
+            case .rejected: return ConCafeColors.surfaceTint
             }
         }()
         let accentForeground: Color = {
             switch status.accent {
-            case .pending: return Color(hex: "6B3050")
-            case .linked: return Color(hex: "2E8B57")
-            case .rejected: return Color(hex: "8B4A5A")
+            case .pending: return ConCafeColors.onPrimaryContainer
+            case .linked: return ConCafeColors.success
+            case .rejected: return ConCafeColors.onTertiaryContainer
             }
         }()
         return Button {
@@ -193,15 +193,15 @@ private struct FanManagementContentView: View {
                 HStack {
                     Text("프로필 연결 상태 보기")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.95))
+            .background(ConCafeColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -217,11 +217,11 @@ private struct FanManagementContentView: View {
                     ZStack(alignment: .topTrailing) {
                         VStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color(hex: "FFD1DC").opacity(0.08))
+                                .fill(ConCafeColors.primaryContainer)
                                 .frame(width: 40, height: 40)
                                 .overlay {
                                     Image(systemName: iconName)
-                                        .foregroundStyle(Color(hex: "5D525B"))
+                                        .foregroundStyle(ConCafeColors.primary)
                                 }
                             Text(quickAction.title)
                                 .font(.subheadline.weight(.semibold))
@@ -234,11 +234,11 @@ private struct FanManagementContentView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 18)
-                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+                        .background(ConCafeColors.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
+                                .stroke(ConCafeColors.outline, lineWidth: 1)
                         )
                     }
                     .frame(maxWidth: .infinity)
@@ -267,7 +267,7 @@ private struct FanManagementContentView: View {
                                     Circle()
                                         .fill(
                                             LinearGradient(
-                                                colors: accent ? [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")] : [Color(hex: "F2EEF1"), Color(hex: "E3D9E2")],
+                                                colors: accent ? [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer] : [ConCafeColors.surfaceVariant, ConCafeColors.outline],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             )
@@ -276,17 +276,17 @@ private struct FanManagementContentView: View {
                                         .overlay {
                                             Text(String(follower.nickname.prefix(1)).uppercased())
                                                 .font(.headline.weight(.bold))
-                                                .foregroundStyle(Color(hex: "6E5566"))
+                                                .foregroundStyle(ConCafeColors.textSecondary)
                                         }
                                         .overlay(
-                                            Circle().stroke(accent ? Color(hex: "FFD1DC") : .clear, lineWidth: 2)
+                                            Circle().stroke(accent ? ConCafeColors.primaryContainer : .clear, lineWidth: 2)
                                         )
                                     Text(follower.nickname)
                                         .font(.caption.weight(.medium))
                                         .foregroundStyle(.primary)
                                     Text(joinedLabel)
                                         .font(.caption2)
-                                        .foregroundStyle(Color(hex: "9C8C98"))
+                                        .foregroundStyle(ConCafeColors.textMuted)
                                 }
                                 .frame(width: 74)
                             }
@@ -304,11 +304,11 @@ private struct FanManagementContentView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(hex: "FFD1DC").opacity(0.08))
+                        .fill(ConCafeColors.primaryContainer)
                         .frame(width: 34, height: 34)
                         .overlay {
                             Image(systemName: "calendar")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("이번 주 스케줄")
@@ -327,11 +327,11 @@ private struct FanManagementContentView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 16)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
+            .background(ConCafeColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
     }
@@ -340,18 +340,18 @@ private struct FanManagementContentView: View {
         VStack(spacing: 4) {
             Text(item.dayLabel)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(item.isWorking ? Color.white : .secondary)
+                .foregroundStyle(item.isWorking ? ConCafeColors.onPrimary : .secondary)
             Text(item.isWorking ? "출근" : "휴무")
                 .font(.caption)
-                .foregroundStyle(item.isWorking ? Color.white.opacity(0.92) : .secondary)
+                .foregroundStyle(item.isWorking ? ConCafeColors.onPrimary.opacity(0.92) : .secondary)
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(item.isWorking ? Color(hex: "EF6797") : Color(hex: "FDF8FA"))
+        .background(item.isWorking ? ConCafeColors.primary : ConCafeColors.surfaceVariant)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(item.isWorking ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                .stroke(item.isWorking ? .clear : ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -366,11 +366,11 @@ private struct FanManagementContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16)
             .padding(.vertical, 18)
-            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
+            .background(ConCafeColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
     }
 
@@ -419,7 +419,7 @@ private struct CastClaimSheetView: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text(sheet.affiliatedCafeName)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                             Text(sheet.headline)
                                 .font(.title3.weight(.bold))
                             Text(sheet.body)
@@ -437,11 +437,11 @@ private struct CastClaimSheetView: View {
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                                 .padding(.horizontal, 16)
                                                 .padding(.vertical, 14)
-                                                .background(sheet.selectedCastId == candidate.castId ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                                                .background(sheet.selectedCastId == candidate.castId ? ConCafeColors.primaryContainer : ConCafeColors.surface)
                                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                                 .overlay(
                                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                                        .stroke(ConCafeColors.outline, lineWidth: 1)
                                                 )
                                         }
                                         .id(candidate.castId)
@@ -479,10 +479,10 @@ private struct CastClaimSheetView: View {
                         } label: {
                             Text(sheet.isSubmitting ? "요청 보내는 중..." : "연결 요청 보내기")
                                 .font(.headline.weight(.bold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(ConCafeColors.onPrimaryContainer)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(Color(hex: "FFD1DC"))
+                                .background(ConCafeColors.primaryContainer)
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -490,7 +490,7 @@ private struct CastClaimSheetView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 14)
                         .padding(.bottom, 14)
-                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                        .background(ConCafeColors.surface)
                     }
                 }
                 .onChange(of: sheet.requestableCasts.count) { newCount in
@@ -574,16 +574,16 @@ private struct FanAnnouncementSheetView: View {
                         if uiState.isSendingAnnouncement {
                             ProgressView()
                                 .progressViewStyle(.circular)
-                                .tint(.primary)
+                                .tint(ConCafeColors.onPrimaryContainer)
                         } else {
                             Text("팬 공지 전송")
                                 .font(.headline.weight(.bold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(uiState.isAnnouncementSubmitEnabled ? ConCafeColors.onPrimaryContainer : ConCafeColors.outlineStrong)
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 60)
-                    .background(uiState.isAnnouncementSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "FFE6EE"))
+                    .background(uiState.isAnnouncementSubmitEnabled ? ConCafeColors.primaryContainer : ConCafeColors.surfaceTint)
                     .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -592,9 +592,9 @@ private struct FanAnnouncementSheetView: View {
             .padding(.horizontal, 24)
             .padding(.top, 14)
             .padding(.bottom, 18)
-            .background(Color(uiColor: .systemGroupedBackground))
+            .background(ConCafeColors.background)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(ConCafeColors.background)
     }
 }
 

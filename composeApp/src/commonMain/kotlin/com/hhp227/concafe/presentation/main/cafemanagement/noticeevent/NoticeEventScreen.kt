@@ -118,6 +118,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,7 +172,7 @@ private fun NoticeEventContent(
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        containerColor = if (isSystemInDarkTheme()) ConCafeColors.background else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -237,7 +238,7 @@ private fun NoticeEventContent(
                 onClick = { onAction(NoticeEventAction.ClickRegister) },
                 modifier = Modifier.navigationBarsPadding(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("FFD1DC"),
+                    containerColor = ConCafeColors.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
@@ -253,7 +254,7 @@ private fun NoticeEventContent(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
@@ -379,7 +380,7 @@ private fun NoticeEventContent(
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = colorFromHex("EF6797"))
+                            CircularProgressIndicator(color = ConCafeColors.primary)
                         }
                     }
                 }
@@ -570,7 +571,7 @@ private fun NoticeEventFormSheetContent(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(stringResource(Res.string.noticeevent_pinned_title), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = colorFromHex("8F848F"))
+                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = ConCafeColors.textMuted)
                             }
                             Switch(
                                 checked = uiState.formPinned,
@@ -705,7 +706,7 @@ private fun NoticeEventFormSheetContent(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorFromHex("FFD1DC"),
+                                        containerColor = ConCafeColors.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onSurface
                                     )
                                 ) {
@@ -718,8 +719,7 @@ private fun NoticeEventFormSheetContent(
             }
         }
         Surface(
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.imePadding()
+            color = MaterialTheme.colorScheme.surface
         ) {
             Box(
                 modifier = Modifier
@@ -740,9 +740,9 @@ private fun NoticeEventFormSheetContent(
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorFromHex("FFD1DC"),
+                        containerColor = ConCafeColors.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface,
-                        disabledContainerColor = colorFromHex("F0D9E0"),
+                        disabledContainerColor = ConCafeColors.primaryContainer,
                         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
@@ -788,7 +788,7 @@ private fun NoticeEventEventOptionsSection(
                     Text(
                         stringResource(Res.string.noticeevent_form_live_performance_desc),
                         style = MaterialTheme.typography.labelMedium,
-                        color = colorFromHex("8F848F")
+                        color = ConCafeColors.textMuted
                     )
                 }
                 Switch(
@@ -808,7 +808,7 @@ private fun NoticeEventEventOptionsSection(
                 Text(
                     stringResource(Res.string.noticeevent_form_participant_cast_empty),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("8F848F"),
+                    color = ConCafeColors.textMuted,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             } else {
@@ -859,7 +859,7 @@ private fun NoticeEventImageSection(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(colorFromHex("FFD8E6"), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
+                            colors = listOf(ConCafeColors.primaryContainer, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
                         )
                     )
                     .clickable { launchImagePicker() }
@@ -878,7 +878,7 @@ private fun NoticeEventImageSection(
                         Icon(
                             Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = colorFromHex("8B5164"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
@@ -889,7 +889,7 @@ private fun NoticeEventImageSection(
                                     Res.string.noticeevent_form_image_title_empty
                                 }
                             ),
-                            color = colorFromHex("5A4954"),
+                            color = ConCafeColors.textSecondary,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -905,7 +905,7 @@ private fun NoticeEventImageSection(
                             .padding(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = colorFromHex("8B5164")
+                            contentColor = ConCafeColors.primary
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     ) {
@@ -917,7 +917,7 @@ private fun NoticeEventImageSection(
         Text(
             text = stringResource(Res.string.noticeevent_form_image_description),
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("8A8088"),
+            color = ConCafeColors.textMuted,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -950,14 +950,14 @@ private fun NoticeCard(
                     if (item.isPinned) {
                         StatusChip(
                             text = "PINNED",
-                            container = colorFromHex("FFD1DC"),
+                            container = ConCafeColors.primaryContainer,
                             content = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     val (container, content) = when (item.statusAccent) {
-                        NoticeStatusAccent.PUBLISHED -> colorFromHex("E8F8EC") to colorFromHex("2E9E5B")
-                        NoticeStatusAccent.DRAFT -> colorFromHex("F2F0F3") to MaterialTheme.colorScheme.onSurfaceVariant
-                        NoticeStatusAccent.ENDED -> colorFromHex("F3E8E8") to colorFromHex("8C5A5A")
+                        NoticeStatusAccent.PUBLISHED -> ConCafeColors.successContainer to ConCafeColors.success
+                        NoticeStatusAccent.DRAFT -> ConCafeColors.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                        NoticeStatusAccent.ENDED -> ConCafeColors.errorContainer to ConCafeColors.textSecondary
                     }
                     StatusChip(text = item.statusLabel, container = container, content = content)
                 }
@@ -979,7 +979,7 @@ private fun NoticeCard(
             Text(
                 text = item.displayDate,
                 style = MaterialTheme.typography.labelMedium,
-                color = colorFromHex("8F848F")
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -993,7 +993,7 @@ private fun LoadingStateCard() {
             .padding(vertical = 32.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = colorFromHex("EF6797"))
+        CircularProgressIndicator(color = ConCafeColors.primary)
     }
 }
 
@@ -1012,7 +1012,7 @@ private fun EmptyStateCard(message: String) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorFromHex("8F848F")
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -1039,7 +1039,7 @@ private fun EventCard(
                         .fillMaxSize()
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(colorFromHex("FFE7EF"), colorFromHex("F6D3E0"))
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         )
                 )
@@ -1061,7 +1061,7 @@ private fun EventCard(
                     modifier = Modifier
                         .padding(12.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (!item.isDimmed) colorFromHex("FFD1DC") else colorFromHex("6E6570"))
+                        .background(if (!item.isDimmed) ConCafeColors.primaryContainer else ConCafeColors.textSecondary)
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
@@ -1100,8 +1100,8 @@ private fun EventCard(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = colorFromHex("8F848F"), modifier = Modifier.size(14.dp))
-                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = colorFromHex("8F848F"))
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = ConCafeColors.textMuted, modifier = Modifier.size(14.dp))
+                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = ConCafeColors.textMuted)
                 }
             }
         }
@@ -1122,7 +1122,7 @@ private fun SectionHeader(
         Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(
             text = actionLabel,
-            color = colorFromHex("EF6797"),
+            color = ConCafeColors.primary,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable(onClick = onAction)
         )
@@ -1147,15 +1147,15 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colorFromHex("FFF2D8"))
+            .background(ConCafeColors.warningContainer)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = message, color = colorFromHex("6B5320"), modifier = Modifier.weight(1f))
+        Text(text = message, color = ConCafeColors.goldDeep, modifier = Modifier.weight(1f))
         Text(
             text = stringResource(Res.string.common_close),
-            color = colorFromHex("6B5320"),
+            color = ConCafeColors.goldDeep,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss).padding(start = 12.dp)
         )

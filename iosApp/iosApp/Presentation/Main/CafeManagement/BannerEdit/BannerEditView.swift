@@ -177,7 +177,7 @@ private struct BannerEditContentView: View {
             .background(
                 Group {
                     if UITraitCollection.current.userInterfaceStyle == .dark {
-                        Color(hex: "FFF9FC")
+                        ConCafeColors.background
                     } else {
                         LinearGradient(
                             colors: [Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }), Color(uiColor: .systemGroupedBackground)],
@@ -198,7 +198,7 @@ private struct BannerEditContentView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(uiColor: .secondarySystemGroupedBackground)],
+                                colors: [ConCafeColors.primaryContainer, Color(uiColor: .secondarySystemGroupedBackground)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -233,7 +233,7 @@ private struct BannerEditContentView: View {
                     .multilineTextAlignment(.center)
                 Text(String(localized: String.LocalizationValue("banneredit_image_guide"), table: "Localizable"))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "8F848F"))
+                    .foregroundStyle(ConCafeColors.textMuted)
             }
             Button {
                 onAction(.clickImagePicker)
@@ -244,7 +244,7 @@ private struct BannerEditContentView: View {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 10)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
@@ -257,7 +257,7 @@ private struct BannerEditContentView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
-                .foregroundStyle(Color(hex: "FFD1DC").opacity(0.45))
+                .foregroundStyle(ConCafeColors.primaryContainer.opacity(0.45))
         )
     }
 
@@ -265,10 +265,10 @@ private struct BannerEditContentView: View {
         VStack(spacing: 8) {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(String(localized: String.LocalizationValue("banneredit_image_placeholder_pick"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color(hex: "5A4954"))
+                .foregroundStyle(ConCafeColors.textSecondary)
         }
     }
 
@@ -299,11 +299,11 @@ private struct BannerEditContentView: View {
                             .foregroundStyle(uiState.selectedTarget == target ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(uiState.selectedTarget == target ? Color(hex: "FFD1DC").opacity(0.12) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+                            .background(uiState.selectedTarget == target ? ConCafeColors.primaryContainer.opacity(0.12) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(uiState.selectedTarget == target ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.2), lineWidth: uiState.selectedTarget == target ? 2 : 1)
+                                    .stroke(uiState.selectedTarget == target ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.2), lineWidth: uiState.selectedTarget == target ? 2 : 1)
                             )
                     }
                     .buttonStyle(.plain)
@@ -376,7 +376,7 @@ private struct BannerEditContentView: View {
                     in: 1...10,
                     step: 1
                 )
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
                 HStack {
                     Text(String(localized: String.LocalizationValue("banneredit_period_min_day"), table: "Localizable"))
                     Spacer()
@@ -407,14 +407,14 @@ private struct BannerEditContentView: View {
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(uiState.isSaveEnabled ? Color(hex: "FFD1DC") : Color(hex: "F4D7DF"))
+            .background(uiState.isSaveEnabled ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .padding(.horizontal, 16)
             .padding(.top, 16)
             .padding(.bottom, 16)
             .background(
                 UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
+                ? ConCafeColors.background
                 : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.94)
             )
         }
@@ -429,7 +429,7 @@ private struct BannerEditContentView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 999, style: .continuous)
-                    .fill(Color(hex: "FFD1DC"))
+                    .fill(ConCafeColors.primaryContainer)
                     .frame(width: 4, height: 18)
                 Text(title).font(.headline.weight(.bold))
             }
@@ -460,12 +460,12 @@ private struct BannerEditContentView: View {
                         if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                             Text(subtitle)
                                 .font(.caption)
-                                .foregroundStyle(Color(hex: "8F848F"))
+                                .foregroundStyle(ConCafeColors.textMuted)
                         }
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(Color(hex: "8F848F"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -473,7 +473,7 @@ private struct BannerEditContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -497,7 +497,7 @@ private struct BannerEditContentView: View {
                 if let subtitle = selectedSubtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "8F848F"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -507,7 +507,7 @@ private struct BannerEditContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
             )
         }
     }
@@ -515,17 +515,17 @@ private struct BannerEditContentView: View {
     private func badgeText(_ text: String) -> some View {
         Text(text)
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "EF6797"))
+            .foregroundStyle(ConCafeColors.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color(hex: "EF6797").opacity(0.08))
+            .background(ConCafeColors.primary.opacity(0.08))
             .clipShape(Capsule())
     }
 
     private func infoBanner(message: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "info.circle.fill")
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .padding(.top, 1)
             Text(message)
                 .font(.caption)
@@ -535,12 +535,12 @@ private struct BannerEditContentView: View {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFD1DC").opacity(0.08))
+        .background(ConCafeColors.primaryContainer.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
@@ -561,7 +561,7 @@ private struct BannerEditImageView<Placeholder: View>: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()
@@ -607,13 +607,13 @@ private struct BannerSelectorSheet: View {
             .padding(.horizontal, 24)
             if uiState.isSelectorLoading {
                 ProgressView()
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
             } else if uiState.activeSelectorItemCount == 0 {
                 Text(String(localized: String.LocalizationValue("banneredit_selector_empty"), table: "Localizable"))
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "8F848F"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 24)
             } else {
@@ -673,7 +673,7 @@ private struct BannerSelectorSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "8F848F"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)

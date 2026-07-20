@@ -12,6 +12,7 @@ import com.hhp227.concafe.presentation.main.MainViewModel
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsViewModel
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementViewModel
+import com.hhp227.concafe.presentation.main.cafemanagement.castlist.CastListViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.castmanagement.CastManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditViewModel
@@ -43,7 +44,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
-    factory { AppViewModel(get(), get(), get(), get(), get()) }
+    factory { AppViewModel(get(), get(), get(), get(), get(), get()) }
     factory { SignInViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -55,7 +56,7 @@ private val composeAppPresentationModule = module {
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
-    factory { SettingsViewModel(get(), get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, eventId: String) -> CafeEventViewModel(cafeId, eventId, get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get(), get(), get()) }
@@ -68,6 +69,7 @@ private val composeAppPresentationModule = module {
     }
     factory { CafeManagementViewModel(get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, cafeName: String) -> CastManagementViewModel(cafeId, cafeName, get()) }
+    factory { (cafeId: String) -> CastListViewModel(cafeId, get(), get(), get()) }
     factory { (cafeId: String) -> CafeDashboardViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, isRegistrationMode: Boolean) -> CafeInfoEditViewModel(cafeId, isRegistrationMode, get(), get(), get(), get()) }
     factory { (title: String, url: String) -> ExternalLinkViewModel(title, url) }

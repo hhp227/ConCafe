@@ -35,7 +35,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_close
@@ -71,6 +71,7 @@ import concafe.composeapp.generated.resources.menugoods_edit_upload_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun MenuGoodsEditScreen(
@@ -133,14 +134,14 @@ private fun MenuGoodsEditContentScreen(
         },
         bottomBar = {
             Surface(
-                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .keyboardBottomInsets()
-                        .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
+                        .fixedBottomBarInsets()
+                        .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -150,8 +151,8 @@ private fun MenuGoodsEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
-                            contentColor = colorFromHex("2B2330")
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
@@ -174,16 +175,18 @@ private fun MenuGoodsEditContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
                             )
                         )
                     }
                 )
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -280,13 +283,13 @@ private fun PhotoUploadCard(
             .background(
                 Brush.linearGradient(
                     colors = if (imageUrl.isNullOrBlank()) {
-                        listOf(Color(0x33FFD1DC), Color(0x22FFF1F5))
+                        listOf(ConCafeColors.primaryContainer.copy(alpha = 0.2f), ConCafeColors.background.copy(alpha = 0.13f))
                     } else {
-                        listOf(Color(0x55FFD1DC), Color(0x44F9E3EA))
+                        listOf(ConCafeColors.primaryContainer.copy(alpha = 0.33f), ConCafeColors.surfaceTint.copy(alpha = 0.27f))
                     }
                 )
             )
-            .border(BorderStroke(2.dp, Color(0x66FFD1DC)), RoundedCornerShape(20.dp))
+            .border(BorderStroke(2.dp, ConCafeColors.primaryContainer.copy(alpha = 0.4f)), RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -302,19 +305,19 @@ private fun PhotoUploadCard(
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
                         contentDescription = null,
-                        tint = colorFromHex("6F5968"),
+                        tint = ConCafeColors.textSecondary,
                         modifier = Modifier.padding(12.dp)
                     )
                 }
                 Text(
                     text = stringResource(Res.string.menugoods_edit_upload_title),
                     fontWeight = FontWeight.SemiBold,
-                    color = colorFromHex("2B2330")
+                    color = ConCafeColors.textPrimary
                 )
                 Text(
                     text = stringResource(Res.string.menugoods_edit_upload_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("7A6671")
+                    color = ConCafeColors.textSecondary
                 )
             }
         } else {
@@ -334,7 +337,7 @@ private fun PhotoUploadCard(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = colorFromHex("2B2330"),
+                        tint = ConCafeColors.textPrimary,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
@@ -352,7 +355,7 @@ private fun FormField(
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = colorFromHex("4D404A"),
+            color = ConCafeColors.textPrimary,
             fontWeight = FontWeight.SemiBold
         )
         content()
@@ -388,7 +391,7 @@ private fun PriceField(
         leadingContent = {
             Text(
                 text = "₩",
-                color = colorFromHex("6B5A65"),
+                color = ConCafeColors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -439,10 +442,10 @@ private fun CategoryButton(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) Color(0x33FFD1DC) else colorFromHex("F8F5F6"),
+        color = if (isSelected) ConCafeColors.primaryContainer.copy(alpha = 0.2f) else ConCafeColors.surfaceVariant,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) colorFromHex("FFD1DC") else Color(0x55FFD1DC)
+            color = if (isSelected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.33f)
         ),
         onClick = onClick
     ) {
@@ -456,12 +459,12 @@ private fun CategoryButton(
             Icon(
                 imageVector = categoryIcon(categoryId),
                 contentDescription = null,
-                tint = if (isSelected) colorFromHex("2B2330") else colorFromHex("6E6169")
+                tint = if (isSelected) ConCafeColors.textPrimary else ConCafeColors.textSecondary
             )
             Text(
                 text = categoryLabel(categoryId),
                 modifier = Modifier.padding(start = 8.dp),
-                color = if (isSelected) colorFromHex("2B2330") else colorFromHex("6E6169"),
+                color = if (isSelected) ConCafeColors.textPrimary else ConCafeColors.textSecondary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -510,8 +513,8 @@ private fun StockCard(
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = colorFromHex("F8F5F6")),
-        border = BorderStroke(1.dp, Color(0x33FFD1DC))
+        colors = CardDefaults.cardColors(containerColor = ConCafeColors.surfaceVariant),
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -527,13 +530,13 @@ private fun StockCard(
                 Icon(
                     imageVector = Icons.Default.Inventory2,
                     contentDescription = null,
-                    tint = colorFromHex("FF8AA8")
+                    tint = ConCafeColors.secondaryContainer
                 )
                 Column {
                     Text(
                         text = stringResource(Res.string.menugoods_edit_stock_title),
                         fontWeight = FontWeight.SemiBold,
-                        color = colorFromHex("2B2330")
+                        color = ConCafeColors.textPrimary
                     )
                     Text(
                         text = stringResource(if (isInStock) {
@@ -542,7 +545,7 @@ private fun StockCard(
                             Res.string.menugoods_edit_stock_sold_out
                         }),
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("7A6671")
+                        color = ConCafeColors.textSecondary
                     )
                 }
             }
@@ -561,8 +564,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -575,7 +578,7 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             Text(
                 text = stringResource(Res.string.common_close),
@@ -583,7 +586,7 @@ private fun InfoBanner(
                     .padding(start = 12.dp)
                     .clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
-                color = colorFromHex("6B5320"),
+                color = ConCafeColors.goldDeep,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -598,17 +601,17 @@ private fun LoadingCard() {
             .height(220.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
-            .border(BorderStroke(1.dp, Color(0x55FFD1DC)), RoundedCornerShape(20.dp)),
+            .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.33f)), RoundedCornerShape(20.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CircularProgressIndicator(color = colorFromHex("FF8AA8"))
+            CircularProgressIndicator(color = ConCafeColors.secondaryContainer)
             Text(
                 text = stringResource(Res.string.menugoods_edit_loading),
-                color = colorFromHex("7A6671"),
+                color = ConCafeColors.textSecondary,
                 textAlign = TextAlign.Center
             )
         }

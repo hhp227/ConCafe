@@ -6,40 +6,73 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.hhp227.concafe.presentation.theme.AppBrandTheme
 
 @Composable
 fun ConCafeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    brandTheme: AppBrandTheme = AppBrandTheme.MAID_CAFE,
     content: @Composable () -> Unit
 ) {
     val darkMode = darkTheme
     val colorScheme = if (darkMode) {
         darkColorScheme(
-            primary = colorFromHex("EF6797"),
-            secondary = colorFromHex("F7A0C1"),
-            tertiary = colorFromHex("FFD1DC"),
-            background = colorFromHex("111317"),
-            surface = colorFromHex("171A20"),
-            onSurface = colorFromHex("F3EFF2"),
-            onBackground = colorFromHex("F3EFF2")
+            primary = ConCafeColors.primary,
+            onPrimary = ConCafeColors.onPrimary,
+            primaryContainer = ConCafeColors.primaryContainer,
+            onPrimaryContainer = ConCafeColors.onPrimaryContainer,
+            secondary = ConCafeColors.secondary,
+            onSecondary = ConCafeColors.onSecondary,
+            secondaryContainer = ConCafeColors.secondaryContainer,
+            onSecondaryContainer = ConCafeColors.onSecondaryContainer,
+            tertiary = ConCafeColors.tertiary,
+            onTertiary = ConCafeColors.onTertiary,
+            tertiaryContainer = ConCafeColors.tertiaryContainer,
+            onTertiaryContainer = ConCafeColors.onTertiaryContainer,
+            background = ConCafeColors.background,
+            surface = ConCafeColors.surface,
+            surfaceVariant = ConCafeColors.surfaceVariant,
+            onSurface = ConCafeColors.textPrimary,
+            onBackground = ConCafeColors.textPrimary,
+            onSurfaceVariant = ConCafeColors.textSecondary,
+            outline = ConCafeColors.outline,
+            outlineVariant = ConCafeColors.outline,
+            error = ConCafeColors.error,
+            errorContainer = ConCafeColors.errorContainer
         )
     } else {
         lightColorScheme(
-            primary = colorFromHex("EF6797"),
-            secondary = colorFromHex("F7A0C1"),
-            tertiary = colorFromHex("FFD1DC"),
-            background = colorFromHex("FFFBFD"),
-            surface = ColorWhite,
-            onSurface = colorFromHex("2B2330"),
-            onBackground = colorFromHex("2B2330")
+            primary = ConCafeColors.primary,
+            onPrimary = ConCafeColors.onPrimary,
+            primaryContainer = ConCafeColors.primaryContainer,
+            onPrimaryContainer = ConCafeColors.onPrimaryContainer,
+            secondary = ConCafeColors.secondary,
+            onSecondary = ConCafeColors.onSecondary,
+            secondaryContainer = ConCafeColors.secondaryContainer,
+            onSecondaryContainer = ConCafeColors.onSecondaryContainer,
+            tertiary = ConCafeColors.tertiary,
+            onTertiary = ConCafeColors.onTertiary,
+            tertiaryContainer = ConCafeColors.tertiaryContainer,
+            onTertiaryContainer = ConCafeColors.onTertiaryContainer,
+            background = ConCafeColors.background,
+            surface = ConCafeColors.surface,
+            surfaceVariant = ConCafeColors.surfaceVariant,
+            onSurface = ConCafeColors.textPrimary,
+            onBackground = ConCafeColors.textPrimary,
+            onSurfaceVariant = ConCafeColors.textSecondary,
+            outline = ConCafeColors.outline,
+            outlineVariant = ConCafeColors.outline,
+            error = ConCafeColors.error,
+            errorContainer = ConCafeColors.errorContainer
         )
     }
 
-    SideEffect { setConCafeDarkMode(darkMode) }
+    SideEffect {
+        setConCafeDarkMode(darkMode)
+        setConCafeBrandTheme(brandTheme)
+    }
     MaterialTheme(
         colorScheme = colorScheme,
         content = content
     )
 }
-
-private val ColorWhite = colorFromHex("FFFFFF")

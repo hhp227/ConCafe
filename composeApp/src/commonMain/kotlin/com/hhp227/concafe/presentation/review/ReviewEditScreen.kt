@@ -28,7 +28,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.common_close
@@ -50,6 +50,7 @@ import concafe.composeapp.generated.resources.reviewedit_verified_visit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun ReviewEditScreen(
@@ -108,7 +109,7 @@ private fun ReviewEditContentScreen(
                         TextButton(onClick = { onAction(ReviewEditAction.ClickSubmit) }) {
                             Text(
                                 text = uiState.topActionLabel,
-                                color = colorFromHex("EF6797"),
+                                color = ConCafeColors.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -125,7 +126,7 @@ private fun ReviewEditContentScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .keyboardBottomInsets()
+                            .fixedBottomBarInsets()
                             .padding(horizontal = 16.dp, vertical = 14.dp)
                     ) {
                         Button(
@@ -136,9 +137,9 @@ private fun ReviewEditContentScreen(
                                 .height(56.dp),
                             shape = RoundedCornerShape(18.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("FFD1DC"),
+                                containerColor = ConCafeColors.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onSurface,
-                                disabledContainerColor = colorFromHex("F0D9E0"),
+                                disabledContainerColor = ConCafeColors.primaryContainer,
                                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
@@ -165,6 +166,8 @@ private fun ReviewEditContentScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 12.dp)
         ) {
@@ -175,7 +178,7 @@ private fun ReviewEditContentScreen(
                         .padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = colorFromHex("EF6797"))
+                    CircularProgressIndicator(color = ConCafeColors.primary)
                 }
             } else {
                 CafeInfoSection(uiState = uiState)
@@ -199,7 +202,7 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0x1AFFD1DC))
+            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
             .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -210,19 +213,19 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
                 .clip(RoundedCornerShape(18.dp))
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(colorFromHex("FFE5EE"), colorFromHex("F4C6D5"))
+                        colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                     )
                 )
                 .border(
                     width = 2.dp,
-                    color = Color(0x4DFFD1DC),
+                    color = ConCafeColors.primaryContainer.copy(alpha = 0.3f),
                     shape = RoundedCornerShape(18.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Cafe",
-                color = colorFromHex("8A5C71"),
+                color = ConCafeColors.primary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -237,12 +240,12 @@ private fun CafeInfoSection(uiState: ReviewEditUiState) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = colorFromHex("EF6797"),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.reviewedit_verified_visit),
-                        color = colorFromHex("EF6797"),
+                        color = ConCafeColors.primary,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -291,7 +294,7 @@ private fun RatingSection(
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = stringResource(Res.string.reviewedit_rating_accessibility, index),
-                    tint = if (isSelected) colorFromHex("FFC94D") else Color(0x33EF6797),
+                    tint = if (isSelected) ConCafeColors.gold else ConCafeColors.primary.copy(alpha = 0.2f),
                     modifier = Modifier
                         .size(38.dp)
                         .clickable { onAction(ReviewEditAction.SelectRating(index)) }
@@ -300,7 +303,7 @@ private fun RatingSection(
         }
         Text(
             text = uiState.ratingMessage,
-            color = colorFromHex("EF6797"),
+            color = ConCafeColors.primary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -337,7 +340,7 @@ private fun PhotoSection(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(colorFromHex("FFD8E6"), colorFromHex("FFEFF5"))
+                            colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                         )
                     )
                     .clickable {
@@ -354,7 +357,7 @@ private fun PhotoSection(
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = colorFromHex("8B5164"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
@@ -383,7 +386,7 @@ private fun PhotoSection(
                             text = stringResource(Res.string.reviewedit_photo_remove),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelMedium,
-                            color = colorFromHex("8B5164"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -429,7 +432,7 @@ private fun ReviewFormSection(
             ),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.End,
-            color = if (uiState.reviewLength >= ReviewEditUiState.minimumReviewLength) colorFromHex("2E9E5B") else colorFromHex("9A8D95"),
+            color = if (uiState.reviewLength >= ReviewEditUiState.minimumReviewLength) ConCafeColors.success else ConCafeColors.textMuted,
             style = MaterialTheme.typography.labelMedium
         )
         if (uiState.availableCastTags.isNotEmpty()) {
@@ -471,10 +474,10 @@ private fun CastTagSection(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (selected) colorFromHex("FFD1DC") else Color(0x1AFFD1DC))
+                        .background(if (selected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                         .border(
                             width = 1.dp,
-                            color = if (selected) colorFromHex("FFD1DC") else Color(0x33FFD1DC),
+                            color = if (selected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(999.dp)
                         )
                         .clickable { onToggle(cast.id) }
@@ -513,13 +516,13 @@ private fun AtmosphereQuestionCard(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(Color(0x1AFFD1DC)),
+                    .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Mood,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797")
+                    tint = ConCafeColors.primary
                 )
             }
             Text(
@@ -553,10 +556,10 @@ private fun AnswerChip(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (selected) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface)
+            .background(if (selected) ConCafeColors.primaryContainer else MaterialTheme.colorScheme.surface)
             .border(
                 width = 1.dp,
-                color = if (selected) colorFromHex("FFD1DC") else colorFromHex("D9CFD5"),
+                color = if (selected) ConCafeColors.primaryContainer else ConCafeColors.outline,
                 shape = RoundedCornerShape(999.dp)
             )
             .clickable(onClick = onClick)
@@ -582,10 +585,10 @@ private fun InfoBanner(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colorFromHex("FFF6D7"))
+            .background(ConCafeColors.goldContainer)
             .border(
                 width = 1.dp,
-                color = colorFromHex("F1D88D"),
+                color = ConCafeColors.gold,
                 shape = RoundedCornerShape(18.dp)
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -594,7 +597,7 @@ private fun InfoBanner(
         Text(
             text = message,
             modifier = Modifier.weight(1f),
-            color = colorFromHex("6B5320"),
+            color = ConCafeColors.goldDeep,
             style = MaterialTheme.typography.bodyMedium
         )
         TextButton(
@@ -603,7 +606,7 @@ private fun InfoBanner(
         ) {
             Text(
                 text = stringResource(Res.string.common_close),
-                color = colorFromHex("6B5320"),
+                color = ConCafeColors.goldDeep,
                 fontWeight = FontWeight.Bold
             )
         }

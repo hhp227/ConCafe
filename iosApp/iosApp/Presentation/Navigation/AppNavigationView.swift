@@ -67,6 +67,8 @@ struct AppNavigationView: View {
                 ScheduleView(castId: castId, onNavigationAction: viewModel.onAction)
             case .castManagement(let cafeId, let cafeName):
                 CastManagementView(cafeId: cafeId, cafeName: cafeName, onNavigationAction: viewModel.onAction)
+            case .castList(let cafeId):
+                CastListView(cafeId: cafeId, onNavigationAction: viewModel.onAction)
             case .menuGoods(let param):
                 MenuGoodsView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .menuGoodsEdit(let cafeId, let itemId):

@@ -74,7 +74,7 @@ private struct ReviewEditContentView: View {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
                         ProgressView()
-                            .tint(Color(hex: "EF6797"))
+                            .tint(ConCafeColors.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 32)
                     } else {
@@ -109,7 +109,7 @@ private struct ReviewEditContentView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: "FFE5EE"), Color(hex: "F4C6D5")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -118,11 +118,11 @@ private struct ReviewEditContentView: View {
                 .overlay {
                     Text("Cafe")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "8A5C71"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 2)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 2)
                 )
             VStack(alignment: .leading, spacing: 4) {
                 if uiState.isVisitVerified {
@@ -132,7 +132,7 @@ private struct ReviewEditContentView: View {
                         Text(String(localized: String.LocalizationValue("reviewedit_verified_visit"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                     }
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 }
                 Text(uiState.cafeName)
                     .font(.title3.weight(.bold))
@@ -145,7 +145,7 @@ private struct ReviewEditContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 20)
-        .background(Color(hex: "FFD1DC").opacity(0.1))
+        .background(ConCafeColors.primaryContainer.opacity(0.1))
     }
 
     private var ratingSection: some View {
@@ -158,7 +158,7 @@ private struct ReviewEditContentView: View {
                     let isSelected = index <= uiState.rating
                     Image(systemName: isSelected ? "star.fill" : "star")
                         .font(.system(size: 34))
-                        .foregroundStyle(isSelected ? Color(hex: "FFC94D") : Color(hex: "E9DDE1"))
+                        .foregroundStyle(isSelected ? ConCafeColors.gold : ConCafeColors.primaryContainer)
                         .onTapGesture {
                             onAction(.selectRating(index))
                         }
@@ -166,7 +166,7 @@ private struct ReviewEditContentView: View {
             }
             Text(uiState.ratingMessage)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
@@ -184,7 +184,7 @@ private struct ReviewEditContentView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                colors: [ConCafeColors.primaryContainer, ConCafeColors.surfaceTint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -198,7 +198,7 @@ private struct ReviewEditContentView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 32, weight: .semibold))
-                                .foregroundStyle(Color(hex: "8B5164"))
+                                .foregroundStyle(ConCafeColors.primary)
                             Text(String(localized: String.LocalizationValue("reviewedit_photo_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
                                 .foregroundStyle(.secondary)
@@ -210,7 +210,7 @@ private struct ReviewEditContentView: View {
                             onAction(.removePhoto)
                         }
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "8B5164"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -261,7 +261,7 @@ private struct ReviewEditContentView: View {
                 )
             )
                 .font(.caption)
-                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : .secondary)
+                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? ConCafeColors.success : .secondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             if !uiState.availableCastTags.isEmpty {
                 castTagSection
@@ -277,11 +277,11 @@ private struct ReviewEditContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Circle()
-                    .fill(Color(hex: "FFD1DC").opacity(0.1))
+                    .fill(ConCafeColors.primaryContainer.opacity(0.1))
                     .frame(width: 34, height: 34)
                     .overlay {
                         Image(systemName: "face.smiling")
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 Text(String(localized: String.LocalizationValue("reviewedit_atmosphere_question"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
@@ -323,11 +323,11 @@ private struct ReviewEditContentView: View {
                                 .foregroundStyle(selected ? .primary : .secondary)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 9)
-                                .background(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.1))
+                                .background(selected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.1))
                                 .clipShape(Capsule())
                                 .overlay(
                                     Capsule()
-                                        .stroke(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                        .stroke(selected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -355,7 +355,7 @@ private struct ReviewEditContentView: View {
                     .foregroundStyle(uiState.isSubmitEnabled ? .primary : .secondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
+                    .background(uiState.isSubmitEnabled ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -379,11 +379,11 @@ private struct ReviewEditContentView: View {
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(isSelected ? Color(hex: "FFD1DC") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+                .background(isSelected ? ConCafeColors.primaryContainer : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .stroke(isSelected ? Color(hex: "FFD1DC") : Color(hex: "D9CFD5"), lineWidth: 1)
+                        .stroke(isSelected ? ConCafeColors.primaryContainer : ConCafeColors.outline, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -393,24 +393,24 @@ private struct ReviewEditContentView: View {
         HStack(spacing: 12) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
                 Text(String(localized: String.LocalizationValue("common_close"), table: "Localizable"))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "6B5320"))
+                    .foregroundStyle(ConCafeColors.goldDeep)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 }
@@ -430,19 +430,19 @@ private struct ReviewPhotoImageView: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()
                         .scaledToFill()
                 case .failure:
-                    Color(hex: "F4EFF2")
+                    ConCafeColors.surfaceTint
                 @unknown default:
-                    Color(hex: "F4EFF2")
+                    ConCafeColors.surfaceTint
                 }
             }
         } else {
-            Color(hex: "F4EFF2")
+            ConCafeColors.surfaceTint
         }
     }
 }

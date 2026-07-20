@@ -72,6 +72,7 @@ import concafe.composeapp.generated.resources.signup_social_kakao
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun SignInScreen(
@@ -119,12 +120,12 @@ private fun SignInContentScreen(
                     Brush.linearGradient(
                         if (isSystemInDarkTheme()) {
                             listOf(
-                                colorFromHex("FFFBFD"),
-                                colorFromHex("FFFBFD"),
-                                colorFromHex("FFFBFD")
+                                ConCafeColors.background,
+                                ConCafeColors.background,
+                                ConCafeColors.background
                             )
                         } else {
-                            listOf(colorFromHex("FFF2F7"), colorFromHex("FFFBFD"), colorFromHex("FDEDF4"))
+                            listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint)
                         }
                     )
                 )
@@ -163,9 +164,9 @@ private fun SignInContentScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                                 unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                                focusedBorderColor = colorFromHex("EF6797"),
+                                focusedBorderColor = ConCafeColors.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
-                                focusedLabelColor = colorFromHex("EF6797"),
+                                focusedLabelColor = ConCafeColors.primary,
                                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -186,9 +187,9 @@ private fun SignInContentScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                                 unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                                focusedBorderColor = colorFromHex("EF6797"),
+                                focusedBorderColor = ConCafeColors.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
-                                focusedLabelColor = colorFromHex("EF6797"),
+                                focusedLabelColor = ConCafeColors.primary,
                                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -200,7 +201,7 @@ private fun SignInContentScreen(
                         if (uiState.errorMessage != null) {
                             Text(
                                 text = uiState.errorMessage,
-                                color = colorFromHex("D1436F"),
+                                color = ConCafeColors.primary,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -209,8 +210,8 @@ private fun SignInContentScreen(
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("FFD1DC"),
-                                contentColor = colorFromHex("2B2330")
+                                containerColor = ConCafeColors.primaryContainer,
+                                contentColor = ConCafeColors.textPrimary
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()

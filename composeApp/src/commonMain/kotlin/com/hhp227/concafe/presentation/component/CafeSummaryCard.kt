@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,8 @@ fun CafeSummaryCard(
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             val resolvedThumbnailImage = thumbnailImage?.trim().orEmpty()
 
@@ -54,7 +56,7 @@ fun CafeSummaryCard(
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(colorFromHex("FFE2D2"), com.hhp227.concafe.presentation.component.colorFromHex("FFC9A9"))
+                            colors = listOf(ConCafeColors.warningContainer, com.hhp227.concafe.presentation.component.ConCafeColors.warningContainer)
                         )
                     )
             ) {
@@ -88,7 +90,7 @@ fun CafeSummaryCard(
                 Text(
                     text = conceptType,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -120,7 +122,7 @@ fun CafeSummaryCard(
                     Text(
                         text = trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("EF6797"),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }

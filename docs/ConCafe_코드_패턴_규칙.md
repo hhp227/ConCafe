@@ -386,3 +386,9 @@ guard isVerifiedVisit else { return }
 guard hasReviewPermission else { return }
 submitReview()
 ```
+
+## 11-2. 색상 토큰 규칙
+- 화면 코드에 hex 색상 하드코딩을 금지한다. `ConCafeColors` 시맨틱 토큰만 사용한다.
+- 토큰 이름과 라이트/다크 값은 Compose(`ConCafeColors.kt`)와 iOS(`ConCafeColors.swift`)에서 1:1 동일하게 유지한다.
+- 서드파티 브랜드 색상(카카오/애플/X/틱톡/인스타그램)만 hex 직접 사용을 허용한다.
+- 상세 토큰 표와 사용 패턴은 `docs/ConCafe_디자인_시스템.md`를 참조한다.

@@ -247,7 +247,7 @@ private fun NativeAdContentLayout(nativeAd: NativeAd) {
             modifier = Modifier.viewTag("cta"),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
-                contentColor = Color(0xFF262626)
+                contentColor = ConCafeColors.textPrimary
             ),
             shape = RoundedCornerShape(999.dp),
             contentPadding = PaddingValues(horizontal = 16.dp)

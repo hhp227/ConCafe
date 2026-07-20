@@ -17,7 +17,7 @@ struct ConCafeCastCard: View {
 
     var imageUrl: String? = nil
 
-    var containerColor = Color(hex: "FFF9FC")
+    var containerColor = ConCafeColors.background
 
     var containerCornerRadius: CGFloat = 18
 
@@ -53,7 +53,7 @@ struct ConCafeCastCard: View {
                         )
                     } else {
                         LinearGradient(
-                            colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")],
+                            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -99,7 +99,7 @@ struct ConCafeCastCard: View {
                 if let metaText, !metaText.isEmpty {
                     Text(metaText)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
             }
             .padding(contentPadding)

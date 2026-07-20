@@ -100,7 +100,7 @@ private struct CafeManagementContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var heroCard: some View {
@@ -133,7 +133,7 @@ private struct CafeManagementContentView: View {
         .padding(22)
         .background(
             LinearGradient(
-                colors: [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")],
+                colors: [ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -145,23 +145,23 @@ private struct CafeManagementContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "6B5320"))
+                    .foregroundStyle(ConCafeColors.goldDeep)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
@@ -172,7 +172,7 @@ private struct CafeManagementContentView: View {
                 .foregroundStyle(.primary)
             Text(subtitle)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "786E7A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -221,8 +221,8 @@ private struct CafeManagementContentView: View {
                     }
                     LinearGradient(
                         colors: cafe.isApproved
-                        ? [Color(hex: "2F1B3A"), Color(hex: "7C3F67"), Color(hex: "F06A9D")]
-                        : [Color(hex: "3A3240"), Color(hex: "6F6272"), Color(hex: "B8A8B2")],
+                        ? [ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary]
+                        : [ConCafeColors.textPrimary, ConCafeColors.textSecondary, ConCafeColors.outlineStrong],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -293,18 +293,18 @@ private struct CafeManagementContentView: View {
                         )
                 )
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "5E4F5D"))
+                .foregroundStyle(ConCafeColors.textSecondary)
                 Spacer()
                 Image(systemName: uiState.isShowingAllCafes ? "chevron.up" : "chevron.down")
-                    .foregroundStyle(Color(hex: "7C6B79"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color(hex: "F7F2F6"))
+            .background(ConCafeColors.surfaceTint)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: "E5DCE5"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -317,15 +317,15 @@ private struct CafeManagementContentView: View {
                 .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("cafemgmt_add_cafe_desc"), table: "Localizable"))
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "786E7A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Button(String(localized: String.LocalizationValue("cafemgmt_register_new_cafe"), table: "Localizable")) {
                 onAction(.clickCreateCafe)
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(hex: "6A5666"))
+            .foregroundStyle(ConCafeColors.textSecondary)
             .padding(.horizontal, 16)
             .frame(height: 44)
-            .background(Color(hex: "F6EDF4"))
+            .background(ConCafeColors.surfaceTint)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -334,7 +334,7 @@ private struct CafeManagementContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -348,7 +348,7 @@ private struct CafeManagementContentView: View {
             )
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Color(hex: "8E8794"))
+                    .foregroundStyle(ConCafeColors.textMuted)
                 TextField(
                     String(localized: String.LocalizationValue("cafemgmt_search_placeholder"), table: "Localizable"),
                     text: Binding(
@@ -365,14 +365,14 @@ private struct CafeManagementContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                    .stroke(ConCafeColors.outline, lineWidth: 1)
             )
             if !uiState.cafeSearchQuery.isEmpty {
                 VStack(spacing: 0) {
                     if visibleSearchableCafes.isEmpty {
                         Text(String(localized: String.LocalizationValue("cafemgmt_search_no_result"), table: "Localizable"))
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "8E8794"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 20)
@@ -382,7 +382,7 @@ private struct CafeManagementContentView: View {
 
                             if index < visibleSearchableCafes.count - 1 {
                                 Divider()
-                                    .overlay(Color(hex: "F1EAF1"))
+                                    .overlay(ConCafeColors.surfaceTint)
                             }
                         }
                     }
@@ -392,7 +392,7 @@ private struct CafeManagementContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color(hex: "E4DDE5"), lineWidth: 1)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
                 )
             }
         }
@@ -406,7 +406,7 @@ private struct CafeManagementContentView: View {
                     .foregroundStyle(.primary)
                 Text(cafe.location)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "8E8794"))
+                    .foregroundStyle(ConCafeColors.textMuted)
             }
             Spacer()
             Button(String(localized: String.LocalizationValue("cafemgmt_register"), table: "Localizable")) {
@@ -416,7 +416,7 @@ private struct CafeManagementContentView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .frame(height: 38)
-            .background(Color(hex: "EF6797"))
+            .background(ConCafeColors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .padding(.horizontal, 16)
@@ -427,26 +427,26 @@ private struct CafeManagementContentView: View {
         VStack(alignment: .leading, spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color(hex: "FCE6EF"))
+                    .fill(ConCafeColors.surfaceTint)
                     .frame(width: 54, height: 54)
                 Image(systemName: "building.2.crop.circle")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             Text(String(localized: String.LocalizationValue("cafemgmt_empty_title"), table: "Localizable"))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(.primary)
             Text(String(localized: String.LocalizationValue("cafemgmt_empty_desc"), table: "Localizable"))
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "786E7A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Button(String(localized: String.LocalizationValue("cafemgmt_register_new_cafe"), table: "Localizable")) {
                 onAction(.clickCreateCafe)
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(hex: "6A5666"))
+            .foregroundStyle(ConCafeColors.textSecondary)
             .padding(.horizontal, 16)
             .frame(height: 44)
-            .background(Color(hex: "F6EDF4"))
+            .background(ConCafeColors.surfaceTint)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             if !uiState.pendingClaims.isEmpty {
@@ -465,7 +465,7 @@ private struct CafeManagementContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color(hex: "E8DFE7"), lineWidth: 1)
+                .stroke(ConCafeColors.outline, lineWidth: 1)
         )
     }
 
@@ -478,26 +478,26 @@ private struct CafeManagementContentView: View {
                 Spacer()
                 ZStack {
                     Circle()
-                        .fill(Color(hex: "FFE8B8"))
+                        .fill(ConCafeColors.warningContainer)
                         .frame(width: 30, height: 30)
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color(hex: "9A6A11"))
+                        .foregroundStyle(ConCafeColors.goldDeep)
                 }
             }
             Text("\(claim.status) · \(claim.requestedAt)")
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8B774C"))
+                .foregroundStyle(ConCafeColors.goldDeep)
             Text(claim.message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6E6248"))
+                .foregroundStyle(ConCafeColors.goldDeep)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color(hex: "FFF8EA"))
+        .background(ConCafeColors.warningContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F0DEB1"), lineWidth: 1)
+                .stroke(ConCafeColors.warningContainer, lineWidth: 1)
         )
     }
 }

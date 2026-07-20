@@ -15,7 +15,7 @@ struct SignInLogoSection: View {
                 .scaledToFill()
                 .frame(width: 96, height: 96)
                 .clipShape(Circle())
-            ConCafeLogo(color: Color(hex: "DA4E84"))
+            ConCafeLogo(color: ConCafeColors.primary)
             Text(String(localized: String.LocalizationValue("signin_logo_subtitle"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -29,13 +29,13 @@ struct SignInDivider: View {
     var body: some View {
         HStack(spacing: 12) {
             Rectangle()
-                .fill(Color(hex: "E5DEE6"))
+                .fill(ConCafeColors.outline)
                 .frame(height: 1)
             Text(String(localized: String.LocalizationValue("signin_divider_or"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Rectangle()
-                .fill(Color(hex: "E5DEE6"))
+                .fill(ConCafeColors.outline)
                 .frame(height: 1)
         }
     }
@@ -71,7 +71,7 @@ struct SignInSocialButton: View {
             .background(background)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(outlined ? Color(hex: "E4DDE5") : Color.clear, lineWidth: 1)
+                    .stroke(outlined ? ConCafeColors.outline : Color.clear, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }

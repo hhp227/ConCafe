@@ -19,7 +19,7 @@ struct MyInfoView: View {
             if viewModel.uiState.isLoading {
                 ProgressView()
                     .controlSize(.large)
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.uiState.isLoggedIn {
                 ProfileMyInfoView(
@@ -33,7 +33,7 @@ struct MyInfoView: View {
                 )
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCafe(let id):
@@ -107,13 +107,13 @@ private struct GuestMyInfoView: View {
                         .padding(.vertical, 8)
                     }
                     .background(.white)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity)
                 .background(
-                    LinearGradient(colors: [Color(hex: "EF6797"), Color(hex: "F8A0C2")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(colors: [ConCafeColors.primary, ConCafeColors.secondaryContainer], startPoint: .topLeading, endPoint: .bottomTrailing)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                 VStack(alignment: .leading, spacing: 8) {
@@ -162,7 +162,7 @@ private struct GuestMyInfoView: View {
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 11, weight: .semibold))
                             }
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -178,7 +178,7 @@ private struct GuestMyInfoView: View {
 
                                     ZStack {
                                         RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous)
-                                            .fill(LinearGradient(colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")], startPoint: .top, endPoint: .bottom))
+                                            .fill(LinearGradient(colors: [ConCafeColors.warningContainer, ConCafeColors.warningContainer], startPoint: .top, endPoint: .bottom))
                                         if let imageUrl = resolvedRemoteImageUrl(cafe.thumbnailImage) {
                                             CachedAsyncImage(
                                                 url: imageUrl,
@@ -198,7 +198,7 @@ private struct GuestMyInfoView: View {
                                     if !conceptType.isEmpty {
                                         Text(conceptType)
                                             .font(.caption.weight(.semibold))
-                                            .foregroundStyle(Color(hex: "EF6797"))
+                                            .foregroundStyle(ConCafeColors.primary)
                                             .lineLimit(1)
                                     }
                                 }
@@ -236,7 +236,7 @@ private struct GuestMyInfoView: View {
                             .padding(.vertical, 10)
                             .background(
                                 LinearGradient(
-                                    colors: [Color(hex: "EF6797"), Color(hex: "F8A0C2")],
+                                    colors: [ConCafeColors.primary, ConCafeColors.secondaryContainer],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -248,7 +248,7 @@ private struct GuestMyInfoView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity)
                 .background(
-                    LinearGradient(colors: [Color(hex: "FFEAF2"), Color(hex: "FDE3F0")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    LinearGradient(colors: [ConCafeColors.surfaceTint, ConCafeColors.surfaceTint], startPoint: .topLeading, endPoint: .bottomTrailing)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
@@ -380,7 +380,7 @@ private struct ProfileMyInfoView: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
+                        colors: [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -389,7 +389,7 @@ private struct ProfileMyInfoView: View {
                 .overlay(
                     Text(String(title.prefix(2)).uppercased())
                         .font(.title3.weight(.bold))
-                        .foregroundStyle(Color(hex: "7C3F67"))
+                        .foregroundStyle(ConCafeColors.primary)
                 )
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .bottom, spacing: 8) {
@@ -405,7 +405,7 @@ private struct ProfileMyInfoView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "mappin.and.ellipse")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                     Text(accentText)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -440,17 +440,17 @@ private struct ProfileMyInfoView: View {
                 .multilineTextAlignment(.center)
             Text(metric.value)
                 .font(.title2.weight(.bold))
-                .foregroundStyle(metric.highlight ? Color(hex: "D94A82") : .primary)
+                .foregroundStyle(metric.highlight ? ConCafeColors.primary : .primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .padding(.horizontal, 10)
-        .background(metric.highlight ? Color(hex: "FFD1DC").opacity(0.10) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+        .background(metric.highlight ? ConCafeColors.primaryContainer.opacity(0.10) : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: metric.highlight ? .clear : Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(metric.highlight ? Color(hex: "FFB3C6").opacity(0.20) : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                .stroke(metric.highlight ? ConCafeColors.primary.opacity(0.20) : ConCafeColors.primaryContainer.opacity(0.10), lineWidth: 1)
         )
     }
 
@@ -600,7 +600,7 @@ private struct ProfileMyInfoView: View {
                                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                                             .fill(
                                                 LinearGradient(
-                                                    colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+                                                    colors: [ConCafeColors.warningContainer, ConCafeColors.warningContainer],
                                                     startPoint: .top,
                                                     endPoint: .bottom
                                                 )
@@ -642,7 +642,7 @@ private struct ProfileMyInfoView: View {
                             name: cafe.name,
                             rating: favoriteCafeRating(cafe.ratingAvg),
                             conceptType: localizedCafeConceptType(cafe.conceptType),
-                            location: cafe.region.city,
+                            location: localizedRegionCity(cafe.region.city),
                             thumbnailImage: cafe.thumbnailImage,
                             showLocationIcon: false,
                             trailingLabel: nil,
@@ -725,7 +725,7 @@ private struct ProfileMyInfoView: View {
 
                                     ZStack {
                                         Circle()
-                                            .fill(LinearGradient(colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")], startPoint: .top, endPoint: .bottom))
+                                            .fill(LinearGradient(colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
                                         CachedAsyncImage(
                                             url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
                                             placeholder: EmptyView()
@@ -764,7 +764,7 @@ private struct BadgeItemView: View {
         VStack(spacing: 4) {
             GeometryReader { proxy in
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(badge.unlocked ? Color(hex: "EF6797") : Color(hex: "DADADA"))
+                    .fill(badge.unlocked ? ConCafeColors.primary : ConCafeColors.outline)
                     .overlay(Text(badge.icon))
                     .onTapGesture {
                         let frame = proxy.frame(in: .named(coordinateSpaceName))
@@ -796,7 +796,7 @@ private struct BadgeTooltipCard: View {
                 .foregroundStyle(.white)
             Text("\(current) / \(goal)")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(badge.unlocked ? Color(hex: "EF6797") : Color.white.opacity(0.7))
+                .foregroundStyle(badge.unlocked ? ConCafeColors.primary : Color.white.opacity(0.7))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -820,7 +820,7 @@ private struct MyInfoSectionTitle: View {
     var body: some View {
         Text(title)
             .font(.headline.weight(.bold))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(ConCafeColors.textPrimary)
     }
 }
 

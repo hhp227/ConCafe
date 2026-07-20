@@ -30,7 +30,7 @@ struct AdminOperationsView: View {
             .padding(.top, 12)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToBanner:
@@ -56,10 +56,10 @@ struct AdminOperationsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: metric.icon.systemName)
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                         Text(metric.title)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(Color(hex: "7A707A"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                     }
                     Text(metric.value)
                         .font(.title3.weight(.bold))
@@ -73,7 +73,7 @@ struct AdminOperationsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .background(Color(hex: "FFD1DC").opacity(0.16))
+                .background(ConCafeColors.primaryContainer.opacity(0.16))
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
         }
@@ -89,7 +89,7 @@ struct AdminOperationsView: View {
                     viewModel.onAction(.clickSeeAllPending)
                 }
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .buttonStyle(.plain)
             }
             ScrollView(.horizontal, showsIndicators: false) {
@@ -97,10 +97,10 @@ struct AdminOperationsView: View {
                     ForEach(viewModel.uiState.pendingFilters) { chip in
                         Text("\(chip.label) (\(chip.count))")
                             .font(.subheadline.weight(chip.isSelected ? .bold : .medium))
-                            .foregroundStyle(chip.isSelected ? Color(hex: "2B2330") : Color(hex: "6F6670"))
+                            .foregroundStyle(chip.isSelected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .background(chip.isSelected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.14))
+                            .background(chip.isSelected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.14))
                             .clipShape(Capsule())
                             .onTapGesture {
                                 viewModel.onAction(.selectPendingFilter(chip.filter))
@@ -171,15 +171,15 @@ struct AdminOperationsView: View {
                     Spacer()
                     Text(requestedAt)
                         .font(.caption2)
-                        .foregroundStyle(Color(hex: "7A707A"))
+                        .foregroundStyle(ConCafeColors.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(hex: "F5F2F4"))
+                        .background(ConCafeColors.surfaceVariant)
                         .clipShape(Capsule())
                 }
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 HStack(spacing: 8) {
                     Button {
                         viewModel.onAction(.approvePending(claimId))
@@ -188,8 +188,8 @@ struct AdminOperationsView: View {
                             .font(.caption.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
-                            .background(Color(hex: "FFD1DC"))
-                            .foregroundStyle(Color(hex: "2B2330"))
+                            .background(ConCafeColors.primaryContainer)
+                            .foregroundStyle(ConCafeColors.textPrimary)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     Button {
@@ -199,8 +199,8 @@ struct AdminOperationsView: View {
                             .font(.caption.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
-                            .background(Color(hex: "F5F2F4"))
-                            .foregroundStyle(Color(hex: "6F6670"))
+                            .background(ConCafeColors.surfaceVariant)
+                            .foregroundStyle(ConCafeColors.textSecondary)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                 }
@@ -215,7 +215,7 @@ struct AdminOperationsView: View {
 
     private var pendingCardImagePlaceholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FFE7EF"), Color(hex: "F4D8E2")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -251,11 +251,11 @@ struct AdminOperationsView: View {
                                 .foregroundStyle(Color.primary)
                             Text(menu.description)
                                 .font(.caption2)
-                                .foregroundStyle(Color(hex: "7A707A"))
+                                .foregroundStyle(ConCafeColors.textSecondary)
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundStyle(Color(hex: "B5AEB5"))
+                            .foregroundStyle(ConCafeColors.outlineStrong)
                     }
                     .padding(16)
                     .background(
@@ -275,7 +275,7 @@ struct AdminOperationsView: View {
             if viewModel.uiState.inquiries.isEmpty {
                 Text(String(localized: String.LocalizationValue("admin_inquiry_empty"), table: "Localizable"))
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
                     .background(
@@ -303,7 +303,7 @@ struct AdminOperationsView: View {
                         .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
-                    .background(Color(hex: "F5F2F4"))
+                    .background(ConCafeColors.surfaceVariant)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .disabled(viewModel.uiState.isLoadingMoreInquiries)
                 }
@@ -316,17 +316,17 @@ struct AdminOperationsView: View {
             HStack {
                 Text(inquiry.inquiryType)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Spacer()
                 Text(inquiry.createdAtLabel)
                     .font(.caption2)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
             }
             Text(inquiry.title)
                 .font(.subheadline.weight(.bold))
             Text(inquiry.content)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6F6670"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Text(
                 String(
                     format: String(localized: String.LocalizationValue("admin_writer"), table: "Localizable"),
@@ -335,7 +335,7 @@ struct AdminOperationsView: View {
                 )
             )
                 .font(.caption2)
-                .foregroundStyle(Color(hex: "8B7F8A"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -352,7 +352,7 @@ struct AdminOperationsView: View {
             if viewModel.uiState.reports.isEmpty {
                 Text("등록된 신고가 없습니다.")
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
                     .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
@@ -363,17 +363,17 @@ struct AdminOperationsView: View {
                         HStack {
                             Text(report.reportType)
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                             Spacer()
                             Text(report.createdAtLabel)
                                 .font(.caption2)
-                                .foregroundStyle(Color(hex: "7A707A"))
+                                .foregroundStyle(ConCafeColors.textSecondary)
                         }
                         Text("대상: \(reportTargetLabel(report)) / \(report.targetId)")
                             .font(.caption)
                         Text("신고자: \(report.reporterNickname)")
                             .font(.caption2)
-                            .foregroundStyle(Color(hex: "8B7F8A"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
@@ -394,7 +394,7 @@ struct AdminOperationsView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.vertical, 12)
-                    .background(Color(hex: "F5F2F4"))
+                    .background(ConCafeColors.surfaceVariant)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
@@ -409,18 +409,18 @@ struct AdminOperationsView: View {
         HStack(spacing: 12) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 viewModel.onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFF2D8"))
+        .background(ConCafeColors.warningContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -430,7 +430,7 @@ struct AdminOperationsView: View {
                 .font(.headline.weight(.bold))
             Text(String(localized: String.LocalizationValue("admin_banner_card_description"), table: "Localizable"))
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "7A707A"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Button {
                 viewModel.onAction(.clickBannerRegister)
             } label: {
@@ -439,10 +439,10 @@ struct AdminOperationsView: View {
                     Text(String(localized: String.LocalizationValue("dashboard_action_create_banner"), table: "Localizable"))
                         .fontWeight(.bold)
                 }
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -478,7 +478,7 @@ private extension MetricTrend {
 
     var color: Color {
         switch self {
-        case .up, .down: return Color(hex: "2E9E5B")
+        case .up, .down: return ConCafeColors.success
         case .new: return .red
         }
     }
@@ -498,17 +498,17 @@ private extension QuickMenuIcon {
 private extension QuickMenuAccent {
     var backgroundColor: Color {
         switch self {
-        case .primary: return Color(hex: "FFD1DC").opacity(0.32)
-        case .rose: return Color(hex: "FFE5EA")
-        case .blue: return Color(hex: "E6F0FF")
+        case .primary: return ConCafeColors.primaryContainer.opacity(0.32)
+        case .rose: return ConCafeColors.errorContainer
+        case .blue: return ConCafeColors.infoContainer
         }
     }
 
     var contentColor: Color {
         switch self {
-        case .primary: return Color(hex: "5E535C")
-        case .rose: return Color(hex: "E05A78")
-        case .blue: return Color(hex: "4F7DFF")
+        case .primary: return ConCafeColors.textSecondary
+        case .rose: return ConCafeColors.error
+        case .blue: return ConCafeColors.info
         }
     }
 }

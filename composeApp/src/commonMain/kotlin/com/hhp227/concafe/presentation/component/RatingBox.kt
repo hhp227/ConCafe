@@ -25,7 +25,7 @@ fun RatingBox(
 ) {
     Row(
         modifier = modifier
-            .background(colorFromHex("FEE3E9"), RoundedCornerShape(20.dp))
+            .background(ConCafeColors.errorContainer, RoundedCornerShape(20.dp))
             .padding(horizontal = 7.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -33,7 +33,7 @@ fun RatingBox(
             imageVector = Icons.Default.Star,
             contentDescription = null,
             modifier = Modifier.size(10.dp),
-            tint = colorFromHex("FFAD30")
+            tint = ConCafeColors.warning
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(

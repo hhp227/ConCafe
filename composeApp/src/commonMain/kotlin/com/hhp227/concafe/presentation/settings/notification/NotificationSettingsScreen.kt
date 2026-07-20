@@ -54,6 +54,7 @@ import concafe.composeapp.generated.resources.notification_settings_title
 import concafe.composeapp.generated.resources.notification_settings_type_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +122,7 @@ private fun NotificationSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -137,8 +138,8 @@ private fun NotificationSettingsContentScreen(
             NotificationSettingCard(title = stringResource(Res.string.notification_settings_basic_title)) {
                 NotificationToggleRow(
                     icon = Icons.Default.Notifications,
-                    iconBackground = colorFromHex("FFE6F1"),
-                    iconTint = colorFromHex("EB5F97"),
+                    iconBackground = ConCafeColors.surfaceTint,
+                    iconTint = ConCafeColors.primary,
                     title = stringResource(Res.string.notification_settings_push_title),
                     description = stringResource(Res.string.notification_settings_push_desc),
                     checked = uiState.isPushNotificationsEnabled,
@@ -152,8 +153,8 @@ private fun NotificationSettingsContentScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     NotificationToggleRow(
                         icon = Icons.Default.WorkHistory,
-                        iconBackground = colorFromHex("E4F7EC"),
-                        iconTint = colorFromHex("2E9E5B"),
+                        iconBackground = ConCafeColors.successContainer,
+                        iconTint = ConCafeColors.success,
                         title = stringResource(Res.string.notification_settings_shift_title),
                         description = stringResource(Res.string.notification_settings_shift_desc),
                         checked = uiState.isShiftNotificationsEnabled,
@@ -162,8 +163,8 @@ private fun NotificationSettingsContentScreen(
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Cake,
-                        iconBackground = colorFromHex("FFE6F1"),
-                        iconTint = colorFromHex("EB5F97"),
+                        iconBackground = ConCafeColors.surfaceTint,
+                        iconTint = ConCafeColors.primary,
                         title = stringResource(Res.string.notification_settings_birthday_title),
                         description = stringResource(Res.string.notification_settings_birthday_desc),
                         checked = uiState.isBirthdayNotificationsEnabled,
@@ -172,8 +173,8 @@ private fun NotificationSettingsContentScreen(
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Campaign,
-                        iconBackground = colorFromHex("E8F0FF"),
-                        iconTint = colorFromHex("4A79E8"),
+                        iconBackground = ConCafeColors.infoContainer,
+                        iconTint = ConCafeColors.info,
                         title = stringResource(Res.string.notification_settings_notice_title),
                         description = stringResource(Res.string.notification_settings_notice_desc),
                         checked = uiState.isNoticeNotificationsEnabled,
@@ -183,8 +184,8 @@ private fun NotificationSettingsContentScreen(
                     if (uiState.isCastRole) {
                         NotificationToggleRow(
                             icon = Icons.Default.PersonAddAlt1,
-                            iconBackground = colorFromHex("F1E8FF"),
-                            iconTint = colorFromHex("8A52E2"),
+                            iconBackground = ConCafeColors.primaryContainer,
+                            iconTint = ConCafeColors.primary,
                             title = stringResource(Res.string.notification_settings_follow_title),
                             description = stringResource(Res.string.notification_settings_follow_desc),
                             checked = uiState.isFollowNotificationsEnabled,
@@ -194,8 +195,8 @@ private fun NotificationSettingsContentScreen(
                     }
                     NotificationToggleRow(
                         icon = Icons.Default.Celebration,
-                        iconBackground = colorFromHex("FFF4E2"),
-                        iconTint = colorFromHex("E29B35"),
+                        iconBackground = ConCafeColors.warningContainer,
+                        iconTint = ConCafeColors.warning,
                         title = stringResource(Res.string.notification_settings_event_title),
                         description = stringResource(Res.string.notification_settings_event_desc),
                         checked = uiState.isEventNotificationsEnabled,
@@ -204,8 +205,8 @@ private fun NotificationSettingsContentScreen(
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Forum,
-                        iconBackground = colorFromHex("E9F7F8"),
-                        iconTint = colorFromHex("228B96"),
+                        iconBackground = ConCafeColors.infoContainer,
+                        iconTint = ConCafeColors.info,
                         title = stringResource(Res.string.notification_settings_community_title),
                         description = stringResource(Res.string.notification_settings_community_desc),
                         checked = uiState.isCommunityNotificationsEnabled,
@@ -241,7 +242,7 @@ private fun NotificationSettingsContentScreen(
                         Text(
                             text = uiState.errorMessage,
                             style = MaterialTheme.typography.bodySmall,
-                            color = colorFromHex("C33E6A")
+                            color = ConCafeColors.primary
                         )
                     }
                 }
@@ -260,7 +261,7 @@ private fun NotificationSettingsHeroCard(uiState: NotificationSettingsUiState) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondary)
                     ),
                     RoundedCornerShape(24.dp)
                 )
@@ -369,7 +370,7 @@ private fun NotificationToggleRow(
             enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = colorFromHex("EF6797")
+                checkedTrackColor = ConCafeColors.primary
             )
         )
     }
@@ -382,17 +383,17 @@ private fun QuietHoursDescriptionCard(option: NotificationQuietHoursMode) {
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = colorFromHex("FFD6E5"),
+                color = ConCafeColors.primaryContainer,
                 shape = RoundedCornerShape(18.dp)
             )
-            .background(colorFromHex("FFF6FA"), RoundedCornerShape(18.dp))
+            .background(ConCafeColors.background, RoundedCornerShape(18.dp))
             .padding(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = option.titleText(),
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("B84473")
+                color = ConCafeColors.primary
             )
             Text(
                 text = option.descriptionText(),

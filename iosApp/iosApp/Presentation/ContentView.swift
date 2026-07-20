@@ -13,6 +13,7 @@ struct ContentView: View {
                 hasUnreadNotifications: viewModel.uiState.hasUnreadNotifications,
                 onRefreshUnreadNotificationCount: { viewModel.onAction(.refreshUnreadNotificationCount) }
             )
+            .id(viewModel.uiState.brandTheme)
             if let networkAlertState = viewModel.uiState.networkAlertState, networkAlertState.isVisible {
                 NetworkStatusBannerView(
                     message: networkAlertState.message,
@@ -22,6 +23,7 @@ struct ContentView: View {
                 .zIndex(1)
             }
         }
+        .tint(ConCafeColors.primary)
         .preferredColorScheme(viewModel.uiState.themeMode.colorScheme)
         .animation(
             .easeInOut(duration: 0.2),

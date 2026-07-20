@@ -603,6 +603,12 @@ class CafeDashboardViewModel(
         _uiState.update { it.copy(infoMessage = null) }
     }
 
+    private fun clickCastListDetail() {
+        viewModelScope.launch {
+            _event.emit(CafeDashboardEvent.NavigateToCastList(cafeId))
+        }
+    }
+
     private fun clickCastSchedule(castId: String) {
         _uiState.update {
             it.copy(
@@ -899,6 +905,7 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ClickEditExternalLink -> clickEditExternalLink(action.linkId)
             is CafeDashboardAction.ClickDeleteExternalLink -> clickDeleteExternalLink(action.linkId)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
+            CafeDashboardAction.ClickCastListDetail -> clickCastListDetail()
             CafeDashboardAction.ClickDeleteCast -> clickDeleteCast()
             CafeDashboardAction.ConfirmDeleteCast -> confirmDeleteCast()
             CafeDashboardAction.DismissDeleteCastDialog -> dismissDeleteCastDialog()

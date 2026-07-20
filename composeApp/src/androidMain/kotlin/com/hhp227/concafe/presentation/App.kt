@@ -35,7 +35,10 @@ fun App() {
     )
     val uiState by appViewModel.uiState.collectAsState()
 
-    ConCafeTheme(darkTheme = uiState.themeMode == AppThemeMode.DARK) {
+    ConCafeTheme(
+        darkTheme = uiState.themeMode == AppThemeMode.DARK,
+        brandTheme = uiState.brandTheme
+    ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {

@@ -14,13 +14,14 @@ import androidx.compose.ui.unit.dp
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.splash_logo
 import org.jetbrains.compose.resources.painterResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun DesktopLaunchScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF9CBCF)),
+            .background(ConCafeColors.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
         Box(

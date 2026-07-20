@@ -109,7 +109,7 @@ val useCaseModule = module {
     factory { GetNearbyCafePageUseCase(get()) }
     factory { GetPopularCastPageUseCase(get(), get()) }
     factory { GetHomeBannersUseCase(get()) }
-    factory { GetBirthdayCastsUseCase(get()) }
+    factory { GetBirthdayCastsUseCase(get(), get()) }
     factory { GetRecentNoticesUseCase(get()) }
     factory { GetHomeCafeEventsUseCase(get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }
@@ -184,6 +184,8 @@ val useCaseModule = module {
     factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { ObserveThemeModeUseCase(get()) }
     factory { SetThemeModeUseCase(get()) }
+    factory { ObserveBrandThemeUseCase(get()) }
+    factory { SetBrandThemeUseCase(get()) }
     factory { ShouldShowDetailTooltipUseCase(get()) }
     factory { MarkDetailTooltipShownUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }

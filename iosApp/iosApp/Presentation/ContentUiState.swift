@@ -12,4 +12,5 @@ struct ContentUiState {
     var networkAlertState: NetworkAlertState? = nil
     var hasUnreadNotifications: Bool = false
     var themeMode: AppThemeMode = .light
+    var brandTheme: AppBrandTheme = .maidCafe
 }

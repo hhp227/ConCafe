@@ -33,7 +33,6 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.schedule_action_close
 import concafe.composeapp.generated.resources.schedule_apply_edit
@@ -80,6 +79,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,7 +171,7 @@ private fun ScheduleEditSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .keyboardBottomInsets()
+            .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -237,14 +237,14 @@ private fun ScheduleEditSheet(
         }
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = Color(0x1AFFD1DC),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33FFD1DC))
+            color = ConCafeColors.primaryContainer.copy(alpha = 0.1f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.Info, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Info, contentDescription = null, tint = ConCafeColors.primary, modifier = Modifier.size(16.dp))
                 Text(
                     stringResource(Res.string.schedule_break_notice),
                     style = MaterialTheme.typography.bodySmall,
@@ -266,7 +266,7 @@ private fun ScheduleEditSheet(
         Button(
             onClick = { onAction(ScheduleAction.SubmitEditDay) },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("FFD1DC"), contentColor = MaterialTheme.colorScheme.onSurface),
+            colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primaryContainer, contentColor = MaterialTheme.colorScheme.onSurface),
             shape = RoundedCornerShape(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
@@ -307,7 +307,7 @@ private fun TimeDropdownField(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 leadingIcon = {
-                    Icon(Icons.Default.Schedule, contentDescription = null, tint = colorFromHex("EF6797"))
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = ConCafeColors.primary)
                 },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded && enabled)
@@ -315,7 +315,7 @@ private fun TimeDropdownField(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    disabledContainerColor = colorFromHex("F2EDF0"),
+                    disabledContainerColor = ConCafeColors.surfaceVariant,
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
                     disabledBorderColor = Color.Transparent
@@ -381,7 +381,7 @@ private fun ScheduleContentScreen(
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                         .navigationBarsPadding(),
                     enabled = uiState.hasPendingChanges && !uiState.isSaving,
-                    colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("FFD1DC")),
+                    colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primaryContainer),
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
@@ -404,7 +404,7 @@ private fun ScheduleContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
@@ -459,7 +459,7 @@ private fun ScheduleContentScreen(
             } else {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
             }
         }
@@ -494,7 +494,7 @@ private fun ScheduleCastSummaryCard(
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
                 Text(
                     text = castSummary.title,
@@ -514,7 +514,7 @@ private fun ScheduleCastSummaryCard(
                     .clip(RoundedCornerShape(18.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
+                            colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -532,7 +532,7 @@ private fun ScheduleCastSummaryCard(
                         text = castSummary.initials,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("7C3F67")
+                        color = ConCafeColors.primary
                     )
                 }
             }
@@ -568,13 +568,13 @@ private fun WeekSelectorSection(
                 Icon(
                     imageVector = Icons.Default.CalendarMonth,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797"),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = stringResource(Res.string.schedule_calendar),
                     style = MaterialTheme.typography.labelLarge,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -634,7 +634,7 @@ private fun SchedulePeriodTabs(
                         modifier = Modifier.padding(vertical = 10.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (selected) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (selected) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
@@ -652,9 +652,9 @@ private fun WeekDayChip(
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) colorFromHex("EF6797") else MaterialTheme.colorScheme.surface,
+        color = if (isSelected) ConCafeColors.primary else MaterialTheme.colorScheme.surface,
         shadowElevation = if (isSelected) 4.dp else 0.dp,
-        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
@@ -686,8 +686,8 @@ private fun ScheduleInfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = androidx.compose.foundation.BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -700,14 +700,14 @@ private fun ScheduleInfoBanner(
                 text = resolveScheduleMessageLabel(message),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             Text(
                 text = stringResource(Res.string.schedule_action_close),
                 modifier = Modifier.clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
         }
     }
@@ -750,7 +750,7 @@ private fun DayScheduleCard(
     schedule: ScheduleManagementDaySchedule,
     onEditClick: () -> Unit
 ) {
-    val workingBackground = colorFromHex("EF6797")
+    val workingBackground = ConCafeColors.primary
     val primaryContentColor = if (schedule.isWorking) Color.White else MaterialTheme.colorScheme.onSurface
     val secondaryContentColor = if (schedule.isWorking) Color.White.copy(alpha = 0.82f) else MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
@@ -767,7 +767,7 @@ private fun DayScheduleCard(
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .background(if (schedule.isWorking) Color.White.copy(alpha = 0.38f) else colorFromHex("E9E0E5"))
+                    .background(if (schedule.isWorking) Color.White.copy(alpha = 0.38f) else ConCafeColors.outline)
             )
             Row(
                 modifier = Modifier
@@ -781,7 +781,7 @@ private fun DayScheduleCard(
                         .size(48.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .background(
-                            if (schedule.isWorking) Color.White.copy(alpha = 0.18f) else colorFromHex("F2EDF0")
+                            if (schedule.isWorking) Color.White.copy(alpha = 0.18f) else ConCafeColors.surfaceVariant
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -807,7 +807,7 @@ private fun DayScheduleCard(
                         )
                         Surface(
                             shape = RoundedCornerShape(999.dp),
-                            color = if (schedule.isWorking) Color.White.copy(alpha = 0.22f) else colorFromHex("F2EDF0")
+                            color = if (schedule.isWorking) Color.White.copy(alpha = 0.22f) else ConCafeColors.surfaceVariant
                         ) {
                             Text(
                                 text = resolveScheduleStatusLabel(schedule.statusLabel, schedule.status),

@@ -64,7 +64,7 @@ struct CafeInfoView: View {
     private func infoRow(icon: String, title: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -103,7 +103,7 @@ struct CafeInfoView: View {
             }
             if let id = socialMedia["youtube"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
-                result.append(("YouTube", "https://youtube.com/@\(trimmed)", Color(hex: "FF0000"), .youtube))
+                result.append(("YouTube", "https://youtube.com/@\(trimmed)", ConCafeColors.error, .youtube))
             }
             if let id = socialMedia["twitter"], !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -140,7 +140,7 @@ struct CafeInfoView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(Color(hex: "F5EDF4"))
+                                .background(ConCafeColors.surfaceTint)
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                         }
@@ -199,8 +199,8 @@ struct CafeInfoView: View {
             .padding(.vertical, 14)
         }
         .buttonStyle(.borderedProminent)
-        .tint(Color(hex: "FFD1DC"))
-        .foregroundStyle(Color(hex: "2B2330"))
+        .tint(ConCafeColors.primaryContainer)
+        .foregroundStyle(ConCafeColors.textPrimary)
         .frame(maxWidth: .infinity)
         .disabled(reservationUrl == nil || reservationUrl?.isEmpty == true)
     }

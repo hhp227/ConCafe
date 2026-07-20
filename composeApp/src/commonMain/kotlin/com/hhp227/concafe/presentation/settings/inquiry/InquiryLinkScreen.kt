@@ -42,6 +42,7 @@ import concafe.composeapp.generated.resources.inquiry_type_service
 import concafe.composeapp.generated.resources.inquiry_type_suggestion
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +105,7 @@ private fun InquiryLinkContentScreen(
                     modifier = Modifier
                         .navigationBarsPadding()
                         .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
+                        .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -115,8 +116,8 @@ private fun InquiryLinkContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
-                            contentColor = colorFromHex("2B2330")
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
@@ -139,11 +140,11 @@ private fun InquiryLinkContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             Brush.verticalGradient(
-                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
                             )
                         )
                     }
@@ -187,7 +188,7 @@ private fun InquiryLinkContentScreen(
                                 Text(
                                     text = uiState.errorMessage,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = colorFromHex("D1436F")
+                                    color = ConCafeColors.primary
                                 )
                             }
                         }
@@ -227,8 +228,8 @@ private fun InquiryTypeDropdown(
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(16.dp),
-            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else colorFromHex("F8F5F6"),
-            border = BorderStroke(1.dp, Color(0x4DFFD1DC)),
+            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else ConCafeColors.surfaceVariant,
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.3f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(
@@ -244,7 +245,7 @@ private fun InquiryTypeDropdown(
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = colorFromHex("7C7480"),
+                    tint = ConCafeColors.textSecondary,
                     modifier = Modifier.align(androidx.compose.ui.Alignment.CenterEnd)
                 )
             }

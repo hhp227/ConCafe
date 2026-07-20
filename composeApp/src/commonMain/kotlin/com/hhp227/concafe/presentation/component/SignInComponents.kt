@@ -35,7 +35,7 @@ fun SignInLogoSection() {
             modifier = Modifier
                 .size(96.dp)
                 .background(
-                    Brush.linearGradient(listOf(colorFromHex("EF6797"), colorFromHex("F7A8C8"))),
+                    Brush.linearGradient(listOf(ConCafeColors.primary, ConCafeColors.secondaryContainer)),
                     CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -56,11 +56,11 @@ fun SignInLogoSection() {
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.height(16.dp))
-        ConCafeLogo(color = colorFromHex("DA4E84"))
+        ConCafeLogo(color = ConCafeColors.primary)
         Spacer(Modifier.height(6.dp))
         Text(
             text = stringResource(Res.string.signin_logo_subtitle),
-            color = colorFromHex("7C7180")
+            color = ConCafeColors.textSecondary
         )
     }
 }
@@ -75,7 +75,7 @@ fun SignInDivider() {
         Text(
             text = stringResource(Res.string.signin_divider_or),
             modifier = Modifier.padding(horizontal = 14.dp),
-            color = colorFromHex("8E8794")
+            color = ConCafeColors.textMuted
         )
         Divider(modifier = Modifier.weight(1f))
     }
@@ -93,7 +93,7 @@ fun SignInSocialButton(
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
-        border = if (outlined) BorderStroke(1.dp, colorFromHex("E4DDE5")) else null,
+        border = if (outlined) BorderStroke(1.dp, ConCafeColors.outline) else null,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor

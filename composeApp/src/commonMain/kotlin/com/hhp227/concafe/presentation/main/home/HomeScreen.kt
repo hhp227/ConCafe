@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyGridImagePrefetch
 import com.hhp227.concafe.presentation.component.LazyListImagePrefetch
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
@@ -96,6 +98,7 @@ import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -225,9 +228,13 @@ fun HomeContentScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(uiState.popularCasts) { maid ->
+                            val cafeName = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId
+                            val cafeRegion = uiState.popularCastCafeRegions[maid.cafeId]
+                            val subtitle = if (!cafeRegion.isNullOrBlank()) "$cafeName(${localizedRegionCity(cafeRegion)})" else cafeName
+
                             ConCafeCastCard(
                                 name = maid.name,
-                                subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
+                                subtitle = subtitle,
                                 imageUrl = maid.profileImage,
                                 modifier = Modifier.width(132.dp),
                                 metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
@@ -324,14 +331,16 @@ fun HomeContentScreen(
                         flingBehavior = rememberStartSnapFlingBehavior(birthdayCastListState),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(104.dp),
+                            .height(128.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(uiState.birthdayCasts) { maid ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
+                                modifier = Modifier
+                                    .width(74.dp)
+                                    .clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -340,8 +349,8 @@ fun HomeContentScreen(
                                         .background(
                                             Brush.verticalGradient(
                                                 listOf(
-                                                    colorFromHex("FFD3E2"),
-                                                    colorFromHex("FFB6D0")
+                                                    ConCafeColors.primaryContainer,
+                                                    ConCafeColors.primaryContainer
                                                 )
                                             )
                                         )
@@ -366,10 +375,27 @@ fun HomeContentScreen(
                                 }
                                 Text(
                                     maid.name,
-                                    modifier = Modifier.padding(top = 8.dp),
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .fillMaxWidth(),
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center
                                 )
+                                val cafeName = uiState.birthdayCastCafeNames[maid.cafeId]
+                                if (!cafeName.isNullOrBlank()) {
+                                    Text(
+                                        cafeName,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
@@ -383,7 +409,7 @@ fun HomeContentScreen(
                 .background(screenBackgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = colorFromHex("EF6797"))
+            CircularProgressIndicator(color = ConCafeColors.primary)
         }
     }
 }
@@ -499,7 +525,7 @@ private fun HomeCafeEventCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
+                        .background(Brush.linearGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
                 )
             }
         }
@@ -509,7 +535,7 @@ private fun HomeCafeEventCard(
         ) {
             Text(
                 text = event.cafeName,
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -582,8 +608,8 @@ private fun HomeBannerSection(
                                 )
                                 .clip(RoundedCornerShape(999.dp))
                                 .background(
-                                    if (pagerState.currentPage == page) colorFromHex("EF6797")
-                                    else colorFromHex("D8D8D8")
+                                    if (pagerState.currentPage == page) ConCafeColors.primary
+                                    else ConCafeColors.outline
                                 )
                         )
                     }
@@ -708,7 +734,7 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(colorFromHex("EDE7EA"), colorFromHex("F6F2F4"))
+                        listOf(ConCafeColors.outline, ConCafeColors.surfaceTint)
                     )
                 )
                 .padding(18.dp),
@@ -776,7 +802,7 @@ private fun SectionTitle(
         if (actionLabel != null && onAction != null) {
             Text(
                 text = actionLabel,
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -802,7 +828,7 @@ private fun NearByCafeItem(
             modifier = Modifier
                 .size(92.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(Brush.verticalGradient(listOf(colorFromHex("FFE1C7"), colorFromHex("FFCEAE"))))
+                .background(Brush.verticalGradient(listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)))
         ) {
             val resolvedThumbnailImage = cafe.thumbnailImage?.trim().orEmpty()
 
@@ -827,14 +853,14 @@ private fun NearByCafeItem(
                 Text(
                     text = conceptLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             Text(
-                text = cafe.region.city,
+                text = localizedRegionCity(cafe.region.city),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
@@ -906,7 +932,7 @@ private fun HomeCommunityPostCard(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
+                                listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -915,7 +941,7 @@ private fun HomeCommunityPostCard(
                         text = post.userNickname.firstOrNull()?.toString() ?: "?",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("EF6797")
+                        color = ConCafeColors.primary
                     )
                 }
                 Text(
@@ -947,7 +973,7 @@ private fun HomeCommunityPostCard(
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
-            Divider(color = colorFromHex("FFD1DC").copy(alpha = 0.3f))
+            Divider(color = ConCafeColors.primaryContainer.copy(alpha = 0.3f))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

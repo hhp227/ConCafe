@@ -34,6 +34,7 @@ import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun PostEditScreen(
@@ -76,8 +77,8 @@ private fun PostEditContentScreen(
     uiState: PostEditUiState,
     onAction: (PostEditAction) -> Unit
 ) {
-    val pink = colorFromHex("EF6797")
-    val softPink = colorFromHex("FFD1DC")
+    val pink = ConCafeColors.primary
+    val softPink = ConCafeColors.primaryContainer
     val textColor = MaterialTheme.colorScheme.onSurface
 
     Scaffold(
@@ -136,7 +137,7 @@ private fun PostEditContentScreen(
             uiState.infoMessage?.let { message ->
                 Card(
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = colorFromHex("FFF6D7"))
+                    colors = CardDefaults.cardColors(containerColor = ConCafeColors.goldContainer)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -147,10 +148,10 @@ private fun PostEditContentScreen(
                             text = message,
                             modifier = Modifier.weight(1f),
                             fontSize = 13.sp,
-                            color = colorFromHex("6B5320")
+                            color = ConCafeColors.goldDeep
                         )
                         TextButton(onClick = { onAction(PostEditAction.DismissInfoMessage) }) {
-                            Text(stringResource(Res.string.common_close), color = colorFromHex("6B5320"), fontSize = 12.sp)
+                            Text(stringResource(Res.string.common_close), color = ConCafeColors.goldDeep, fontSize = 12.sp)
                         }
                     }
                 }

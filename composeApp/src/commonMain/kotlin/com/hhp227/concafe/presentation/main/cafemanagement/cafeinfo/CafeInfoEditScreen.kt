@@ -30,7 +30,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
@@ -39,6 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 import kotlin.math.round
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeInfoEditScreen(
@@ -119,14 +120,14 @@ private fun CafeInfoEditContent(
         },
         bottomBar = {
             Surface(
-                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp,
-                border = BorderStroke(1.dp, Color(0x33FFD1DC))
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .keyboardBottomInsets()
+                        .fixedBottomBarInsets()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -137,7 +138,7 @@ private fun CafeInfoEditContent(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
+                            containerColor = ConCafeColors.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
@@ -161,7 +162,7 @@ private fun CafeInfoEditContent(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
@@ -174,7 +175,9 @@ private fun CafeInfoEditContent(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -186,7 +189,7 @@ private fun CafeInfoEditContent(
                                 .padding(vertical = 32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = colorFromHex("EF6797"))
+                            CircularProgressIndicator(color = ConCafeColors.primary)
                         }
                     }
                 }
@@ -250,7 +253,7 @@ private fun CafeInfoEditContent(
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(
                                             Brush.linearGradient(
-                                                colors = listOf(colorFromHex("FFD8E6"), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
+                                                colors = listOf(ConCafeColors.primaryContainer, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
                                             ),
                                             RoundedCornerShape(20.dp)
                                         )
@@ -265,12 +268,12 @@ private fun CafeInfoEditContent(
                                             Icon(
                                                 Icons.Default.PhotoCamera,
                                                 contentDescription = null,
-                                                tint = colorFromHex("8B5164"),
+                                                tint = ConCafeColors.primary,
                                                 modifier = Modifier.size(34.dp)
                                             )
                                             Text(
                                                 text = stringResource(Res.string.cafeinfo_representative_title),
-                                                color = colorFromHex("5A4954"),
+                                                color = ConCafeColors.textSecondary,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -286,7 +289,7 @@ private fun CafeInfoEditContent(
                             Text(
                                 text = stringResource(Res.string.cafeinfo_representative_hint),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = colorFromHex("8A8088"),
+                                color = ConCafeColors.textMuted,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -299,7 +302,7 @@ private fun CafeInfoEditContent(
                             trailing = {
                                 Text(
                                     stringResource(Res.string.cafeinfo_gallery_limit, uiState.galleryLimitCount, uiState.galleryMaxCount),
-                                    color = colorFromHex("EF6797"),
+                                    color = ConCafeColors.primary,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -358,7 +361,7 @@ private fun CafeInfoEditContent(
                                         Icon(
                                             Icons.Default.LocationOn,
                                             contentDescription = stringResource(Res.string.cafeinfo_content_find_by_address),
-                                            tint = colorFromHex("EF6797")
+                                            tint = ConCafeColors.primary
                                         )
                                     }
                                 },
@@ -368,7 +371,7 @@ private fun CafeInfoEditContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
-                                    .background(colorFromHex("F4EFF2"), RoundedCornerShape(18.dp))
+                                    .background(ConCafeColors.surfaceTint, RoundedCornerShape(18.dp))
                             ) {
                                 CafeInfoLocationPickerMap(
                                     latitude = uiState.mapLatitude,
@@ -400,7 +403,7 @@ private fun CafeInfoEditContent(
                                         .clickable { onAction(CafeInfoEditAction.ClickPinLocation) },
                                     shape = RoundedCornerShape(999.dp),
                                     color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
-                                    border = BorderStroke(1.dp, Color(0x33FFD1DC))
+                                    border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
                                 ) {
                                     Text(
                                         text = stringResource(Res.string.cafeinfo_action_pin_location),
@@ -417,7 +420,7 @@ private fun CafeInfoEditContent(
                                     formatCoordinate(uiState.mapLongitude)
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = colorFromHex("7E737B")
+                                color = ConCafeColors.textSecondary
                             )
                             PhoneNumberTextField(
                                 label = stringResource(Res.string.cafeinfo_label_contact),
@@ -448,8 +451,8 @@ private fun CafeInfoEditContent(
                                 onClick = { onAction(CafeInfoEditAction.ClickManageExceptionDates) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.EditCalendar, contentDescription = null, tint = colorFromHex("EF6797"))
-                                Text(stringResource(Res.string.cafeinfo_action_manage_exception), color = colorFromHex("EF6797"), fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.EditCalendar, contentDescription = null, tint = ConCafeColors.primary)
+                                Text(stringResource(Res.string.cafeinfo_action_manage_exception), color = ConCafeColors.primary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -473,7 +476,7 @@ private fun EditSectionCard(
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
@@ -553,7 +556,7 @@ private fun GalleryImageTile(
                     .align(Alignment.BottomStart)
                     .padding(10.dp),
                 style = MaterialTheme.typography.labelMedium,
-                color = colorFromHex("5A4954"),
+                color = ConCafeColors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -580,19 +583,19 @@ private fun AddGalleryTile(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(96.dp)
-            .background(Color(0x1AFFD1DC), RoundedCornerShape(16.dp))
+            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             shape = CircleShape,
             color = Color.Transparent,
-            border = BorderStroke(2.dp, Color(0x66FFD1DC))
+            border = BorderStroke(2.dp, ConCafeColors.primaryContainer.copy(alpha = 0.4f))
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = stringResource(Res.string.cafeinfo_content_add_image),
-                tint = colorFromHex("EF6797"),
+                tint = ConCafeColors.primary,
                 modifier = Modifier.padding(14.dp)
             )
         }
@@ -617,7 +620,7 @@ private fun HoursRow(
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
         SmallTimeField(value = open, onValueChange = onOpenChange)
-        Text(stringResource(Res.string.cafeinfo_dash), color = colorFromHex("8A8088"))
+        Text(stringResource(Res.string.cafeinfo_dash), color = ConCafeColors.textMuted)
         SmallTimeField(value = close, onValueChange = onCloseChange)
     }
 }
@@ -644,14 +647,14 @@ private fun SmallTimeField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
                 unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
-                focusedBorderColor = Color(0x33FFD1DC),
-                unfocusedBorderColor = Color(0x33FFD1DC)
+                focusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f),
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f)
             ),
             trailingIcon = {
                 Icon(
                     imageVector = Icons.Default.AccessTime,
                     contentDescription = stringResource(Res.string.cafeinfo_content_select_time),
-                    tint = colorFromHex("8A8088"),
+                    tint = ConCafeColors.textMuted,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -719,8 +722,8 @@ private fun CafeTypeDropdownField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
                 unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
-                focusedBorderColor = Color(0x33FFD1DC),
-                unfocusedBorderColor = Color(0x33FFD1DC)
+                focusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f),
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f)
             )
         )
         ExposedDropdownMenu(
@@ -739,7 +742,7 @@ private fun CafeTypeDropdownField(
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
-                                tint = colorFromHex("EF6797")
+                                tint = ConCafeColors.primary
                             )
                         }
                     } else {
@@ -774,8 +777,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -788,10 +791,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.banneredit_action_close), color = colorFromHex("6B5320"))
+                Text(stringResource(Res.string.banneredit_action_close), color = ConCafeColors.goldDeep)
             }
         }
     }

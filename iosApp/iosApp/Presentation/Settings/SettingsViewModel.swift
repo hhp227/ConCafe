@@ -18,6 +18,10 @@ final class SettingsViewModel: ObservableObject {
 
     private let setThemeModeUseCase: SetThemeModeUseCase
 
+    private let observeBrandThemeUseCase: ObserveBrandThemeUseCase
+
+    private let setBrandThemeUseCase: SetBrandThemeUseCase
+
     @Published private(set) var uiState = SettingsUiState.empty
 
     let event = PassthroughSubject<SettingsEvent, Never>()
@@ -87,6 +91,24 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    private func selectBrandTheme(_ brandTheme: AppBrandTheme) {
+        setBrandThemeUseCase.invoke(brandTheme: brandTheme.sharedBrandTheme)
+        uiState.brandTheme = brandTheme
+    }
+
+    private func observeBrandTheme() {
+        tasks[.observeBrandTheme]?.cancel()
+        tasks[.observeBrandTheme] = Task {
+            do {
+                for try await brandTheme in asyncSequence(for: observeBrandThemeUseCase.invoke()) {
+                    uiState.brandTheme = AppBrandTheme(brandTheme: brandTheme)
+                }
+            } catch {
+                uiState.brandTheme = .maidCafe
+            }
+        }
+    }
+
     func onAction(_ action: SettingsAction) {
         switch action {
         case .backTapped:
@@ -105,19 +127,26 @@ final class SettingsViewModel: ObservableObject {
             signOut()
         case .themeModeSelected(let themeMode):
             selectThemeMode(themeMode)
+        case .brandThemeSelected(let brandTheme):
+            selectBrandTheme(brandTheme)
         }
     }
 
     init(
         signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
         observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase(),
-        setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase()
+        setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase(),
+        observeBrandThemeUseCase: ObserveBrandThemeUseCase = KoinInitializerKt.resolveObserveBrandThemeUseCase(),
+        setBrandThemeUseCase: SetBrandThemeUseCase = KoinInitializerKt.resolveSetBrandThemeUseCase()
     ) {
         self.signOutUseCase = signOutUseCase
         self.observeThemeModeUseCase = observeThemeModeUseCase
         self.setThemeModeUseCase = setThemeModeUseCase
+        self.observeBrandThemeUseCase = observeBrandThemeUseCase
+        self.setBrandThemeUseCase = setBrandThemeUseCase
 
         observeThemeMode()
+        observeBrandTheme()
     }
 
     deinit {
@@ -128,6 +157,7 @@ final class SettingsViewModel: ObservableObject {
     private enum TaskKey {
         case signOut
         case observeTheme
+        case observeBrandTheme
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"

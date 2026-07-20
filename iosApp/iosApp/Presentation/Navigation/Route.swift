@@ -22,6 +22,7 @@ enum Route: Hashable {
     case castEdit(cafeId: String?, castId: String?)
     case schedule(castId: String?)
     case castManagement(cafeId: String, cafeName: String)
+    case castList(cafeId: String)
     case menuGoods(param: String)
     case menuGoodsEdit(cafeId: String, itemId: String?)
     case reviewEdit(cafeId: String, reviewId: String?)

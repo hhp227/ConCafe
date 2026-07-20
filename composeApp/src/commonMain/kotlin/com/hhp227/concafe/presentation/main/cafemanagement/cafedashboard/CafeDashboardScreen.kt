@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,7 +34,6 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
-import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
 import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +86,9 @@ fun CafeDashboardScreen(
                 }
                 is CafeDashboardEvent.NavigateToCastEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
+                }
+                is CafeDashboardEvent.NavigateToCastList -> {
+                    onNavigationAction(NavigationAction.NavigateToCastList(event.cafeId))
                 }
                 is CafeDashboardEvent.NavigateToSchedule -> {
                     onNavigationAction(NavigationAction.NavigateToSchedule(event.castId))
@@ -223,7 +227,7 @@ private fun CafeDashboardContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFFBFD"))
+                .background(ConCafeColors.background)
         ) {
             if (uiState.isLoading) {
                 Box(
@@ -315,6 +319,9 @@ private fun CafeDashboardContentScreen(
                                 },
                                 onLoadMoreClick = {
                                     onAction(CafeDashboardAction.ClickLoadMoreCasts)
+                                },
+                                onCastListDetailClick = {
+                                    onAction(CafeDashboardAction.ClickCastListDetail)
                                 }
                             )
                         }
@@ -373,7 +380,7 @@ private fun ExternalLinkSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -399,9 +406,9 @@ private fun ExternalLinkSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContainerColor = ConCafeColors.primaryContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -433,7 +440,7 @@ private fun SocialMediaSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -476,9 +483,9 @@ private fun SocialMediaSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContainerColor = ConCafeColors.primaryContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -511,7 +518,7 @@ private fun ReservationSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -536,9 +543,9 @@ private fun ReservationSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContainerColor = ConCafeColors.primaryContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -571,7 +578,7 @@ private fun TableCountSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -604,9 +611,9 @@ private fun TableCountSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContainerColor = ConCafeColors.primaryContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -639,7 +646,7 @@ private fun GuestScheduleSheetContent(
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .keyboardBottomInsets(),
+            .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("게스트 출연 추가", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -690,9 +697,9 @@ private fun GuestScheduleSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = colorFromHex("F4D7DF"),
+                disabledContainerColor = ConCafeColors.primaryContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -759,7 +766,7 @@ private fun ExternalLinkSection(
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.White,
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -775,22 +782,22 @@ private fun ExternalLinkSection(
                         text = stringResource(Res.string.dashboard_shortcut_external_links),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("8C7A83")
+                        color = ConCafeColors.textMuted
                     )
                     Text(
                         text = stringResource(Res.string.dashboard_external_link_section_subtitle),
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("7E7480")
+                        color = ConCafeColors.textSecondary
                     )
                 }
                 TextButton(onClick = onAddClick) {
-                    Text(stringResource(Res.string.dashboard_action_add), color = colorFromHex("EF6797"))
+                    Text(stringResource(Res.string.dashboard_action_add), color = ConCafeColors.primary)
                 }
             }
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.background,
-                border = BorderStroke(1.dp, colorFromHex("F0E6EC"))
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -806,7 +813,7 @@ private fun ExternalLinkSection(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-                                border = BorderStroke(1.dp, colorFromHex("F0E6EC")),
+                                border = BorderStroke(1.dp, ConCafeColors.primaryContainer),
                                 onClick = { onItemClick(link.id) }
                             ) {
                                 Row(
@@ -821,7 +828,7 @@ private fun ExternalLinkSection(
                                             .size(52.dp)
                                             .background(
                                                 Brush.linearGradient(
-                                                    colors = listOf(colorFromHex("FFD1DC"), colorFromHex("FFE4EC"))
+                                                    colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                                                 ),
                                                 RoundedCornerShape(16.dp)
                                             ),
@@ -846,14 +853,14 @@ private fun ExternalLinkSection(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_edit),
-                                    tint = colorFromHex("8F848F")
+                                    tint = ConCafeColors.textMuted
                                 )
                             }
                             IconButton(onClick = { onDeleteClick(link.id) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_delete),
-                                    tint = colorFromHex("8F848F")
+                                    tint = ConCafeColors.textMuted
                                 )
                             }
                         }
@@ -863,7 +870,7 @@ private fun ExternalLinkSection(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
+                            containerColor = ConCafeColors.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
@@ -903,10 +910,10 @@ private fun PendingCastClaimSection(
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = colorFromHex("8A808A"))
+                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textMuted)
                     }
                     claim.message?.let { message ->
-                        Text(message, style = MaterialTheme.typography.bodyMedium, color = colorFromHex("5C5760"))
+                        Text(message, style = MaterialTheme.typography.bodyMedium, color = ConCafeColors.textSecondary)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
@@ -914,7 +921,7 @@ private fun PendingCastClaimSection(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("FFD1DC"),
+                                containerColor = ConCafeColors.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         ) {
@@ -947,7 +954,7 @@ private fun DashboardHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(colorFromHex("2F1B3A"), colorFromHex("7C3F67"), colorFromHex("F06A9D"))
+                        colors = listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
                     )
                 )
                 .padding(22.dp)
@@ -999,8 +1006,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -1013,10 +1020,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = colorFromHex("6B5320"))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = ConCafeColors.goldDeep)
             }
         }
     }
@@ -1040,19 +1047,19 @@ private fun DashboardMetricGrid(
                 modifier = Modifier.weight(1f),
                 title = stringResource(Res.string.dashboard_metric_today_checkin),
                 value = cafe.todayCheckIns.toString(),
-                accent = colorFromHex("EF6797")
+                accent = ConCafeColors.primary
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(Res.string.dashboard_metric_follower),
                 value = cafe.followerCount.toString(),
-                accent = colorFromHex("47A88B")
+                accent = ConCafeColors.success
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(Res.string.dashboard_metric_table_count),
                 value = "${cafe.tableCounts.current}/${cafe.tableCounts.total}",
-                accent = colorFromHex("7C3AED"),
+                accent = ConCafeColors.primary,
                 onClick = onTableCountClick
             )
         }
@@ -1073,7 +1080,7 @@ private fun DashboardMetricCard(
         ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -1171,7 +1178,7 @@ private fun DashboardQrMetricCard(
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7")),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Row(
@@ -1187,12 +1194,12 @@ private fun DashboardQrMetricCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = colorFromHex("FCE6EF")
+                    color = ConCafeColors.surfaceTint
                 ) {
                     Icon(
                         imageVector = Icons.Default.QrCode2,
                         contentDescription = null,
-                        tint = colorFromHex("EF6797"),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -1213,7 +1220,7 @@ private fun DashboardQrMetricCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = null,
-                tint = colorFromHex("B8ACB4"),
+                tint = ConCafeColors.outlineStrong,
                 modifier = Modifier
                     .size(20.dp)
                     .graphicsLayer { rotationZ = 180f }
@@ -1253,7 +1260,7 @@ private fun DashboardQrSheetContent(
         Surface(
             shape = RoundedCornerShape(18.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
         ) {
             CafeManagementQrCode(
                 payload = payload,
@@ -1271,7 +1278,7 @@ private fun DashboardQrSheetContent(
             },
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
+                containerColor = ConCafeColors.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface
             )
         ) {
@@ -1320,7 +1327,7 @@ private fun ShortcutCard(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7")),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Column(
@@ -1329,12 +1336,12 @@ private fun ShortcutCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = colorFromHex("FCE6EF")
+                color = ConCafeColors.surfaceTint
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797"),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.padding(10.dp)
                 )
             }
@@ -1369,12 +1376,13 @@ private fun CastManagementSection(
     onScheduleClick: () -> Unit,
     selectedCastId: String?,
     onCastScheduleSelect: (String) -> Unit,
-    onLoadMoreClick: () -> Unit
+    onLoadMoreClick: () -> Unit,
+    onCastListDetailClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -1389,17 +1397,17 @@ private fun CastManagementSection(
                     text = stringResource(Res.string.dashboard_section_cast_management),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("8C7A83")
+                    color = ConCafeColors.textMuted
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = onDeleteClick,
                         enabled = canDelete,
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = colorFromHex("FCE6EF"),
-                            contentColor = colorFromHex("EF6797"),
-                            disabledContainerColor = colorFromHex("F6EEF2"),
-                            disabledContentColor = colorFromHex("C8B7C0")
+                            containerColor = ConCafeColors.surfaceTint,
+                            contentColor = ConCafeColors.primary,
+                            disabledContainerColor = ConCafeColors.surfaceTint,
+                            disabledContentColor = ConCafeColors.outlineStrong
                         )
                     ) {
                         Icon(
@@ -1409,7 +1417,7 @@ private fun CastManagementSection(
                     }
                     Surface(
                         shape = RoundedCornerShape(999.dp),
-                        color = colorFromHex("FCE6EF"),
+                        color = ConCafeColors.surfaceTint,
                         onClick = onScheduleClick
                     ) {
                         Row(
@@ -1420,13 +1428,13 @@ private fun CastManagementSection(
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = colorFromHex("EF6797"),
+                                tint = ConCafeColors.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = stringResource(Res.string.dashboard_action_schedule_management),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = colorFromHex("EF6797"),
+                                color = ConCafeColors.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -1456,6 +1464,38 @@ private fun CastManagementSection(
                     }
                 }
             }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = ConCafeColors.surfaceTint,
+                onClick = onCastListDetailClick
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = null,
+                        tint = ConCafeColors.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(Res.string.dashboard_action_cast_list_detail),
+                        modifier = Modifier.padding(start = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ConCafeColors.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = ConCafeColors.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1481,7 +1521,7 @@ private fun CastPreviewItem(
                 color = Color.Transparent,
                 border = BorderStroke(
                     if (isSelected) 2.dp else 0.dp,
-                    if (isSelected) colorFromHex("EF6797") else Color.Transparent
+                    if (isSelected) ConCafeColors.primary else Color.Transparent
                 )
             ) {
                 Box(
@@ -1504,7 +1544,7 @@ private fun CastPreviewItem(
                             .matchParentSize()
                             .background(
                                 brush = Brush.linearGradient(
-                                    colors = listOf(colorFromHex("FFD7E3"), colorFromHex("FFF0F5"))
+                                    colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.background)
                                 ),
                                 shape = CircleShape
                             )
@@ -1524,7 +1564,7 @@ private fun CastPreviewItem(
                             .align(Alignment.TopEnd)
                             .padding(top = 4.dp, end = 4.dp),
                         shape = CircleShape,
-                        color = colorFromHex("EF6797")
+                        color = ConCafeColors.primary
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -1542,7 +1582,7 @@ private fun CastPreviewItem(
                         .offset(x = (-2).dp, y = (-2).dp)
                         .size(16.dp)
                         .background(
-                            if (cast.isOnShift) colorFromHex("35C26B") else colorFromHex("C7CBD3"),
+                            if (cast.isOnShift) ConCafeColors.success else ConCafeColors.outlineStrong,
                             CircleShape
                         )
                 )
@@ -1552,7 +1592,7 @@ private fun CastPreviewItem(
             text = cast.name,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = if (isSelected) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurface
+            color = if (isSelected) ConCafeColors.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -1570,8 +1610,8 @@ private fun LoadMoreCastItem(
         Surface(
             modifier = Modifier.size(72.dp),
             shape = CircleShape,
-            color = colorFromHex("F7F2F6"),
-            border = BorderStroke(1.dp, colorFromHex("E3DCE3")),
+            color = ConCafeColors.surfaceTint,
+            border = BorderStroke(1.dp, ConCafeColors.outline),
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -1579,13 +1619,13 @@ private fun LoadMoreCastItem(
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
-                        color = colorFromHex("B8AEB7")
+                        color = ConCafeColors.outlineStrong
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = stringResource(Res.string.dashboard_accessibility_cast_load_more),
-                        tint = colorFromHex("8F848F")
+                        tint = ConCafeColors.textMuted
                     )
                 }
             }
@@ -1593,7 +1633,7 @@ private fun LoadMoreCastItem(
         Text(
             text = if (isLoading) stringResource(Res.string.dashboard_action_loading) else stringResource(Res.string.dashboard_action_load_more),
             style = MaterialTheme.typography.labelMedium,
-            color = colorFromHex("8F848F"),
+            color = ConCafeColors.textMuted,
             fontWeight = FontWeight.Bold
         )
     }
@@ -1608,7 +1648,7 @@ private fun GuestManagementSection(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
@@ -1617,17 +1657,17 @@ private fun GuestManagementSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("게스트 캐스트 관리", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = colorFromHex("8C7A83"))
-                    Text("소속 캐스트가 아닌 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = colorFromHex("7E7480"))
+                    Text("게스트 캐스트 관리", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = ConCafeColors.textMuted)
+                    Text("소속 캐스트가 아닌 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = ConCafeColors.textSecondary)
                 }
-                Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("FCE6EF"), onClick = onAddClick) {
+                Surface(shape = RoundedCornerShape(999.dp), color = ConCafeColors.surfaceTint, onClick = onAddClick) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
-                        Text("추가", style = MaterialTheme.typography.labelMedium, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = ConCafeColors.primary, modifier = Modifier.size(16.dp))
+                        Text("추가", style = MaterialTheme.typography.labelMedium, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1637,7 +1677,7 @@ private fun GuestManagementSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(colorFromHex("F8F2F6"))
+                        .background(ConCafeColors.surfaceTint)
                         .padding(14.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1662,8 +1702,8 @@ private fun GuestManagementRow(
     val memo = guest.memo
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = colorFromHex("FFF8FB"),
-        border = BorderStroke(1.dp, colorFromHex("F0D9E4"))
+        color = ConCafeColors.background,
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -1671,7 +1711,7 @@ private fun GuestManagementRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(46.dp).clip(CircleShape).background(colorFromHex("FFE2EC")),
+                modifier = Modifier.size(46.dp).clip(CircleShape).background(ConCafeColors.surfaceTint),
                 contentAlignment = Alignment.Center
             ) {
                 if (!profileImage.isNullOrBlank()) {
@@ -1682,14 +1722,14 @@ private fun GuestManagementRow(
                         displaySize = ImageDisplaySize.THUMBNAIL
                     )
                 } else {
-                    Text(guest.name.take(2), fontWeight = FontWeight.Bold, color = colorFromHex("8B3154"))
+                    Text(guest.name.take(2), fontWeight = FontWeight.Bold, color = ConCafeColors.primary)
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(guest.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("FCE6EF")) {
-                        Text("게스트", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+                    Surface(shape = RoundedCornerShape(999.dp), color = ConCafeColors.surfaceTint) {
+                        Text("게스트", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
                     }
                 }
                 Text("${guest.date} · ${guest.startTime} - ${guest.endTime}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1698,7 +1738,7 @@ private fun GuestManagementRow(
                 }
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = colorFromHex("C15A7B"))
+                Icon(Icons.Default.Delete, contentDescription = null, tint = ConCafeColors.primary)
             }
         }
     }
@@ -1717,14 +1757,14 @@ private fun AddCastItem(
             modifier = Modifier.size(72.dp),
             shape = CircleShape,
             color = Color.Transparent,
-            border = BorderStroke(2.dp, colorFromHex("E3DCE3")),
+            border = BorderStroke(2.dp, ConCafeColors.outline),
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = stringResource(Res.string.dashboard_accessibility_cast_add),
-                    tint = colorFromHex("B8AEB7")
+                    tint = ConCafeColors.outlineStrong
                 )
             }
         }
@@ -1732,7 +1772,7 @@ private fun AddCastItem(
             text = stringResource(Res.string.dashboard_action_add),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = colorFromHex("8F848F")
+            color = ConCafeColors.textMuted
         )
     }
 }
@@ -1746,7 +1786,7 @@ private fun HomeBannerSection(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, colorFromHex("E8DFE7"))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -1761,7 +1801,7 @@ private fun HomeBannerSection(
                     text = stringResource(Res.string.dashboard_section_home_banner),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("8C7A83")
+                    color = ConCafeColors.textMuted
                 )
                 TextButton(onClick = onBannerClick) {
                     Text(stringResource(Res.string.dashboard_action_view_all))
@@ -1770,7 +1810,7 @@ private fun HomeBannerSection(
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-                border = BorderStroke(1.dp, colorFromHex("F0E6EC"))
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -1788,7 +1828,7 @@ private fun HomeBannerSection(
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(
                                     Brush.linearGradient(
-                                        colors = listOf(colorFromHex("FFD1DC"), colorFromHex("FFE4EC"))
+                                        colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -1825,11 +1865,11 @@ private fun HomeBannerSection(
                                     banner.period
                                 },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = colorFromHex("7E7480")
+                                color = ConCafeColors.textSecondary
                             )
                             Surface(
                                 shape = RoundedCornerShape(999.dp),
-                                color = colorFromHex("E8F7EE")
+                                color = ConCafeColors.successContainer
                             ) {
                                 Text(
                                     text = when (banner.statusLabel) {
@@ -1840,7 +1880,7 @@ private fun HomeBannerSection(
                                     },
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = colorFromHex("2F8B57"),
+                                    color = ConCafeColors.success,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -1850,7 +1890,7 @@ private fun HomeBannerSection(
                         onClick = onCreateBannerClick,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
+                            containerColor = ConCafeColors.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         shape = RoundedCornerShape(16.dp)
@@ -1886,7 +1926,7 @@ private fun SectionHeader(
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("786E7A")
+            color = ConCafeColors.textSecondary
         )
     }
 }

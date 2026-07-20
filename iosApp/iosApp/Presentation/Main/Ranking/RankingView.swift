@@ -86,7 +86,7 @@ private struct RankingContentView: View {
             }
             .padding(.vertical, 16)
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private var headerSection: some View {
@@ -101,7 +101,7 @@ private struct RankingContentView: View {
         ConCafeTabBar(
             labels: RankingUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: RankingUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: Color(hex: "FFF9FC"),
+            backgroundColor: ConCafeColors.background,
             onSelect: { index in
                 onAction(.changeTab(RankingUiState.TabType.allCases[index]))
             }
@@ -182,7 +182,7 @@ struct RankingHeaderSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "trophy.fill")
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 Text(String(localized: String.LocalizationValue("ranking_title"), table: "Localizable"))
                 .font(.title2.weight(.bold))
             }
@@ -331,7 +331,7 @@ struct RankingPromoBanner: View {
 
     private func indicatorColor(for index: Int) -> Color {
         if selectedIndex == 1 || selectedIndex == 2 {
-            return index == selectedIndex ? Color(hex: "EF6797") : Color(hex: "E3D9E0")
+            return index == selectedIndex ? ConCafeColors.primary : ConCafeColors.outline
         } else {
             return index == selectedIndex ? Color.white : Color.white.opacity(0.5)
         }
@@ -346,7 +346,8 @@ struct RankingEntryCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 10) {
+            RankingChangeIndicator(change: item.change)
             rankIndicator
             ZStack {
                 LinearGradient(
@@ -354,8 +355,12 @@ struct RankingEntryCard: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                Text(item.symbol)
-                .font(.title2)
+                if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: item.imageUrl) {
+                    CachedAsyncImage(url: imageUrl, placeholder: Color.clear, displaySize: .thumbnail)
+                } else {
+                    Text(item.symbol)
+                    .font(.title2)
+                }
             }
             .frame(width: 64, height: 64)
             .clipShape(isMaid ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 18, style: .continuous)))
@@ -368,12 +373,9 @@ struct RankingEntryCard: View {
                 .font(.caption)
                 .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.78) : .secondary)
                 .lineLimit(1)
-                HStack(spacing: 8) {
-                    Text("\(item.score) pt")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
-                    RankingChangeIndicator(change: item.change)
-                }
+                Text(String(format: String(localized: String.LocalizationValue("ranking_score_format"), table: "Localizable"), locale: Locale.current, item.score))
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(ConCafeColors.primary)
             }
             Spacer()
         }
@@ -390,9 +392,15 @@ struct RankingEntryCard: View {
     private var rankIndicator: some View {
         Group {
             if item.rank <= 3 {
-                Image(systemName: "trophy.fill")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(rankColor(Int(item.rank)))
+                VStack(spacing: 0) {
+                    Image(systemName: "trophy.fill")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(rankColor(Int(item.rank)))
+                    Text("\(item.rank)")
+                        .font(.subheadline.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(rankColor(Int(item.rank)))
+                }
             } else {
                 Text("\(item.rank)")
                     .font(.title2.weight(.bold))
@@ -405,10 +413,10 @@ struct RankingEntryCard: View {
 
     private func rankColor(_ rank: Int) -> Color {
         switch rank {
-        case 1: return Color(hex: "E2B11E")
-        case 2: return Color(hex: "A2A7B1")
-        case 3: return Color(hex: "B8753B")
-        default: return Color(hex: "8A8A8A")
+        case 1: return ConCafeColors.gold
+        case 2: return ConCafeColors.outlineStrong
+        case 3: return ConCafeColors.warning
+        default: return ConCafeColors.textMuted
         }
     }
 }
@@ -420,10 +428,10 @@ struct RankingChangeIndicator: View {
         HStack(spacing: 2) {
             if change.hasPrefix("+") {
                 Image(systemName: "arrow.up")
-                .foregroundStyle(Color(hex: "34A853"))
+                .foregroundStyle(ConCafeColors.success)
             } else if change.hasPrefix("-") {
                 Image(systemName: "arrow.down")
-                .foregroundStyle(Color(hex: "E24B62"))
+                .foregroundStyle(ConCafeColors.error)
             } else {
                 Text("-")
                 .foregroundStyle(.secondary)

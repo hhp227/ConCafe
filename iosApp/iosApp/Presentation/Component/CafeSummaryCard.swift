@@ -33,6 +33,10 @@ struct CafeSummaryCard: View {
                 .frame(height: 120)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
+                )
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
@@ -41,7 +45,7 @@ struct CafeSummaryCard: View {
                 if let conceptType = conceptType?.trimmingCharacters(in: .whitespacesAndNewlines), !conceptType.isEmpty {
                     Text(conceptType)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .lineLimit(1)
                 }
                 HStack(alignment: .center) {
@@ -60,7 +64,7 @@ struct CafeSummaryCard: View {
                     if let trailingLabel {
                         Text(trailingLabel)
                             .font(.caption)
-                            .foregroundColor(Color(hex: "EF6797"))
+                            .foregroundColor(ConCafeColors.primary)
                             .fontWeight(.semibold)
                             .lineLimit(1)
                     }
@@ -96,7 +100,7 @@ struct CafeSummaryCard: View {
 
     private var placeholderCafeImage: some View {
         LinearGradient(
-            colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+            colors: [ConCafeColors.warningContainer, ConCafeColors.warningContainer],
             startPoint: .top,
             endPoint: .bottom
         )

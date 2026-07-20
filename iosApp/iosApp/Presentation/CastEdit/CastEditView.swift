@@ -118,7 +118,7 @@ private struct CastEditContentView: View {
                     VStack {
                         Spacer()
                         ProgressView()
-                            .tint(Color(hex: "EF6797"))
+                            .tint(ConCafeColors.primary)
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -173,17 +173,17 @@ private struct CastEditContentView: View {
         .background(
             Group {
                 if UITraitCollection.current.userInterfaceStyle == .dark {
-                    Color(hex: "FFF9FC")
+                    ConCafeColors.background
                 } else {
                     LinearGradient(
-                        colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                        colors: [ConCafeColors.surfaceVariant, ConCafeColors.background],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 }
             }
         )
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : ConCafeColors.surfaceVariant)
         .sheet(isPresented: $isBirthdayPickerPresented) {
             CompatNavigationContainer(title: String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable")) {
                 VStack {
@@ -221,7 +221,7 @@ private struct CastEditContentView: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                                    colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -234,12 +234,12 @@ private struct CastEditContentView: View {
                                 .clipped()
                         }
                         Circle()
-                            .fill(Color(hex: "FFD1DC"))
+                            .fill(ConCafeColors.primaryContainer)
                             .frame(width: 34, height: 34)
                             .overlay {
                                 Image(systemName: "camera.fill")
                                     .font(.caption.weight(.bold))
-                                    .foregroundStyle(Color(hex: "2B2330"))
+                                    .foregroundStyle(ConCafeColors.textPrimary)
                             }
                             .overlay(
                                 Circle()
@@ -254,10 +254,10 @@ private struct CastEditContentView: View {
             .buttonStyle(.plain)
             Text(String(localized: String.LocalizationValue("castedit_profile_photo_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(ConCafeColors.textPrimary)
             Text(String(localized: String.LocalizationValue("castedit_profile_photo_hint"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8C7E87"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
         .frame(maxWidth: .infinity)
     }
@@ -268,11 +268,11 @@ private struct CastEditContentView: View {
             HStack {
                 Text(String(localized: String.LocalizationValue("castedit_gallery_title"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 Spacer()
                 Text(galleryLimitText)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             LazyVGrid(
                 columns: [
@@ -308,7 +308,7 @@ private struct CastEditContentView: View {
                 )
             )
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -390,13 +390,13 @@ private struct CastEditContentView: View {
             onPickGalleryImage()
         } label: {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(hex: "FFD1DC").opacity(0.1))
+                .fill(ConCafeColors.primaryContainer.opacity(0.1))
                 .overlay {
                     Circle()
-                        .stroke(Color(hex: "FFD1DC").opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
                         .overlay {
                             Image(systemName: "plus")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                         .padding(22)
                 }
@@ -412,29 +412,29 @@ private struct CastEditContentView: View {
             HStack(spacing: 8) {
                 if uiState.isSaving {
                     ProgressView()
-                        .tint(Color(hex: "2B2330"))
+                        .tint(ConCafeColors.textPrimary)
                 } else {
                     Image(systemName: "person.crop.circle.badge.checkmark")
                 }
                 Text(uiState.saveButtonLabel)
                     .fontWeight(.bold)
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(ConCafeColors.textPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
-            .background(Color(hex: "FFD1DC"))
+            .background(ConCafeColors.primaryContainer)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(16)
         .background(
             UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
+                ? ConCafeColors.background
                 : Color.white.opacity(0.92)
         )
         .overlay(alignment: .top) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
         }
     }
@@ -443,21 +443,21 @@ private struct CastEditContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
@@ -473,13 +473,13 @@ private struct BirthdayInputField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: String.LocalizationValue("castedit_birthday_label"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             HStack(spacing: 8) {
                 MaskedBirthdayTextField(text: $text)
                     .frame(maxWidth: .infinity)
                 Button(action: onTapCalendar) {
                     Image(systemName: "calendar")
-                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .foregroundStyle(ConCafeColors.outlineStrong)
                 }
                 .buttonStyle(.plain)
             }
@@ -488,12 +488,12 @@ private struct BirthdayInputField: View {
             .background(
                 UITraitCollection.current.userInterfaceStyle == .dark
                     ? Color(uiColor: .tertiarySystemBackground)
-                    : Color(hex: "F8F5F6")
+                    : ConCafeColors.surfaceVariant
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
             )
         }
     }
@@ -568,7 +568,7 @@ private struct CastEditProfileImageView: View {
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                    colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -593,7 +593,7 @@ private struct CastEditImageView<Placeholder: View>: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()

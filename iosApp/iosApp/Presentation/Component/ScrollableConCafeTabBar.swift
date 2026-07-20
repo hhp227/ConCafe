@@ -29,15 +29,15 @@ struct ScrollableConCafeTabBar: View {
                                 .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
                                 .foregroundStyle(
                                     selectedIndex == index
-                                    ? Color(hex: "EF6797")
-                                    : Color(hex: "777777")
+                                    ? ConCafeColors.primary
+                                    : ConCafeColors.textSecondary
                                 )
                                 .padding(.horizontal, 16)
                         }
                         .frame(minWidth: 56, maxHeight: .infinity, alignment: .center)
                         .overlay(alignment: .bottom) {
                             Rectangle()
-                                .fill(selectedIndex == index ? Color(hex: "EF6797") : .clear)
+                                .fill(selectedIndex == index ? ConCafeColors.primary : .clear)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 2)
                         }

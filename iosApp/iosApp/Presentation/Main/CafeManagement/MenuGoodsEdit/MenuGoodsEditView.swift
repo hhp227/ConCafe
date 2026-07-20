@@ -48,10 +48,10 @@ struct MenuGoodsEditView: View {
                             }()
                         )
                             .font(.footnote)
-                            .foregroundStyle(Color(hex: "6B5320"))
+                            .foregroundStyle(ConCafeColors.goldDeep)
                             .padding(12)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(hex: "FFF6D7"))
+                            .background(ConCafeColors.goldContainer)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     photoUploadSection
@@ -72,7 +72,7 @@ struct MenuGoodsEditView: View {
                             leadingContent: {
                                 Text("₩")
                                     .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "6B5A65"))
+                                    .foregroundStyle(ConCafeColors.textSecondary)
                             }
                         )
                         .keyboardType(.numberPad)
@@ -133,7 +133,7 @@ struct MenuGoodsEditView: View {
     private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
             Button {
                 viewModel.onAction(.clickSave)
@@ -152,15 +152,15 @@ struct MenuGoodsEditView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .tint(ConCafeColors.primaryContainer)
+            .foregroundStyle(ConCafeColors.textPrimary)
             .disabled(viewModel.uiState.isSaving || viewModel.uiState.isLoading)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
             .background(
                 UITraitCollection.current.userInterfaceStyle == .dark
-                ? Color(hex: "FFF9FC")
+                ? ConCafeColors.background
                 : Color.white.opacity(0.92)
             )
         }
@@ -171,7 +171,7 @@ struct MenuGoodsEditView: View {
         return VStack(alignment: .leading, spacing: 10) {
             Text(String(localized: String.LocalizationValue("menugoods_edit_label_category"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             LazyVGrid(
                 columns: [
                     GridItem(.flexible(), spacing: 12),
@@ -197,15 +197,15 @@ struct MenuGoodsEditView: View {
                 Text(categoryLabel(categoryId: categoryId))
                     .font(.subheadline.weight(.medium))
             }
-            .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
+            .foregroundStyle(isSelected ? ConCafeColors.textPrimary : ConCafeColors.textSecondary)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(isSelected ? Color(hex: "FFD1DC").opacity(0.2) : Color(hex: "F8F5F6"))
+            .background(isSelected ? ConCafeColors.primaryContainer.opacity(0.2) : ConCafeColors.surfaceVariant)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(
-                        isSelected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3),
+                        isSelected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.3),
                         lineWidth: isSelected ? 2 : 1
                     )
             )
@@ -251,7 +251,7 @@ struct MenuGoodsEditView: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFE5EE")],
+                                colors: [ConCafeColors.primaryContainer, ConCafeColors.surfaceTint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -282,7 +282,7 @@ struct MenuGoodsEditView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC"), lineWidth: 1.5)
+                        .stroke(ConCafeColors.primaryContainer, lineWidth: 1.5)
                 )
             }
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
@@ -293,10 +293,10 @@ struct MenuGoodsEditView: View {
     private var loadingPhotoPlaceholder: some View {
         VStack(spacing: 8) {
             ProgressView()
-                .tint(Color(hex: "9C7A88"))
+                .tint(ConCafeColors.textMuted)
             Text(String(localized: String.LocalizationValue("menugoods_edit_image_loading"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
     }
 
@@ -304,13 +304,13 @@ struct MenuGoodsEditView: View {
         VStack(spacing: 8) {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(Color(hex: "8B5164"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(String(localized: String.LocalizationValue("menugoods_edit_upload_title"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color(hex: "5A4954"))
+                .foregroundStyle(ConCafeColors.textSecondary)
             Text(String(localized: String.LocalizationValue("menugoods_edit_upload_desc"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
     }
 

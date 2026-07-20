@@ -43,6 +43,7 @@ import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -102,6 +103,7 @@ import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,8 +334,8 @@ private fun ReviewPromptBottomSheet(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
-                contentColor = colorFromHex("2B2330")
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             )
         ) {
             Text(stringResource(Res.string.checkin_review_prompt_primary), fontWeight = FontWeight.Bold)
@@ -611,7 +613,7 @@ fun CafeMapSection(
                         if (isSystemInDarkTheme()) {
                             listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
                         } else {
-                            listOf(colorFromHex("FFF0F6"), colorFromHex("FFFAFC"), colorFromHex("FFF3F8"))
+                            listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.background)
                         }
                     )
                 )
@@ -726,7 +728,7 @@ private fun CheckInRegionDropdown(
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
-                tint = colorFromHex("EF6797"),
+                tint = ConCafeColors.primary,
                 modifier = Modifier.size(18.dp)
             )
             Text(
@@ -912,7 +914,7 @@ private fun PopularCafeCard(
     CafeSummaryCard(
         name = cafe.name,
         rating = RatingUtils.formatOneDecimal(cafe.rating),
-        location = cafe.locationLabel,
+        location = localizedRegionCity(cafe.locationLabel),
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
         modifier = Modifier
@@ -950,7 +952,7 @@ private fun PopularCastCard(
                         .size(56.dp)
                         .background(
                             Brush.linearGradient(
-                                listOf(colorFromHex("FFD1E2"), colorFromHex("FFEAF2"))
+                                listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                             ),
                             CircleShape
                         ),
@@ -958,7 +960,7 @@ private fun PopularCastCard(
                 ) {
                     Text(
                         text = cast.name.take(1),
-                        color = colorFromHex("B74C72"),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
@@ -988,15 +990,15 @@ private fun PopularCastCard(
             Surface(
                 shape = RoundedCornerShape(999.dp),
                 color = if (isSystemInDarkTheme()) {
-                    colorFromHex("EF6797").copy(alpha = 0.22f)
+                    ConCafeColors.primary.copy(alpha = 0.22f)
                 } else {
-                    colorFromHex("FFEEF5")
+                    ConCafeColors.surfaceTint
                 }
             ) {
                 Text(
                     text = stringResource(Res.string.checkin_today_visit_count, cast.todayVisit),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (isSystemInDarkTheme()) colorFromHex("F8B7CF") else colorFromHex("EF6797"),
+                    color = if (isSystemInDarkTheme()) ConCafeColors.secondaryContainer else ConCafeColors.primary,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1019,7 +1021,7 @@ private fun LoginPromotionSection(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        listOf(colorFromHex("EF6797"), colorFromHex("F7A1C3"))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondaryContainer)
                     )
                 )
                 .padding(20.dp),
@@ -1041,7 +1043,7 @@ private fun LoginPromotionSection(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-                    contentColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.onSurface else colorFromHex("EF6797")
+                    contentColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.onSurface else ConCafeColors.primary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -1077,8 +1079,8 @@ private fun LoginRequiredBottomSheet(
             onClick = onSignIn,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
-                contentColor = colorFromHex("2B2330")
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -1269,8 +1271,8 @@ private fun NewVisitCheckInBottomSheet(
                 .height(52.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
-                contentColor = colorFromHex("2B2330")
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             )
         ) {
             Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
@@ -1282,8 +1284,8 @@ private fun NewVisitCheckInBottomSheet(
                 .height(52.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorFromHex("FFD1DC"),
-                contentColor = colorFromHex("2B2330")
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             )
         ) {
             Text("QR ${stringResource(Res.string.checkin_button)}", fontWeight = FontWeight.Bold)
@@ -1515,7 +1517,7 @@ private fun MoreVisitCard(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(colorFromHex("FFF1F6"), colorFromHex("FFE1EC"))
+                        listOf(ConCafeColors.background, ConCafeColors.surfaceTint)
                     )
                 ),
             contentAlignment = Alignment.Center
@@ -1523,7 +1525,7 @@ private fun MoreVisitCard(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "+$remainingCount",
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
@@ -1546,9 +1548,9 @@ private fun CheckInButton(
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
     val containerColor = when {
-        isPressed -> colorFromHex("E78CB3")
-        isHovered -> colorFromHex("F2A8C6")
-        else -> colorFromHex("F6BCD1")
+        isPressed -> ConCafeColors.secondaryContainer
+        isHovered -> ConCafeColors.secondaryContainer
+        else -> ConCafeColors.primaryContainer
     }
 
     Button(
@@ -1561,7 +1563,7 @@ private fun CheckInButton(
         interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
-            contentColor = colorFromHex("3A2E36")
+            contentColor = ConCafeColors.textPrimary
         ),
         shape = RoundedCornerShape(20.dp),
         elevation = ButtonDefaults.buttonElevation(0.dp)
@@ -1585,7 +1587,7 @@ fun TimelineItem(
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, colorFromHex("F6BCD1")),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.primaryContainer),
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
@@ -1599,7 +1601,7 @@ fun TimelineItem(
                 modifier = Modifier
                     .width(2.dp)
                     .height(100.dp)
-                    .background(colorFromHex("F6BCD1").copy(alpha = 0.3f))
+                    .background(ConCafeColors.primaryContainer.copy(alpha = 0.3f))
             )
         }
         Spacer(modifier = Modifier.width(16.dp))

@@ -12,6 +12,7 @@ sealed interface CafeDashboardAction {
     data class ClickEditExternalLink(val linkId: String) : CafeDashboardAction
     data class ClickDeleteExternalLink(val linkId: String) : CafeDashboardAction
     data class ClickCastSchedule(val castId: String) : CafeDashboardAction
+    data object ClickCastListDetail : CafeDashboardAction
     data object ClickDeleteCast : CafeDashboardAction
     data object ConfirmDeleteCast : CafeDashboardAction
     data object DismissDeleteCastDialog : CafeDashboardAction

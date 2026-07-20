@@ -28,7 +28,7 @@ actual fun RankingNativeAd(
         Text(
             text = "Ad",
             style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF9A8D95)
+            color = ConCafeColors.textMuted
         )
     }
 }
@@ -48,7 +48,7 @@ actual fun CommunityNativeAd(
         Text(
             text = "Ad",
             style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF9A8D95)
+            color = ConCafeColors.textMuted
         )
     }
 }

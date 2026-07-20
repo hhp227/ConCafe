@@ -115,7 +115,7 @@ private struct BannerContentView: View {
             ConCafeTabBar(
                 labels: BannerTab.allCases.map { String(localized: String.LocalizationValue($0.rawValue), table: "Localizable") },
                 selectedIndex: BannerTab.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-                backgroundColor: Color(hex: "FFF9FC"),
+                backgroundColor: ConCafeColors.background,
                 onSelect: { index in
                     onAction(.selectTab(BannerTab.allCases[index]))
                 }
@@ -132,7 +132,7 @@ private struct BannerContentView: View {
                     }
                     Text(String(localized: String.LocalizationValue("banner_info_max_five"), table: "Localizable"))
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "9A8E97"))
+                        .foregroundStyle(ConCafeColors.textMuted)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                 }
@@ -141,7 +141,7 @@ private struct BannerContentView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .safeAreaInset(edge: .bottom) {
             Button {
                 onAction(.createBannerTapped)
@@ -154,14 +154,14 @@ private struct BannerContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .foregroundStyle(.primary)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color(hex: "FFF9FC"))
+            .background(ConCafeColors.background)
         }
     }
 
@@ -188,7 +188,7 @@ private struct BannerContentView: View {
             Spacer()
             Text(String(localized: String.LocalizationValue("banner_location_home_top"), table: "Localizable"))
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
         }
     }
 }
@@ -207,10 +207,10 @@ private struct BannerCardView: View {
                 HStack(alignment: .top) {
                     Text(String(localized: String.LocalizationValue(banner.statusLabelKey), table: "Localizable"))
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: "CE5E87"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color(hex: "FFD1DC").opacity(0.28))
+                        .background(ConCafeColors.primaryContainer.opacity(0.28))
                         .clipShape(Capsule())
                     Spacer()
                     HStack(spacing: 6) {
@@ -232,7 +232,7 @@ private struct BannerCardView: View {
                     Text(String(format: String(localized: String.LocalizationValue("banner_period_days"), table: "Localizable"), banner.periodDays))
                         .font(.caption2)
                 }
-                .foregroundStyle(Color(hex: "9A8E97"))
+                .foregroundStyle(ConCafeColors.textMuted)
             }
         }
         .padding(16)
@@ -240,7 +240,7 @@ private struct BannerCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color(hex: "FFD1DC").opacity(0.16), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer.opacity(0.16), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
     }
@@ -253,7 +253,7 @@ private struct BannerCardView: View {
 
             ZStack {
                 LinearGradient(
-                    colors: [Color(hex: banner.accentHex), Color(hex: "FFE6ED")],
+                    colors: [Color(hex: banner.accentHex), ConCafeColors.surfaceTint],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -287,7 +287,7 @@ private struct IconCircleButton: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color(hex: "8F848F"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(width: 28, height: 28)
         }
         .buttonStyle(.plain)
