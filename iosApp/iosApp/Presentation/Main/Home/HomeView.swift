@@ -153,9 +153,13 @@ private struct HomeContentView: View {
                 HStack(spacing: 12) {
                     if !uiState.popularCasts.isEmpty {
                         ForEach(Array(uiState.popularCasts.enumerated()), id: \.element.id) { index, maid in
+                            let cafeName = uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId
+                            let cafeRegion = uiState.popularCastCafeRegions[maid.cafeId]?.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let subtitle = (cafeRegion?.isEmpty == false) ? "\(cafeName)(\(localizedRegionCity(cafeRegion!)))" : cafeName
+
                             ConCafeCastCard(
                                 name: maid.name,
-                                subtitle: uiState.popularCastCafeNames[maid.cafeId] ?? maid.cafeId,
+                                subtitle: subtitle,
                                 imageUrl: maid.profileImage,
                                 metaText: String(format: String(localized: String.LocalizationValue("home_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount),
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
@@ -270,7 +274,15 @@ private struct HomeContentView: View {
                             .frame(width: 74, height: 74)
                             Text(maid.name)
                                 .font(.caption)
+                                .lineLimit(1)
+                            if let cafeName = uiState.birthdayCastCafeNames[maid.cafeId], !cafeName.isEmpty {
+                                Text(cafeName)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
                         }
+                        .frame(width: 74)
                         .onTapGesture {
                             onAction(.birthdayMaidTapped(id: maid.id))
                         }
@@ -691,7 +703,7 @@ private struct NearByCafeItem: View {
                         .foregroundStyle(ConCafeColors.primary)
                         .lineLimit(1)
                 }
-                Text(cafe.region.city)
+                Text(localizedRegionCity(cafe.region.city))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

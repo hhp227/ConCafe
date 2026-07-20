@@ -36,6 +36,7 @@ import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
@@ -730,7 +731,7 @@ private fun CafeSearchItem(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(cafe.name, fontWeight = FontWeight.SemiBold)
             Text(
-                text = cafe.region.city,
+                text = localizedRegionCity(cafe.region.city),
                 style = MaterialTheme.typography.bodySmall,
                 color = ConCafeColors.textMuted
             )

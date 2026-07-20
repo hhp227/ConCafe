@@ -109,7 +109,7 @@ val useCaseModule = module {
     factory { GetNearbyCafePageUseCase(get()) }
     factory { GetPopularCastPageUseCase(get(), get()) }
     factory { GetHomeBannersUseCase(get()) }
-    factory { GetBirthdayCastsUseCase(get()) }
+    factory { GetBirthdayCastsUseCase(get(), get()) }
     factory { GetRecentNoticesUseCase(get()) }
     factory { GetHomeCafeEventsUseCase(get(), get()) }
     factory { GetAdminOperationsMetricsUseCase(get(), get()) }

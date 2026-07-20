@@ -26,5 +26,6 @@ data class RankingFeedEntry(
     val change: String,
     val startColorHex: String,
     val endColorHex: String,
-    val symbol: String
+    val symbol: String,
+    val imageUrl: String? = null
 )

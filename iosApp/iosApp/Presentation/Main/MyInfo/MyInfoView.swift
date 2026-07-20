@@ -642,7 +642,7 @@ private struct ProfileMyInfoView: View {
                             name: cafe.name,
                             rating: favoriteCafeRating(cafe.ratingAvg),
                             conceptType: localizedCafeConceptType(cafe.conceptType),
-                            location: cafe.region.city,
+                            location: localizedRegionCity(cafe.region.city),
                             thumbnailImage: cafe.thumbnailImage,
                             showLocationIcon: false,
                             trailingLabel: nil,

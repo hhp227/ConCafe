@@ -432,7 +432,7 @@ private struct SignUpContentView: View {
                                             Text(cafe.name)
                                                 .font(.subheadline.weight(.semibold))
                                                 .foregroundStyle(.primary)
-                                            Text(cafe.region.city)
+                                            Text(localizedRegionCity(cafe.region.city))
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                         }

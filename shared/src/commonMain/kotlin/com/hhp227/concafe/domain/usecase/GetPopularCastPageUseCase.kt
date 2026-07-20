@@ -14,18 +14,19 @@ class GetPopularCastPageUseCase(
         return try {
             val page = castRepository.getHomePopularCastPage(cursor = cursor, pageSize = PAGE_SIZE)
             val cafeIds = page.items.map { it.cafeId }.distinct()
-            val cafeNames = if (cafeIds.isEmpty()) {
-                emptyMap()
+            val cafes = if (cafeIds.isEmpty()) {
+                emptyList()
             } else {
-                runCatching {
-                    cafeRepository.getCafesByIds(cafeIds).associate { it.id to it.name }
-                }.getOrElse { emptyMap() }
+                runCatching { cafeRepository.getCafesByIds(cafeIds) }.getOrElse { emptyList() }
             }
+            val cafeNames = cafes.associate { it.id to it.name }
+            val cafeRegions = cafes.associate { it.id to it.region.city }
 
             AppResult.Success(
                 HomePopularCastPage(
                     casts = page.items,
                     cafeNames = cafeNames,
+                    cafeRegions = cafeRegions,
                     nextCursor = page.nextCursor,
                     hasNext = page.hasNext
                 )

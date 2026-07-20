@@ -43,6 +43,7 @@ import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -913,7 +914,7 @@ private fun PopularCafeCard(
     CafeSummaryCard(
         name = cafe.name,
         rating = RatingUtils.formatOneDecimal(cafe.rating),
-        location = cafe.locationLabel,
+        location = localizedRegionCity(cafe.locationLabel),
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
         modifier = Modifier

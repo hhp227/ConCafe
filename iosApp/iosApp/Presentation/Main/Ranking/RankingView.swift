@@ -346,7 +346,8 @@ struct RankingEntryCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 10) {
+            RankingChangeIndicator(change: item.change)
             rankIndicator
             ZStack {
                 LinearGradient(
@@ -354,8 +355,12 @@ struct RankingEntryCard: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                Text(item.symbol)
-                .font(.title2)
+                if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: item.imageUrl) {
+                    CachedAsyncImage(url: imageUrl, placeholder: Color.clear, displaySize: .thumbnail)
+                } else {
+                    Text(item.symbol)
+                    .font(.title2)
+                }
             }
             .frame(width: 64, height: 64)
             .clipShape(isMaid ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: 18, style: .continuous)))
@@ -368,12 +373,9 @@ struct RankingEntryCard: View {
                 .font(.caption)
                 .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.78) : .secondary)
                 .lineLimit(1)
-                HStack(spacing: 8) {
-                    Text("\(item.score) pt")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(ConCafeColors.primary)
-                    RankingChangeIndicator(change: item.change)
-                }
+                Text(String(format: String(localized: String.LocalizationValue("ranking_score_format"), table: "Localizable"), locale: Locale.current, item.score))
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(ConCafeColors.primary)
             }
             Spacer()
         }
@@ -390,9 +392,15 @@ struct RankingEntryCard: View {
     private var rankIndicator: some View {
         Group {
             if item.rank <= 3 {
-                Image(systemName: "trophy.fill")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(rankColor(Int(item.rank)))
+                VStack(spacing: 0) {
+                    Image(systemName: "trophy.fill")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(rankColor(Int(item.rank)))
+                    Text("\(item.rank)")
+                        .font(.subheadline.weight(.bold))
+                        .monospacedDigit()
+                        .foregroundStyle(rankColor(Int(item.rank)))
+                }
             } else {
                 Text("\(item.rank)")
                     .font(.title2.weight(.bold))

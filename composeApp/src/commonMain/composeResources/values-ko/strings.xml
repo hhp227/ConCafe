@@ -140,7 +140,7 @@
     <string name="explore_cast_followers">팔로워 %1$d</string>
     <string name="home_section_popular_cast">인기 캐스트</string>
     <string name="home_section_nearby_cafe">근처 컨셉카페</string>
-    <string name="home_section_birthday_cast">생일인 캐스트</string>
+    <string name="home_section_birthday_cast">오늘 생일인 캐스트</string>
     <string name="home_section_notice">최근 카페 공지</string>
     <string name="home_show_more">더보기</string>
     <string name="home_cast_followers">팔로워 %1$d</string>
@@ -158,6 +158,12 @@
     <string name="home_nearby_cafe_type_yokai">요괴</string>
     <string name="home_nearby_cafe_type_cat">고양이</string>
     <string name="home_nearby_cafe_type_other">기타</string>
+    <string name="region_seoul">서울</string>
+    <string name="region_busan">부산</string>
+    <string name="region_daegu">대구</string>
+    <string name="region_tokyo">도쿄</string>
+    <string name="region_osaka">오사카</string>
+    <string name="region_yokohama">요코하마</string>
     <string name="home_notice_empty_title">최근 공지가 없어요</string>
     <string name="home_notice_empty_desc">새 공지가 등록되면 이 영역에 표시됩니다.</string>
     <string name="home_section_ongoing_cafe_event">진행중인 카페 이벤트</string>
@@ -171,6 +177,7 @@
     <string name="ranking_detail">자세히</string>
     <string name="ranking_empty_title">아직 집계된 랭킹이 없어요</string>
     <string name="ranking_empty_desc">활동 데이터가 쌓이면 이곳에 순위가 표시됩니다.</string>
+    <string name="ranking_score_format">%1$d점</string>
     <string name="settings_title">설정</string>
     <string name="settings_preferences_title">환경설정</string>
     <string name="settings_general_title">일반</string>

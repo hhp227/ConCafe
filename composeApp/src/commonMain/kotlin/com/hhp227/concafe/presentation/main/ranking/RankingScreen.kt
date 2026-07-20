@@ -35,6 +35,7 @@ import com.hhp227.concafe.domain.model.RankingFeedEntry
 import com.hhp227.concafe.domain.model.RankingPeriod
 import com.hhp227.concafe.domain.model.RankingPromoAd
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.RankingNativeAd
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -424,19 +425,31 @@ fun RankingEntryCard(
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            RankingChangeIndicator(item.change)
             Box(
                 modifier = Modifier.width(36.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (item.rank <= 3) {
-                    Icon(
-                        imageVector = Icons.Filled.EmojiEvents,
-                        contentDescription = null,
-                        tint = rankColor(item.rank),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.EmojiEvents,
+                            contentDescription = null,
+                            tint = rankColor(item.rank),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = item.rank.toString(),
+                            color = rankColor(item.rank),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 } else {
                     Text(
                         text = item.rank.toString(),
@@ -457,11 +470,20 @@ fun RankingEntryCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    item.symbol,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                val resolvedImageUrl = item.imageUrl?.trim().orEmpty()
+                if (resolvedImageUrl.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = resolvedImageUrl,
+                        modifier = Modifier.matchParentSize(),
+                        applyRoundedClip = false
+                    )
+                } else {
+                    Text(
+                        item.symbol,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
             Column(
                 modifier = Modifier.weight(1f),
@@ -481,18 +503,12 @@ fun RankingEntryCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "${item.score} pt",
-                        color = ConCafeColors.primary,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    RankingChangeIndicator(item.change)
-                }
+                Text(
+                    text = stringResource(Res.string.ranking_score_format, item.score),
+                    color = ConCafeColors.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

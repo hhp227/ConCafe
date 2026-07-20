@@ -140,7 +140,7 @@
     <string name="explore_cast_followers">Followers %1$d</string>
     <string name="home_section_popular_cast">Popular Cast</string>
     <string name="home_section_nearby_cafe">Nearby Concept Cafes</string>
-    <string name="home_section_birthday_cast">Birthday Cast</string>
+    <string name="home_section_birthday_cast">Today\'s Birthday Cast</string>
     <string name="home_section_notice">Recent Cafe Notices</string>
     <string name="home_show_more">More</string>
     <string name="home_cast_followers">Followers %1$d</string>
@@ -158,6 +158,12 @@
     <string name="home_nearby_cafe_type_yokai">Yokai</string>
     <string name="home_nearby_cafe_type_cat">Cat</string>
     <string name="home_nearby_cafe_type_other">Other</string>
+    <string name="region_seoul">Seoul</string>
+    <string name="region_busan">Busan</string>
+    <string name="region_daegu">Daegu</string>
+    <string name="region_tokyo">Tokyo</string>
+    <string name="region_osaka">Osaka</string>
+    <string name="region_yokohama">Yokohama</string>
     <string name="home_notice_empty_title">No recent notices</string>
     <string name="home_notice_empty_desc">This area will display once a new notice is posted.</string>
     <string name="home_section_ongoing_cafe_event">Ongoing Cafe Events</string>
@@ -171,6 +177,7 @@
     <string name="ranking_detail">Details</string>
     <string name="ranking_empty_title">No ranking has been aggregated yet</string>
     <string name="ranking_empty_desc">When activity data accumulates, rankings will be shown here.</string>
+    <string name="ranking_score_format">%1$d pts</string>
     <string name="settings_title">Settings</string>
     <string name="settings_preferences_title">Preferences</string>
     <string name="settings_general_title">General</string>

@@ -217,7 +217,7 @@ private struct CheckInGuestContentView: View {
                                     name: cafe.name,
                                     rating: RatingUtils.formatOneDecimal(cafe.rating),
                                     conceptType: nil,
-                                    location: cafe.locationLabel,
+                                    location: localizedRegionCity(cafe.locationLabel),
                                     thumbnailImage: cafe.thumbnailImage,
                                     showLocationIcon: false,
                                     trailingLabel: String(format: String(localized: String.LocalizationValue("checkin_count_label"), table: "Localizable"), locale: Locale.current, cafe.checkInCount),
