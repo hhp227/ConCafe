@@ -227,6 +227,7 @@
 		0A94E09D2F5C6E0C0006722D /* RankingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */; };
 		0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */; };
 		0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */; };
+		6CB16D8481025C4A3FCBBB9F /* CafeRegionLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C10FF7FC0978586D316386E /* CafeRegionLabel.swift */; };
 		0A9A0B182F6B2B2500B69B62 /* KMPNativeCoroutinesAsync in Frameworks */ = {isa = PBXBuildFile; productRef = 0A9A0B172F6B2B2500B69B62 /* KMPNativeCoroutinesAsync */; };
 		0A9B96162F62645300F6D8FE /* ConCafeCastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */; };
 		0AA0361E2F5AA31B00A3BAF5 /* NotificationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */; };
@@ -496,6 +497,7 @@
 		0A94E09C2F5C6E0B0006722D /* RankingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingViewModel.swift; sourceTree = "<group>"; };
 		0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableConCafeTabBar.swift; sourceTree = "<group>"; };
 		0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CafeSummaryCard.swift; sourceTree = "<group>"; };
+		9C10FF7FC0978586D316386E /* CafeRegionLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CafeRegionLabel.swift; sourceTree = "<group>"; };
 		0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConCafeCastCard.swift; sourceTree = "<group>"; };
 		0AA0361D2F5AA31B00A3BAF5 /* NotificationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViewModel.swift; sourceTree = "<group>"; };
 		0AA0361F2F5AA33300A3BAF5 /* NotificationUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationUiState.swift; sourceTree = "<group>"; };
@@ -1136,6 +1138,7 @@
 				0A92FDF92FC9A46500C09E50 /* ImagePrefetcher.swift */,
 				0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */,
 				0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */,
+				9C10FF7FC0978586D316386E /* CafeRegionLabel.swift */,
 				0AC0FE000AC0FE000AC0FE02 /* ConCafeColors.swift */,
 				0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */,
 				0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */,
@@ -1517,6 +1520,7 @@
 				0A27C8EB2F614D2F00573900 /* ScheduleView.swift in Sources */,
 				0A580DAD2F59683500390F67 /* ExploreView.swift in Sources */,
 				0A94E0A12F5C701C0006722D /* CafeSummaryCard.swift in Sources */,
+				6CB16D8481025C4A3FCBBB9F /* CafeRegionLabel.swift in Sources */,
 				0ABDDBEA2F5C3E1C001BEF08 /* SignInComponents.swift in Sources */,
 				0A48CF192F66A2D300ED21AA /* ChangePasswordView.swift in Sources */,
 				0A27C8E32F614C9000573900 /* ScheduleViewModel.swift in Sources */,
