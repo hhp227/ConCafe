@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,7 @@ import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyGridImagePrefetch
 import com.hhp227.concafe.presentation.component.LazyListImagePrefetch
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
@@ -226,9 +228,13 @@ fun HomeContentScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(uiState.popularCasts) { maid ->
+                            val cafeName = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId
+                            val cafeRegion = uiState.popularCastCafeRegions[maid.cafeId]
+                            val subtitle = if (!cafeRegion.isNullOrBlank()) "$cafeName(${localizedRegionCity(cafeRegion)})" else cafeName
+
                             ConCafeCastCard(
                                 name = maid.name,
-                                subtitle = uiState.popularCastCafeNames[maid.cafeId] ?: maid.cafeId,
+                                subtitle = subtitle,
                                 imageUrl = maid.profileImage,
                                 modifier = Modifier.width(132.dp),
                                 metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
@@ -325,14 +331,16 @@ fun HomeContentScreen(
                         flingBehavior = rememberStartSnapFlingBehavior(birthdayCastListState),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(104.dp),
+                            .height(128.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(uiState.birthdayCasts) { maid ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
+                                modifier = Modifier
+                                    .width(74.dp)
+                                    .clickable { onAction(HomeAction.ClickBirthdayMaid(maid.id)) }
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -367,10 +375,27 @@ fun HomeContentScreen(
                                 }
                                 Text(
                                     maid.name,
-                                    modifier = Modifier.padding(top = 8.dp),
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .fillMaxWidth(),
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center
                                 )
+                                val cafeName = uiState.birthdayCastCafeNames[maid.cafeId]
+                                if (!cafeName.isNullOrBlank()) {
+                                    Text(
+                                        cafeName,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
@@ -835,7 +860,7 @@ private fun NearByCafeItem(
                 )
             }
             Text(
-                text = cafe.region.city,
+                text = localizedRegionCity(cafe.region.city),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,

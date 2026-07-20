@@ -66,18 +66,21 @@ class HomeViewModel(
                 val popularCastPage = (popularCastPageResult as? AppResult.Success)?.data
                 val nearbyCafePage = (nearbyCafePageResult as? AppResult.Success)?.data
                 val cafeEventPage = (cafeEventsResult as? AppResult.Success)?.data
+                val birthdayCastPage = (birthdayCastsResult as? AppResult.Success)?.data
                 state.copy(
                     isLoading = false,
                     errorMessage = null,
                     banners = (bannersResult as? AppResult.Success)?.data ?: state.banners,
                     popularCasts = popularCastPage?.casts ?: state.popularCasts,
                     popularCastCafeNames = popularCastPage?.cafeNames ?: state.popularCastCafeNames,
+                    popularCastCafeRegions = popularCastPage?.cafeRegions ?: state.popularCastCafeRegions,
                     popularCastCursor = popularCastPage?.nextCursor ?: state.popularCastCursor,
                     canLoadMorePopularCasts = popularCastPage?.hasNext ?: state.canLoadMorePopularCasts,
                     nearbyCafes = nearbyCafePage?.items ?: state.nearbyCafes,
                     nearbyCafeCursor = nearbyCafePage?.nextCursor ?: state.nearbyCafeCursor,
                     canLoadMoreNearbyCafes = nearbyCafePage?.hasNext ?: state.canLoadMoreNearbyCafes,
-                    birthdayCasts = (birthdayCastsResult as? AppResult.Success)?.data ?: state.birthdayCasts,
+                    birthdayCasts = birthdayCastPage?.casts ?: state.birthdayCasts,
+                    birthdayCastCafeNames = birthdayCastPage?.cafeNames ?: state.birthdayCastCafeNames,
                     notices = (noticesResult as? AppResult.Success)?.data ?: state.notices,
                     cafeEvents = cafeEventPage?.items ?: state.cafeEvents,
                     cafeEventCursor = cafeEventPage?.nextCursor ?: state.cafeEventCursor,
@@ -103,7 +106,12 @@ class HomeViewModel(
         jobs[TaskKey.BIRTHDAY_CASTS]?.cancel()
         jobs[TaskKey.BIRTHDAY_CASTS] = viewModelScope.launch {
             when (val result = getBirthdayCastsUseCase.invoke(HOME_FEED_LIMIT)) {
-                is AppResult.Success -> _uiState.update { it.copy(birthdayCasts = result.data) }
+                is AppResult.Success -> _uiState.update {
+                    it.copy(
+                        birthdayCasts = result.data.casts,
+                        birthdayCastCafeNames = result.data.cafeNames
+                    )
+                }
                 is AppResult.Failure -> Unit
             }
         }
@@ -193,6 +201,11 @@ class HomeViewModel(
                                 state.popularCastCafeNames + result.data.cafeNames
                             } else {
                                 result.data.cafeNames
+                            },
+                            popularCastCafeRegions = if (append) {
+                                state.popularCastCafeRegions + result.data.cafeRegions
+                            } else {
+                                result.data.cafeRegions
                             },
                             popularCastCursor = result.data.nextCursor,
                             canLoadMorePopularCasts = result.data.hasNext,
@@ -349,6 +362,8 @@ class HomeViewModel(
         _uiState.update { state ->
             state.copy(
                 popularCastCafeNames = state.popularCastCafeNames + (cafe.id to cafe.name),
+                popularCastCafeRegions = state.popularCastCafeRegions + (cafe.id to cafe.region.city),
+                birthdayCastCafeNames = state.birthdayCastCafeNames + (cafe.id to cafe.name),
                 nearbyCafes = state.nearbyCafes.map { item ->
                     if (item.id == cafe.id) cafe else item
                 }

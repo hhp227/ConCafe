@@ -140,7 +140,7 @@
     <string name="explore_cast_followers">フォロワー %1$d</string>
     <string name="home_section_popular_cast">人気キャスト</string>
     <string name="home_section_nearby_cafe">近くのコンセプトカフェ</string>
-    <string name="home_section_birthday_cast">誕生日のキャスト</string>
+    <string name="home_section_birthday_cast">本日誕生日のキャスト</string>
     <string name="home_section_notice">最近のカフェお知らせ</string>
     <string name="home_show_more">もっと見る</string>
     <string name="home_cast_followers">フォロワー %1$d</string>
@@ -158,6 +158,12 @@
     <string name="home_nearby_cafe_type_yokai">妖怪</string>
     <string name="home_nearby_cafe_type_cat">猫</string>
     <string name="home_nearby_cafe_type_other">その他</string>
+    <string name="region_seoul">ソウル</string>
+    <string name="region_busan">釜山</string>
+    <string name="region_daegu">大邱</string>
+    <string name="region_tokyo">東京</string>
+    <string name="region_osaka">大阪</string>
+    <string name="region_yokohama">横浜</string>
     <string name="home_notice_empty_title">最近のお知らせはありません</string>
     <string name="home_notice_empty_desc">新しいお知らせが登録されるとこの領域に表示されます。</string>
     <string name="home_section_ongoing_cafe_event">開催中のカフェイベント</string>
@@ -171,6 +177,7 @@
     <string name="ranking_detail">詳細</string>
     <string name="ranking_empty_title">まだ集計されたランキングがありません</string>
     <string name="ranking_empty_desc">活動データが蓄積されるとここに順位が表示されます。</string>
+    <string name="ranking_score_format">%1$dpt</string>
     <string name="settings_title">設定</string>
     <string name="settings_preferences_title">環境設定</string>
     <string name="settings_general_title">一般</string>

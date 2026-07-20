@@ -50,7 +50,8 @@ class GetRankingFeedUseCase(
                 change = item.change,
                 startColorHex = castColors(index).first,
                 endColorHex = castColors(index).second,
-                symbol = castSymbol(index)
+                symbol = castSymbol(index),
+                imageUrl = item.imageUrl
             )
         }
         val cafeRankings = cafeResult.getOrElse { emptyList() }.mapIndexed { index, item ->
@@ -63,7 +64,8 @@ class GetRankingFeedUseCase(
                 change = item.change,
                 startColorHex = cafeColors(index).first,
                 endColorHex = cafeColors(index).second,
-                symbol = cafeSymbol(index)
+                symbol = cafeSymbol(index),
+                imageUrl = item.imageUrl
             )
         }
         return@coroutineScope AppResult.Success(
@@ -77,8 +79,8 @@ class GetRankingFeedUseCase(
 
     private fun defaultAds(): List<RankingPromoAd> {
         return listOf(
-            RankingPromoAd("ad-premium", "AD", "프리미엄 멤버십", "첫 달 50% 할인!", "특별한 혜택을 받아보세요", "A66BFF", "F58CCF", "✨"),
             RankingPromoAd("ad-coupon", "AD", "3월 특별 쿠폰", "전 메뉴 20% 할인", "메이드 하우스에서 사용 가능", "F6A8C5", "FFC8A2", "🎁"),
+            RankingPromoAd("ad-premium", "AD", "프리미엄 멤버십", "첫 달 50% 할인!", "특별한 혜택을 받아보세요", "A66BFF", "F58CCF", "✨"),
             RankingPromoAd("ad-open", "AD", "신규 카페 오픈", "리본 카페 홍대점", "오픈 기념 이벤트 진행중!", "7AC7FF", "7BE7D8", "🎀")
         )
     }

@@ -127,7 +127,8 @@ final class RankingViewModel: ObservableObject {
                 change: entry.change,
                 startColorHex: entry.startColorHex,
                 endColorHex: entry.endColorHex,
-                symbol: entry.symbol
+                symbol: entry.symbol,
+                imageUrl: entry.imageUrl
             )
         }
     }
@@ -144,7 +145,8 @@ final class RankingViewModel: ObservableObject {
                 change: entry.change,
                 startColorHex: entry.startColorHex,
                 endColorHex: entry.endColorHex,
-                symbol: entry.symbol
+                symbol: entry.symbol,
+                imageUrl: entry.imageUrl
             )
         }
     }

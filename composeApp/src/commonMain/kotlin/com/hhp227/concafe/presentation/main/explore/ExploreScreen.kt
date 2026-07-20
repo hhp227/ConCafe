@@ -1,8 +1,10 @@
 package com.hhp227.concafe.presentation.main.explore
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -45,6 +47,7 @@ import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyListGridImagePrefetch
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
@@ -201,6 +204,8 @@ fun ExploreContentScreen(
                             )
                         },
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                            unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
                             unfocusedBorderColor = Color.Transparent,
                             focusedBorderColor = MaterialTheme.colorScheme.primary
                         )
@@ -396,7 +401,7 @@ private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
         name = cafe.name,
         rating = ratingText,
         conceptType = localizedCafeConceptType(cafe.conceptType),
-        location = cafe.region.city,
+        location = localizedRegionCity(cafe.region.city),
         thumbnailImage = cafe.thumbnailImage,
         showLocationIcon = false,
         onClick = onClick
@@ -429,7 +434,8 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
     Column(modifier = Modifier.clickable(onClick = onClick)) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Box(
                 modifier = Modifier

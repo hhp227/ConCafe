@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +45,8 @@ fun CafeSummaryCard(
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             val resolvedThumbnailImage = thumbnailImage?.trim().orEmpty()
 

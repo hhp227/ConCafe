@@ -277,7 +277,7 @@ private struct ExploreContentView: View {
             name: cafe.name,
             rating: RatingUtils.formatOneDecimal(cafe.ratingAvg),
             conceptType: localizedCafeConceptType(cafe.conceptType),
-            location: cafe.region.city,
+            location: localizedRegionCity(cafe.region.city),
             thumbnailImage: cafe.thumbnailImage,
             showLocationIcon: false,
             trailingLabel: nil,
@@ -334,6 +334,10 @@ private struct ExploreContentView: View {
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .clipped()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
+                )
             }
             .frame(height: 120)
             VStack(alignment: .leading, spacing: 4) {
