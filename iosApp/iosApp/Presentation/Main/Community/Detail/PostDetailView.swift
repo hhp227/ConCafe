@@ -118,7 +118,7 @@ private struct PostDetailContentView: View {
         Group {
             if uiState.isLoading || uiState.isDeleting {
                 ProgressView()
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if uiState.post == nil {
                 Text(String(localized: String.LocalizationValue("post_detail_load_failed"), table: "Localizable"))
@@ -185,7 +185,7 @@ private struct PostDetailContentView: View {
                 }
             }
             .padding(.vertical, 10)
-            .background(Color(hex: "EF6797"))
+            .background(ConCafeColors.primary)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .disabled(uiState.selectedReportType == nil || uiState.isSubmittingReport)
         }
@@ -220,7 +220,7 @@ private struct PostDetailContentView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(Color(hex: "EF6797"))
+                            .background(ConCafeColors.primary)
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                 }
@@ -276,7 +276,7 @@ private struct PostDetailContentView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
-                    .background(Color(hex: "2B2330").opacity(0.9))
+                    .background(ConCafeColors.textPrimary.opacity(0.9))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .padding(.horizontal, 16)
                     .padding(.bottom, 100)
@@ -288,7 +288,7 @@ private struct PostDetailContentView: View {
     private var commentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
-                .overlay(Color(hex: "FFD1DC").opacity(0.4))
+                .overlay(ConCafeColors.primaryContainer.opacity(0.4))
                 .padding(.horizontal, 16)
             HStack(spacing: 6) {
                 Image(systemName: "bubble.left")
@@ -303,13 +303,13 @@ private struct PostDetailContentView: View {
 
             if uiState.isLoadingComments {
                 ProgressView()
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             } else {
                 if uiState.isLoadingMoreComments {
                     ProgressView()
-                        .tint(Color(hex: "EF6797"))
+                        .tint(ConCafeColors.primary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                 } else if uiState.hasMoreComments {
@@ -343,7 +343,7 @@ private struct PostDetailContentView: View {
     private var commentInputBar: some View {
         VStack(spacing: 0) {
             Divider()
-                .overlay(Color(hex: "FFD1DC").opacity(0.2))
+                .overlay(ConCafeColors.primaryContainer.opacity(0.2))
             HStack(spacing: 8) {
                 CompatVerticalTextField(placeholder: String(localized: String.LocalizationValue("post_detail_comment_placeholder"), table: "Localizable"), text: Binding(
                     get: { uiState.commentText },
@@ -357,7 +357,7 @@ private struct PostDetailContentView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.6), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.6), lineWidth: 1)
                 )
                 Button {
                     isCommentFocused = false
@@ -373,7 +373,7 @@ private struct PostDetailContentView: View {
                         }
                     }
                     .frame(width: 36, height: 36)
-                    .background(uiState.canSendComment ? Color(hex: "EF6797") : Color(hex: "FFD1DC"))
+                    .background(uiState.canSendComment ? ConCafeColors.primary : ConCafeColors.primaryContainer)
                     .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -402,14 +402,14 @@ private struct PostBodyView: View {
             HStack(alignment: .center, spacing: 10) {
                 Circle()
                     .fill(LinearGradient(
-                        colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
                     .frame(width: 40, height: 40)
                     .overlay {
                         Text(String(post.userNickname.prefix(1).isEmpty ? "?" : post.userNickname.prefix(1)))
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(post.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : post.userNickname)
@@ -446,7 +446,7 @@ private struct PostBodyView: View {
                                 image.resizable().scaledToFit()
                             default:
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Color(hex: "FFE3EC"))
+                                    .fill(ConCafeColors.surfaceTint)
                                     .aspectRatio(16 / 9, contentMode: .fit)
                             }
                         }
@@ -462,10 +462,10 @@ private struct PostBodyView: View {
                     HStack(spacing: 4) {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
                             .font(.system(size: 16))
-                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
+                            .foregroundStyle(isLiked ? ConCafeColors.primary : .secondary)
                         Text(String(format: String(localized: String.LocalizationValue("community_post_like_count"), table: "Localizable"), locale: Locale.current, "\(post.likeCount)"))
                             .font(.system(size: 13))
-                            .foregroundStyle(isLiked ? Color(hex: "EF6797") : .secondary)
+                            .foregroundStyle(isLiked ? ConCafeColors.primary : .secondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -505,14 +505,14 @@ private struct CommentItemView: View {
             HStack(spacing: 8) {
                 Circle()
                     .fill(LinearGradient(
-                        colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
                     .frame(width: 28, height: 28)
                     .overlay {
                         Text(String(comment.userNickname.prefix(1).isEmpty ? "?" : comment.userNickname.prefix(1)))
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 Text(comment.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : comment.userNickname)
                     .font(.subheadline.weight(.semibold))

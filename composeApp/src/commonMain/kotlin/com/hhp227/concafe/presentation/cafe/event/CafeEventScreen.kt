@@ -79,6 +79,7 @@ import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 private val HeroTitleTriggerOffset = 20.dp
 private val HeroHeight = 260.dp
@@ -195,7 +196,7 @@ private fun CafeEventContentScreen(
             when {
                 uiState.isLoading -> CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
                 uiState.event != null -> CafeEventDetailContent(
                     uiState = uiState,
@@ -256,12 +257,12 @@ private fun CafeEventDetailContent(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(100),
-                        color = colorFromHex("FDE7EF")
+                        color = ConCafeColors.surfaceTint
                     ) {
                         Text(
                             text = event.statusLabel,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                            color = colorFromHex("9E2E5C"),
+                            color = ConCafeColors.primary,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -269,7 +270,7 @@ private fun CafeEventDetailContent(
                     if (event.hasLivePerformance) {
                         Surface(
                             shape = RoundedCornerShape(100),
-                            color = colorFromHex("FFF0E0")
+                            color = ConCafeColors.warningContainer
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
@@ -280,11 +281,11 @@ private fun CafeEventDetailContent(
                                     imageVector = Icons.Default.MusicNote,
                                     contentDescription = null,
                                     modifier = Modifier.size(12.dp),
-                                    tint = colorFromHex("C25800")
+                                    tint = ConCafeColors.warning
                                 )
                                 Text(
                                     text = stringResource(Res.string.cafeevent_live_performance_badge),
-                                    color = colorFromHex("C25800"),
+                                    color = ConCafeColors.warning,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -330,13 +331,13 @@ private fun CafeEventDetailContent(
                         Icon(
                             imageVector = if (uiState.isLikedByMe) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
-                            tint = if (uiState.isLikedByMe) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (uiState.isLikedByMe) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(22.dp)
                         )
                         Text(
                             text = stringResource(Res.string.cafeevent_like_count, uiState.likeCount),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (uiState.isLikedByMe) colorFromHex("EF6797") else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (uiState.isLikedByMe) ConCafeColors.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (showCafeButton) {
@@ -345,7 +346,7 @@ private fun CafeEventDetailContent(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("EF6797"),
+                                containerColor = ConCafeColors.primary,
                                 contentColor = Color.White
                             )
                         ) {
@@ -418,7 +419,7 @@ private fun CafeEventHeroImage(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(Brush.linearGradient(listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))))
+                    .background(Brush.linearGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
             )
         }
         Box(
@@ -472,7 +473,7 @@ private fun CafeEventCastSection(
                             .clip(CircleShape)
                             .background(
                                 Brush.verticalGradient(
-                                    listOf(colorFromHex("FDE7EF"), colorFromHex("FCCFDF"))
+                                    listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                                 )
                             )
                     ) {

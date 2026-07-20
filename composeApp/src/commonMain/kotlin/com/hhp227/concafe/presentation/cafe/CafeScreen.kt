@@ -44,6 +44,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeScreen(
@@ -177,7 +178,7 @@ fun CafeContentScreen(
         }
     }
     Scaffold(
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = ConCafeColors.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -207,7 +208,7 @@ fun CafeContentScreen(
                                 imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = stringResource(Res.string.cafe_accessibility_favorite),
                                 tint = if (uiState.isFavorite) {
-                                    colorFromHex("EF6797")
+                                    ConCafeColors.primary
                                 } else {
                                     if (isTopBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                                 }
@@ -228,8 +229,8 @@ fun CafeContentScreen(
             if (uiState.selectedTab == CafeUiState.TabType.REVIEWS && uiState.detail != null && uiState.isLoggedIn) {
                 ExtendedFloatingActionButton(
                     onClick = { onAction(CafeAction.ClickWriteReview) },
-                    containerColor = colorFromHex("FFD1DC"),
-                    contentColor = colorFromHex("2B2330"),
+                    containerColor = ConCafeColors.primaryContainer,
+                    contentColor = ConCafeColors.textPrimary,
                     text = {
                         Text(
                             text = stringResource(Res.string.cafe_action_write_review),
@@ -259,7 +260,7 @@ fun CafeContentScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colorFromHex("FFFBFD")),
+                    .background(ConCafeColors.background),
                 contentPadding = PaddingValues(
                     top = 0.dp,
                     bottom = innerPadding.calculateBottomPadding() + 32.dp
@@ -331,7 +332,7 @@ fun CafeContentScreen(
                                 color = Color.White,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(colorFromHex("EF6797"))
+                                    .background(ConCafeColors.primary)
                                     .clickable { onAction(CafeAction.Refresh) }
                                     .padding(horizontal = 16.dp, vertical = 10.dp)
                             )
@@ -400,9 +401,9 @@ private fun CafeHeroSection(
                     .background(
                         Brush.verticalGradient(
                             colors = if (imageUrl.isBlank()) {
-                                listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))
+                                listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
                             } else {
-                                listOf(colorFromHex("FFC6DB"), colorFromHex("F7A6C5"))
+                                listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                             }
                         )
                     )
@@ -468,7 +469,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 Icon(
                     imageVector = Icons.Default.Verified,
                     contentDescription = null,
-                    tint = colorFromHex("2563EB"),
+                    tint = ConCafeColors.info,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -478,10 +479,10 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 text = conceptLabel,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = colorFromHex("9E2E5C"),
+                color = ConCafeColors.primary,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(colorFromHex("FDE7EF"))
+                    .background(ConCafeColors.surfaceTint)
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             )
         }
@@ -493,7 +494,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = colorFromHex("FFC107"),
+                    tint = ConCafeColors.gold,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))

@@ -43,7 +43,7 @@ private struct CommunityContentView: View {
                 if uiState.isLoading {
                     VStack {
                         Spacer()
-                        ProgressView().tint(Color(hex: "EF6797"))
+                        ProgressView().tint(ConCafeColors.primary)
                         Spacer()
                     }
                     .frame(maxWidth: .infinity)
@@ -52,7 +52,7 @@ private struct CommunityContentView: View {
                         Spacer()
                         Text(String(localized: String.LocalizationValue("community_empty"), table: "Localizable"))
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "8C7E87"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                             .multilineTextAlignment(.center)
                             .lineSpacing(4)
                         Spacer()
@@ -89,7 +89,7 @@ private struct CommunityContentView: View {
                                 }
                                 if uiState.isLoadingMore {
                                     ProgressView()
-                                        .tint(Color(hex: "EF6797"))
+                                        .tint(ConCafeColors.primary)
                                         .padding(.vertical, 12)
                                 } else if uiState.hasNext {
                                     Color.clear
@@ -109,9 +109,9 @@ private struct CommunityContentView: View {
                     .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
                     .frame(width: 56, height: 56)
-                    .background(Color(hex: "EF6797"))
+                    .background(ConCafeColors.primary)
                     .clipShape(Circle())
-                    .shadow(color: Color(hex: "EF6797").opacity(0.4), radius: 8, x: 0, y: 4)
+                    .shadow(color: ConCafeColors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(String(localized: String.LocalizationValue("community_write_post"), table: "Localizable"))
@@ -119,7 +119,7 @@ private struct CommunityContentView: View {
             .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "F8F5F6"))
+        .background(ConCafeColors.surfaceVariant)
         .navigationTitle(String(localized: String.LocalizationValue("community_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.large)
     }
@@ -175,44 +175,44 @@ private struct CommunityNativeAdCard: View {
                 HStack(spacing: 8) {
                     Circle()
                         .fill(LinearGradient(
-                            colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         ))
                         .frame(width: 32, height: 32)
                         .overlay {
                             Text("AD")
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                     Text("ConCafe")
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color(hex: "665A63"))
+                        .foregroundStyle(ConCafeColors.textSecondary)
                 }
                 Spacer()
                 Text("광고")
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "B1A3AC"))
+                    .foregroundStyle(ConCafeColors.outlineStrong)
             }
             .padding(.bottom, 10)
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(hex: "F1E8EC"))
+                .fill(ConCafeColors.primaryContainer)
                 .frame(height: 17)
                 .padding(.trailing, 70)
             RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .fill(Color(hex: "F6EEF2"))
+                .fill(ConCafeColors.surfaceTint)
                 .frame(height: 13)
                 .padding(.top, 6)
                 .padding(.trailing, 28)
             Divider()
-                .overlay(Color(hex: "FFD1DC").opacity(0.3))
+                .overlay(ConCafeColors.primaryContainer.opacity(0.3))
                 .padding(.vertical, 10)
             HStack {
                 Text("자세히")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(Capsule())
                 Spacer()
             }
@@ -261,9 +261,9 @@ private struct CommunityNativeAdRepresentable: UIViewRepresentable {
 
         avatarLabel.text = "AD"
         avatarLabel.font = .systemFont(ofSize: 11, weight: .bold)
-        avatarLabel.textColor = UIColor(Color(hex: "EF6797"))
+        avatarLabel.textColor = UIColor(ConCafeColors.primary)
         avatarLabel.textAlignment = .center
-        avatarLabel.backgroundColor = UIColor(Color(hex: "FFE3EC"))
+        avatarLabel.backgroundColor = UIColor(ConCafeColors.surfaceTint)
         avatarLabel.layer.cornerRadius = 16
         avatarLabel.clipsToBounds = true
         avatarLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -273,25 +273,25 @@ private struct CommunityNativeAdRepresentable: UIViewRepresentable {
         ])
 
         advertiserLabel.font = .systemFont(ofSize: 13, weight: .medium)
-        advertiserLabel.textColor = UIColor(Color(hex: "665A63"))
+        advertiserLabel.textColor = UIColor(ConCafeColors.textSecondary)
         advertiserLabel.numberOfLines = 1
 
         adBadgeLabel.text = "광고"
         adBadgeLabel.font = .systemFont(ofSize: 11, weight: .regular)
-        adBadgeLabel.textColor = UIColor(Color(hex: "B1A3AC"))
+        adBadgeLabel.textColor = UIColor(ConCafeColors.outlineStrong)
         adBadgeLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         headlineLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        headlineLabel.textColor = UIColor(Color(hex: "2B2330"))
+        headlineLabel.textColor = UIColor(ConCafeColors.textPrimary)
         headlineLabel.numberOfLines = 2
         headlineLabel.lineBreakMode = .byTruncatingTail
 
         bodyLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        bodyLabel.textColor = UIColor(Color(hex: "665A63"))
+        bodyLabel.textColor = UIColor(ConCafeColors.textSecondary)
         bodyLabel.numberOfLines = 3
         bodyLabel.lineBreakMode = .byTruncatingTail
 
-        divider.backgroundColor = UIColor(Color(hex: "FFD1DC").opacity(0.3))
+        divider.backgroundColor = UIColor(ConCafeColors.primaryContainer.opacity(0.3))
         divider.translatesAutoresizingMaskIntoConstraints = false
         divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
 
@@ -299,8 +299,8 @@ private struct CommunityNativeAdRepresentable: UIViewRepresentable {
         bottomRow.alignment = .center
 
         callToActionButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .semibold)
-        callToActionButton.setTitleColor(UIColor(Color(hex: "2B2330")), for: .normal)
-        callToActionButton.backgroundColor = UIColor(Color(hex: "FFD1DC"))
+        callToActionButton.setTitleColor(UIColor(ConCafeColors.textPrimary), for: .normal)
+        callToActionButton.backgroundColor = UIColor(ConCafeColors.primaryContainer)
         callToActionButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
         callToActionButton.layer.cornerRadius = 16
         callToActionButton.isUserInteractionEnabled = false
@@ -358,35 +358,35 @@ private struct CommunityPostCard: View {
                     HStack(spacing: 8) {
                         Circle()
                             .fill(LinearGradient(
-                                colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                                colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                                 startPoint: .topLeading, endPoint: .bottomTrailing
                             ))
                             .frame(width: 32, height: 32)
                             .overlay {
                                 Text(String(post.userNickname.prefix(1).isEmpty ? "?" : post.userNickname.prefix(1)))
                                     .font(.caption.weight(.bold))
-                                    .foregroundStyle(Color(hex: "EF6797"))
+                                    .foregroundStyle(ConCafeColors.primary)
                             }
                         Text(post.userNickname.isEmpty ? String(localized: String.LocalizationValue("community_anonymous"), table: "Localizable") : post.userNickname)
                             .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Color(hex: "665A63"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                     }
                     Spacer()
                     Text(post.displayDate)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "B1A3AC"))
+                        .foregroundStyle(ConCafeColors.outlineStrong)
                 }
                 .padding(.bottom, 10)
                 Text(post.title)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if !post.content.isEmpty {
                     Text(post.content)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "665A63"))
+                        .foregroundStyle(ConCafeColors.textSecondary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -405,7 +405,7 @@ private struct CommunityPostCard: View {
                                         image.resizable().scaledToFill()
                                     default:
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .fill(Color(hex: "FFE3EC"))
+                                            .fill(ConCafeColors.surfaceTint)
                                     }
                                 }
                                 .frame(width: 72, height: 72)
@@ -424,24 +424,24 @@ private struct CommunityPostCard: View {
                     .padding(.top, 10)
                 }
                 Divider()
-                    .overlay(Color(hex: "FFD1DC").opacity(0.3))
+                    .overlay(ConCafeColors.primaryContainer.opacity(0.3))
                     .padding(.vertical, 10)
                 HStack(spacing: 14) {
                     HStack(spacing: 4) {
                         Image(systemName: "heart")
                             .font(.caption2)
-                            .foregroundStyle(Color(hex: "B1A3AC"))
+                            .foregroundStyle(ConCafeColors.outlineStrong)
                         Text(String(format: String(localized: String.LocalizationValue("community_post_like_count"), table: "Localizable"), locale: Locale.current, "\(post.likeCount)"))
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "8C7E87"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                     }
                     HStack(spacing: 4) {
                         Image(systemName: "bubble.left")
                             .font(.caption2)
-                            .foregroundStyle(Color(hex: "B1A3AC"))
+                            .foregroundStyle(ConCafeColors.outlineStrong)
                         Text(String(format: String(localized: String.LocalizationValue("community_post_comment_count"), table: "Localizable"), locale: Locale.current, "\(post.commentCount)"))
                             .font(.caption)
-                            .foregroundStyle(Color(hex: "8C7E87"))
+                            .foregroundStyle(ConCafeColors.textMuted)
                     }
                 }
             }

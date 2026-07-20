@@ -4,12 +4,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.hhp227.concafe.presentation.theme.AppBrandTheme
 
 fun colorFromHex(hex: String): Color {
     val normalized = hex.removePrefix("#")
     val value = normalized.toLongOrNull(16) ?: return Color.Gray
     val argb = (0xFF000000 or value)
     return adaptiveColor(argb)
+}
+
+fun themedColor(light: Long, dark: Long, maidLight: Long = light): Color {
+    val rgb = when {
+        ConCafeThemeState.isDarkMode -> dark
+        ConCafeThemeState.brandTheme == AppBrandTheme.MAID_CAFE -> maidLight
+        else -> light
+    }
+    return Color(0xFF000000 or rgb)
+}
+
+fun setConCafeBrandTheme(brandTheme: AppBrandTheme) {
+    ConCafeThemeState.brandTheme = brandTheme
 }
 
 fun adaptiveColor(argb: Long): Color {
@@ -37,6 +51,7 @@ fun setConCafeDarkMode(enabled: Boolean) {
 
 private object ConCafeThemeState {
     var isDarkMode by mutableStateOf(false)
+    var brandTheme by mutableStateOf(AppBrandTheme.MAID_CAFE)
 }
 
 private fun adaptForDarkMode(red: Float, green: Float, blue: Float): Triple<Float, Float, Float> {

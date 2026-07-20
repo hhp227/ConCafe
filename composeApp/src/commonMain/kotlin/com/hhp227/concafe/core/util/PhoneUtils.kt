@@ -9,19 +9,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 fun formatKoreanPhoneNumber(input: String): String {
     val digits = input.filter { it.isDigit() }.take(11)
@@ -73,7 +68,7 @@ fun PhoneNumberTextField(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = colorFromHex("665A63")
+            color = ConCafeColors.textSecondary
         )
         OutlinedTextField(
             value = fieldValue,
@@ -82,17 +77,17 @@ fun PhoneNumberTextField(
                 fieldValue = TextFieldValue(formatted, TextRange(formatted.length))
                 onValueChange(formatted)
             },
-            placeholder = { Text(text = placeholder, color = colorFromHex("AA98A4")) },
+            placeholder = { Text(text = placeholder, color = ConCafeColors.textMuted) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             trailingIcon = trailingContent,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorFromHex("F8F5F6"),
-                unfocusedContainerColor = colorFromHex("F8F5F6"),
-                focusedBorderColor = colorFromHex("FFD1DC"),
-                unfocusedBorderColor = Color(0x4DFFD1DC)
+                focusedContainerColor = ConCafeColors.surfaceVariant,
+                unfocusedContainerColor = ConCafeColors.surfaceVariant,
+                focusedBorderColor = ConCafeColors.primaryContainer,
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.3f)
             )
         )
     }

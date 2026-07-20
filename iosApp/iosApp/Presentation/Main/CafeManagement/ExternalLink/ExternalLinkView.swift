@@ -48,7 +48,7 @@ private struct ExternalLinkContentView: View {
 
     var body: some View {
         ExternalWebView(urlString: uiState.url)
-            .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color.white)
+            .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color.white)
     }
 }
 

@@ -77,11 +77,13 @@
 		0A3470842F611D63005F9A8C /* MenuGoodsEditEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470832F611D63005F9A8C /* MenuGoodsEditEvent.swift */; };
 		0A3470862F611D80005F9A8C /* MenuGoodsEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */; };
 		0A34708A2F611DB0005F9A8C /* ConCafeFormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */; };
+		0AC0FE000AC0FE000AC0FE01 /* ConCafeColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE000AC0FE000AC0FE02 /* ConCafeColors.swift */; };
 		0A3BB97A2F99302300737CDB /* CafeEventUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9792F99302300737CDB /* CafeEventUiState.swift */; };
 		0A3BB97E2F99307900737CDB /* CafeEventViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */; };
 		0A3BB9802F9930A100737CDB /* CafeEventAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */; };
 		0A3BB9822F9930C600737CDB /* CafeEventEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */; };
 		0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */; };
+		0AC0FE000AC0FE000AC0FE03 /* AppBrandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */; };
 		0A3D3AC02F6D1F3400167893 /* NetworkStatusBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */; };
 		0A3DB80A2F649F2E00064804 /* BannerEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */; };
 		0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB80B2F649F5000064804 /* BannerEditAction.swift */; };
@@ -343,11 +345,13 @@
 		0A3470832F611D63005F9A8C /* MenuGoodsEditEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditEvent.swift; sourceTree = "<group>"; };
 		0A3470852F611D80005F9A8C /* MenuGoodsEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuGoodsEditViewModel.swift; sourceTree = "<group>"; };
 		0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConCafeFormField.swift; sourceTree = "<group>"; };
+		0AC0FE000AC0FE000AC0FE02 /* ConCafeColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConCafeColors.swift; sourceTree = "<group>"; };
 		0A3BB9792F99302300737CDB /* CafeEventUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventUiState.swift; sourceTree = "<group>"; };
 		0A3BB97D2F99307900737CDB /* CafeEventViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventViewModel.swift; sourceTree = "<group>"; };
 		0A3BB97F2F9930A100737CDB /* CafeEventAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventAction.swift; sourceTree = "<group>"; };
 		0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventEvent.swift; sourceTree = "<group>"; };
 		0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeMode.swift; sourceTree = "<group>"; };
+		0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBrandTheme.swift; sourceTree = "<group>"; };
 		0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatusBannerView.swift; sourceTree = "<group>"; };
 		0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditUiState.swift; sourceTree = "<group>"; };
 		0A3DB80B2F649F5000064804 /* BannerEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditAction.swift; sourceTree = "<group>"; };
@@ -765,6 +769,7 @@
 		0A3C35712FAB277A00CB6B11 /* Theme */ = {
 			isa = PBXGroup;
 			children = (
+				0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */,
 				0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */,
 			);
 			path = Theme;
@@ -1131,6 +1136,7 @@
 				0A92FDF92FC9A46500C09E50 /* ImagePrefetcher.swift */,
 				0A9B96152F62645300F6D8FE /* ConCafeCastCard.swift */,
 				0A94E0A02F5C701C0006722D /* CafeSummaryCard.swift */,
+				0AC0FE000AC0FE000AC0FE02 /* ConCafeColors.swift */,
 				0A3470892F611DB0005F9A8C /* ConCafeFormField.swift */,
 				0A94E09A2F5C6D3A0006722D /* ConCafeTabBar.swift */,
 				0A94E09E2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift */,
@@ -1520,6 +1526,7 @@
 				0A51B0552F61561A00051A97 /* CastEditAction.swift in Sources */,
 				0A27F1E82F5D6CCD003D4763 /* Compat.swift in Sources */,
 				0A34708A2F611DB0005F9A8C /* ConCafeFormField.swift in Sources */,
+				0AC0FE000AC0FE000AC0FE01 /* ConCafeColors.swift in Sources */,
 				0A491C892F669F5F005C106F /* BannerView.swift in Sources */,
 				0A491C8D2F669F8F005C106F /* BannerViewModel.swift in Sources */,
 				0A785C9D2F5A7B28004037A8 /* CafeView.swift in Sources */,
@@ -1596,6 +1603,7 @@
 				0A580DA32F59671900390F67 /* NavigationAction.swift in Sources */,
 				0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */,
 				0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */,
+				0AC0FE000AC0FE000AC0FE03 /* AppBrandTheme.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,
 				0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */,
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,

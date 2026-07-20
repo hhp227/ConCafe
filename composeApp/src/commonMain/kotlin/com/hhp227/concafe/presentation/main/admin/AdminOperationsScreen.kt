@@ -53,6 +53,7 @@ import concafe.composeapp.generated.resources.dashboard_action_reject
 import concafe.composeapp.generated.resources.dashboard_action_view_all
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun AdminOperationsScreen(
@@ -85,11 +86,11 @@ fun AdminOperationsScreen(
             .fillMaxSize()
             .then(
                 if (isSystemInDarkTheme()) {
-                    Modifier.background(colorFromHex("FFFBFD"))
+                    Modifier.background(ConCafeColors.background)
                 } else {
                     Modifier.background(
                         Brush.verticalGradient(
-                            colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFCFD"))
+                            colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
                         )
                     )
                 }
@@ -139,7 +140,7 @@ private fun ReportSection(
         Text("신고 내역", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         if (uiState.reports.isEmpty()) {
             Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                Text("등록된 신고가 없습니다.", modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp), color = colorFromHex("7A707A"))
+                Text("등록된 신고가 없습니다.", modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp), color = ConCafeColors.textSecondary)
             }
         } else {
             uiState.reports.forEach { report -> ReportCard(report) }
@@ -161,12 +162,12 @@ private fun ReportCard(report: Report) {
     Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(report.reportType, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
-                Text(report.createdAtLabel, color = colorFromHex("7A707A"), style = MaterialTheme.typography.labelSmall)
+                Text(report.reportType, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
+                Text(report.createdAtLabel, color = ConCafeColors.textSecondary, style = MaterialTheme.typography.labelSmall)
             }
             Text("대상: ${report.targetLabel()} / ${report.targetId}", style = MaterialTheme.typography.labelMedium)
-            Text("신고자: ${report.reporterNickname}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("8B7F8A"))
-            Text("상태: ${report.status.name}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("6F6670"))
+            Text("신고자: ${report.reporterNickname}", style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textMuted)
+            Text("상태: ${report.status.name}", style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textSecondary)
         }
     }
 }
@@ -194,13 +195,13 @@ private fun BannerRegisterCard(
             Text(
                 stringResource(Res.string.admin_banner_card_description),
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorFromHex("7A707A")
+                color = ConCafeColors.textSecondary
             )
             Button(
                 onClick = onClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorFromHex("FFD1DC"),
-                    contentColor = colorFromHex("2B2330")
+                    containerColor = ConCafeColors.primaryContainer,
+                    contentColor = ConCafeColors.textPrimary
                 )
             ) {
                 Icon(Icons.Default.Campaign, contentDescription = null)
@@ -232,15 +233,15 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = colorFromHex("FFD1DC").copy(alpha = 0.16f))
+        colors = CardDefaults.cardColors(containerColor = ConCafeColors.primaryContainer.copy(alpha = 0.16f))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(metric.icon.toImageVector(), contentDescription = null, tint = colorFromHex("EF6797"), modifier = Modifier.size(16.dp))
-                Text(metric.title, style = MaterialTheme.typography.labelMedium, color = colorFromHex("7A707A"))
+                Icon(metric.icon.toImageVector(), contentDescription = null, tint = ConCafeColors.primary, modifier = Modifier.size(16.dp))
+                Text(metric.title, style = MaterialTheme.typography.labelMedium, color = ConCafeColors.textSecondary)
             }
             Text(metric.value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -252,9 +253,9 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
                     },
                     contentDescription = null,
                     tint = when (metric.trend) {
-                        MetricTrend.DOWN -> colorFromHex("2E9E5B")
-                        MetricTrend.UP -> colorFromHex("2E9E5B")
-                        MetricTrend.NEW -> colorFromHex("EF5350")
+                        MetricTrend.DOWN -> ConCafeColors.success
+                        MetricTrend.UP -> ConCafeColors.success
+                        MetricTrend.NEW -> ConCafeColors.error
                     },
                     modifier = Modifier.size(14.dp)
                 )
@@ -263,9 +264,9 @@ private fun MetricCard(metric: AdminMetricCard, modifier: Modifier = Modifier) {
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = when (metric.trend) {
-                        MetricTrend.DOWN -> colorFromHex("2E9E5B")
-                        MetricTrend.UP -> colorFromHex("2E9E5B")
-                        MetricTrend.NEW -> colorFromHex("EF5350")
+                        MetricTrend.DOWN -> ConCafeColors.success
+                        MetricTrend.UP -> ConCafeColors.success
+                        MetricTrend.NEW -> ConCafeColors.error
                     }
                 )
             }
@@ -283,7 +284,7 @@ private fun PendingSection(
             Text(stringResource(Res.string.admin_pending_section_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
                 text = stringResource(Res.string.dashboard_action_view_all),
-                color = colorFromHex("EF6797"),
+                color = ConCafeColors.primary,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable { onAction(AdminOperationsAction.ClickSeeAllPending) }
@@ -298,14 +299,14 @@ private fun PendingSection(
             uiState.pendingFilters.forEach { chip ->
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = if (chip.isSelected) colorFromHex("FFD1DC") else colorFromHex("FFD1DC").copy(alpha = 0.14f),
+                    color = if (chip.isSelected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.14f),
                     tonalElevation = 0.dp,
                     modifier = Modifier.clickable { onAction(AdminOperationsAction.SelectPendingFilter(chip.filter)) }
                 ) {
                     Text(
                         text = "${chip.label} (${chip.count})",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                        color = if (chip.isSelected) colorFromHex("2B2330") else colorFromHex("6F6670"),
+                        color = if (chip.isSelected) ConCafeColors.textPrimary else ConCafeColors.textSecondary,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (chip.isSelected) FontWeight.Bold else FontWeight.Medium
                     )
@@ -351,7 +352,7 @@ private fun InquirySection(
                 Text(
                     text = stringResource(Res.string.admin_inquiry_empty),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
-                    color = colorFromHex("7A707A")
+                    color = ConCafeColors.textSecondary
                 )
             }
         } else {
@@ -364,15 +365,15 @@ private fun InquirySection(
                     enabled = !uiState.isLoadingMoreInquiries,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorFromHex("F5F2F4"),
-                        contentColor = colorFromHex("5E545F")
+                        containerColor = ConCafeColors.surfaceVariant,
+                        contentColor = ConCafeColors.textSecondary
                     )
                 ) {
                     if (uiState.isLoadingMoreInquiries) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = colorFromHex("8B7F8A")
+                            color = ConCafeColors.textMuted
                         )
                     } else {
                         Text(stringResource(Res.string.admin_inquiry_load_more), fontWeight = FontWeight.Bold)
@@ -404,13 +405,13 @@ private fun InquiryCard(
             ) {
                 Text(
                     text = inquiry.inquiryType,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = inquiry.createdAtLabel,
-                    color = colorFromHex("7A707A"),
+                    color = ConCafeColors.textSecondary,
                     style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -422,12 +423,12 @@ private fun InquiryCard(
             Text(
                 text = inquiry.content,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6F6670")
+                color = ConCafeColors.textSecondary
             )
             Text(
                 text = stringResource(Res.string.admin_writer, inquiry.userNickname),
                 style = MaterialTheme.typography.labelSmall,
-                color = colorFromHex("8B7F8A")
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -490,7 +491,7 @@ private fun PendingClaimCard(
                     .clip(RoundedCornerShape(14.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(colorFromHex("FFE7EF"), colorFromHex("F4D8E2"))
+                            colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                         )
                     )
             ) {
@@ -505,23 +506,23 @@ private fun PendingClaimCard(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                     Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Surface(shape = RoundedCornerShape(999.dp), color = colorFromHex("F5F2F4")) {
+                    Surface(shape = RoundedCornerShape(999.dp), color = ConCafeColors.surfaceVariant) {
                         Text(
                             text = requestedAt,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = colorFromHex("7A707A")
+                            color = ConCafeColors.textSecondary
                         )
                     }
                 }
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colorFromHex("7A707A"))
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = ConCafeColors.textSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onApprove,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
-                            contentColor = colorFromHex("2B2330")
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -531,8 +532,8 @@ private fun PendingClaimCard(
                         onClick = onReject,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("F5F2F4"),
-                            contentColor = colorFromHex("6F6670")
+                            containerColor = ConCafeColors.surfaceVariant,
+                            contentColor = ConCafeColors.textSecondary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -575,9 +576,9 @@ private fun QuickMenuSection(
                     }
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(menu.title, fontWeight = FontWeight.Bold)
-                        Text(menu.description, style = MaterialTheme.typography.labelSmall, color = colorFromHex("7A707A"))
+                        Text(menu.description, style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textSecondary)
                     }
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("B5AEB5"))
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ConCafeColors.outlineStrong)
                 }
             }
         }
@@ -590,16 +591,16 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(colorFromHex("FFF2D8"))
+            .background(ConCafeColors.warningContainer)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(message, modifier = Modifier.weight(1f), color = colorFromHex("6B5320"), style = MaterialTheme.typography.bodyMedium)
+        Text(message, modifier = Modifier.weight(1f), color = ConCafeColors.goldDeep, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = stringResource(Res.string.common_close),
-            color = colorFromHex("6B5320"),
+            color = ConCafeColors.goldDeep,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss)
@@ -622,13 +623,13 @@ private fun QuickMenuIcon.toImageVector() = when (this) {
 }
 
 private fun QuickMenuAccent.backgroundColor() = when (this) {
-    QuickMenuAccent.PRIMARY -> colorFromHex("FFD1DC").copy(alpha = 0.32f)
-    QuickMenuAccent.ROSE -> colorFromHex("FFE5EA")
-    QuickMenuAccent.BLUE -> colorFromHex("E6F0FF")
+    QuickMenuAccent.PRIMARY -> ConCafeColors.primaryContainer.copy(alpha = 0.32f)
+    QuickMenuAccent.ROSE -> ConCafeColors.errorContainer
+    QuickMenuAccent.BLUE -> ConCafeColors.infoContainer
 }
 
 private fun QuickMenuAccent.contentColor() = when (this) {
-    QuickMenuAccent.PRIMARY -> colorFromHex("5E535C")
-    QuickMenuAccent.ROSE -> colorFromHex("E05A78")
-    QuickMenuAccent.BLUE -> colorFromHex("4F7DFF")
+    QuickMenuAccent.PRIMARY -> ConCafeColors.textSecondary
+    QuickMenuAccent.ROSE -> ConCafeColors.error
+    QuickMenuAccent.BLUE -> ConCafeColors.info
 }

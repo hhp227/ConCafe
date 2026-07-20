@@ -27,13 +27,13 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
 import com.hhp227.concafe.presentation.component.ConCafeFormField
-import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +122,7 @@ private fun FanManagementContentScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(ConCafeColors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
@@ -172,14 +172,14 @@ private fun CastClaimStatusCard(
     onClick: () -> Unit
 ) {
     val accent = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> colorFromHex("FFD1DC")
-        FanManagementUiState.Accent.LINKED -> colorFromHex("EAF8EF")
-        FanManagementUiState.Accent.REJECTED -> colorFromHex("F8E9EE")
+        FanManagementUiState.Accent.PENDING -> ConCafeColors.primaryContainer
+        FanManagementUiState.Accent.LINKED -> ConCafeColors.successContainer
+        FanManagementUiState.Accent.REJECTED -> ConCafeColors.surfaceTint
     }
     val contentColor = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> colorFromHex("6B3050")
-        FanManagementUiState.Accent.LINKED -> colorFromHex("2E8B57")
-        FanManagementUiState.Accent.REJECTED -> colorFromHex("8B4A5A")
+        FanManagementUiState.Accent.PENDING -> ConCafeColors.onPrimaryContainer
+        FanManagementUiState.Accent.LINKED -> ConCafeColors.success
+        FanManagementUiState.Accent.REJECTED -> ConCafeColors.onTertiaryContainer
     }
 
     Card(
@@ -225,9 +225,9 @@ private fun CastClaimStatusCard(
                     text = stringResource(Res.string.fanmanagement_action_profile_link_status),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("EF6797"))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ConCafeColors.primary)
             }
         }
     }
@@ -263,17 +263,17 @@ private fun ProfileSummaryCard(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
+                                colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                             )
                         )
-                        .border(2.dp, colorFromHex("FFD1DC"), CircleShape),
+                        .border(2.dp, ConCafeColors.primaryContainer, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = profileAccent,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("7C3F67")
+                        color = ConCafeColors.primary
                     )
                 }
                 if (isOnline) {
@@ -282,7 +282,7 @@ private fun ProfileSummaryCard(
                             .align(Alignment.BottomEnd)
                             .size(18.dp)
                             .clip(CircleShape)
-                            .background(colorFromHex("37B26C"))
+                            .background(ConCafeColors.success)
                             .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
                     )
                 }
@@ -315,7 +315,7 @@ private fun ProfileSummaryCard(
                     Surface(
                         modifier = Modifier.clickable { onAction(FanManagementAction.ClickEditProfile) },
                         shape = RoundedCornerShape(999.dp),
-                        color = Color(0x14FFD1DC)
+                        color = ConCafeColors.primaryContainer
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -325,14 +325,14 @@ private fun ProfileSummaryCard(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = stringResource(Res.string.fanmanagement_accessibility_edit_profile),
-                                tint = colorFromHex("7C3F67"),
+                                tint = ConCafeColors.primary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
                                 text = stringResource(Res.string.fanmanagement_action_edit),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = colorFromHex("7C3F67")
+                                color = ConCafeColors.primary
                             )
                         }
                     }
@@ -344,7 +344,7 @@ private fun ProfileSummaryCard(
                     Icon(
                         imageVector = Icons.Default.Storefront,
                         contentDescription = null,
-                        tint = colorFromHex("EF6797"),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
@@ -365,8 +365,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -378,7 +378,7 @@ private fun InfoBanner(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320"),
+                color = ConCafeColors.goldDeep,
                 modifier = Modifier.weight(1f)
             )
             Text(
@@ -389,7 +389,7 @@ private fun InfoBanner(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
         }
     }
@@ -405,8 +405,8 @@ private fun PrimaryAnnouncementButton(
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
         shape = RoundedCornerShape(22.dp),
         colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = colorFromHex("FFD1DC"),
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = ConCafeColors.primaryContainer,
+            contentColor = ConCafeColors.onPrimaryContainer
         )
     ) {
         Row(
@@ -451,7 +451,7 @@ private fun QuickActionGrid(
                     .clickable { onActionClick(quickAction) },
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+                border = BorderStroke(1.dp, ConCafeColors.outline)
             ) {
                 Box {
                     Column(
@@ -465,13 +465,13 @@ private fun QuickActionGrid(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0x14FFD1DC)),
+                                .background(ConCafeColors.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = colorFromHex("5D525B")
+                                tint = ConCafeColors.primary
                             )
                         }
                         Text(
@@ -526,7 +526,7 @@ private fun CastClaimSheet(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = colorFromHex("EF6797"))
+                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = ConCafeColors.primary)
                     }
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(Res.string.common_close))
@@ -548,8 +548,8 @@ private fun CastClaimSheet(
                             .fillMaxWidth()
                             .clickable { onSelect(candidate.castId) },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (sheet.selectedCastId == candidate.castId) colorFromHex("FFD1DC") else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+                        color = if (sheet.selectedCastId == candidate.castId) ConCafeColors.primaryContainer else MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, ConCafeColors.outline)
                     ) {
                         Text(
                             text = candidate.castName,
@@ -585,7 +585,7 @@ private fun CastClaimSheet(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     contentPadding = PaddingValues(vertical = 14.dp),
                     colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = colorFromHex("FFD1DC"),
+                        containerColor = ConCafeColors.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
@@ -604,7 +604,7 @@ private fun RecentFollowersSection(
     followers: List<FanFollower>,
     onFollowerClick: (String) -> Unit
 ) {
-    SectionCard(
+    SectionContainer(
         title = stringResource(Res.string.fanmanagement_section_recent_followers)
     ) {
         if (followers.isEmpty()) {
@@ -630,14 +630,14 @@ private fun RecentFollowersSection(
                                 .clip(CircleShape)
                                 .background(
                                     if (accent) Brush.linearGradient(
-                                        colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
+                                        colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                                     ) else Brush.linearGradient(
-                                        colors = listOf(colorFromHex("F2EEF1"), colorFromHex("E3D9E2"))
+                                        colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.outline)
                                     )
                                 )
                                 .border(
                                     width = if (accent) 2.dp else 0.dp,
-                                    color = if (accent) colorFromHex("FFD1DC") else Color.Transparent,
+                                    color = if (accent) ConCafeColors.primaryContainer else Color.Transparent,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -646,7 +646,7 @@ private fun RecentFollowersSection(
                                 text = follower.nickname.take(1).uppercase(),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = colorFromHex("6E5566")
+                                color = ConCafeColors.textSecondary
                             )
                         }
                         Text(
@@ -778,17 +778,17 @@ private fun FanAnnouncementSheetContent(
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorFromHex("FFD1DC"),
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        disabledContainerColor = colorFromHex("FFE6EE"),
-                        disabledContentColor = colorFromHex("BCAAB3")
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = ConCafeColors.onPrimaryContainer,
+                        disabledContainerColor = ConCafeColors.surfaceTint,
+                        disabledContentColor = ConCafeColors.outlineStrong
                     )
                 ) {
                     if (uiState.isSendingAnnouncement) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
                             modifier = Modifier.size(22.dp),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = ConCafeColors.onPrimaryContainer
                         )
                     } else {
                         Text(
@@ -809,11 +809,11 @@ private fun WeeklyScheduleSection(
 ) {
     val weeklyStatus = rememberWeeklySchedule(schedule)
 
-    SectionCard(title = stringResource(Res.string.fanmanagement_section_weekly_work)) {
+    SectionContainer(title = stringResource(Res.string.fanmanagement_section_weekly_work)) {
         Surface(
             shape = RoundedCornerShape(22.dp),
             color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Column(
                 modifier = Modifier
@@ -829,13 +829,13 @@ private fun WeeklyScheduleSection(
                         modifier = Modifier
                             .size(34.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x14FFD1DC)),
+                            .background(ConCafeColors.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            tint = colorFromHex("EF6797"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -879,10 +879,10 @@ private fun WeeklyScheduleItemCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isWorking) colorFromHex("EF6797") else colorFromHex("FDF8FA"),
+        color = if (isWorking) ConCafeColors.primary else ConCafeColors.surfaceVariant,
         border = BorderStroke(
             1.dp,
-            if (isWorking) Color.Transparent else Color(0x1AFFD1DC)
+            if (isWorking) Color.Transparent else ConCafeColors.outline
         )
     ) {
         Column(
@@ -896,12 +896,12 @@ private fun WeeklyScheduleItemCard(
                 text = dayLabel,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isWorking) ConCafeColors.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = if (isWorking) stringResource(Res.string.schedule_status_work) else stringResource(Res.string.schedule_status_off),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isWorking) ConCafeColors.onPrimary.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -918,14 +918,14 @@ private fun AddFollowerButton() {
             modifier = Modifier
                 .size(58.dp)
                 .clip(CircleShape)
-                .background(colorFromHex("F8F1F4"))
-                .border(1.dp, colorFromHex("D9CBD4"), CircleShape),
+                .background(ConCafeColors.surfaceTint)
+                .border(1.dp, ConCafeColors.outline, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Groups,
                 contentDescription = null,
-                tint = colorFromHex("A28E9B")
+                tint = ConCafeColors.textMuted
             )
         }
         Text(
@@ -989,7 +989,7 @@ private fun EmptySectionCard(message: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Text(
             text = message,
@@ -1004,45 +1004,36 @@ private fun EmptySectionCard(message: String) {
 }
 
 @Composable
-private fun SectionCard(
+private fun SectionContainer(
     title: String,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Column(
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Transparent)
+                .padding(bottom = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (actionLabel != null) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = actionLabel,
+                    modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (actionLabel != null) {
-                    Text(
-                        text = actionLabel,
-                        modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
-            content()
         }
+        content()
     }
 }

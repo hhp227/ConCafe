@@ -110,7 +110,7 @@ struct ScheduleView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .foregroundStyle(.primary)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -147,7 +147,7 @@ private struct ScheduleEditModal: View {
                 }
             VStack(spacing: 0) {
                 Capsule()
-                    .fill(Color(hex: "E5DDE2"))
+                    .fill(ConCafeColors.outline)
                     .frame(width: 48, height: 5)
                     .padding(.top, 12)
                     .padding(.bottom, 8)
@@ -203,7 +203,7 @@ private struct ScheduleEditModal: View {
                     }
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "info.circle.fill")
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                             .font(.caption)
                         Text(String(localized: String.LocalizationValue("schedule_break_notice"), table: "Localizable"))
                             .font(.caption)
@@ -211,11 +211,11 @@ private struct ScheduleEditModal: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(12)
-                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                    .background(ConCafeColors.primaryContainer.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                            .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
                     )
                     HStack {
                         Text(String(localized: String.LocalizationValue("schedule_total_work"), table: "Localizable"))
@@ -236,7 +236,7 @@ private struct ScheduleEditModal: View {
                             .font(.headline.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color(hex: "FFD1DC"))
+                            .background(ConCafeColors.primaryContainer)
                             .foregroundStyle(.primary)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
@@ -319,7 +319,7 @@ private struct TimePickerField: View {
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "clock")
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                     Text(value)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(isEnabled ? .primary : .secondary)
@@ -354,7 +354,7 @@ private struct ScheduleContentView: View {
         ZStack {
             Group {
                 if UITraitCollection.current.userInterfaceStyle == .dark {
-                    Color(hex: "FFF9FC")
+                    ConCafeColors.background
                 } else {
                     LinearGradient(
                         colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground), Color(uiColor: .systemGroupedBackground)],
@@ -399,7 +399,7 @@ private struct ScheduleContentView: View {
             } else {
                 ProgressView()
                     .progressViewStyle(.circular)
-                    .tint(Color(hex: "EF6797"))
+                    .tint(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
@@ -410,7 +410,7 @@ private struct ScheduleContentView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(String(localized: String.LocalizationValue(uiState.castSummary.badge), table: "Localizable"))
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(uiState.castSummary.title)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
@@ -422,7 +422,7 @@ private struct ScheduleContentView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: "FFD7E5"), Color(hex: "F2ADC2")],
+                        colors: [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -437,7 +437,7 @@ private struct ScheduleContentView: View {
                     } else {
                         Text(uiState.castSummary.initials)
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(Color(hex: "7C3F67"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
                 }
         }
@@ -446,7 +446,7 @@ private struct ScheduleContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer.opacity(0.10), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
@@ -467,7 +467,7 @@ private struct ScheduleContentView: View {
                             .fontWeight(.bold)
                     }
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 }
                 .buttonStyle(.plain)
             }
@@ -490,13 +490,13 @@ private struct ScheduleContentView: View {
                             }
                             .frame(width: 56)
                             .padding(.vertical, 10)
-                            .background(isSelected ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+                            .background(isSelected ? ConCafeColors.primary : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(isSelected ? .clear : Color(hex: "FFD1DC").opacity(0.10), lineWidth: 1)
+                                    .stroke(isSelected ? .clear : ConCafeColors.primaryContainer.opacity(0.10), lineWidth: 1)
                             )
-                            .shadow(color: isSelected ? Color(hex: "EF6797").opacity(0.35) : .clear, radius: 4, x: 0, y: 2)
+                            .shadow(color: isSelected ? ConCafeColors.primary.opacity(0.35) : .clear, radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
                     }
@@ -535,7 +535,7 @@ private struct ScheduleContentView: View {
                 } label: {
                     Text(String(localized: String.LocalizationValue(period.localizationKey), table: "Localizable"))
                         .font(.caption.weight(isSelected ? .bold : .medium))
-                        .foregroundStyle(isSelected ? Color(hex: "EF6797") : .secondary)
+                        .foregroundStyle(isSelected ? ConCafeColors.primary : .secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(isSelected ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.clear)
@@ -575,21 +575,21 @@ private struct ScheduleContentView: View {
                 }()
             )
             .font(.caption)
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
             .frame(maxWidth: .infinity, alignment: .leading)
             Button(String(localized: String.LocalizationValue("schedule_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
     
@@ -598,7 +598,7 @@ private struct ScheduleContentView: View {
             ForEach(uiState.schedules, id: \.id) { schedule in
                 HStack(spacing: 14) {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(schedule.isWorking ? Color.white.opacity(0.18) : Color(hex: "F2EDF0"))
+                        .fill(schedule.isWorking ? Color.white.opacity(0.18) : ConCafeColors.surfaceVariant)
                         .frame(width: 48, height: 48)
                         .overlay {
                             Image(systemName: schedule.isWorking ? "clock" : "bed.double")
@@ -614,7 +614,7 @@ private struct ScheduleContentView: View {
                                 .foregroundStyle(schedule.isWorking ? Color.white.opacity(0.86) : .secondary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(schedule.isWorking ? Color.white.opacity(0.22) : Color(hex: "F2EDF0"))
+                                .background(schedule.isWorking ? Color.white.opacity(0.22) : ConCafeColors.surfaceVariant)
                                 .clipShape(Capsule())
                         }
                         Text(resolveScheduleTimeLabel(schedule.timeLabel, status: schedule.status))
@@ -638,11 +638,11 @@ private struct ScheduleContentView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 14)
                 .id(schedule.id)
-                .background(schedule.isWorking ? Color(hex: "EF6797") : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
+                .background(schedule.isWorking ? ConCafeColors.primary : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.88))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(schedule.isWorking ? Color.white.opacity(0.38) : Color(hex: "E9E0E5"))
+                        .fill(schedule.isWorking ? Color.white.opacity(0.38) : ConCafeColors.outline)
                         .frame(width: 4)
                 }
                 .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)

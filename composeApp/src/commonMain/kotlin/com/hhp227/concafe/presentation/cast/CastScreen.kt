@@ -85,6 +85,7 @@ import kotlinx.coroutines.delay
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 private val SummaryTitleTriggerOffset = 22.dp
 
@@ -286,7 +287,7 @@ private fun CastHeroSection(
                             heroBrush(page)
                         } else {
                             Brush.verticalGradient(
-                                colors = listOf(colorFromHex("FFC6DB"), colorFromHex("F7A6C5"))
+                                colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                             )
                         }
                     )
@@ -426,18 +427,18 @@ private fun CastSummarySection(
                             Icon(
                                 imageVector = Icons.Default.Verified,
                                 contentDescription = null,
-                                tint = colorFromHex("9333EA"),
+                                tint = ConCafeColors.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
                     }
                     Surface(
                         shape = RoundedCornerShape(999.dp),
-                        color = colorFromHex("FFE7F1")
+                        color = ConCafeColors.surfaceTint
                     ) {
                         Text(
                             text = detail.cast.conceptRole.replaceFirstChar { it.uppercase() },
-                            color = colorFromHex("C9527E"),
+                            color = ConCafeColors.primary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
@@ -472,12 +473,12 @@ private fun CastSummarySection(
                         enabled = !isSelfCast,
                         colors = if (isFollowing) {
                             ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("F1E3EB"),
-                                contentColor = colorFromHex("6A4960")
+                                containerColor = ConCafeColors.primaryContainer,
+                                contentColor = ConCafeColors.primary
                             )
                         } else {
                             ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("EF6797"),
+                                containerColor = ConCafeColors.primary,
                                 contentColor = Color.White
                             )
                         }
@@ -527,8 +528,8 @@ private fun CastTodaySection(detail: CastDetail) {
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            colorFromHex("EF6797"),
-                            colorFromHex("F8A3C5")
+                            ConCafeColors.primary,
+                            ConCafeColors.secondaryContainer
                         )
                     ),
                     shape = RoundedCornerShape(24.dp)
@@ -583,7 +584,7 @@ private fun CastScheduleSection(detail: CastDetail) {
             Icon(
                 imageVector = Icons.Default.CalendarMonth,
                 contentDescription = null,
-                tint = colorFromHex("EF6797")
+                tint = ConCafeColors.primary
             )
             Text(
                 text = stringResource(Res.string.cast_schedule_title),
@@ -615,7 +616,7 @@ private fun CastScheduleCard(
     isWorking: Boolean
 ) {
     Surface(
-        color = if (isWorking) colorFromHex("EF6797") else MaterialTheme.colorScheme.surface,
+        color = if (isWorking) ConCafeColors.primary else MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier
     ) {
@@ -732,7 +733,7 @@ private fun CastActivityCard(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("EF6797")
+                color = ConCafeColors.primary
             )
             Text(
                 text = label,
@@ -788,9 +789,9 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                         text = RatingUtils.formatOneDecimal(review.rating),
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(Color(0x1AFFD1DC))
+                                            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                                        color = colorFromHex("EF6797"),
+                                        color = ConCafeColors.primary,
                                         fontSize = 12.sp
                                     )
                                 }
@@ -807,9 +808,9 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                             text = castName,
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(999.dp))
-                                                .background(Color(0x1AFFD1DC))
+                                                .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                                 .padding(horizontal = 10.dp, vertical = 5.dp),
-                                            color = colorFromHex("C9527E"),
+                                            color = ConCafeColors.primary,
                                             fontSize = 11.sp
                                         )
                                     }
@@ -865,7 +866,7 @@ private fun CastStatItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = colorFromHex("EF6797"),
+            tint = ConCafeColors.primary,
             modifier = Modifier.size(18.dp)
         )
         Row(
@@ -888,9 +889,9 @@ private fun CastStatItem(
 
 private fun heroBrush(index: Int): Brush {
     val gradients = listOf(
-        listOf(colorFromHex("F8A3C5"), colorFromHex("EF6797")),
-        listOf(colorFromHex("FFC6C7"), colorFromHex("FF8E9E")),
-        listOf(colorFromHex("F8D6E9"), colorFromHex("D98AB7"))
+        listOf(ConCafeColors.secondaryContainer, ConCafeColors.primary),
+        listOf(ConCafeColors.errorContainer, ConCafeColors.tertiary),
+        listOf(ConCafeColors.primaryContainer, ConCafeColors.primary)
     )
     return Brush.verticalGradient(gradients[index % gradients.size])
 }

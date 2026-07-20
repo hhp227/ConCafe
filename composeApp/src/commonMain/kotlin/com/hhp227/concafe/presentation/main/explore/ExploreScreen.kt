@@ -69,6 +69,7 @@ import concafe.composeapp.generated.resources.home_nearby_cafe_type_yokai
 import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun ExploreScreen(
@@ -436,7 +437,7 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(colorFromHex("FFDFEA"), colorFromHex("FFBED5"))
+                            colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -478,7 +479,7 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                 Text(
                     text = stringResource(Res.string.explore_cast_followers, maid.followerCount),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("EF6797")
+                    color = ConCafeColors.primary
                 )
             }
         }

@@ -134,7 +134,7 @@ private struct CafeEventContentView: View {
             }
         } else if uiState.isLoading {
             ProgressView()
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             CafeEventErrorContent(
@@ -206,7 +206,7 @@ private struct CafeEventHeroSection: View {
 
     private var heroPlaceholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -232,22 +232,22 @@ private struct CafeEventInfoSection: View {
             HStack(spacing: 8) {
                 Text(event.statusLabel)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "9E2E5C"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .background(Color(hex: "FDE7EF"), in: Capsule())
+                    .background(ConCafeColors.surfaceTint, in: Capsule())
                 if event.hasLivePerformance {
                     HStack(spacing: 4) {
                         Image(systemName: "music.note")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Color(hex: "C25800"))
+                            .foregroundStyle(ConCafeColors.warning)
                         Text(String(localized: String.LocalizationValue("cafeevent_live_performance_badge"), table: "Localizable"))
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color(hex: "C25800"))
+                            .foregroundStyle(ConCafeColors.warning)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
-                    .background(Color(hex: "FFF0E0"), in: Capsule())
+                    .background(ConCafeColors.warningContainer, in: Capsule())
                 }
             }
             Text(event.title)
@@ -268,16 +268,16 @@ private struct CafeEventInfoSection: View {
                     HStack(spacing: 6) {
                         Image(systemName: uiState.isLikedByMe ? "heart.fill" : "heart")
                             .font(.system(size: 18))
-                            .foregroundStyle(uiState.isLikedByMe ? Color(hex: "EF6797") : Color.secondary)
+                            .foregroundStyle(uiState.isLikedByMe ? ConCafeColors.primary : Color.secondary)
                         Text(String(format: String(localized: String.LocalizationValue("cafeevent_like_count"), table: "Localizable"), uiState.likeCount))
                             .font(.subheadline)
-                            .foregroundStyle(uiState.isLikedByMe ? Color(hex: "EF6797") : Color.secondary)
+                            .foregroundStyle(uiState.isLikedByMe ? ConCafeColors.primary : Color.secondary)
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: 50)
-                            .fill(uiState.isLikedByMe ? Color(hex: "EF6797").opacity(0.08) : Color(uiColor: .secondarySystemBackground))
+                            .fill(uiState.isLikedByMe ? ConCafeColors.primary.opacity(0.08) : Color(uiColor: .secondarySystemBackground))
                     )
                 }
                 .buttonStyle(.plain)
@@ -295,7 +295,7 @@ private struct CafeEventInfoSection: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color(hex: "EF6797"))
+                        .background(ConCafeColors.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -327,7 +327,7 @@ private struct CafeEventCastSection: View {
                             GeometryReader { proxy in
                                 ZStack {
                                     Circle()
-                                        .fill(LinearGradient(colors: [Color(hex: "FDE7EF"), Color(hex: "FCCFDF")], startPoint: .top, endPoint: .bottom))
+                                        .fill(LinearGradient(colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
                                     if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
                                        !rawImageUrl.isEmpty,
                                        let imageUrl = URL(string: rawImageUrl) {

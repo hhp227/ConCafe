@@ -68,6 +68,7 @@ import concafe.composeapp.generated.resources.menugoods_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun MenuGoodsScreen(
@@ -108,7 +109,7 @@ fun MenuGoodsScreen(
             text = { Text(stringResource(Res.string.menugoods_delete_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(MenuGoodsAction.ConfirmDeleteItem(itemId)) }) {
-                    Text(stringResource(Res.string.menugoods_delete_confirm), color = colorFromHex("D96B7A"))
+                    Text(stringResource(Res.string.menugoods_delete_confirm), color = ConCafeColors.tertiary)
                 }
             },
             dismissButton = {
@@ -154,8 +155,8 @@ private fun MenuGoodsContentScreen(
             Box(modifier = Modifier.navigationBarsPadding()) {
                 ExtendedFloatingActionButton(
                     onClick = { onAction(MenuGoodsAction.ClickAddNewItem) },
-                    containerColor = colorFromHex("FFD1DC"),
-                    contentColor = colorFromHex("2B2330"),
+                    containerColor = ConCafeColors.primaryContainer,
+                    contentColor = ConCafeColors.textPrimary,
                     text = {
                         Text(
                             text = stringResource(Res.string.menugoods_add_new_item),
@@ -174,11 +175,11 @@ private fun MenuGoodsContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(colorFromHex("FFF8FB"), colorFromHex("FFF2F6"), colorFromHex("FFFCFD"))
+                                colors = listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.background)
                             )
                         )
                     }
@@ -287,7 +288,7 @@ private fun CafeContextCard(cafeName: String) {
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(colorFromHex("351B42"), colorFromHex("7B3F68"), colorFromHex("F28EB5"))
+                        colors = listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.secondaryContainer)
                     )
                 )
                 .padding(20.dp)
@@ -316,7 +317,7 @@ private fun CollectionTabRow(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0x1AFFD1DC)
+        color = ConCafeColors.primaryContainer.copy(alpha = 0.1f)
     ) {
         Row(
             modifier = Modifier
@@ -350,7 +351,7 @@ private fun CollectionTabButton(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = if (selected) colorFromHex("FFD1DC") else Color.Transparent,
+        color = if (selected) ConCafeColors.primaryContainer else Color.Transparent,
         onClick = onClick
     ) {
         Box(
@@ -361,7 +362,7 @@ private fun CollectionTabButton(
         ) {
             Text(
                 text = label,
-                color = if (selected) colorFromHex("2B2330") else colorFromHex("7A6671"),
+                color = if (selected) ConCafeColors.textPrimary else ConCafeColors.textSecondary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -376,7 +377,7 @@ private fun SearchField(
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
-        border = BorderStroke(1.dp, colorFromHex("F1D9E4"))
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Row(
             modifier = Modifier
@@ -387,7 +388,7 @@ private fun SearchField(
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = colorFromHex("9A7D8E")
+                tint = ConCafeColors.textMuted
             )
             Spacer(modifier = Modifier.width(10.dp))
             BasicTextField(
@@ -395,12 +396,12 @@ private fun SearchField(
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colorFromHex("2B2330")),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = ConCafeColors.textPrimary),
                 decorationBox = { innerTextField ->
                     if (value.isBlank()) {
                         Text(
                             text = stringResource(Res.string.menugoods_search_placeholder),
-                            color = colorFromHex("B395A8"),
+                            color = ConCafeColors.textMuted,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -424,7 +425,7 @@ private fun CategoryChipRow(
 
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = if (selected) colorFromHex("FFD1DC") else Color(0x33FFD1DC),
+                color = if (selected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.2f),
                 onClick = { onSelect(chip.id) }
             ) {
                 Row(
@@ -436,12 +437,12 @@ private fun CategoryChipRow(
                         imageVector = categoryChipIcon(chip.iconKey),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = if (selected) colorFromHex("2B2330") else colorFromHex("6F5E68")
+                        tint = if (selected) ConCafeColors.textPrimary else ConCafeColors.textSecondary
                     )
                     Text(
                         text = chip.label,
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (selected) colorFromHex("2B2330") else colorFromHex("6F5E68"),
+                        color = if (selected) ConCafeColors.textPrimary else ConCafeColors.textSecondary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -465,8 +466,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -478,13 +479,13 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(Res.string.common_close),
-                    tint = colorFromHex("6B5320")
+                    tint = ConCafeColors.goldDeep
                 )
             }
         }
@@ -498,11 +499,11 @@ private fun LoadingCard() {
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
-            .border(BorderStroke(1.dp, colorFromHex("F0E2E9")), RoundedCornerShape(24.dp))
+            .border(BorderStroke(1.dp, ConCafeColors.primaryContainer), RoundedCornerShape(24.dp))
             .padding(vertical = 44.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = colorFromHex("EF6797"))
+        CircularProgressIndicator(color = ConCafeColors.primary)
     }
 }
 
@@ -513,7 +514,7 @@ private fun EmptyStateCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
-        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Column(
             modifier = Modifier
@@ -524,12 +525,12 @@ private fun EmptyStateCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = colorFromHex("FCE7EF")
+                color = ConCafeColors.surfaceTint
             ) {
                 Icon(
                     imageVector = Icons.Default.Inventory2,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797"),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.padding(12.dp)
                 )
             }
@@ -537,7 +538,7 @@ private fun EmptyStateCard(
                 text = stringResource(if (isSearchMode) Res.string.menugoods_empty_search_title else Res.string.menugoods_empty_default_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("2B2330")
+                color = ConCafeColors.textPrimary
             )
             Text(
                 text = stringResource(if (isSearchMode) {
@@ -546,7 +547,7 @@ private fun EmptyStateCard(
                     Res.string.menugoods_empty_default_desc
                 }),
                 style = MaterialTheme.typography.bodyMedium,
-                color = colorFromHex("7B6B75")
+                color = ConCafeColors.textSecondary
             )
         }
     }
@@ -564,7 +565,7 @@ private fun MenuItemCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
-        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -593,45 +594,45 @@ private fun MenuItemCard(
                             text = item.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = colorFromHex("2B2330"),
+                            color = ConCafeColors.textPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = formatPrice(item.price),
-                            color = colorFromHex("EF6797"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = colorFromHex("7A6671"))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = ConCafeColors.textSecondary)
                         }
                         IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = colorFromHex("D96B7A"))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = ConCafeColors.tertiary)
                         }
                     }
                 }
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = colorFromHex("FCE7EF")
+                    color = ConCafeColors.surfaceTint
                 ) {
                     Text(
                         text = categoryLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = colorFromHex("B64A79"),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 Text(
                     text = item.desc,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("7B6B75"),
+                    color = ConCafeColors.textSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Divider(color = colorFromHex("F4E7EE"))
+                Divider(color = ConCafeColors.surfaceTint)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -640,7 +641,7 @@ private fun MenuItemCard(
                     Text(
                         text = stringResource(if (isAvailable) Res.string.menugoods_available else Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isAvailable) colorFromHex("3B7B5A") else colorFromHex("8A7A82"),
+                        color = if (isAvailable) ConCafeColors.success else ConCafeColors.textMuted,
                         fontWeight = FontWeight.SemiBold
                     )
                     Switch(
@@ -665,7 +666,7 @@ private fun GoodsItemCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White),
-        border = BorderStroke(1.dp, colorFromHex("F0E2E9"))
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -694,51 +695,51 @@ private fun GoodsItemCard(
                             text = item.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = colorFromHex("2B2330"),
+                            color = ConCafeColors.textPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = formatPrice(item.price),
-                            color = colorFromHex("EF6797"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = colorFromHex("7A6671"))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = ConCafeColors.textSecondary)
                         }
                         IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = colorFromHex("D96B7A"))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = ConCafeColors.tertiary)
                         }
                     }
                 }
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = colorFromHex("FCE7EF")
+                    color = ConCafeColors.surfaceTint
                 ) {
                     Text(
                         text = categoryLabel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
-                        color = colorFromHex("B64A79"),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 Text(
                     text = stringResource(Res.string.menugoods_goods_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("7B6B75"),
+                    color = ConCafeColors.textSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = stringResource(Res.string.menugoods_stock, item.stock),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("8B7A84"),
+                    color = ConCafeColors.textMuted,
                     fontWeight = FontWeight.Medium
                 )
-                Divider(color = colorFromHex("F4E7EE"))
+                Divider(color = ConCafeColors.surfaceTint)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -747,7 +748,7 @@ private fun GoodsItemCard(
                     Text(
                         text = if (isAvailable) stringResource(Res.string.menugoods_available) else stringResource(Res.string.menugoods_sold_out),
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isAvailable) colorFromHex("3B7B5A") else colorFromHex("8A7A82"),
+                        color = if (isAvailable) ConCafeColors.success else ConCafeColors.textMuted,
                         fontWeight = FontWeight.SemiBold
                     )
                     Switch(
@@ -771,34 +772,34 @@ private fun ItemThumbnail(
     val gradient = if (isMenu) {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(colorFromHex("FFE0EA"), colorFromHex("FAB6D0"))
+                listOf(ConCafeColors.surfaceTint, ConCafeColors.secondaryContainer)
             } else {
-                listOf(colorFromHex("F1E2EA"), colorFromHex("D7C1CE"))
+                listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
             }
         )
     } else {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(colorFromHex("FFEBCB"), colorFromHex("FFD7A1"))
+                listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
             } else {
-                listOf(colorFromHex("E7E1DA"), colorFromHex("CBC0B2"))
+                listOf(ConCafeColors.outline, ConCafeColors.outlineStrong)
             }
         )
     }
     val overlayGradient = if (isMenu) {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(colorFromHex("FFE0EA").copy(alpha = 0.28f), colorFromHex("FAB6D0").copy(alpha = 0.28f))
+                listOf(ConCafeColors.surfaceTint.copy(alpha = 0.28f), ConCafeColors.secondaryContainer.copy(alpha = 0.28f))
             } else {
-                listOf(colorFromHex("F1E2EA").copy(alpha = 0.28f), colorFromHex("D7C1CE").copy(alpha = 0.28f))
+                listOf(ConCafeColors.primaryContainer.copy(alpha = 0.28f), ConCafeColors.secondaryContainer.copy(alpha = 0.28f))
             }
         )
     } else {
         Brush.linearGradient(
             colors = if (isAvailable) {
-                listOf(colorFromHex("FFEBCB").copy(alpha = 0.28f), colorFromHex("FFD7A1").copy(alpha = 0.28f))
+                listOf(ConCafeColors.warningContainer.copy(alpha = 0.28f), ConCafeColors.warningContainer.copy(alpha = 0.28f))
             } else {
-                listOf(colorFromHex("E7E1DA").copy(alpha = 0.28f), colorFromHex("CBC0B2").copy(alpha = 0.28f))
+                listOf(ConCafeColors.outline.copy(alpha = 0.28f), ConCafeColors.outlineStrong.copy(alpha = 0.28f))
             }
         )
     }
@@ -828,12 +829,12 @@ private fun ItemThumbnail(
             Icon(
                 imageVector = if (isMenu) Icons.Default.Storefront else Icons.Default.Inventory2,
                 contentDescription = null,
-                tint = colorFromHex("704A5F")
+                tint = ConCafeColors.primary
             )
             Text(
                 text = label.take(1),
                 style = MaterialTheme.typography.titleLarge,
-                color = colorFromHex("704A5F"),
+                color = ConCafeColors.primary,
                 fontWeight = FontWeight.Bold
             )
         }

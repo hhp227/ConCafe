@@ -81,6 +81,7 @@ import concafe.composeapp.generated.resources.common_cancel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,7 +179,7 @@ private fun AccountSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -194,7 +195,7 @@ private fun AccountSettingsContentScreen(
             item {
                 Text(
                     text = uiState.errorMessage,
-                    color = colorFromHex("D1436F"),
+                    color = ConCafeColors.primary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -264,8 +265,8 @@ private fun AccountSettingsContentScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorFromHex("FFD1DC"),
-                        contentColor = colorFromHex("2B2330")
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = ConCafeColors.textPrimary
                     )
                 ) {
                     Text(
@@ -361,7 +362,7 @@ private fun AccountSettingsContentScreen(
                     } else {
                         stringResource(Res.string.account_settings_delete)
                     },
-                    color = if (uiState.isDeleteRequested) colorFromHex("B84473") else colorFromHex("8E8794")
+                    color = if (uiState.isDeleteRequested) ConCafeColors.primary else ConCafeColors.textMuted
                 )
             }
         }
@@ -390,7 +391,7 @@ private fun AccountHeroCard(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondary)
                     ),
                     shape = MaterialTheme.shapes.extraLarge
                 )
@@ -434,7 +435,7 @@ private fun AccountSectionCard(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = colorFromHex("EF6797"))
+                Icon(icon, contentDescription = null, tint = ConCafeColors.primary)
                 Text(
                     text = title,
                     modifier = Modifier.padding(start = 10.dp),
@@ -468,10 +469,10 @@ private fun LinkedDestinationCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .background(colorFromHex("FFF1F7"), MaterialTheme.shapes.large),
+                    .background(ConCafeColors.background, MaterialTheme.shapes.large),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = colorFromHex("EF6797"))
+                Icon(icon, contentDescription = null, tint = ConCafeColors.primary)
             }
             Column(
                 modifier = Modifier
@@ -485,7 +486,7 @@ private fun LinkedDestinationCard(
                 }
                 Text(supporting, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colorFromHex("B3ACB7"))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ConCafeColors.outlineStrong)
         }
     }
 }
@@ -536,7 +537,7 @@ private fun DeleteAccountDialog(
             Icon(
                 imageVector = Icons.Default.WarningAmber,
                 contentDescription = null,
-                tint = colorFromHex("D1436F")
+                tint = ConCafeColors.primary
             )
         },
         title = { Text(stringResource(Res.string.account_settings_delete_dialog_title)) },
@@ -563,7 +564,7 @@ private fun DeleteAccountDialog(
                     Text(
                         text = errorMessage,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("D1436F")
+                        color = ConCafeColors.primary
                     )
                 }
             }

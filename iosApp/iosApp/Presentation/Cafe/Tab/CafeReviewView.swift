@@ -65,7 +65,7 @@ struct CafeReviewView: View {
                                             .foregroundStyle(.white)
                                             .padding(.horizontal, 8)
                                             .padding(.vertical, 4)
-                                            .background(Color(hex: "EF6797"))
+                                            .background(ConCafeColors.primary)
                                             .clipShape(Capsule())
                                     }
                                 }
@@ -99,7 +99,7 @@ struct CafeReviewView: View {
                                 ForEach(0..<5, id: \.self) { starIndex in
                                     Image(systemName: "star.fill")
                                         .font(.caption)
-                                        .foregroundStyle(starIndex < Int(review.rating) ? Color.yellow : Color(hex: "E1E1E1"))
+                                        .foregroundStyle(starIndex < Int(review.rating) ? Color.yellow : ConCafeColors.outline)
                                 }
                             }
                             if !review.taggedCastNames.isEmpty {
@@ -108,10 +108,10 @@ struct CafeReviewView: View {
                                         ForEach(review.taggedCastNames, id: \.self) { castName in
                                             Text(castName)
                                                 .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "C9527E"))
+                                                .foregroundStyle(ConCafeColors.primary)
                                                 .padding(.horizontal, 10)
                                                 .padding(.vertical, 5)
-                                                .background(Color(hex: "FFD1DC").opacity(0.12))
+                                                .background(ConCafeColors.primaryContainer.opacity(0.12))
                                                 .clipShape(Capsule())
                                         }
                                     }
@@ -127,7 +127,7 @@ struct CafeReviewView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     CachedAsyncImage(
                                         url: imageUrl,
-                                        placeholder: Color(hex: "F4EFF2")
+                                        placeholder: ConCafeColors.surfaceTint
                                     )
                                     .frame(width: 96, height: 96)
                                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

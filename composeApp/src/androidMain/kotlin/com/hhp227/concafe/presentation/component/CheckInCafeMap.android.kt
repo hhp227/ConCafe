@@ -173,7 +173,7 @@ private fun CafeMarkerLabel(
 ) {
     Text(
         text = cafeName,
-        color = Color(0xFF23161C),
+        color = ConCafeColors.textPrimary,
         fontWeight = FontWeight.Bold,
         fontSize = 9.sp,
         maxLines = 1,
@@ -207,7 +207,7 @@ private fun CafeMapPin(
             close()
         }
 
-        drawPath(pinPath, Color(0xFFEF6797))
+        drawPath(pinPath, ConCafeColors.primary)
         drawPath(
             path = pinPath,
             color = Color.White,
@@ -264,7 +264,7 @@ private fun CafeMapCallout(
                 text = cafeName,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = Color(0xFF2B2330),
+                color = ConCafeColors.textPrimary,
                 modifier = Modifier.clickable(onClick = onCafeClick)
             )
             if (showCheckInButton) {
@@ -275,7 +275,7 @@ private fun CafeMapCallout(
                     Icon(
                         imageVector = Icons.Default.EventAvailable,
                         contentDescription = "체크인",
-                        tint = Color(0xFFEF6797),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }

@@ -33,7 +33,7 @@ struct ResetPasswordView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                        colors: [ConCafeColors.primary, ConCafeColors.secondary],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -54,7 +54,7 @@ struct ResetPasswordView: View {
                         keyboardType: .emailAddress,
                         trailingContent: {
                             Image(systemName: "envelope")
-                                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "B3ACB7"))
+                                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.outlineStrong)
                         }
                     )
                 }
@@ -69,10 +69,10 @@ struct ResetPasswordView: View {
                     Text(viewModel.uiState.isSubmitting ? String(localized: String.LocalizationValue("reset_password_sending"), table: "Localizable") : String(localized: String.LocalizationValue("reset_password_submit"), table: "Localizable"))
                         .font(.headline)
                         .fontWeight(.bold)
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(ConCafeColors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(Color(hex: "FFD1DC"))
+                        .background(ConCafeColors.primaryContainer)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -81,7 +81,7 @@ struct ResetPasswordView: View {
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .systemBackground) : Color(hex: "FFFBFD"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .systemBackground) : ConCafeColors.background)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
@@ -110,7 +110,7 @@ struct ResetPasswordView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(title)
                     .font(.headline)
                     .bold()
@@ -133,16 +133,16 @@ struct ResetPasswordView: View {
     private func guideRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(text)
                 .font(.caption)
-                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : Color(hex: "6F6673"))
+                .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }) : ConCafeColors.surfaceVariant)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }

@@ -128,6 +128,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun MyInfoScreen(
@@ -192,10 +193,10 @@ private fun GuestMyInfoScreen(
     onAction: (MyInfoAction) -> Unit
 ) {
     val features = listOf(
-        GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), colorFromHex("EF6797"), colorFromHex("F57AA8")),
-        GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), colorFromHex("9C6ADE"), colorFromHex("B388EB")),
-        GuestFeatureItem(Icons.Filled.Star, stringResource(Res.string.myinfo_guest_feature_badge_title), stringResource(Res.string.myinfo_guest_feature_badge_desc), colorFromHex("F0B429"), colorFromHex("F5C857")),
-        GuestFeatureItem(Icons.Filled.CardGiftcard, stringResource(Res.string.myinfo_guest_feature_membership_title), stringResource(Res.string.myinfo_guest_feature_membership_desc), colorFromHex("4C8BF5"), colorFromHex("71A7FF"))
+        GuestFeatureItem(Icons.Filled.Place, stringResource(Res.string.myinfo_guest_feature_checkin_title), stringResource(Res.string.myinfo_guest_feature_checkin_desc), ConCafeColors.primary, ConCafeColors.primary),
+        GuestFeatureItem(Icons.Filled.Favorite, stringResource(Res.string.myinfo_guest_feature_bookmark_title), stringResource(Res.string.myinfo_guest_feature_bookmark_desc), ConCafeColors.primary, ConCafeColors.secondary),
+        GuestFeatureItem(Icons.Filled.Star, stringResource(Res.string.myinfo_guest_feature_badge_title), stringResource(Res.string.myinfo_guest_feature_badge_desc), ConCafeColors.gold, ConCafeColors.gold),
+        GuestFeatureItem(Icons.Filled.CardGiftcard, stringResource(Res.string.myinfo_guest_feature_membership_title), stringResource(Res.string.myinfo_guest_feature_membership_desc), ConCafeColors.info, ConCafeColors.info)
     )
 
     LazyColumn(
@@ -213,7 +214,7 @@ private fun GuestMyInfoScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.linearGradient(listOf(colorFromHex("EF6797"), colorFromHex("F8A0C2"))))
+                        .background(Brush.linearGradient(listOf(ConCafeColors.primary, ConCafeColors.secondaryContainer)))
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -230,13 +231,13 @@ private fun GuestMyInfoScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = colorFromHex("EF6797"),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(18.dp)
                         )
                         Box(modifier = Modifier.width(6.dp))
                         Text(
                             stringResource(Res.string.myinfo_guest_signin_cta),
-                            color = colorFromHex("EF6797"),
+                            color = ConCafeColors.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -303,11 +304,11 @@ private fun GuestMyInfoScreen(
                     modifier = Modifier.clickable { },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(Res.string.home_show_more), color = colorFromHex("EF6797"), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.home_show_more), color = ConCafeColors.primary, style = MaterialTheme.typography.bodySmall)
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = colorFromHex("EF6797"),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -331,7 +332,7 @@ private fun GuestMyInfoScreen(
                                     modifier = Modifier
                                         .size(64.dp)
                                         .clip(imageShape)
-                                        .background(Brush.verticalGradient(listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))))
+                                        .background(Brush.verticalGradient(listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)))
                                 ) {
                                     if (resolvedThumbnail.isNotBlank()) {
                                         CompatImageDisplay(
@@ -354,7 +355,7 @@ private fun GuestMyInfoScreen(
                                         Text(
                                             text = conceptType,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = colorFromHex("EF6797"),
+                                            color = ConCafeColors.primary,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -380,25 +381,25 @@ private fun GuestMyInfoScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.linearGradient(listOf(colorFromHex("FFEAF2"), colorFromHex("FDE3F0"))))
+                        .background(Brush.linearGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.surfaceTint)))
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("✨", style = MaterialTheme.typography.headlineMedium)
                     Text(
                         stringResource(Res.string.myinfo_guest_start_title),
-                        color = colorFromHex("2B2330"),
+                        color = ConCafeColors.textPrimary,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         stringResource(Res.string.myinfo_guest_start_subtitle),
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("7E7E7E")
+                        color = ConCafeColors.textSecondary
                     )
                     Button(
                         onClick = {},
                         modifier = Modifier.padding(top = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorFromHex("EF6797"))
+                        colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary)
                     ) {
                         Text(stringResource(Res.string.signin_sign_up), color = Color.White, fontWeight = FontWeight.Bold)
                     }
@@ -537,7 +538,7 @@ private fun ProfileMyInfoScreen(
                                     .fillMaxWidth()
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Brush.verticalGradient(listOf(colorFromHex("FFE2D2"), colorFromHex("FFC9A9"))))
+                                    .background(Brush.verticalGradient(listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)))
                             ) {
                                 if (thumbnailImage.isNotBlank()) {
                                     CompatImageDisplay(
@@ -639,7 +640,7 @@ private fun ProfileMyInfoScreen(
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
-                                                .background(Brush.verticalGradient(listOf(colorFromHex("FFDFEA"), colorFromHex("FFBED5"))))
+                                                .background(Brush.verticalGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
                                         )
                                     } else {
                                         CompatImageDisplay(
@@ -713,10 +714,10 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     .clip(CircleShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(colorFromHex("FFD7E5"), colorFromHex("F2ADC2"))
+                            colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                         )
                     )
-                    .background(colorFromHex("FFD7E5"))
+                    .background(ConCafeColors.primaryContainer)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -724,7 +725,7 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     text = profileAccent,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = colorFromHex("7C3F67")
+                    color = ConCafeColors.primary
                 )
             }
             Column(
@@ -754,7 +755,7 @@ private fun ProfileSummaryCard(uiState: MyInfoUiState) {
                     Icon(
                         imageVector = Icons.Filled.Place,
                         contentDescription = null,
-                        tint = colorFromHex("EF6797"),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
@@ -875,7 +876,7 @@ private fun BadgeItem(badge: ProfileBadge) {
                 modifier = Modifier
                     .size(70.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (badge.unlocked) colorFromHex("EF6797") else colorFromHex("DADADA"))
+                    .background(if (badge.unlocked) ConCafeColors.primary else ConCafeColors.outline)
                     .clickable { showTooltip = true },
                 contentAlignment = Alignment.Center
             ) {
@@ -922,7 +923,7 @@ private fun BadgeItem(badge: ProfileBadge) {
                         Text(
                             "${minOf(badge.currentCount, badge.goalCount)} / ${badge.goalCount}",
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (badge.unlocked) colorFromHex("EF6797") else Color.White.copy(alpha = 0.7f),
+                            color = if (badge.unlocked) ConCafeColors.primary else Color.White.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -947,11 +948,11 @@ private fun RowScope.MyInfoMetricCard(
     Surface(
         modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(20.dp),
-        color = if (highlight) Color(0x1AFFD1DC) else MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        color = if (highlight) ConCafeColors.primaryContainer.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         tonalElevation = if (highlight) 0.dp else 2.dp,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (highlight) Color(0x33FFB3C6) else Color(0x1AFFD1DC)
+            if (highlight) ConCafeColors.primary.copy(alpha = 0.2f) else ConCafeColors.primaryContainer.copy(alpha = 0.1f)
         )
     ) {
         Column(
@@ -971,7 +972,7 @@ private fun RowScope.MyInfoMetricCard(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                color = if (highlight) colorFromHex("D94A82") else MaterialTheme.colorScheme.onSurface,
+                color = if (highlight) ConCafeColors.primary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )

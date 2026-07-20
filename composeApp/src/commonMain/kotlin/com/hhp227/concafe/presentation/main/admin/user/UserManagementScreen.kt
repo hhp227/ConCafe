@@ -32,6 +32,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +61,7 @@ fun UserManagementScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFF9FC"))
+                .background(ConCafeColors.background)
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -69,7 +70,7 @@ fun UserManagementScreen(
             if (uiState.isLoading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = colorFromHex("EF6797"))
+                        CircularProgressIndicator(color = ConCafeColors.primary)
                     }
                 }
             } else if (uiState.users.isEmpty()) {
@@ -86,8 +87,8 @@ fun UserManagementScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorFromHex("F5F2F4"),
-                                contentColor = colorFromHex("5E545F")
+                                containerColor = ConCafeColors.surfaceVariant,
+                                contentColor = ConCafeColors.textSecondary
                             )
                         ) {
                             if (uiState.isLoadingMore) {
@@ -143,28 +144,28 @@ private fun UserCard(user: User) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(48.dp).clip(CircleShape).background(colorFromHex("FFE7EF")),
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(ConCafeColors.surfaceTint),
                 contentAlignment = Alignment.Center
             ) {
                 CompatImageDisplay(imageUrl = user.profileImage, modifier = Modifier.fillMaxSize())
                 if (user.profileImage.isNullOrBlank()) {
-                    Text(user.nickname.take(1), fontWeight = FontWeight.Bold, color = colorFromHex("EF6797"))
+                    Text(user.nickname.take(1), fontWeight = FontWeight.Bold, color = ConCafeColors.primary)
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(user.nickname, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Surface(shape = RoundedCornerShape(999.dp), color = if (user.banned) colorFromHex("FFE4E6") else colorFromHex("EDE9FE")) {
+                    Surface(shape = RoundedCornerShape(999.dp), color = if (user.banned) ConCafeColors.errorContainer else ConCafeColors.primaryContainer) {
                         Text(
                             text = if (user.banned) "차단" else "운영자",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (user.banned) colorFromHex("BE123C") else colorFromHex("6D28D9")
+                            color = if (user.banned) ConCafeColors.error else ConCafeColors.primary
                         )
                     }
                 }
-                Text(user.email, style = MaterialTheme.typography.bodySmall, color = colorFromHex("6F6670"), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("가입일 ${user.createdAt.take(10)}", style = MaterialTheme.typography.labelSmall, color = colorFromHex("8B7F8A"))
+                Text(user.email, style = MaterialTheme.typography.bodySmall, color = ConCafeColors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("가입일 ${user.createdAt.take(10)}", style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textMuted)
             }
         }
     }
@@ -176,18 +177,18 @@ private fun EmptyUsersCard(filter: AdminUserFilter) {
         Text(
             text = "${filter.label} 목록이 없습니다.",
             modifier = Modifier.fillMaxWidth().padding(16.dp),
-            color = colorFromHex("7A707A")
+            color = ConCafeColors.textSecondary
         )
     }
 }
 
 @Composable
 private fun InfoMessage(message: String, onDismiss: () -> Unit) {
-    Surface(shape = RoundedCornerShape(16.dp), color = colorFromHex("FFF4CC")) {
+    Surface(shape = RoundedCornerShape(16.dp), color = ConCafeColors.goldContainer) {
         Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(message, modifier = Modifier.weight(1f), color = colorFromHex("6B5320"))
+            Text(message, modifier = Modifier.weight(1f), color = ConCafeColors.goldDeep)
             TextButton(onClick = onDismiss) {
-                Text("닫기", color = colorFromHex("6B5320"), fontWeight = FontWeight.Bold)
+                Text("닫기", color = ConCafeColors.goldDeep, fontWeight = FontWeight.Bold)
             }
         }
     }

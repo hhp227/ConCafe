@@ -37,14 +37,14 @@ struct PostEditView: View {
                 } label: {
                     if viewModel.uiState.isSubmitting {
                         ProgressView()
-                            .tint(Color(hex: "EF6797"))
+                            .tint(ConCafeColors.primary)
                     } else {
                         Text(viewModel.uiState.isEditMode ? "저장" : "등록")
                             .fontWeight(.bold)
                             .foregroundStyle(
                                 viewModel.uiState.canSubmit
-                                    ? Color(hex: "EF6797")
-                                    : Color(hex: "B1A3AC")
+                                    ? ConCafeColors.primary
+                                    : ConCafeColors.outlineStrong
                             )
                     }
                 }
@@ -138,7 +138,7 @@ private struct PostEditContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [ConCafeColors.surfaceVariant, ConCafeColors.background],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -150,11 +150,11 @@ private struct PostEditContentView: View {
             HStack {
                 Text("사진 첨부")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 Spacer()
                 Text("\(uiState.imageUrls.count) / \(uiState.imageMaxCount)")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             HStack(spacing: 10) {
                 ForEach(Array(uiState.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
@@ -168,7 +168,7 @@ private struct PostEditContentView: View {
             }
             Text("사진은 최대 \(uiState.imageMaxCount)장까지 첨부할 수 있습니다.")
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -188,12 +188,12 @@ private struct PostEditContentView: View {
                             image.resizable().scaledToFill()
                         default:
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color(hex: "FFE3EC"))
+                                .fill(ConCafeColors.surfaceTint)
                         }
                     }
                 } else {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(hex: "FFE3EC"))
+                        .fill(ConCafeColors.surfaceTint)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -215,11 +215,11 @@ private struct PostEditContentView: View {
     private var addImageItem: some View {
         Button(action: onPickImage) {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(hex: "FFD1DC").opacity(0.15))
+                .fill(ConCafeColors.primaryContainer.opacity(0.15))
                 .overlay {
                     Image(systemName: "plus")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
         }
         .buttonStyle(.plain)
@@ -229,21 +229,21 @@ private struct PostEditContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button("닫기") {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 }

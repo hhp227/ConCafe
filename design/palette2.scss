@@ -1,0 +1,47 @@
+/* Soft Pastels - https://coolors.co/ffd6ff-e7c6ff-c8b6ff-b8c0ff-bbd0ff */
+
+/* CSS HEX */
+--petal-frost: #ffd6ffff;
+--mauve: #e7c6ffff;
+--mauve-2: #c8b6ffff;
+--periwinkle: #b8c0ffff;
+--periwinkle-2: #bbd0ffff;
+
+/* CSS HSL */
+--petal-frost: hsla(300, 100%, 92%, 1);
+--mauve: hsla(275, 100%, 89%, 1);
+--mauve-2: hsla(255, 100%, 86%, 1);
+--periwinkle: hsla(233, 100%, 86%, 1);
+--periwinkle-2: hsla(221, 100%, 87%, 1);
+
+/* SCSS HEX */
+$petal-frost: #ffd6ffff;
+$mauve: #e7c6ffff;
+$mauve-2: #c8b6ffff;
+$periwinkle: #b8c0ffff;
+$periwinkle-2: #bbd0ffff;
+
+/* SCSS HSL */
+$petal-frost: hsla(300, 100%, 92%, 1);
+$mauve: hsla(275, 100%, 89%, 1);
+$mauve-2: hsla(255, 100%, 86%, 1);
+$periwinkle: hsla(233, 100%, 86%, 1);
+$periwinkle-2: hsla(221, 100%, 87%, 1);
+
+/* SCSS RGB */
+$petal-frost: rgba(255, 214, 255, 1);
+$mauve: rgba(231, 198, 255, 1);
+$mauve-2: rgba(200, 182, 255, 1);
+$periwinkle: rgba(184, 192, 255, 1);
+$periwinkle-2: rgba(187, 208, 255, 1);
+
+/* SCSS Gradient */
+$gradient-top: linear-gradient(0deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-right: linear-gradient(90deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-bottom: linear-gradient(180deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-left: linear-gradient(270deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-top-right: linear-gradient(45deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-bottom-right: linear-gradient(135deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-top-left: linear-gradient(225deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-bottom-left: linear-gradient(315deg, #ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);
+$gradient-radial: radial-gradient(#ffd6ffff, #e7c6ffff, #c8b6ffff, #b8c0ffff, #bbd0ffff);

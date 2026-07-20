@@ -14,7 +14,7 @@ struct RatingBox: View {
         HStack(spacing: 3) {
             Image(systemName: "star.fill")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(Color(hex: "FFAD30"))
+                .foregroundStyle(ConCafeColors.warning)
         Text(rating)
                 .font(.caption)
                 .foregroundStyle(.primary)
@@ -22,7 +22,7 @@ struct RatingBox: View {
         .padding(.horizontal, 7)
         .padding(.vertical, 2)
         .background(
-            Color(hex: "FEE3E9"),
+            ConCafeColors.errorContainer,
             in: Capsule()
         )
     }

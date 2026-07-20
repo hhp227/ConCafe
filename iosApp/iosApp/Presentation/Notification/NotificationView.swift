@@ -57,7 +57,7 @@ private struct NotificationContentView: View {
                 )
             }
         }
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
     }
 }
 
@@ -66,12 +66,12 @@ private struct NotificationSignInRequiredView: View {
 
     var body: some View {
         ZStack {
-            (UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+            (UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
                 .ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "bell.badge")
                     .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(String(localized: String.LocalizationValue("notification_login_required_title"), table: "Localizable"))
                     .font(.headline)
                     .bold()
@@ -90,7 +90,7 @@ private struct NotificationSignInRequiredView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(Color(hex: "EF6797"))
+                        .background(ConCafeColors.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
@@ -120,7 +120,7 @@ private struct NotificationSectionsView: View {
             .padding(16)
             .padding(.bottom, 20)
         }
-        .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(hex: "FFF9FC") : Color(uiColor: .systemGroupedBackground))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
     }
 
     private var summaryCard: some View {
@@ -142,7 +142,7 @@ private struct NotificationSectionsView: View {
         .padding(20)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -165,7 +165,7 @@ private struct NotificationSectionsView: View {
 
     private func notificationCard(_ item: NotificationListItem) -> some View {
         let visual = notificationVisual(type: item.type)
-        let containerColor = item.isRead ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color(hex: "FFF3F8")
+        let containerColor = item.isRead ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : ConCafeColors.background
         return HStack(alignment: .top, spacing: 12) {
             Circle()
                 .fill(visual.background)
@@ -178,7 +178,7 @@ private struct NotificationSectionsView: View {
                 .overlay(alignment: .topTrailing) {
                     if !item.isRead {
                         Circle()
-                            .fill(Color(hex: "EF6797"))
+                            .fill(ConCafeColors.primary)
                             .frame(width: 10, height: 10)
                             .overlay(Circle().stroke(Color.white, lineWidth: 2))
                             .offset(x: 2, y: -2)
@@ -210,27 +210,27 @@ private struct NotificationSectionsView: View {
 
     private func notificationVisual(type: String) -> (symbol: String, background: Color, foreground: Color) {
         if type == "CAST_SHIFT" {
-            return ("figure.walk.motion", Color(hex: "E4F7EC"), Color(hex: "2E9E5B"))
+            return ("figure.walk.motion", ConCafeColors.successContainer, ConCafeColors.success)
         } else if type == "CAST_SCHEDULE_ASSIGNED" {
-            return ("calendar.badge.plus", Color(hex: "E4F7EC"), Color(hex: "2E9E5B"))
+            return ("calendar.badge.plus", ConCafeColors.successContainer, ConCafeColors.success)
         } else if type == "BIRTHDAY" {
-            return ("birthday.cake.fill", Color(hex: "FFE6F1"), Color(hex: "EB5F97"))
+            return ("birthday.cake.fill", ConCafeColors.surfaceTint, ConCafeColors.primary)
         } else if type == "CAFE_NOTICE" {
-            return ("megaphone.fill", Color(hex: "E8F0FF"), Color(hex: "4A79E8"))
+            return ("megaphone.fill", ConCafeColors.infoContainer, ConCafeColors.info)
         } else if type == "CAFE_EVENT" {
-            return ("party.popper.fill", Color(hex: "FFF4E2"), Color(hex: "E29B35"))
+            return ("party.popper.fill", ConCafeColors.warningContainer, ConCafeColors.warning)
         } else if type == "CAST_SCHEDULE_CREATED" {
-            return ("calendar.badge.plus", Color(hex: "F0F7FF"), Color(hex: "2D74C4"))
+            return ("calendar.badge.plus", ConCafeColors.infoContainer, ConCafeColors.info)
         } else if type == "CAFE_TABLE_COUNT_UPDATE" {
-            return ("tablecells.fill", Color(hex: "ECFFF5"), Color(hex: "1F8B5F"))
+            return ("tablecells.fill", ConCafeColors.successContainer, ConCafeColors.success)
         } else if type == "FOLLOW_UPDATE" {
-            return ("person.badge.plus.fill", Color(hex: "F1E8FF"), Color(hex: "8A52E2"))
+            return ("person.badge.plus.fill", ConCafeColors.primaryContainer, ConCafeColors.primary)
         } else if type == "COMMUNITY_COMMENT" {
-            return ("text.bubble.fill", Color(hex: "EAF7FF"), Color(hex: "2878A8"))
+            return ("text.bubble.fill", ConCafeColors.infoContainer, ConCafeColors.info)
         } else if type == "COMMUNITY_LIKE" {
-            return ("heart.fill", Color(hex: "FFE9EF"), Color(hex: "D94F75"))
+            return ("heart.fill", ConCafeColors.surfaceTint, ConCafeColors.primary)
         } else if type == "WEEKLY_COMMUNITY_HIGHLIGHT" {
-            return ("flame.fill", Color(hex: "FFF3DF"), Color(hex: "D27B21"))
+            return ("flame.fill", ConCafeColors.warningContainer, ConCafeColors.warning)
         } else {
             return ("bell.fill", Color(uiColor: .tertiarySystemFill), .secondary)
         }

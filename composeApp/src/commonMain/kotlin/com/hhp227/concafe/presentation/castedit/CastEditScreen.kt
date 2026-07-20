@@ -63,6 +63,7 @@ import concafe.composeapp.generated.resources.common_confirm
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
 import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CastEditScreen(
@@ -138,7 +139,7 @@ private fun CastEditContentScreen(
             Surface(
                 modifier = Modifier
                     .fixedBottomBarInsets(),
-                color = if (isSystemInDarkTheme()) colorFromHex("FFFBFD") else Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -153,15 +154,15 @@ private fun CastEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("FFD1DC"),
-                            contentColor = colorFromHex("2B2330")
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = colorFromHex("2B2330")
+                                color = ConCafeColors.textPrimary
                             )
                         } else {
                             Icon(Icons.Default.HowToReg, contentDescription = null)
@@ -181,11 +182,11 @@ private fun CastEditContentScreen(
                 .fillMaxSize()
                 .then(
                     if (isSystemInDarkTheme()) {
-                        Modifier.background(colorFromHex("FFFBFD"))
+                        Modifier.background(ConCafeColors.background)
                     } else {
                         Modifier.background(
                             Brush.verticalGradient(
-                                colors = listOf(colorFromHex("F8F5F6"), colorFromHex("FFFBFD"))
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
                             )
                         )
                     }
@@ -199,7 +200,7 @@ private fun CastEditContentScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = colorFromHex("EF6797"))
+                    CircularProgressIndicator(color = ConCafeColors.primary)
                 }
             } else {
                 LazyColumn(
@@ -338,7 +339,7 @@ private fun BirthdayInputField(
             text = stringResource(Res.string.castedit_birthday_label),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = colorFromHex("665A63")
+            color = ConCafeColors.textSecondary
         )
         OutlinedTextField(
             value = birthdayTextFieldValue,
@@ -355,22 +356,22 @@ private fun BirthdayInputField(
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
-            placeholder = { Text("MM/DD/YYYY", color = colorFromHex("AA98A4")) },
+            placeholder = { Text("MM/DD/YYYY", color = ConCafeColors.textMuted) },
             shape = RoundedCornerShape(16.dp),
             trailingIcon = {
                 IconButton(onClick = onClickCalendar) {
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
                         contentDescription = stringResource(Res.string.castedit_birthday_pick),
-                        tint = colorFromHex("B1A3AC")
+                        tint = ConCafeColors.outlineStrong
                     )
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorFromHex("F8F5F6"),
-                unfocusedContainerColor = colorFromHex("F8F5F6"),
-                focusedBorderColor = colorFromHex("FFD1DC"),
-                unfocusedBorderColor = Color(0x4DFFD1DC)
+                focusedContainerColor = ConCafeColors.surfaceVariant,
+                unfocusedContainerColor = ConCafeColors.surfaceVariant,
+                focusedBorderColor = ConCafeColors.primaryContainer,
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.3f)
             )
         )
     }
@@ -399,7 +400,7 @@ private fun ProfilePhotoSection(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(colorFromHex("FFE3EC"), colorFromHex("F8C5D7"))
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         )
                 ) {
@@ -412,7 +413,7 @@ private fun ProfilePhotoSection(
                 }
                 Surface(
                     shape = CircleShape,
-                    color = colorFromHex("FFD1DC"),
+                    color = ConCafeColors.primaryContainer,
                     border = BorderStroke(2.dp, Color.White),
                     shadowElevation = 6.dp
                 ) {
@@ -420,7 +421,7 @@ private fun ProfilePhotoSection(
                         imageVector = Icons.Default.PhotoCamera,
                         contentDescription = null,
                         modifier = Modifier.padding(8.dp),
-                        tint = colorFromHex("2B2330")
+                        tint = ConCafeColors.textPrimary
                     )
                 }
             }
@@ -432,7 +433,7 @@ private fun ProfilePhotoSection(
             Text(
                 stringResource(Res.string.castedit_profile_photo_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("8C7E87")
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -457,9 +458,9 @@ private fun GallerySection(
                 stringResource(Res.string.castedit_gallery_title),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = colorFromHex("665A63")
+                color = ConCafeColors.textSecondary
             )
-            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = colorFromHex("EF6797"), fontWeight = FontWeight.Bold)
+            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
         }
         CastGalleryGrid(
             galleryImages = galleryImages,
@@ -470,7 +471,7 @@ private fun GallerySection(
         Text(
             text = stringResource(Res.string.castedit_gallery_guide, galleryMaxCount),
             style = MaterialTheme.typography.bodySmall,
-            color = colorFromHex("8A8088")
+            color = ConCafeColors.textMuted
         )
     }
 }
@@ -502,14 +503,14 @@ private fun CastGalleryGrid(
                     .size(96.dp)
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0x1AFFD1DC))
+                    .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                     .clickable(onClick = onAddClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(Res.string.castedit_gallery_add),
-                    tint = colorFromHex("EF6797")
+                    tint = ConCafeColors.primary
                 )
             }
         }
@@ -524,9 +525,9 @@ private fun CastGalleryImageTile(
     onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
-        listOf(colorFromHex("FFE6EE"), colorFromHex("F7C9D8")),
-        listOf(colorFromHex("FFD8E6"), colorFromHex("FFEFF5")),
-        listOf(colorFromHex("FFD9CF"), colorFromHex("FFF0EA"))
+        listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer),
+        listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint),
+        listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
     )
     val colors = gradients[index % gradients.size]
 
@@ -587,8 +588,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = colorFromHex("FFF6D7"),
-        border = BorderStroke(1.dp, colorFromHex("F1D88D"))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -601,12 +602,12 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = colorFromHex("6B5320")
+                color = ConCafeColors.goldDeep
             )
             TextButton(onClick = onDismiss) {
                 Text(
                     stringResource(Res.string.common_close),
-                    color = colorFromHex("6B5320"),
+                    color = ConCafeColors.goldDeep,
                     fontWeight = FontWeight.Bold
                 )
             }

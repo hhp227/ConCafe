@@ -93,7 +93,7 @@ private struct CastManagementContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
     }
 
     private func formatPeriodLabel(viewMode: CastScheduleViewMode, from: Date, to: Date) -> String {
@@ -125,10 +125,10 @@ private struct ViewModeSelector: View {
                 } label: {
                     Text(String(localized: String.LocalizationValue(mode.rawValue), table: "Localizable"))
                         .font(.subheadline.weight(isSelected ? .bold : .regular))
-                        .foregroundStyle(isSelected ? Color(hex: "EF6797") : .secondary)
+                        .foregroundStyle(isSelected ? ConCafeColors.primary : .secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
-                        .background(isSelected ? Color(hex: "FFD1DC").opacity(0.3) : Color.clear)
+                        .background(isSelected ? ConCafeColors.primaryContainer.opacity(0.3) : Color.clear)
                 }
                 .buttonStyle(.plain)
             }
@@ -136,7 +136,7 @@ private struct ViewModeSelector: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color(hex: "FFD1DC").opacity(0.5), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer.opacity(0.5), lineWidth: 1)
         )
     }
 }
@@ -167,13 +167,13 @@ private struct WeekDayCard: View {
             VStack(spacing: 2) {
                 Text(column.dayLabel)
                     .font(.system(size: 15, weight: .heavy))
-                    .foregroundStyle(isWorking ? Color(hex: "EF6797") : .secondary)
+                    .foregroundStyle(isWorking ? ConCafeColors.primary : .secondary)
                 Text(column.dateLabel)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
             .frame(width: 52, height: 52)
-            .background(isWorking ? Color(hex: "FFF0F4") : Color(uiColor: UIColor.secondarySystemFill))
+            .background(isWorking ? ConCafeColors.background : Color(uiColor: UIColor.secondarySystemFill))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             if !isWorking {
                 Text("-")
@@ -265,10 +265,10 @@ private struct CastNameChip: View {
     var body: some View {
         Text(name)
             .font(.caption2.weight(.medium))
-            .foregroundStyle(Color(hex: "EF6797"))
+            .foregroundStyle(ConCafeColors.primary)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(Color(hex: "FFD1DC").opacity(0.3))
+            .background(ConCafeColors.primaryContainer.opacity(0.3))
             .clipShape(Capsule())
             .lineLimit(1)
     }
@@ -298,12 +298,12 @@ private struct MonthScheduleView: View {
                     ForEach(dayHeaders, id: \.self) { label in
                         Text(label)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                     }
                 }
-                .background(Color(hex: "FFD1DC").opacity(0.12))
+                .background(ConCafeColors.primaryContainer.opacity(0.12))
                 LazyVGrid(columns: columns, spacing: 1) {
                     ForEach(0..<offset, id: \.self) { _ in
                         Color.clear
@@ -313,12 +313,12 @@ private struct MonthScheduleView: View {
                         MonthDayCell(cell: cell)
                     }
                 }
-                .background(Color(hex: "FFD1DC").opacity(0.08))
+                .background(ConCafeColors.primaryContainer.opacity(0.08))
             }
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
@@ -340,11 +340,11 @@ private struct MonthDayCell: View {
                 ForEach(cell.castNames.prefix(3), id: \.self) { name in
                     Text(name)
                         .font(.system(size: 9))
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .lineLimit(1)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
-                        .background(Color(hex: "FFD1DC").opacity(0.3))
+                        .background(ConCafeColors.primaryContainer.opacity(0.3))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
                 if cell.castNames.count > 3 {

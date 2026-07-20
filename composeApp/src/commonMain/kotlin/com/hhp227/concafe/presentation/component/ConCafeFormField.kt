@@ -105,7 +105,7 @@ fun ConCafeFormField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
                 unfocusedContainerColor = if (isSystemInDarkTheme()) colorScheme.surfaceVariant else Color.White,
-                focusedBorderColor = colorFromHex("FFD1DC"),
+                focusedBorderColor = ConCafeColors.primaryContainer,
                 unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.45f)
             )
         )

@@ -12,6 +12,7 @@ struct SettingsUiState {
     var errorMessage: String?
     var appVersion: String = Self.resolvedAppVersion()
     var themeMode: AppThemeMode = .light
+    var brandTheme: AppBrandTheme = .maidCafe
 
     static let empty = SettingsUiState()
 

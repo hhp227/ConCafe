@@ -184,6 +184,8 @@ val useCaseModule = module {
     factory { ObserveNetworkAlertStateUseCase(get()) }
     factory { ObserveThemeModeUseCase(get()) }
     factory { SetThemeModeUseCase(get()) }
+    factory { ObserveBrandThemeUseCase(get()) }
+    factory { SetBrandThemeUseCase(get()) }
     factory { ShouldShowDetailTooltipUseCase(get()) }
     factory { MarkDetailTooltipShownUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }

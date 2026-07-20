@@ -178,6 +178,10 @@
     <string name="settings_theme_desc">Choose how ConCafe appears.</string>
     <string name="settings_theme_light">Light Mode</string>
     <string name="settings_theme_dark">Dark Mode</string>
+    <string name="settings_brand_theme_title">Theme Style</string>
+    <string name="settings_brand_theme_desc">Choose the app's color mood.</string>
+    <string name="settings_brand_theme_maid">Maid Cafe</string>
+    <string name="settings_brand_theme_mens">Men's Con Cafe</string>
     <string name="settings_account_title">Account</string>
     <string name="settings_account_desc">Manage your profile and sign-in info.</string>
     <string name="settings_notification_title">Notifications</string>

@@ -2,6 +2,7 @@ package com.hhp227.concafe.data.source.local
 
 import android.content.Context
 import androidx.core.content.edit
+import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class AndroidUserPreferenceLocalDataSource(context: Context) : UserPreferenceLocalDataSource {
     private val preferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+
     private val themeMode = MutableStateFlow(loadThemeMode())
+
+    private val brandTheme = MutableStateFlow(loadBrandTheme())
 
     override fun observeThemeMode(): Flow<ThemeMode> {
         return themeMode.asStateFlow()
@@ -19,6 +23,15 @@ class AndroidUserPreferenceLocalDataSource(context: Context) : UserPreferenceLoc
     override fun setThemeMode(themeMode: ThemeMode) {
         preferences.edit { putString(KEY_THEME_MODE, themeMode.name) }
         this.themeMode.value = themeMode
+    }
+
+    override fun observeBrandTheme(): Flow<BrandTheme> {
+        return brandTheme.asStateFlow()
+    }
+
+    override fun setBrandTheme(brandTheme: BrandTheme) {
+        preferences.edit { putString(KEY_BRAND_THEME, brandTheme.name) }
+        this.brandTheme.value = brandTheme
     }
 
     override fun hasShownDetailTooltip(type: DetailTooltipType): Boolean {
@@ -34,6 +47,11 @@ class AndroidUserPreferenceLocalDataSource(context: Context) : UserPreferenceLoc
         return ThemeMode.entries.firstOrNull { it.name == storedValue } ?: ThemeMode.LIGHT
     }
 
+    private fun loadBrandTheme(): BrandTheme {
+        val storedValue = preferences.getString(KEY_BRAND_THEME, null)
+        return BrandTheme.entries.firstOrNull { it.name == storedValue } ?: BrandTheme.MAID_CAFE
+    }
+
     private val DetailTooltipType.preferenceKey: String
         get() = when (this) {
             DetailTooltipType.CAFE_FAVORITE -> KEY_CAFE_FAVORITE_TOOLTIP_SHOWN
@@ -43,6 +61,7 @@ class AndroidUserPreferenceLocalDataSource(context: Context) : UserPreferenceLoc
     private companion object {
         private const val PREF_NAME = "concafe.theme.preferences"
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_BRAND_THEME = "brand_theme"
         private const val KEY_CAFE_FAVORITE_TOOLTIP_SHOWN = "cafe_favorite_tooltip_shown"
         private const val KEY_CAST_FOLLOW_TOOLTIP_SHOWN = "cast_follow_tooltip_shown"
     }

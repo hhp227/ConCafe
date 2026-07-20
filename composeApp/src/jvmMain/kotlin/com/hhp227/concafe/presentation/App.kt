@@ -32,7 +32,10 @@ fun App() {
         delay(800)
         isLaunchScreenVisible = false
     }
-    ConCafeTheme(darkTheme = uiState.themeMode == AppThemeMode.DARK) {
+    ConCafeTheme(
+        darkTheme = uiState.themeMode == AppThemeMode.DARK,
+        brandTheme = uiState.brandTheme
+    ) {
         if (isLaunchScreenVisible) {
             DesktopLaunchScreen()
         } else {

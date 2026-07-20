@@ -16,4 +16,5 @@ enum SettingsAction {
     case privacyPolicyTapped
     case signOutTapped
     case themeModeSelected(AppThemeMode)
+    case brandThemeSelected(AppBrandTheme)
 }

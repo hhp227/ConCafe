@@ -179,7 +179,7 @@ private struct CafeContentView: View {
                 .coordinateSpace(name: "cafeScroll")
                 .ignoresSafeArea(edges: .top)
                 .compatScrollContentInsetAdjustmentNever()
-                .background(Color(hex: "FFF9FC"))
+                .background(ConCafeColors.background)
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
                 }
@@ -272,12 +272,12 @@ private struct CafeContentView: View {
                 Text(String(localized: String.LocalizationValue("cafe_action_write_review"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(ConCafeColors.textPrimary)
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
-            .background(Color(hex: "FFD1DC"))
+            .background(ConCafeColors.primaryContainer)
             .clipShape(Capsule())
-            .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+            .shadow(color: ConCafeColors.primaryContainer.opacity(0.45), radius: 12, x: 0, y: 6)
         }
         .buttonStyle(.plain)
     }
@@ -326,7 +326,7 @@ private struct CafeContentView: View {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
@@ -379,7 +379,7 @@ private struct CafeContentView: View {
 
     private var heroPlaceholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FFD2E4"), Color(hex: "F7A6C5")],
+            colors: [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -398,17 +398,17 @@ private struct CafeContentView: View {
                     .font(.title2.bold())
                 if !detail.cafe.ownerIds.isEmpty {
                     Image(systemName: "checkmark.seal.fill")
-                        .foregroundStyle(Color(hex: "2563EB"))
+                        .foregroundStyle(ConCafeColors.info)
                         .font(.title2)
                 }
             }
             if !conceptLabel.isEmpty {
                 Text(conceptLabel)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(hex: "9E2E5C"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color(hex: "FDE7EF"), in: Capsule())
+                    .background(ConCafeColors.surfaceTint, in: Capsule())
             }
             HStack(spacing: 14) {
                 HStack(spacing: 4) {

@@ -42,6 +42,7 @@ import concafe.composeapp.generated.resources.signin_back_content_description
 import concafe.composeapp.generated.resources.signin_submit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +80,7 @@ private fun NotificationContentScreen(
     onAction: (NotificationAction) -> Unit
 ) {
     Scaffold(
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = ConCafeColors.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(Res.string.common_notification)) },
@@ -130,7 +131,7 @@ private fun NotificationSignInRequiredScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD"))
+            .background(ConCafeColors.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -148,7 +149,7 @@ private fun NotificationSignInRequiredScreen(
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = null,
-                    tint = colorFromHex("EF6797"),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
@@ -184,7 +185,7 @@ private fun NotificationSectionsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(colorFromHex("FFFBFD")),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
@@ -198,7 +199,7 @@ private fun NotificationSectionsScreen(
                         .clip(RoundedCornerShape(24.dp))
                         .background(
                             Brush.linearGradient(
-                                listOf(colorFromHex("EF6797"), colorFromHex("F7A0C1"))
+                                listOf(ConCafeColors.primary, ConCafeColors.secondary)
                             )
                         )
                         .padding(20.dp),
@@ -255,7 +256,7 @@ private fun NotificationItemCard(
     onAction: (NotificationAction) -> Unit
 ) {
     val visual = notificationVisual(item.type)
-    val containerColor = if (item.isRead) MaterialTheme.colorScheme.surface else colorFromHex("FFF3F8")
+    val containerColor = if (item.isRead) MaterialTheme.colorScheme.surface else ConCafeColors.background
 
     Card(
         modifier = Modifier
@@ -297,7 +298,7 @@ private fun NotificationItemCard(
                             .size(12.dp)
                             .background(MaterialTheme.colorScheme.surface, CircleShape)
                             .padding(2.dp)
-                            .background(colorFromHex("EF6797"), CircleShape)
+                            .background(ConCafeColors.primary, CircleShape)
                     )
                 }
             }
@@ -335,17 +336,17 @@ private data class NotificationVisual(
 
 private fun notificationVisual(type: String): NotificationVisual {
     return when (type) {
-        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, colorFromHex("E4F7EC"), colorFromHex("2E9E5B"))
-        "CAST_SCHEDULE_ASSIGNED" -> NotificationVisual(Icons.Filled.EventAvailable, colorFromHex("E4F7EC"), colorFromHex("2E9E5B"))
-        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, colorFromHex("FFE6F1"), colorFromHex("EB5F97"))
-        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, colorFromHex("E8F0FF"), colorFromHex("4A79E8"))
-        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, colorFromHex("FFF4E2"), colorFromHex("E29B35"))
-        "CAST_SCHEDULE_CREATED" -> NotificationVisual(Icons.Filled.EventAvailable, colorFromHex("F0F7FF"), colorFromHex("2D74C4"))
-        "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, colorFromHex("ECFFF5"), colorFromHex("1F8B5F"))
-        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, colorFromHex("F1E8FF"), colorFromHex("8A52E2"))
-        "COMMUNITY_COMMENT" -> NotificationVisual(Icons.Filled.Forum, colorFromHex("EAF7FF"), colorFromHex("2878A8"))
-        "COMMUNITY_LIKE" -> NotificationVisual(Icons.Filled.Favorite, colorFromHex("FFE9EF"), colorFromHex("D94F75"))
-        "WEEKLY_COMMUNITY_HIGHLIGHT" -> NotificationVisual(Icons.Filled.Whatshot, colorFromHex("FFF3DF"), colorFromHex("D27B21"))
-        else -> NotificationVisual(Icons.Filled.Notifications, colorFromHex("F2F2F2"), colorFromHex("666666"))
+        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, ConCafeColors.successContainer, ConCafeColors.success)
+        "CAST_SCHEDULE_ASSIGNED" -> NotificationVisual(Icons.Filled.EventAvailable, ConCafeColors.successContainer, ConCafeColors.success)
+        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, ConCafeColors.surfaceTint, ConCafeColors.primary)
+        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, ConCafeColors.infoContainer, ConCafeColors.info)
+        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, ConCafeColors.warningContainer, ConCafeColors.warning)
+        "CAST_SCHEDULE_CREATED" -> NotificationVisual(Icons.Filled.EventAvailable, ConCafeColors.infoContainer, ConCafeColors.info)
+        "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, ConCafeColors.successContainer, ConCafeColors.success)
+        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, ConCafeColors.primaryContainer, ConCafeColors.primary)
+        "COMMUNITY_COMMENT" -> NotificationVisual(Icons.Filled.Forum, ConCafeColors.infoContainer, ConCafeColors.info)
+        "COMMUNITY_LIKE" -> NotificationVisual(Icons.Filled.Favorite, ConCafeColors.surfaceTint, ConCafeColors.primary)
+        "WEEKLY_COMMUNITY_HIGHLIGHT" -> NotificationVisual(Icons.Filled.Whatshot, ConCafeColors.warningContainer, ConCafeColors.warning)
+        else -> NotificationVisual(Icons.Filled.Notifications, ConCafeColors.surfaceVariant, ConCafeColors.textSecondary)
     }
 }

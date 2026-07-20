@@ -122,7 +122,7 @@ struct CheckInCafeMapView: UIViewRepresentable {
 
             view.annotation = annotation
             view.canShowCallout = true
-            view.markerTintColor = UIColor(Color(hex: "EF6797"))
+            view.markerTintColor = UIColor(ConCafeColors.primary)
             view.glyphImage = UIImage(systemName: "cup.and.saucer.fill")
             view.leftCalloutAccessoryView = nil
             view.rightCalloutAccessoryView = nil
@@ -157,7 +157,7 @@ struct CheckInCafeMapView: UIViewRepresentable {
             let cafeButton = CheckInCalloutButton(type: .system)
             cafeButton.cafeId = annotation.id
             cafeButton.setTitle(annotation.title ?? "", for: .normal)
-            cafeButton.setTitleColor(UIColor(Color(hex: "2B2330")), for: .normal)
+            cafeButton.setTitleColor(UIColor(ConCafeColors.textPrimary), for: .normal)
             cafeButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             cafeButton.addTarget(self, action: #selector(handleCafeButtonTap(_:)), for: .touchUpInside)
 
@@ -166,7 +166,7 @@ struct CheckInCafeMapView: UIViewRepresentable {
                 let checkInButton = CheckInCalloutButton(type: .system)
                 checkInButton.cafeId = annotation.id
                 checkInButton.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
-                checkInButton.tintColor = UIColor(Color(hex: "EF6797"))
+                checkInButton.tintColor = UIColor(ConCafeColors.primary)
                 checkInButton.addTarget(self, action: #selector(handleCheckInButtonTap(_:)), for: .touchUpInside)
                 arrangedSubviews = [cafeButton, checkInButton]
             } else {

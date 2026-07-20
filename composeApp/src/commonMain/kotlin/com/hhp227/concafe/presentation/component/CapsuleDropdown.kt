@@ -25,7 +25,7 @@ fun <T> CapsuleDropdown(
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(999.dp),
-            color = colorFromHex("F3F3F3")
+            color = ConCafeColors.surfaceVariant
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -35,12 +35,12 @@ fun <T> CapsuleDropdown(
                 Text(
                     text = selected,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("555555")
+                    color = ConCafeColors.textSecondary
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = colorFromHex("777777")
+                    tint = ConCafeColors.textSecondary
                 )
             }
         }

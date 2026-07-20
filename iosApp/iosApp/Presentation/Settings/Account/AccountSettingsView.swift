@@ -83,7 +83,7 @@ private struct AccountSettingsContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFF9FC"))
+        .background(ConCafeColors.background)
         .sheet(isPresented: Binding(
             get: { uiState.isDeleteDialogVisible },
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
@@ -223,7 +223,7 @@ private struct AccountSettingsContentView: View {
         } label: {
             Text(uiState.isDeleteRequested ? String(localized: String.LocalizationValue("account_settings_delete_requested"), table: "Localizable") : String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
                 .font(.footnote)
-                .foregroundStyle(uiState.isDeleteRequested ? Color(hex: "B84473") : Color(hex: "8E8794"))
+                .foregroundStyle(uiState.isDeleteRequested ? ConCafeColors.primary : ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
@@ -269,7 +269,7 @@ private struct AccountSettingsContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -280,7 +280,7 @@ private struct AccountSettingsContentView: View {
     private func sectionEyebrow(_ text: String) -> some View {
         Text(text)
             .font(.caption)
-            .foregroundStyle(Color(hex: "8E8794"))
+            .foregroundStyle(ConCafeColors.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -292,7 +292,7 @@ private struct AccountSettingsContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(title)
                     .font(.headline)
                     .bold()
@@ -315,11 +315,11 @@ private struct AccountSettingsContentView: View {
         Button(action: onTap) {
             HStack(spacing: 14) {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(hex: "FFF1F7"))
+                    .fill(ConCafeColors.background)
                     .frame(width: 46, height: 46)
                     .overlay(
                         Image(systemName: symbol)
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     )
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -338,7 +338,7 @@ private struct AccountSettingsContentView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(hex: "B3ACB7"))
+                    .foregroundStyle(ConCafeColors.outlineStrong)
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -356,7 +356,7 @@ private struct AccountSettingsContentView: View {
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -464,10 +464,10 @@ private struct AccountDeleteConfirmationSheet: View {
                     Button(action: onDismiss) {
                         Text(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"))
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color(hex: "6F6673"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
-                            .background(Color(hex: "F4EDF1"))
+                            .background(ConCafeColors.surfaceTint)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -478,7 +478,7 @@ private struct AccountDeleteConfirmationSheet: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 52)
-                                .background(Color(hex: "C9527E"))
+                                .background(ConCafeColors.primary)
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -487,7 +487,7 @@ private struct AccountDeleteConfirmationSheet: View {
                 Spacer()
             }
             .padding(20)
-            .background(Color(hex: "FFF9FC"))
+            .background(ConCafeColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

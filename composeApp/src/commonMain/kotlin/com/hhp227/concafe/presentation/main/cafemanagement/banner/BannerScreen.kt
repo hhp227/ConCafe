@@ -34,6 +34,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,7 +106,7 @@ private fun BannerContentScreen(
     onAction: (BannerAction) -> Unit
 ) {
     Scaffold(
-        containerColor = colorFromHex("FFFBFD"),
+        containerColor = ConCafeColors.background,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             Column(
@@ -147,7 +148,7 @@ private fun BannerContentScreen(
         },
         bottomBar = {
             Surface(
-                color = colorFromHex("FFFBFD"),
+                color = ConCafeColors.background,
                 shadowElevation = 8.dp
             ) {
                 Button(
@@ -158,7 +159,7 @@ private fun BannerContentScreen(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorFromHex("FFD1DC"),
+                        containerColor = ConCafeColors.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     contentPadding = PaddingValues(vertical = 16.dp)
@@ -173,7 +174,7 @@ private fun BannerContentScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorFromHex("FFFBFD")),
+                .background(ConCafeColors.background),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
@@ -206,7 +207,7 @@ private fun BannerContentScreen(
                         text = stringResource(Res.string.banner_location_home_top),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = colorFromHex("EF6797")
+                        color = ConCafeColors.primary
                     )
                 }
             }
@@ -224,7 +225,7 @@ private fun BannerContentScreen(
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("9A8E97")
+                    color = ConCafeColors.textMuted
                 )
             }
         }
@@ -240,7 +241,7 @@ private fun BannerCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, Color(0x1AFFD1DC)),
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -261,7 +262,7 @@ private fun BannerCard(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0x33FFD1DC)
+                        color = ConCafeColors.primaryContainer.copy(alpha = 0.2f)
                     ) {
                         Text(
                             text = when (banner.statusLabelKey) {
@@ -273,15 +274,15 @@ private fun BannerCard(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = colorFromHex("CE5E87")
+                            color = ConCafeColors.primary
                         )
                     }
                     Row {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.banner_content_edit), tint = colorFromHex("8F848F"))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.banner_content_edit), tint = ConCafeColors.textMuted)
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.banner_content_delete), tint = colorFromHex("8F848F"))
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.banner_content_delete), tint = ConCafeColors.textMuted)
                         }
                     }
                 }
@@ -309,13 +310,13 @@ private fun BannerCard(
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
-                        tint = colorFromHex("B2A7AF"),
+                        tint = ConCafeColors.outlineStrong,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(Res.string.banner_period_days, banner.periodDays),
                         style = MaterialTheme.typography.labelSmall,
-                        color = colorFromHex("9A8E97")
+                        color = ConCafeColors.textMuted
                     )
                 }
             }
@@ -332,7 +333,7 @@ private fun BannerThumbnail(banner: BannerItem) {
             .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(colorFromHex(banner.accentColorHex), colorFromHex("FFE6ED"))
+                    colors = listOf(colorFromHex(banner.accentColorHex), ConCafeColors.surfaceTint)
                 )
             ),
         contentAlignment = Alignment.Center

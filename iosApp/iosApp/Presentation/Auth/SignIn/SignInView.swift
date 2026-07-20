@@ -65,8 +65,8 @@ private struct SignInContentView: View {
         .background(
             LinearGradient(
                 colors: UITraitCollection.current.userInterfaceStyle == .dark
-                    ? [Color(hex: "FFF9FC"), Color(hex: "FFF9FC"), Color(hex: "FFF9FC")]
-                    : [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
+                    ? [ConCafeColors.background, ConCafeColors.background, ConCafeColors.background]
+                    : [ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -96,7 +96,7 @@ private struct SignInContentView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(
-                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline,
                             lineWidth: 1
                         )
                 )
@@ -112,7 +112,7 @@ private struct SignInContentView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(
-                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : Color(hex: "E4DDE5"),
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline,
                             lineWidth: 1
                         )
                 )
@@ -120,7 +120,7 @@ private struct SignInContentView: View {
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "D1436F"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             Button {
@@ -128,10 +128,10 @@ private struct SignInContentView: View {
             } label: {
                 Text(uiState.isLoading ? String(localized: String.LocalizationValue("signin_loading"), table: "Localizable") : String(localized: String.LocalizationValue("signin_submit"), table: "Localizable"))
                     .font(.headline)
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(uiState.isLoading)

@@ -54,7 +54,7 @@ fun CafeSummaryCard(
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(colorFromHex("FFE2D2"), com.hhp227.concafe.presentation.component.colorFromHex("FFC9A9"))
+                            colors = listOf(ConCafeColors.warningContainer, com.hhp227.concafe.presentation.component.ConCafeColors.warningContainer)
                         )
                     )
             ) {
@@ -88,7 +88,7 @@ fun CafeSummaryCard(
                 Text(
                     text = conceptType,
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorFromHex("EF6797"),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -120,7 +120,7 @@ fun CafeSummaryCard(
                     Text(
                         text = trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = colorFromHex("EF6797"),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
