@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -433,9 +434,8 @@ private fun HomeSkeletonContent(bannerHeight: Dp) {
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
                 .height(bannerHeight),
-            shape = RoundedCornerShape(16.dp)
+            shape = RectangleShape
         )
         repeat(2) {
             Column {
@@ -653,15 +653,13 @@ private fun HomeBannerSection(
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (uiState.banners.isNotEmpty()) {
+        if (uiState.banners.isNotEmpty()) {
+            Box {
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(bannerHeight),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    pageSpacing = 12.dp
+                        .height(bannerHeight)
                 ) { page ->
                     val banner = uiState.banners[page]
 
@@ -671,32 +669,23 @@ private fun HomeBannerSection(
                         onClick = { onAction(HomeAction.ClickBanner(banner)) }
                     )
                 }
-            } else {
-                // 플레이스홀더에도 동일한 높이 적용
-                HomeBannerPlaceholderCard(bannerHeight)
-            }
-            if (uiState.banners.size > 1) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(uiState.banners.size) { page ->
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 3.dp)
-                                .size(
-                                    width = if (pagerState.currentPage == page) 18.dp else 8.dp,
-                                    height = 8.dp
-                                )
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(
-                                    if (pagerState.currentPage == page) ConCafeColors.primary
-                                    else ConCafeColors.outline
-                                )
-                        )
-                    }
+                if (uiState.banners.size > 1) {
+                    Text(
+                        text = "${pagerState.currentPage + 1} / ${uiState.banners.size}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(18.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.Black.copy(alpha = 0.45f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
                 }
             }
+        } else {
+            // 플레이스홀더에도 동일한 높이 적용
+            HomeBannerPlaceholderCard(bannerHeight)
         }
     }
 }
@@ -712,7 +701,7 @@ private fun HomeBannerItem(
 
     Card(
         modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(20.dp)
+        shape = RectangleShape
     ) {
         Box(
             modifier = Modifier
@@ -807,9 +796,8 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(height)
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp)
+            .height(height),
+        shape = RectangleShape
     ) {
         Box(
             modifier = Modifier
@@ -840,9 +828,7 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
 }
 
 private fun homeBannerHeight(contentWidth: Dp): Dp {
-    val horizontalPadding = 32.dp
-    val bannerWidth = (contentWidth - horizontalPadding).coerceAtLeast(0.dp)
-    return (bannerWidth * (10f / 16f)).coerceAtMost(360.dp)
+    return (contentWidth * (10f / 16f)).coerceAtMost(360.dp)
 }
 
 private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {

@@ -119,15 +119,13 @@ private struct HomeContentView: View {
 
     private var homeSkeleton: some View {
         let containerWidth = UIScreen.main.bounds.width
-        let bannerWidth = max(containerWidth - 32, 0)
         let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
 
         // 배너는 실제 배너와 같은 화면폭 기반 고정 크기로 만든다.
         // 가변폭(maxWidth: .infinity) 체인은 카드 행이 화면보다 넓을 때 렌더가 깨진다.
         return VStack(alignment: .leading, spacing: 24) {
-            ShimmerBox(cornerRadius: 16)
-                .frame(width: bannerWidth, height: bannerHeight)
-                .padding(.horizontal, 16)
+            ShimmerBox(cornerRadius: 0)
+                .frame(width: containerWidth, height: bannerHeight)
             ForEach(0..<2, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 10) {
                     ShimmerBox()
@@ -457,9 +455,8 @@ private struct HomeBannerSection: View {
     var body: some View {
         let containerWidth = UIScreen.main.bounds.width
         let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
-        let sectionHeight = bannerSectionHeight(containerWidth: containerWidth)
 
-        VStack(spacing: 10) {
+        Group {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
@@ -468,43 +465,36 @@ private struct HomeBannerSection: View {
                             height: bannerHeight
                         )
                         .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 16)
                         .onTapGesture {
                             onAction(.bannerTapped(banner))
                         }
                         .tag(index)
                     }
                 }
-                .frame(height: bannerHeight)
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .overlay(alignment: .bottomTrailing) {
+                    if uiState.banners.count > 1 {
+                        Text("\(currentBannerPage + 1) / \(uiState.banners.count)")
+                            .font(.caption2)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.black.opacity(0.45))
+                            .clipShape(Capsule())
+                            .padding(18)
+                    }
+                }
             } else {
                 HomeBannerPlaceholderCard(height: bannerHeight)
             }
-            if uiState.banners.count > 1 {
-                HStack(spacing: 6) {
-                    ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
-                        RoundedRectangle(cornerRadius: 999)
-                            .fill(currentBannerPage == index ? ConCafeColors.primary : ConCafeColors.outline)
-                            .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
-                    }
-                }
-            }
         }
         .frame(maxWidth: .infinity, alignment: .top)
-        .frame(height: sectionHeight)
-    }
-
-    private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
-        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
-        let indicatorHeight: CGFloat = uiState.banners.count > 1 ? 18 : 0
-        return bannerHeight + indicatorHeight
+        .frame(height: bannerHeight)
     }
 }
 
 private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
-    let horizontalPadding: CGFloat = 32
-    let contentWidth = max(containerWidth - horizontalPadding, 0)
-    return min(contentWidth * (10.0 / 16.0), 360)
+    return min(containerWidth * (10.0 / 16.0), 360)
 }
 
 private struct HomeBannerItem: View {
@@ -512,7 +502,7 @@ private struct HomeBannerItem: View {
 
     let height: CGFloat
 
-    private let cardShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+    private let cardShape = Rectangle()
 
     var body: some View {
         ZStack {
@@ -652,8 +642,6 @@ private struct HomeBannerPlaceholderCard: View {
             }
             .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .padding(.horizontal, 16)
         .frame(height: height)
     }
 }
