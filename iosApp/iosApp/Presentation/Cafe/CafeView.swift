@@ -193,9 +193,12 @@ private struct CafeContentView: View {
                     }
                 }
                 if uiState.detail != nil, isTabPinned {
+                    // 핀 트리거와 동일 기준: 스크롤 뷰처럼 상단 safe area(툴팁 인셋 포함)를 무시한
+                    // 원시 상단에서 safeAreaInsets.top만큼 내리면 인라인 탭이 멈추는 지점과 일치한다.
                     pinnedTabHeader()
-                        .padding(.top, pinnedTabTopPadding(in: proxy))
+                        .padding(.top, proxy.safeAreaInsets.top)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .ignoresSafeArea(edges: .top)
                         .zIndex(2)
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
@@ -522,7 +525,10 @@ private struct CafeContentView: View {
             }
         )
         .frame(maxWidth: .infinity)
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .background(
+            Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
+            ignoresSafeAreaEdges: []
+        )
         .zIndex(1)
     }
 
@@ -530,11 +536,10 @@ private struct CafeContentView: View {
         VStack(spacing: 0) {
             tabHeader()
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-    }
-
-    private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
-        max(0, proxy.safeAreaInsets.top - proxy.frame(in: .global).minY)
+        .background(
+            Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
+            ignoresSafeAreaEdges: []
+        )
     }
 
     @ViewBuilder
