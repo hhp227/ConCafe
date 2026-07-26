@@ -189,7 +189,7 @@ fun HomeContentScreen(
                 .fillMaxSize()
                 .background(screenBackgroundColor),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(vertical = 20.dp)
+            contentPadding = PaddingValues(bottom = 20.dp)
         ) {
             item {
                 HomeBannerSection(
@@ -428,7 +428,7 @@ private fun HomeSkeletonContent(bannerHeight: Dp) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 20.dp),
+            .padding(bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         ShimmerBox(

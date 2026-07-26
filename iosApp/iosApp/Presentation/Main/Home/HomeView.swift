@@ -103,7 +103,7 @@ private struct HomeContentView: View {
                         birthdaySection
                     }
                 }
-                .padding(.vertical, 16)
+                .padding(.bottom, 16)
             }
             .background(ConCafeColors.background)
         } else {
@@ -160,7 +160,7 @@ private struct HomeContentView: View {
             }
             .padding(.horizontal, 16)
         }
-        .padding(.vertical, 16)
+        .padding(.bottom, 16)
         .clipped()
     }
 
