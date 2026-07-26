@@ -720,7 +720,8 @@ private fun HomeBannerItem(
                 CompatImageDisplay(
                     imageUrl = imageUrl,
                     modifier = Modifier.matchParentSize(),
-                    displaySize = ImageDisplaySize.MEDIUM
+                    displaySize = ImageDisplaySize.MEDIUM,
+                    applyRoundedClip = false
                 )
                 Box(
                     modifier = Modifier
