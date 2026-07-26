@@ -45,7 +45,14 @@ struct ShimmerBox: View {
                         endPoint: .bottomTrailing
                     )
                     .frame(width: ShimmerAppearance.band)
-                    .offset(x: isAnimating ? sweepEnd : sweepStart),
+                    .offset(x: isAnimating ? sweepEnd : sweepStart)
+                    // withAnimation(repeatForever)은 전역 트랜잭션이라 등장 중 확정되는 레이아웃까지
+                    // 무한 반복에 가둔다(가변폭 배너 미표시, push 전환 중 내비바 상태 꼬임의 원인).
+                    // 값 범위 애니메이션으로 offset 변화만 반복시킨다.
+                    .animation(
+                        .linear(duration: ShimmerAppearance.duration).repeatForever(autoreverses: false),
+                        value: isAnimating
+                    ),
                     alignment: .leading
                 )
         }
@@ -60,9 +67,7 @@ struct ShimmerBox: View {
             }
         }
         .onAppear {
-            withAnimation(.linear(duration: ShimmerAppearance.duration).repeatForever(autoreverses: false)) {
-                isAnimating = true
-            }
+            isAnimating = true
         }
     }
 }
