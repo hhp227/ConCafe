@@ -64,8 +64,7 @@ struct ContentView: View {
 
             viewModel.onAction(.syncPushToken(token: token))
         }
-        // TODO: 스켈레톤 UI 디버깅용 스크린샷 캡쳐를 위해 임시 비활성화 — 확인 후 반드시 복원할 것
-        // .protectedFromScreenCapture()
+        .protectedFromScreenCapture()
     }
 
     private var appUpdateAlertPresented: Binding<Bool> {

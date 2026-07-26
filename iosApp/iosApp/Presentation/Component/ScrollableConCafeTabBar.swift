@@ -49,9 +49,9 @@ struct ScrollableConCafeTabBar: View {
             }
             .padding(.horizontal, 12)
             .frame(height: 48)
-            .background(backgroundColor)
+            .background(backgroundColor, ignoresSafeAreaEdges: [])
         }
-        .background(backgroundColor)
+        .background(backgroundColor, ignoresSafeAreaEdges: [])
         .frame(height: 48)
     }
 }
