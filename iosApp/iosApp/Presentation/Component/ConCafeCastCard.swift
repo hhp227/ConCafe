@@ -73,7 +73,7 @@ struct ConCafeCastCard: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.green)
+                                .background(ConCafeColors.success)
                                 .clipShape(Capsule())
                         }
                         if let conceptRole, !conceptRole.isEmpty {

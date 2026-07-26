@@ -675,7 +675,7 @@ private struct HomeSectionPlaceholderCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
         .padding(.vertical, 16)
-        .background(.white)
+        .background(ConCafeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
