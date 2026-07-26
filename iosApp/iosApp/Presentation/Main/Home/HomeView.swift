@@ -107,11 +107,11 @@ private struct HomeContentView: View {
             }
             .background(ConCafeColors.background)
         } else {
-            ZStack(alignment: .top) {
-                ConCafeColors.background
-                    .ignoresSafeArea()
-                homeSkeleton
-            }
+            // 배경을 ZStack 자식으로 두면 ignoresSafeArea가 정렬 경계를 화면 최상단까지 넓혀
+            // 스켈레톤 배너가 상단 크롬 아래로 밀려 가려진다. 배경은 background 수정자로만 처리한다.
+            homeSkeleton
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background(ConCafeColors.background.ignoresSafeArea())
         }
     }
 
