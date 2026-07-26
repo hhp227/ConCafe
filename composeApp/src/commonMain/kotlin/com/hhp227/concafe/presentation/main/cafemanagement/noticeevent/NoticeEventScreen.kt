@@ -2,61 +2,18 @@ package com.hhp227.concafe.presentation.main.cafemanagement.noticeevent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.Icons.Filled
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -72,13 +29,96 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.NoticeStatusAccent
-import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
+import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_confirm
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.menugoods_delete_content_description
+import concafe.composeapp.generated.resources.menugoods_edit_content_description
+import concafe.composeapp.generated.resources.noticeevent_empty_event
+import concafe.composeapp.generated.resources.noticeevent_empty_notice
+import concafe.composeapp.generated.resources.noticeevent_form_content_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_content_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_form_image_description
+import concafe.composeapp.generated.resources.noticeevent_form_image_label
+import concafe.composeapp.generated.resources.noticeevent_form_image_title_attached
+import concafe.composeapp.generated.resources.noticeevent_form_image_title_empty
+import concafe.composeapp.generated.resources.noticeevent_form_label_content
+import concafe.composeapp.generated.resources.noticeevent_form_live_performance_desc
+import concafe.composeapp.generated.resources.noticeevent_form_live_performance_title
+import concafe.composeapp.generated.resources.noticeevent_form_participant_cast_empty
+import concafe.composeapp.generated.resources.noticeevent_form_participant_cast_label
+import concafe.composeapp.generated.resources.noticeevent_form_label_title
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_event
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_label_notice
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_schedule_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_event_create
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_event_edit
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_notice_create
+import concafe.composeapp.generated.resources.noticeevent_form_sheet_title_notice_edit
+import concafe.composeapp.generated.resources.noticeevent_form_submit_event_create
+import concafe.composeapp.generated.resources.noticeevent_form_submit_event_edit
+import concafe.composeapp.generated.resources.noticeevent_form_submit_notice_create
+import concafe.composeapp.generated.resources.noticeevent_form_submit_notice_edit
+import concafe.composeapp.generated.resources.noticeevent_form_title_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_form_title_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_info_event_create_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_created
+import concafe.composeapp.generated.resources.noticeevent_info_event_delete_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_delete_success
+import concafe.composeapp.generated.resources.noticeevent_info_event_edit_target_not_found
+import concafe.composeapp.generated.resources.noticeevent_info_event_load_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_update_failed
+import concafe.composeapp.generated.resources.noticeevent_info_event_updated
+import concafe.composeapp.generated.resources.noticeevent_info_image_one_only
+import concafe.composeapp.generated.resources.noticeevent_info_image_pick_required
+import concafe.composeapp.generated.resources.noticeevent_info_image_upload_failed
+import concafe.composeapp.generated.resources.noticeevent_info_more_events_next_step
+import concafe.composeapp.generated.resources.noticeevent_info_notice_create_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_created
+import concafe.composeapp.generated.resources.noticeevent_info_notice_delete_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_delete_success
+import concafe.composeapp.generated.resources.noticeevent_info_notice_edit_target_not_found
+import concafe.composeapp.generated.resources.noticeevent_info_notice_load_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_update_failed
+import concafe.composeapp.generated.resources.noticeevent_info_notice_updated
+import concafe.composeapp.generated.resources.noticeevent_info_reserve_schedule_next_step
+import concafe.composeapp.generated.resources.noticeevent_pinned_desc
+import concafe.composeapp.generated.resources.noticeevent_pinned_title
+import concafe.composeapp.generated.resources.noticeevent_register_cta
+import concafe.composeapp.generated.resources.noticeevent_remove
+import concafe.composeapp.generated.resources.noticeevent_search_close_content_description
+import concafe.composeapp.generated.resources.noticeevent_search_content_description
+import concafe.composeapp.generated.resources.noticeevent_search_placeholder_event
+import concafe.composeapp.generated.resources.noticeevent_search_placeholder_notice
+import concafe.composeapp.generated.resources.noticeevent_tab_event
+import concafe.composeapp.generated.resources.noticeevent_tab_notice
+import concafe.composeapp.generated.resources.noticeevent_title
+import concafe.composeapp.generated.resources.noticeevent_validation_cafe_required
+import concafe.composeapp.generated.resources.noticeevent_validation_content_required
+import concafe.composeapp.generated.resources.noticeevent_validation_event_image_required
+import concafe.composeapp.generated.resources.noticeevent_validation_event_required
+import concafe.composeapp.generated.resources.noticeevent_validation_notice_required
+import concafe.composeapp.generated.resources.noticeevent_validation_title_required
+import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.schedule_label_end_time
+import concafe.composeapp.generated.resources.schedule_label_start_time
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,8 +151,9 @@ fun NoticeEventScreen(
         )
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(NoticeEventAction.DismissFormSheet) },
-            containerColor = Color(0xFFF8F5F6),
-            sheetState = sheetState
+            containerColor = MaterialTheme.colorScheme.surface,
+            sheetState = sheetState,
+            windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
             NoticeEventFormSheetContent(
                 uiState = uiState,
@@ -131,7 +172,7 @@ private fun NoticeEventContent(
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color(0xFFF8F5F6),
+        containerColor = if (isSystemInDarkTheme()) ConCafeColors.background else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -145,14 +186,18 @@ private fun NoticeEventContent(
                                 .fillMaxWidth()
                                 .padding(end = 8.dp),
                             singleLine = true,
-                            placeholder = if (uiState.selectedTab == NoticeEventTab.NOTICE) "공지사항 검색" else "이벤트 검색",
+                            placeholder = stringResource(if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                                Res.string.noticeevent_search_placeholder_notice
+                            } else {
+                                Res.string.noticeevent_search_placeholder_event
+                            }),
                             leadingContent = {
                                 Icon(Icons.Default.Search, contentDescription = null)
                             }
                         )
                     } else {
                         Text(
-                            text = "공지 및 이벤트 관리",
+                            text = stringResource(Res.string.noticeevent_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -160,7 +205,7 @@ private fun NoticeEventContent(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(NoticeEventAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.signin_back_content_description))
                     }
                 },
                 actions = {
@@ -178,7 +223,11 @@ private fun NoticeEventContent(
                     ) {
                         Icon(
                             imageVector = if (isSearchMode) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = if (isSearchMode) "검색 닫기" else "검색"
+                            contentDescription = stringResource(if (isSearchMode) {
+                                Res.string.noticeevent_search_close_content_description
+                            } else {
+                                Res.string.noticeevent_search_content_description
+                            })
                         )
                     }
                 }
@@ -189,29 +238,40 @@ private fun NoticeEventContent(
                 onClick = { onAction(NoticeEventAction.ClickRegister) },
                 modifier = Modifier.navigationBarsPadding(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD1DC),
-                    contentColor = Color(0xFF2B2330)
+                    containerColor = ConCafeColors.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("공지/이벤트 등록", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.noticeevent_register_cta), fontWeight = FontWeight.Bold)
             }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(ConCafeColors.background)
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
             ConCafeTabBar(
-                labels = NoticeEventTab.entries.map { it.title },
+                labels = NoticeEventTab.entries.map {
+                    when (it) {
+                        NoticeEventTab.NOTICE -> stringResource(Res.string.noticeevent_tab_notice)
+                        NoticeEventTab.EVENT -> stringResource(Res.string.noticeevent_tab_event)
+                    }
+                },
                 selectedIndex = NoticeEventTab.entries.indexOf(uiState.selectedTab),
                 modifier = Modifier.fillMaxWidth(),
                 onTabSelected = { index ->
@@ -226,7 +286,39 @@ private fun NoticeEventContent(
                 uiState.infoMessage?.let { message ->
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            InfoBanner(message = message, onDismiss = { onAction(NoticeEventAction.DismissInfoMessage) })
+                            InfoBanner(
+                                message = when (message) {
+                                    "noticeevent_validation_cafe_required" -> stringResource(Res.string.noticeevent_validation_cafe_required)
+                                    "noticeevent_validation_notice_required" -> stringResource(Res.string.noticeevent_validation_notice_required)
+                                    "noticeevent_validation_event_required" -> stringResource(Res.string.noticeevent_validation_event_required)
+                                    "noticeevent_validation_title_required" -> stringResource(Res.string.noticeevent_validation_title_required)
+                                    "noticeevent_validation_content_required" -> stringResource(Res.string.noticeevent_validation_content_required)
+                                    "noticeevent_validation_event_image_required" -> stringResource(Res.string.noticeevent_validation_event_image_required)
+                                    "noticeevent_info_notice_edit_target_not_found" -> stringResource(Res.string.noticeevent_info_notice_edit_target_not_found)
+                                    "noticeevent_info_event_edit_target_not_found" -> stringResource(Res.string.noticeevent_info_event_edit_target_not_found)
+                                    "noticeevent_info_notice_load_failed" -> stringResource(Res.string.noticeevent_info_notice_load_failed)
+                                    "noticeevent_info_event_load_failed" -> stringResource(Res.string.noticeevent_info_event_load_failed)
+                                    "noticeevent_info_notice_created" -> stringResource(Res.string.noticeevent_info_notice_created)
+                                    "noticeevent_info_notice_updated" -> stringResource(Res.string.noticeevent_info_notice_updated)
+                                    "noticeevent_info_event_created" -> stringResource(Res.string.noticeevent_info_event_created)
+                                    "noticeevent_info_event_updated" -> stringResource(Res.string.noticeevent_info_event_updated)
+                                    "noticeevent_info_notice_create_failed" -> stringResource(Res.string.noticeevent_info_notice_create_failed)
+                                    "noticeevent_info_notice_update_failed" -> stringResource(Res.string.noticeevent_info_notice_update_failed)
+                                    "noticeevent_info_event_create_failed" -> stringResource(Res.string.noticeevent_info_event_create_failed)
+                                    "noticeevent_info_event_update_failed" -> stringResource(Res.string.noticeevent_info_event_update_failed)
+                                    "noticeevent_info_notice_delete_success" -> stringResource(Res.string.noticeevent_info_notice_delete_success)
+                                    "noticeevent_info_notice_delete_failed" -> stringResource(Res.string.noticeevent_info_notice_delete_failed)
+                                    "noticeevent_info_event_delete_success" -> stringResource(Res.string.noticeevent_info_event_delete_success)
+                                    "noticeevent_info_event_delete_failed" -> stringResource(Res.string.noticeevent_info_event_delete_failed)
+                                    "noticeevent_info_image_upload_failed" -> stringResource(Res.string.noticeevent_info_image_upload_failed)
+                                    "noticeevent_info_more_events_next_step" -> stringResource(Res.string.noticeevent_info_more_events_next_step)
+                                    "noticeevent_info_image_one_only" -> stringResource(Res.string.noticeevent_info_image_one_only)
+                                    "noticeevent_info_image_pick_required" -> stringResource(Res.string.noticeevent_info_image_pick_required)
+                                    "noticeevent_info_reserve_schedule_next_step" -> stringResource(Res.string.noticeevent_info_reserve_schedule_next_step)
+                                    else -> message
+                                },
+                                onDismiss = { onAction(NoticeEventAction.DismissInfoMessage) }
+                            )
                         }
                     }
                 }
@@ -240,13 +332,13 @@ private fun NoticeEventContent(
                 } else if (uiState.selectedTab == NoticeEventTab.NOTICE && uiState.notices.isEmpty()) {
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            EmptyStateCard(message = "등록된 공지사항이 없습니다.")
+                            EmptyStateCard(message = stringResource(Res.string.noticeevent_empty_notice))
                         }
                     }
                 } else if (uiState.selectedTab == NoticeEventTab.EVENT && uiState.events.isEmpty()) {
                     item {
                         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            EmptyStateCard(message = "등록된 이벤트가 없습니다.")
+                            EmptyStateCard(message = stringResource(Res.string.noticeevent_empty_event))
                         }
                     }
                 } else if (uiState.selectedTab == NoticeEventTab.NOTICE) {
@@ -288,7 +380,7 @@ private fun NoticeEventContent(
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFFEF6797))
+                            CircularProgressIndicator(color = ConCafeColors.primary)
                         }
                     }
                 }
@@ -297,17 +389,95 @@ private fun NoticeEventContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NoticeEventFormSheetContent(
     uiState: NoticeEventUiState,
     onAction: (NoticeEventAction) -> Unit
 ) {
+    var isEventPeriodEditorVisible by rememberSaveable { mutableStateOf(false) }
+    var isStartDatePickerVisible by rememberSaveable { mutableStateOf(false) }
+    var isEndDatePickerVisible by rememberSaveable { mutableStateOf(false) }
+    var selectedStartDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedEndDateMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(uiState.selectedTab, uiState.formReservedAt, uiState.formEditingId) {
+        if (uiState.selectedTab == NoticeEventTab.EVENT) {
+            val parsed = parseEventPeriodText(uiState.formReservedAt)
+            selectedStartDateMillis = parsed?.first
+            selectedEndDateMillis = parsed?.second
+        } else {
+            isEventPeriodEditorVisible = false
+            isStartDatePickerVisible = false
+            isEndDatePickerVisible = false
+            selectedStartDateMillis = null
+            selectedEndDateMillis = null
+        }
+    }
+
+    if (isStartDatePickerVisible) {
+        val startState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedStartDateMillis ?: Clock.System.now().toEpochMilliseconds()
+        )
+        DatePickerDialog(
+            onDismissRequest = { isStartDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val picked = startState.selectedDateMillis ?: return@TextButton
+                        selectedStartDateMillis = picked
+                        if (selectedEndDateMillis != null && selectedEndDateMillis!! < picked) {
+                            selectedEndDateMillis = picked
+                        }
+                        isStartDatePickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isStartDatePickerVisible = false }) {
+                    Text(stringResource(Res.string.common_close))
+                }
+            }
+        ) {
+            DatePicker(state = startState)
+        }
+    }
+
+    if (isEndDatePickerVisible) {
+        val endState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedEndDateMillis ?: selectedStartDateMillis ?: Clock.System.now().toEpochMilliseconds()
+        )
+        DatePickerDialog(
+            onDismissRequest = { isEndDatePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val picked = endState.selectedDateMillis ?: return@TextButton
+                        val start = selectedStartDateMillis
+                        selectedEndDateMillis = if (start != null && picked < start) start else picked
+                        isEndDatePickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isEndDatePickerVisible = false }) {
+                    Text(stringResource(Res.string.common_close))
+                }
+            }
+        ) {
+            DatePicker(state = endState)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.86f)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-            .imePadding()
     ) {
         Row(
             modifier = Modifier
@@ -316,9 +486,20 @@ private fun NoticeEventFormSheetContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(uiState.formSheetTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(
+                    when {
+                        uiState.selectedTab == NoticeEventTab.NOTICE && uiState.formEditingId != null -> Res.string.noticeevent_form_sheet_title_notice_edit
+                        uiState.selectedTab == NoticeEventTab.NOTICE -> Res.string.noticeevent_form_sheet_title_notice_create
+                        uiState.formEditingId != null -> Res.string.noticeevent_form_sheet_title_event_edit
+                        else -> Res.string.noticeevent_form_sheet_title_event_create
+                    }
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
             IconButton(onClick = { onAction(NoticeEventAction.DismissFormSheet) }) {
-                Icon(Filled.Close, contentDescription = "닫기", tint = Color(0xFF7A707A))
+                Icon(Filled.Close, contentDescription = stringResource(Res.string.common_close), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         LazyColumn(
@@ -328,18 +509,30 @@ private fun NoticeEventFormSheetContent(
         ) {
             item {
                 ConCafeFormField(
-                    label = "제목",
+                    label = stringResource(Res.string.noticeevent_form_label_title),
                     value = uiState.formTitle,
                     onValueChange = { onAction(NoticeEventAction.ChangeFormTitle(it)) },
-                    placeholder = uiState.formTitlePlaceholder
+                    placeholder = stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_title_placeholder_notice
+                        } else {
+                            Res.string.noticeevent_form_title_placeholder_event
+                        }
+                    )
                 )
             }
             item {
                 ConCafeFormField(
-                    label = "내용",
+                    label = stringResource(Res.string.noticeevent_form_label_content),
                     value = uiState.formContent,
                     onValueChange = { onAction(NoticeEventAction.ChangeFormContent(it)) },
-                    placeholder = uiState.formContentPlaceholder,
+                    placeholder = stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_content_placeholder_notice
+                        } else {
+                            Res.string.noticeevent_form_content_placeholder_event
+                        }
+                    ),
                     minLines = 8,
                     singleLine = false
                 )
@@ -357,11 +550,19 @@ private fun NoticeEventFormSheetContent(
                     )
                 }
             }
+            if (uiState.selectedTab == NoticeEventTab.EVENT) {
+                item {
+                    NoticeEventEventOptionsSection(
+                        uiState = uiState,
+                        onAction = onAction
+                    )
+                }
+            }
             if (uiState.showsPinnedSection) {
                 item {
                     Card(
                         shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -369,8 +570,8 @@ private fun NoticeEventFormSheetContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("중요 공지 (Pinned)", fontWeight = FontWeight.Bold, color = Color(0xFF23161C))
-                                Text("목록 상단에 고정됩니다.", style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                                Text(stringResource(Res.string.noticeevent_pinned_title), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(stringResource(Res.string.noticeevent_pinned_desc), style = MaterialTheme.typography.labelMedium, color = ConCafeColors.textMuted)
                             }
                             Switch(
                                 checked = uiState.formPinned,
@@ -382,17 +583,29 @@ private fun NoticeEventFormSheetContent(
             }
             item {
                 Text(
-                    uiState.formScheduleLabel,
+                    stringResource(
+                        if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                            Res.string.noticeevent_form_schedule_label_notice
+                        } else {
+                            Res.string.noticeevent_form_schedule_label_event
+                        }
+                    ),
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF665A63),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
                 )
                 Button(
-                    onClick = { onAction(NoticeEventAction.ClickReserveSchedule) },
+                    onClick = {
+                        if (uiState.selectedTab == NoticeEventTab.EVENT) {
+                            isEventPeriodEditorVisible = !isEventPeriodEditorVisible
+                        } else {
+                            onAction(NoticeEventAction.ClickReserveSchedule)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF9A8D95)
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     shape = RoundedCornerShape(18.dp)
                 ) {
@@ -401,22 +614,119 @@ private fun NoticeEventFormSheetContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(if (uiState.formReservedAt.isBlank()) uiState.formSchedulePlaceholder else uiState.formReservedAt)
+                        Text(
+                            uiState.formReservedAt.ifBlank {
+                                stringResource(
+                                    if (uiState.selectedTab == NoticeEventTab.NOTICE) {
+                                        Res.string.noticeevent_form_schedule_placeholder_notice
+                                    } else {
+                                        Res.string.noticeevent_form_schedule_placeholder_event
+                                    }
+                                )
+                            }
+                        )
                         Icon(Icons.Default.CalendarToday, contentDescription = null)
+                    }
+                }
+                if (uiState.selectedTab == NoticeEventTab.EVENT && isEventPeriodEditorVisible) {
+                    Spacer(Modifier.height(12.dp))
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { isStartDatePickerVisible = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(stringResource(Res.string.schedule_label_start_time))
+                                    Text(
+                                        text = selectedStartDateMillis?.let(::formatDateMillis) ?: "-",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = { isEndDatePickerVisible = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(stringResource(Res.string.schedule_label_end_time))
+                                    Text(
+                                        text = selectedEndDateMillis?.let(::formatDateMillis) ?: "-",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedStartDateMillis = null
+                                        selectedEndDateMillis = null
+                                        onAction(NoticeEventAction.ChangeFormReservedAt(""))
+                                        isEventPeriodEditorVisible = false
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(stringResource(Res.string.noticeevent_remove))
+                                }
+                                Button(
+                                    onClick = {
+                                        val start = selectedStartDateMillis ?: return@Button
+                                        val end = selectedEndDateMillis ?: return@Button
+                                        val normalized = if (start <= end) start to end else end to start
+                                        onAction(
+                                            NoticeEventAction.ChangeFormReservedAt(
+                                                formatEventPeriodText(normalized.first, normalized.second)
+                                            )
+                                        )
+                                        isEventPeriodEditorVisible = false
+                                    },
+                                    enabled = selectedStartDateMillis != null && selectedEndDateMillis != null,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = ConCafeColors.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                    )
+                                ) {
+                                    Text(stringResource(Res.string.common_confirm))
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
         Surface(
-            color = Color.Transparent,
-            modifier = Modifier.navigationBarsPadding()
+            color = MaterialTheme.colorScheme.surface
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFFF8F5F6), Color(0xFFF8F5F6))
+                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surface)
                         )
                     )
             ) {
@@ -426,16 +736,100 @@ private fun NoticeEventFormSheetContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 18.dp)
+                        .navigationBarsPadding()
                         .height(60.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330),
-                        disabledContainerColor = Color(0xFFF0D9E0),
-                        disabledContentColor = Color(0xFF7F7078)
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        disabledContainerColor = ConCafeColors.primaryContainer,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
-                    Text(uiState.formSubmitLabel, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(
+                            when {
+                                uiState.selectedTab == NoticeEventTab.NOTICE && uiState.formEditingId != null -> Res.string.noticeevent_form_submit_notice_edit
+                                uiState.selectedTab == NoticeEventTab.NOTICE -> Res.string.noticeevent_form_submit_notice_create
+                                uiState.formEditingId != null -> Res.string.noticeevent_form_submit_event_edit
+                                else -> Res.string.noticeevent_form_submit_event_create
+                            }
+                        ),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NoticeEventEventOptionsSection(
+    uiState: NoticeEventUiState,
+    onAction: (NoticeEventAction) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Card(
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(Res.string.noticeevent_form_live_performance_title),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        stringResource(Res.string.noticeevent_form_live_performance_desc),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ConCafeColors.textMuted
+                    )
+                }
+                Switch(
+                    checked = uiState.formHasLivePerformance,
+                    onCheckedChange = { onAction(NoticeEventAction.ChangeFormHasLivePerformance(it)) }
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(Res.string.noticeevent_form_participant_cast_label),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            if (uiState.cafeCasts.isEmpty()) {
+                Text(
+                    stringResource(Res.string.noticeevent_form_participant_cast_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ConCafeColors.textMuted,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    uiState.cafeCasts.chunked(2).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            rowItems.forEach { cast ->
+                                FilterChip(
+                                    selected = cast.id in uiState.formParticipantCastIds,
+                                    onClick = { onAction(NoticeEventAction.ToggleFormParticipantCast(cast.id)) },
+                                    label = {
+                                        Text(cast.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -450,9 +844,9 @@ private fun NoticeEventImageSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            text = "대표 이미지",
+            text = stringResource(Res.string.noticeevent_form_image_label),
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF665A63),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 4.dp)
         )
         CompatImagePicker(
@@ -465,7 +859,7 @@ private fun NoticeEventImageSection(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                            colors = listOf(ConCafeColors.primaryContainer, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
                         )
                     )
                     .clickable { launchImagePicker() }
@@ -484,12 +878,18 @@ private fun NoticeEventImageSection(
                         Icon(
                             Icons.Default.PhotoCamera,
                             contentDescription = null,
-                            tint = Color(0xFF8B5164),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(34.dp)
                         )
                         Text(
-                            text = uiState.formImageTitle,
-                            color = Color(0xFF5A4954),
+                            text = stringResource(
+                                if (uiState.hasAttachedImage) {
+                                    Res.string.noticeevent_form_image_title_attached
+                                } else {
+                                    Res.string.noticeevent_form_image_title_empty
+                                }
+                            ),
+                            color = ConCafeColors.textSecondary,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -504,20 +904,20 @@ private fun NoticeEventImageSection(
                             .align(Alignment.BottomEnd)
                             .padding(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF8B5164)
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = ConCafeColors.primary
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        Text("제거", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.noticeevent_remove), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
         Text(
-            text = uiState.formImageDescription,
+            text = stringResource(Res.string.noticeevent_form_image_description),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF8A8088),
+            color = ConCafeColors.textMuted,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -531,7 +931,7 @@ private fun NoticeCard(
 ) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -550,23 +950,23 @@ private fun NoticeCard(
                     if (item.isPinned) {
                         StatusChip(
                             text = "PINNED",
-                            container = Color(0xFFFFD1DC),
-                            content = Color(0xFF2B2330)
+                            container = ConCafeColors.primaryContainer,
+                            content = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     val (container, content) = when (item.statusAccent) {
-                        NoticeStatusAccent.PUBLISHED -> Color(0xFFE8F8EC) to Color(0xFF2E9E5B)
-                        NoticeStatusAccent.DRAFT -> Color(0xFFF2F0F3) to Color(0xFF7A707A)
-                        NoticeStatusAccent.ENDED -> Color(0xFFF3E8E8) to Color(0xFF8C5A5A)
+                        NoticeStatusAccent.PUBLISHED -> ConCafeColors.successContainer to ConCafeColors.success
+                        NoticeStatusAccent.DRAFT -> ConCafeColors.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                        NoticeStatusAccent.ENDED -> ConCafeColors.errorContainer to ConCafeColors.textSecondary
                     }
                     StatusChip(text = item.statusLabel, container = container, content = content)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "편집", tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = "삭제", tint = Color(0xFF9A8D95))
+                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -574,12 +974,12 @@ private fun NoticeCard(
                 text = item.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF23161C)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = item.displayDate,
                 style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF8F848F)
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -593,7 +993,7 @@ private fun LoadingStateCard() {
             .padding(vertical = 32.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFFEF6797))
+        CircularProgressIndicator(color = ConCafeColors.primary)
     }
 }
 
@@ -601,7 +1001,7 @@ private fun LoadingStateCard() {
 private fun EmptyStateCard(message: String) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
@@ -612,7 +1012,7 @@ private fun EmptyStateCard(message: String) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF8F848F)
+                color = ConCafeColors.textMuted
             )
         }
     }
@@ -627,30 +1027,46 @@ private fun EventCard(
     Card(
         modifier = Modifier.alpha(if (item.isDimmed) 0.72f else 1f),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+                val eventImageUrl = item.imageUrl.trim().takeIf { it.isNotEmpty() }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFE7EF), Color(0xFFF6D3E0))
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         )
                 )
+                if (eventImageUrl != null) {
+                    CompatImageDisplay(
+                        imageUrl = eventImageUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        applyRoundedClip = false
+                    )
+                    if (item.isDimmed) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface)
+                        )
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .padding(12.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (item.statusLabel == "진행 중") Color(0xFFFFD1DC) else Color(0xFF6E6570))
+                        .background(if (!item.isDimmed) ConCafeColors.primaryContainer else ConCafeColors.textSecondary)
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = item.statusLabel,
-                        color = if (item.statusLabel == "진행 중") Color(0xFF2B2330) else Color.White,
+                        color = if (!item.isDimmed) MaterialTheme.colorScheme.onSurface else Color.White,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -669,23 +1085,23 @@ private fun EventCard(
                         text = item.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF23161C),
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.Edit, contentDescription = "수정", tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.menugoods_edit_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = "삭제", tint = Color(0xFF9A8D95))
+                            Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(Res.string.menugoods_delete_content_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color(0xFF8F848F), modifier = Modifier.size(14.dp))
-                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = Color(0xFF8F848F))
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = ConCafeColors.textMuted, modifier = Modifier.size(14.dp))
+                    Text(text = item.periodText, style = MaterialTheme.typography.labelMedium, color = ConCafeColors.textMuted)
                 }
             }
         }
@@ -706,7 +1122,7 @@ private fun SectionHeader(
         Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(
             text = actionLabel,
-            color = Color(0xFFEF6797),
+            color = ConCafeColors.primary,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable(onClick = onAction)
         )
@@ -731,17 +1147,41 @@ private fun InfoBanner(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFFF2D8))
+            .background(ConCafeColors.warningContainer)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = message, color = Color(0xFF6B5320), modifier = Modifier.weight(1f))
+        Text(text = message, color = ConCafeColors.goldDeep, modifier = Modifier.weight(1f))
         Text(
-            text = "닫기",
-            color = Color(0xFF6B5320),
+            text = stringResource(Res.string.common_close),
+            color = ConCafeColors.goldDeep,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onDismiss).padding(start = 12.dp)
         )
     }
 }
+
+private fun parseEventPeriodText(periodText: String): Pair<Long, Long>? {
+    val regex = Regex("""(\d{4})\.(\d{2})\.(\d{2})\s*(?:~|-)\s*(\d{4})\.(\d{2})\.(\d{2})""")
+    val match = regex.find(periodText.trim()) ?: return null
+    val values = match.groupValues
+    val start = LocalDate(values[1].toInt(), values[2].toInt(), values[3].toInt())
+    val end = LocalDate(values[4].toInt(), values[5].toInt(), values[6].toInt())
+    return localDateToEpochMillis(start) to localDateToEpochMillis(end)
+}
+
+private fun formatDateMillis(millis: Long): String {
+    val date = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return "%04d.%02d.%02d".format(date.year, date.monthNumber, date.dayOfMonth)
+}
+
+private fun formatEventPeriodText(startMillis: Long, endMillis: Long): String {
+    return "${formatDateMillis(startMillis)} - ${formatDateMillis(endMillis)}"
+}
+
+private fun localDateToEpochMillis(date: LocalDate): Long {
+    val instant = date.atStartOfDayIn(TimeZone.currentSystemDefault())
+    return instant.toEpochMilliseconds()
+}
+

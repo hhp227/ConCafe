@@ -20,14 +20,14 @@ fun NetworkStatusBanner(
     modifier: Modifier = Modifier
 ) {
     val containerColor = if (networkAlertState.isConnected) {
-        colorFromHex("DCFCE7")
+        ConCafeColors.successContainer
     } else {
-        colorFromHex("FEE2E2")
+        ConCafeColors.errorContainer
     }
     val contentColor = if (networkAlertState.isConnected) {
-        colorFromHex("166534")
+        ConCafeColors.success
     } else {
-        colorFromHex("991B1B")
+        ConCafeColors.error
     }
 
     AnimatedVisibility(

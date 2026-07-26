@@ -1,26 +1,42 @@
 [versions]
-agp = "8.1.4"
-android-compileSdk = "34"
+agp = "8.10.1"
+android-compileSdk = "35"
 android-minSdk = "24"
-android-targetSdk = "34"
+android-targetSdk = "35"
 androidx-activity = "1.8.2"
 androidx-appcompat = "1.6.1"
 androidx-core = "1.12.0"
 androidx-espresso = "3.5.1"
 androidx-testExt = "1.1.5"
 jetbrains-lifecycle = "2.8.4"
-composeMultiplatform = "1.6.10"
+composeMultiplatform = "1.7.0"
 junit = "4.13.2"
-kotlin = "1.9.24"
-kotlinx-coroutines = "1.8.1"
+kotlin = "2.0.20"
+kotlinx-coroutines = "1.9.0"
 kotlinx-datetime = "0.6.1"
 kotlinx-serialization = "1.6.3"
 material3 = "1.5.12"
 navigationComposeAndroid = "2.8.9"
 androidxComposeMaterial = "1.5.4"
+google-services = "4.4.1"
 koin = "3.5.6"
-kmp-nativecoroutines = "1.0.0-ALPHA-30"
-ksp = "1.9.24-1.0.20"
+coil = "2.6.0"
+kmp-nativecoroutines = "1.0.0-ALPHA-36"
+ksp = "2.0.20-1.0.25"
+ktor = "2.3.12"
+coreSplashscreen = "1.0.1"
+androidx-credentials = "1.3.0"
+googleid = "1.1.1"
+google-maps-compose = "5.0.4"
+google-play-services-maps = "18.2.0"
+google-play-services-ads = "23.6.0"
+google-play-services-code-scanner = "16.1.0"
+zxing-core = "3.5.3"
+firebase-auth = "23.1.0"
+firebase-messaging = "24.1.0"
+kakao-user = "2.21.5"
+javafx = "21.0.6"
+jna = "5.14.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -46,15 +62,41 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationComposeAndroid" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "androidxComposeMaterial" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "google-maps-compose" }
+google-play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "google-play-services-maps" }
+google-play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "google-play-services-ads" }
+google-play-services-code-scanner = { module = "com.google.android.gms:play-services-code-scanner", version.ref = "google-play-services-code-scanner" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebase-auth" }
+firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "firebase-messaging" }
+kakao-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao-user" }
+javafx-base = { module = "org.openjfx:javafx-base", version.ref = "javafx" }
+javafx-graphics = { module = "org.openjfx:javafx-graphics", version.ref = "javafx" }
+javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }
+javafx-swing = { module = "org.openjfx:javafx-swing", version.ref = "javafx" }
+javafx-web = { module = "org.openjfx:javafx-web", version.ref = "javafx" }
+javafx-media = { module = "org.openjfx:javafx-media", version.ref = "javafx" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 kmp-nativecoroutines-core = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
 kmp-nativecoroutines-ksp = { module = "com.rickclephas.kmp:kmp-nativecoroutines-ksp", version.ref = "kmp-nativecoroutines" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kmp-nativecoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmp-nativecoroutines" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

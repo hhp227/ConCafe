@@ -33,82 +33,82 @@ struct InquiryView: View {
                 alertMessage = message
             }
         }
-        .alert("문의하기", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("inquiry_screen_title"), table: "Localizable"), isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { alertMessage = nil }
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
         } message: {
             Text(alertMessage ?? "")
         }
-        .navigationTitle("문의하기")
+        .navigationTitle(String(localized: String.LocalizationValue("inquiry_screen_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(Color(hex: "FFFBFD"))
+        .background(ConCafeColors.background)
     }
 
     private var inquiryTypeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("문의 유형")
+            Text(String(localized: String.LocalizationValue("inquiry_type_section_title"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
-            Text("문의 성격에 맞는 항목을 선택해 주세요.")
+                .foregroundStyle(.secondary)
+            Text(String(localized: String.LocalizationValue("inquiry_type_section_desc"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Menu {
                 ForEach(InquiryType.allCases, id: \.self) { type in
-                    Button(type.title) {
+                    Button(localizedInquiryTypeTitle(type)) {
                         viewModel.onAction(.inquiryTypeChanged(type))
                     }
                 }
             } label: {
                 HStack {
-                    Text(viewModel.uiState.inquiryType.title)
-                        .foregroundStyle(Color(hex: "2B2330"))
+                    Text(localizedInquiryTypeTitle(viewModel.uiState.inquiryType))
+                        .foregroundStyle(.primary)
                     Spacer()
                     Image(systemName: "chevron.down")
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color(hex: "F8F5F6"))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
     private var inquiryInputSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("문의 입력")
-                .font(.title3.weight(.bold))
-            Text("입력한 문의는 서버에 저장되어 운영팀이 확인합니다.")
+            Text(String(localized: String.LocalizationValue("inquiry_input_section_title"), table: "Localizable"))
+                .font(.headline.weight(.bold))
+            Text(String(localized: String.LocalizationValue("inquiry_input_section_desc"), table: "Localizable"))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
             ConCafeFormField(
-                label: "제목",
+                label: String(localized: String.LocalizationValue("inquiry_title_label"), table: "Localizable"),
                 text: Binding(
                     get: { viewModel.uiState.title },
                     set: { viewModel.onAction(.titleChanged($0)) }
                 ),
-                placeholder: "문의 제목을 입력하세요"
+                placeholder: String(localized: String.LocalizationValue("inquiry_title_placeholder"), table: "Localizable")
             )
 
             ConCafeFormEditor(
-                label: "문의 내용",
+                label: String(localized: String.LocalizationValue("inquiry_message_label"), table: "Localizable"),
                 text: Binding(
                     get: { viewModel.uiState.message },
                     set: { viewModel.onAction(.messageChanged($0)) }
                 ),
-                placeholder: "상세 내용을 입력해 주세요"
+                placeholder: String(localized: String.LocalizationValue("inquiry_message_placeholder"), table: "Localizable")
             )
 
             if let errorMessage = viewModel.uiState.errorMessage {
@@ -119,14 +119,14 @@ struct InquiryView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
     private var submitButtonBar: some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
             Button {
                 viewModel.onAction(.submitTapped)
@@ -138,7 +138,7 @@ struct InquiryView: View {
                             .progressViewStyle(.circular)
                     } else {
                         Image(systemName: "paperplane.fill")
-                        Text("문의 접수")
+                        Text(String(localized: String.LocalizationValue("inquiry_submit"), table: "Localizable"))
                             .font(.headline.weight(.bold))
                     }
                     Spacer()
@@ -146,13 +146,24 @@ struct InquiryView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .tint(ConCafeColors.primaryContainer)
+            .foregroundStyle(.primary)
             .disabled(viewModel.uiState.isSubmitting)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white.opacity(0.92))
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
+        }
+    }
+
+    private func localizedInquiryTypeTitle(_ type: InquiryType) -> String {
+        switch type {
+        case .service:
+            return String(localized: String.LocalizationValue("inquiry_type_service"), table: "Localizable")
+        case .bugReport:
+            return String(localized: String.LocalizationValue("inquiry_type_bug_report"), table: "Localizable")
+        case .suggestion:
+            return String(localized: String.LocalizationValue("inquiry_type_suggestion"), table: "Localizable")
         }
     }
 }

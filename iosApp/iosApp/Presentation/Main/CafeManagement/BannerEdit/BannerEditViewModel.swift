@@ -68,11 +68,11 @@ final class BannerEditViewModel: ObservableObject {
                     }
                 } else {
                     uiState.ownedCafeOptions = []
-                    uiState.infoMessage = "운영 카페 목록을 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.ownedCafeLoadFailed
                 }
             } catch {
                 uiState.ownedCafeOptions = []
-                uiState.infoMessage = "운영 카페 목록을 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.ownedCafeLoadFailed
             }
         }
     }
@@ -83,14 +83,17 @@ final class BannerEditViewModel: ObservableObject {
             do {
                 let result = try await getHomeBannerManagementUseCase.invoke(cafeId: initialCafeId)
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let banners = success.data as? [HomeBanner],
-                   let banner = banners.first(where: { $0.id == initialBannerId }) {
-                    applyEditingBanner(banner)
+                   let banners = success.data as? [HomeBanner] {
+                    if let banner = banners.first(where: { $0.id == initialBannerId }) {
+                        applyEditingBanner(banner)
+                    } else {
+                        uiState.infoMessage = MessageKey.editBannerNotFound
+                    }
                 } else {
-                    uiState.infoMessage = "수정할 배너 정보를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.editBannerLoadFailed
                 }
             } catch {
-                uiState.infoMessage = "수정할 배너 정보를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.editBannerLoadFailed
             }
         }
     }
@@ -111,8 +114,6 @@ final class BannerEditViewModel: ObservableObject {
         }
 
         uiState.editingBannerId = banner.id
-        uiState.screenTitle = "배너 수정"
-        uiState.submitButtonText = "배너 수정하기"
         uiState.selectedImageLabel = banner.imageUrl
         uiState.originalImageUrl = banner.imageUrl
         uiState.title = banner.title
@@ -160,7 +161,7 @@ final class BannerEditViewModel: ObservableObject {
 
     private func openTargetSelector() {
         guard let selectedCafe = uiState.selectedCafeOption else {
-            uiState.infoMessage = "먼저 운영 카페를 선택해주세요."
+            uiState.infoMessage = MessageKey.selectCafeFirst
             return
         }
         switch uiState.selectedTarget {
@@ -212,13 +213,13 @@ final class BannerEditViewModel: ObservableObject {
                 } else {
                     uiState.noticeSelectorOptions = []
                     uiState.isSelectorLoading = false
-                    uiState.infoMessage = "공지사항 목록을 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.noticeListLoadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.noticeSelectorOptions = []
                 uiState.isSelectorLoading = false
-                uiState.infoMessage = "공지사항 목록을 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.noticeListLoadFailed
             }
         }
     }
@@ -236,13 +237,13 @@ final class BannerEditViewModel: ObservableObject {
                 } else {
                     uiState.eventSelectorOptions = []
                     uiState.isSelectorLoading = false
-                    uiState.infoMessage = "이벤트 목록을 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.eventListLoadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.eventSelectorOptions = []
                 uiState.isSelectorLoading = false
-                uiState.infoMessage = "이벤트 목록을 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.eventListLoadFailed
             }
         }
     }
@@ -287,17 +288,17 @@ final class BannerEditViewModel: ObservableObject {
         let validationMessage: String?
 
         if uiState.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            validationMessage = "배너 제목을 입력해주세요."
+            validationMessage = MessageKey.validationTitleRequired
         } else if uiState.selectedImageLabel?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
-            validationMessage = "배너 이미지를 등록해주세요."
+            validationMessage = MessageKey.validationImageRequired
         } else if uiState.subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            validationMessage = "서브 문구를 입력해주세요."
+            validationMessage = MessageKey.validationSubtitleRequired
         } else if uiState.selectedTarget == .externalLink &&
                     uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            validationMessage = "외부 URL을 입력해주세요."
+            validationMessage = MessageKey.validationExternalUrlRequired
         } else if uiState.selectedTarget != .externalLink &&
                     uiState.targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            validationMessage = "연결 대상을 선택해주세요."
+            validationMessage = MessageKey.validationTargetRequired
         } else {
             validationMessage = nil
         }
@@ -329,7 +330,7 @@ final class BannerEditViewModel: ObservableObject {
             do {
                 guard let imageUrl = try await resolveBannerImageUrl() else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "배너 이미지를 업로드하지 못했습니다."
+                    uiState.infoMessage = MessageKey.imageUploadFailed
                     return
                 }
 
@@ -358,28 +359,28 @@ final class BannerEditViewModel: ObservableObject {
                 } else if let failure = result as? AppResultFailure {
                     let userMessage: String
                     if failure.error is AppErrorUnauthorized {
-                        userMessage = "로그인 후 배너를 등록해주세요."
+                        userMessage = MessageKey.unauthorized
                     } else if failure.error is AppErrorPermissionDenied {
-                        userMessage = "배너 등록 권한이 없습니다."
+                        userMessage = MessageKey.permissionDenied
                     } else if failure.error is AppErrorNotFound {
-                        userMessage = "연결 대상을 찾을 수 없습니다."
+                        userMessage = MessageKey.targetNotFound
                     } else if let error = failure.error as? AppErrorValidationFailed {
                         userMessage = error.reason
                     } else if failure.error is AppErrorNetworkError {
-                        userMessage = "배너를 등록하지 못했습니다."
+                        userMessage = MessageKey.networkFailed
                     } else {
-                        userMessage = "배너 저장 중 오류가 발생했습니다."
+                        userMessage = MessageKey.saveUnknown
                     }
                     uiState.isSaving = false
                     uiState.infoMessage = userMessage
                 } else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "배너 저장 중 오류가 발생했습니다."
+                    uiState.infoMessage = MessageKey.saveUnknown
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSaving = false
-                uiState.infoMessage = "배너 저장 중 오류가 발생했습니다."
+                uiState.infoMessage = MessageKey.saveUnknown
             }
         }
     }
@@ -479,5 +480,25 @@ final class BannerEditViewModel: ObservableObject {
 
     deinit {
         selectorTask?.cancel()
+    }
+
+    private enum MessageKey {
+        static let ownedCafeLoadFailed = "banneredit_info_owned_cafe_load_failed"
+        static let editBannerNotFound = "banneredit_info_edit_banner_not_found"
+        static let editBannerLoadFailed = "banneredit_info_edit_banner_load_failed"
+        static let selectCafeFirst = "banneredit_info_select_cafe_first"
+        static let noticeListLoadFailed = "banneredit_info_notice_list_load_failed"
+        static let eventListLoadFailed = "banneredit_info_event_list_load_failed"
+        static let validationTitleRequired = "banneredit_validation_title_required"
+        static let validationImageRequired = "banneredit_validation_image_required"
+        static let validationSubtitleRequired = "banneredit_validation_subtitle_required"
+        static let validationExternalUrlRequired = "banneredit_validation_external_url_required"
+        static let validationTargetRequired = "banneredit_validation_target_required"
+        static let imageUploadFailed = "banneredit_info_image_upload_failed"
+        static let unauthorized = "banneredit_error_unauthorized"
+        static let permissionDenied = "banneredit_error_permission_denied"
+        static let targetNotFound = "banneredit_error_target_not_found"
+        static let networkFailed = "banneredit_error_network_failed"
+        static let saveUnknown = "banneredit_error_save_unknown"
     }
 }

@@ -18,6 +18,10 @@ final class CastViewModel: ObservableObject {
 
     private let toggleFollowCastUseCase: ToggleFollowCastUseCase
 
+    private let shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase
+
+    private let markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase
+
     private let castEventPublisher: CastEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
@@ -44,8 +48,12 @@ final class CastViewModel: ObservableObject {
                                 cast: event.cast,
                                 cafe: detail.cafe,
                                 images: detail.images,
-                                schedule: detail.schedule
+                                schedule: detail.schedule,
+                                visitCertificationCount: detail.visitCertificationCount
                             )
+                            if let isFollowing = event.isFollowing?.boolValue {
+                                self.uiState.isFollowing = isFollowing
+                            }
                         }
                     case let event as Shared.CastEvent.Deleted:
                         if event.castId == self.castId {
@@ -95,16 +103,21 @@ final class CastViewModel: ObservableObject {
                         detail: feed.detail,
                         recentReviews: feed.recentReviews,
                         isFollowing: feed.isFollowing,
-                        isLoggedIn: feed.isLoggedIn
+                        isLoggedIn: feed.isLoggedIn,
+                        todayAttendanceStatus: feed.todayAttendanceStatus,
+                        isSelfCast: feed.isSelfCast,
+                        shouldShowFollowTooltip: (uiState.shouldShowFollowTooltip ||
+                            shouldShowDetailTooltipUseCase.invoke(type: .castFollow)) &&
+                            !feed.isSelfCast
                     )
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                uiState.errorMessage = nil
             }
         }
     }
@@ -135,11 +148,17 @@ final class CastViewModel: ObservableObject {
             event.send(.navigateBack)
         case .followTapped:
             toggleFollow()
+        case .followTooltipShown:
+            markDetailTooltipShownUseCase.invoke(type: .castFollow)
+        case .dismissFollowTooltip:
+            uiState.shouldShowFollowTooltip = false
         case .refresh:
             loadCastDetail()
         case .cafeTapped:
             guard let cafeId = uiState.detail?.cafe.id else { return }
             event.send(.navigateToCafe(id: cafeId))
+        case .imageTapped(let imageUrl):
+            event.send(.navigateToPicture(imageUrl: imageUrl))
         }
     }
 
@@ -147,12 +166,16 @@ final class CastViewModel: ObservableObject {
         castId: String,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         toggleFollowCastUseCase: ToggleFollowCastUseCase = KoinInitializerKt.resolveToggleFollowCastUseCase(),
+        shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase = KoinInitializerKt.resolveShouldShowDetailTooltipUseCase(),
+        markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase = KoinInitializerKt.resolveMarkDetailTooltipShownUseCase(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
         reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.toggleFollowCastUseCase = toggleFollowCastUseCase
+        self.shouldShowDetailTooltipUseCase = shouldShowDetailTooltipUseCase
+        self.markDetailTooltipShownUseCase = markDetailTooltipShownUseCase
         self.castEventPublisher = castEventPublisher
         self.reviewEventPublisher = reviewEventPublisher
 

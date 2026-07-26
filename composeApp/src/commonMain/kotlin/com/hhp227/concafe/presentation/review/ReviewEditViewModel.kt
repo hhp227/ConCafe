@@ -6,6 +6,8 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetReviewUseCase
+import com.hhp227.concafe.domain.usecase.UpdateReviewUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,13 +18,20 @@ import kotlinx.coroutines.launch
 
 class ReviewEditViewModel(
     private val cafeId: String? = null,
+    private val reviewId: String? = null,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
     private val createReviewUseCase: CreateReviewUseCase,
+    private val updateReviewUseCase: UpdateReviewUseCase,
+    private val getReviewUseCase: GetReviewUseCase,
     private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ReviewEditUiState(
-            cafeId = cafeId.orEmpty()
+            cafeId = cafeId.orEmpty(),
+            reviewId = reviewId,
+            screenTitle = if (reviewId != null) "리뷰 수정" else "리뷰 작성",
+            topActionLabel = if (reviewId != null) "수정" else "등록",
+            submitButtonLabel = if (reviewId != null) "리뷰 수정하기" else "리뷰 등록하기"
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -61,6 +70,7 @@ class ReviewEditViewModel(
                                 infoMessage = null
                             )
                         }
+                        if (reviewId != null) loadExistingReview()
                     }
                     is AppResult.Failure -> {
                         _uiState.update {
@@ -70,6 +80,28 @@ class ReviewEditViewModel(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun loadExistingReview() {
+        val id = reviewId ?: return
+        viewModelScope.launch {
+            when (val result = getReviewUseCase.invoke(id)) {
+                is AppResult.Success -> {
+                    val review = result.data
+                    _uiState.update {
+                        it.copy(
+                            rating = review.rating.toInt(),
+                            content = review.content,
+                            taggedCastIds = review.taggedCastIds,
+                            photoImageUrl = review.imageUrls.firstOrNull()
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = "기존 리뷰를 불러오지 못했습니다.") }
                 }
             }
         }
@@ -121,37 +153,68 @@ class ReviewEditViewModel(
                 if (!currentState.photoImageUrl.isNullOrBlank() && uploadedPhoto == null) {
                     return@launch
                 }
-                when (
-                    val result = createReviewUseCase.invoke(
-                        cafeId = currentState.cafeId,
-                        rating = currentState.rating.toFloat(),
-                        content = currentState.content,
-                        imageUrls = uploadedPhoto?.let { listOf(it) } ?: emptyList(),
-                        taggedCastIds = currentState.taggedCastIds
-                    )
-                ) {
-                    is AppResult.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isSubmitting = false,
-                                reviewId = result.data.id,
-                                userId = result.data.userId,
-                                visitId = result.data.visitId,
-                                createdAt = result.data.createdAt
-                            )
+                val imageUrls = uploadedPhoto?.let { listOf(it) } ?: emptyList()
+
+                if (reviewId != null) {
+                    when (
+                        val result = updateReviewUseCase.invoke(
+                            reviewId = reviewId,
+                            rating = currentState.rating.toFloat(),
+                            content = currentState.content,
+                            imageUrls = imageUrls,
+                            taggedCastIds = currentState.taggedCastIds
+                        )
+                    ) {
+                        is AppResult.Success -> {
+                            _uiState.update { it.copy(isSubmitting = false) }
+                            _event.emit(ReviewEditEvent.NavigateBack)
                         }
-                        _event.emit(ReviewEditEvent.NavigateBack)
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
+                                    isSubmitting = false,
+                                    infoMessage = when (val error = result.error) {
+                                        is AppError.Unauthorized -> "리뷰 수정은 로그인 후 가능해요."
+                                        is AppError.ValidationFailed -> error.reason.toReviewValidationMessage()
+                                        else -> "리뷰 수정에 실패했습니다."
+                                    }
+                                )
+                            }
+                        }
                     }
-                    is AppResult.Failure -> {
-                        _uiState.update {
-                            it.copy(
-                                isSubmitting = false,
-                                infoMessage = when (val error = result.error) {
-                                    is AppError.Unauthorized -> "리뷰 작성은 로그인 후 가능해요."
-                                    is AppError.ValidationFailed -> error.reason.toReviewValidationMessage()
-                                    else -> "리뷰 등록에 실패했습니다."
-                                }
-                            )
+                } else {
+                    when (
+                        val result = createReviewUseCase.invoke(
+                            cafeId = currentState.cafeId,
+                            rating = currentState.rating.toFloat(),
+                            content = currentState.content,
+                            imageUrls = imageUrls,
+                            taggedCastIds = currentState.taggedCastIds
+                        )
+                    ) {
+                        is AppResult.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    isSubmitting = false,
+                                    reviewId = result.data.id,
+                                    userId = result.data.userId,
+                                    visitId = result.data.visitId,
+                                    createdAt = result.data.createdAt
+                                )
+                            }
+                            _event.emit(ReviewEditEvent.NavigateBack)
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
+                                    isSubmitting = false,
+                                    infoMessage = when (val error = result.error) {
+                                        is AppError.Unauthorized -> "리뷰 작성은 로그인 후 가능해요."
+                                        is AppError.ValidationFailed -> error.reason.toReviewValidationMessage()
+                                        else -> "리뷰 등록에 실패했습니다."
+                                    }
+                                )
+                            }
                         }
                     }
                 }

@@ -50,6 +50,6 @@ class UploadImageUseCase(
     }
 
     companion object {
-        private const val MAX_UPLOAD_IMAGE_BYTES = 1_048_576
+        private const val MAX_UPLOAD_IMAGE_BYTES = 512_000
     }
 }

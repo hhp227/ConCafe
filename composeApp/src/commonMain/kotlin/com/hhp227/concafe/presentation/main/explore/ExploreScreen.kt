@@ -1,20 +1,11 @@
 package com.hhp227.concafe.presentation.main.explore
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -22,43 +13,66 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.LazyListGridImagePrefetch
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.explore_empty_cafe_title
+import concafe.composeapp.generated.resources.explore_empty_cast_title
+import concafe.composeapp.generated.resources.explore_empty_hint
+import concafe.composeapp.generated.resources.explore_error_load_failed
+import concafe.composeapp.generated.resources.explore_search_placeholder
+import concafe.composeapp.generated.resources.explore_cast_followers
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_butler
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_cat
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_cosplay
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_devil
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_doll
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_idol
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_maid
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_namjang
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_other
+import concafe.composeapp.generated.resources.home_nearby_cafe_type_yokai
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
-import kotlin.collections.chunked
-import kotlin.collections.map
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun ExploreScreen(
@@ -91,16 +105,16 @@ fun ExploreScreen(
     if (uiState.isLoginPromptVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(ExploreAction.DismissLoginPrompt) },
-            title = { Text("로그인이 필요합니다") },
-            text = { Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.") },
+            title = { Text(stringResource(Res.string.auth_login_required_title)) },
+            text = { Text(stringResource(Res.string.auth_login_required_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(ExploreAction.ClickLoginPromptSignIn) }) {
-                    Text("로그인")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(ExploreAction.DismissLoginPrompt) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -114,140 +128,221 @@ fun ExploreContentScreen(
     listState: LazyListState,
     onAction: (ExploreAction) -> Unit
 ) {
-    val cafeNameById = uiState.cafes.associate { it.id to it.name }
-    val rows = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
-        uiState.cafes.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.CafeItem(it) }
-        }
-    } else {
-        uiState.maids.chunked(2).map { pair ->
-            pair.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
+    var searchFieldValue by remember { mutableStateOf(TextFieldValue(uiState.query)) }
+    val cafeNameById = remember(uiState.cafes) { uiState.cafes.associate { it.id to it.name } }
+
+    LaunchedEffect(uiState.query) {
+        if (searchFieldValue.text != uiState.query && searchFieldValue.composition == null) {
+            searchFieldValue = TextFieldValue(
+                text = uiState.query,
+                selection = TextRange(uiState.query.length)
+            )
         }
     }
-
-    LazyColumn(
-        state = listState,
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
-        contentPadding = PaddingValues(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        item {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedTextField(
-                    value = uiState.query,
-                    onValueChange = { onAction(ExploreAction.QueryChanged(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    placeholder = { Text("카페나 메이드를 검색하세요...") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CapsuleDropdown(
-                        selected = uiState.selectedRegion.label,
-                        options = ExploreUiState.RegionFilter.entries.map { it.label to it },
-                        onSelected = { onAction(ExploreAction.RegionChanged(it)) }
-                    )
-                    CapsuleDropdown(
-                        selected = uiState.selectedSort.label,
-                        options = ExploreUiState.SortFilter.entries.map { it.label to it },
-                        onSelected = { onAction(ExploreAction.SortChanged(it)) }
-                    )
+        val gridColumnCount = exploreGridColumnCount(maxWidth)
+        val rows = remember(uiState.selectedTab, uiState.cafes, uiState.maids, gridColumnCount) {
+            if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+                uiState.cafes.chunked(gridColumnCount).map { row ->
+                    row.map { ExploreGridItem.CafeItem(it) }
+                }
+            } else {
+                uiState.maids.chunked(gridColumnCount).map { row ->
+                    row.map { ExploreGridItem.MaidItem(it, cafeNameById[it.cafeId] ?: it.cafeId) }
                 }
             }
         }
-        stickyHeader {
-            Surface(
-                color = Color(0xFFFFFBFD),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .zIndex(1f)
-            ) {
-                val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
-                val labels = ExploreUiState.TabType.entries.map { it.label }
+        val prefetchImageUrls = remember(uiState.selectedTab, uiState.cafes, uiState.maids) {
+            if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
+                uiState.cafes.map { it.thumbnailImage }
+            } else {
+                uiState.maids.map { it.profileImage }
+            }
+        }
 
-                ConCafeTabBar(
-                    labels = labels,
-                    selectedIndex = selectedTabIndex,
-                    modifier = Modifier.fillMaxWidth(),
-                    onTabSelected = { index ->
-                        onAction(ExploreAction.TabChanged(ExploreUiState.TabType.entries[index]))
-                    }
-                )
-            }
-        }
-        if (uiState.isLoading) {
+        LazyListGridImagePrefetch(
+            state = listState,
+            imageUrls = prefetchImageUrls,
+            columns = gridColumnCount,
+            firstGridRowIndex = 2,
+            aheadCount = 12,
+            displaySize = ImageDisplaySize.THUMBNAIL
+        )
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             item {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 12.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    CircularProgressIndicator()
+                    OutlinedTextField(
+                        value = searchFieldValue,
+                        onValueChange = { next ->
+                            searchFieldValue = next
+                            if (next.text != uiState.query) {
+                                onAction(ExploreAction.QueryChanged(next.text))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        placeholder = { Text(stringResource(Res.string.explore_search_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                            unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CapsuleDropdown(
+                            selected = uiState.selectedRegion.label,
+                            options = ExploreUiState.RegionFilter.entries.map { it.label to it },
+                            onSelected = { onAction(ExploreAction.RegionChanged(it)) }
+                        )
+                        CapsuleDropdown(
+                            selected = uiState.selectedSort.label,
+                            options = ExploreUiState.SortFilter.entries.map { it.label to it },
+                            onSelected = { onAction(ExploreAction.SortChanged(it)) }
+                        )
+                    }
                 }
             }
-        } else if (uiState.errorMessage != null) {
-            item {
-                Box(
+            stickyHeader {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
+                        .zIndex(1f)
                 ) {
-                    Text(
-                        text = "탐색 데이터를 불러오지 못했습니다.",
-                        color = MaterialTheme.colorScheme.error
+                    val selectedTabIndex = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) 0 else 1
+                    val labels = ExploreUiState.TabType.entries.map { it.label }
+
+                    ConCafeTabBar(
+                        labels = labels,
+                        selectedIndex = selectedTabIndex,
+                        modifier = Modifier.fillMaxWidth(),
+                        onTabSelected = { index ->
+                            onAction(ExploreAction.TabChanged(ExploreUiState.TabType.entries[index]))
+                        }
                     )
                 }
             }
-        } else {
-            items(rows) { rowItems ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    rowItems.forEach { item ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            when (item) {
-                                is ExploreGridItem.CafeItem -> CafeCard(
-                                    cafe = item.cafe,
-                                    onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
-                                )
-                                is ExploreGridItem.MaidItem -> MaidCard(
-                                    maid = item.maid,
-                                    cafeName = item.cafeName,
-                                    onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
-                                )
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (uiState.errorMessage != null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.explore_error_load_failed),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            } else {
+                if (rows.isNotEmpty()) {
+                    items(rows) { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowItems.forEach { item ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    when (item) {
+                                        is ExploreGridItem.CafeItem -> CafeCard(
+                                            cafe = item.cafe,
+                                            onClick = { onAction(ExploreAction.ClickCafe(item.cafe.id)) }
+                                        )
+                                        is ExploreGridItem.MaidItem -> MaidCard(
+                                            maid = item.maid,
+                                            cafeName = item.cafeName,
+                                            onClick = { onAction(ExploreAction.ClickMaid(item.maid.id)) }
+                                        )
+                                    }
+                                }
+                            }
+                            repeat(gridColumnCount - rowItems.size) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
+                } else {
+                    item {
+                        ExploreEmptyPlaceholder(
+                            title = if (uiState.selectedTab == ExploreUiState.TabType.CAFE) stringResource(Res.string.explore_empty_cafe_title) else stringResource(Res.string.explore_empty_cast_title),
+                            description = stringResource(Res.string.explore_empty_hint)
+                        )
                     }
                 }
+                item {
+                    ExplorePagingTrigger(uiState = uiState, onAction = onAction)
+                }
             }
-            item {
-                ExplorePagingTrigger(uiState = uiState, onAction = onAction)
-            }
+        }
+    }
+}
+
+@Composable
+private fun ExploreEmptyPlaceholder(
+    title: String,
+    description: String
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -269,7 +364,6 @@ private fun ExplorePagingTrigger(
     }
 
     if (!canLoadMore && !isLoadingMore) return
-
     if (canLoadMore && !isLoadingMore) {
         LaunchedEffect(
             uiState.selectedTab,
@@ -301,12 +395,38 @@ private fun ExplorePagingTrigger(
 
 @Composable
 private fun CafeCard(cafe: Cafe, onClick: () -> Unit) {
+    val ratingText = RatingUtils.formatOneDecimal(cafe.ratingAvg)
+
     CafeSummaryCard(
         name = cafe.name,
-        rating = "${cafe.ratingAvg}",
-        location = cafe.region.city,
+        rating = ratingText,
+        conceptType = localizedCafeConceptType(cafe.conceptType),
+        location = localizedRegionCity(cafe.region.city),
+        thumbnailImage = cafe.thumbnailImage,
+        showLocationIcon = false,
         onClick = onClick
     )
+}
+
+@Composable
+private fun localizedCafeConceptType(rawConceptType: String): String {
+    val normalized = rawConceptType.trim()
+    if (normalized.isEmpty()) {
+        return ""
+    }
+    return when (normalized.uppercase()) {
+        "MAID" -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        "BUTLER" -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        "IDOL" -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        "DEVIL" -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        "DOLL" -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        "COSPLAY" -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        "NAMJANG" -> stringResource(Res.string.home_nearby_cafe_type_namjang)
+        "YOKAI" -> stringResource(Res.string.home_nearby_cafe_type_yokai)
+        "CAT" -> stringResource(Res.string.home_nearby_cafe_type_cat)
+        "OTHER" -> stringResource(Res.string.home_nearby_cafe_type_other)
+        else -> normalized
+    }
 }
 
 @Composable
@@ -314,7 +434,8 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
     Column(modifier = Modifier.clickable(onClick = onClick)) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Box(
                 modifier = Modifier
@@ -322,35 +443,49 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFFFFDFEA), Color(0xFFFFBED5))
+                            colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color.White.copy(alpha = 0.55f))
-                )
+                if (!maid.profileImage.isNullOrBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = maid.profileImage,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(16.dp)),
+                        applyRoundedClip = false
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.White.copy(alpha = 0.55f))
+                    )
+                }
             }
         }
         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(maid.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                maid.name,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(
                 cafeName,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF777777),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("👥", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    maid.followerCount.toString(),
+                    text = stringResource(Res.string.explore_cast_followers, maid.followerCount),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFEF6797)
+                    color = ConCafeColors.primary
                 )
             }
         }
@@ -361,3 +496,18 @@ private sealed interface ExploreGridItem {
     data class CafeItem(val cafe: Cafe) : ExploreGridItem
     data class MaidItem(val maid: Cast, val cafeName: String) : ExploreGridItem
 }
+
+private fun exploreGridColumnCount(contentWidth: Dp): Int {
+    val availableWidth = contentWidth.value - EXPLORE_GRID_HORIZONTAL_PADDING_DP
+    val minimumGridWidth = (EXPLORE_GRID_MIN_CELL_WIDTH_DP * 2) + EXPLORE_GRID_ITEM_SPACING_DP
+    val normalizedWidth = maxOf(availableWidth, minimumGridWidth)
+    val rawCount = ((normalizedWidth + EXPLORE_GRID_ITEM_SPACING_DP) /
+        (EXPLORE_GRID_MIN_CELL_WIDTH_DP + EXPLORE_GRID_ITEM_SPACING_DP)).toInt()
+    return rawCount.coerceIn(EXPLORE_GRID_MIN_COLUMN_COUNT, EXPLORE_GRID_MAX_COLUMN_COUNT)
+}
+
+private const val EXPLORE_GRID_MIN_COLUMN_COUNT = 2
+private const val EXPLORE_GRID_MAX_COLUMN_COUNT = 6
+private const val EXPLORE_GRID_HORIZONTAL_PADDING_DP = 24f
+private const val EXPLORE_GRID_ITEM_SPACING_DP = 12f
+private const val EXPLORE_GRID_MIN_CELL_WIDTH_DP = 180f

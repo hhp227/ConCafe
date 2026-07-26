@@ -15,6 +15,10 @@ final class RankingViewModel: ObservableObject {
     private let getRankingFeedUseCase: GetRankingFeedUseCase
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    
+    private let loadNativeAdUseCase: LoadNativeAdUseCase
+    
+    private let clearNativeAdUseCase: ClearNativeAdUseCase
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
@@ -123,7 +127,8 @@ final class RankingViewModel: ObservableObject {
                 change: entry.change,
                 startColorHex: entry.startColorHex,
                 endColorHex: entry.endColorHex,
-                symbol: entry.symbol
+                symbol: entry.symbol,
+                imageUrl: entry.imageUrl
             )
         }
     }
@@ -140,7 +145,8 @@ final class RankingViewModel: ObservableObject {
                 change: entry.change,
                 startColorHex: entry.startColorHex,
                 endColorHex: entry.endColorHex,
-                symbol: entry.symbol
+                symbol: entry.symbol,
+                imageUrl: entry.imageUrl
             )
         }
     }
@@ -151,6 +157,23 @@ final class RankingViewModel: ObservableObject {
         } else {
             uiState.isLoginPromptVisible = true
         }
+    }
+
+    private func loadNativeAd() {
+        guard uiState.nativeAdSlot1 == nil || uiState.nativeAdSlot2 == nil else { return }
+        guard tasks[.nativeAd] == nil || tasks[.nativeAd]?.isCancelled == true else { return }
+        tasks[.nativeAd] = Task {
+            let slot1Ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke(slot: 1))
+            let slot2Ad = try? await asyncFunction(for: loadNativeAdUseCase.invoke(slot: 2))
+            uiState.nativeAdSlot1 = slot1Ad
+            uiState.nativeAdSlot2 = slot2Ad
+        }
+    }
+
+    private func clearNativeAd() {
+        clearNativeAdUseCase.invoke()
+        uiState.nativeAdSlot1 = nil
+        uiState.nativeAdSlot2 = nil
     }
 
     func onAction(_ action: RankingAction) {
@@ -179,17 +202,27 @@ final class RankingViewModel: ObservableObject {
             event.send(.navigateToSignIn)
         case .dismissLoginPrompt:
             uiState.isLoginPromptVisible = false
+        case .updateBannerHeight(let height):
+            if height > uiState.bannerHeight {
+                uiState.bannerHeight = height
+            }
+        case .loadNativeAdIfNeeded:
+            loadNativeAd()
         }
     }
 
     init(
         getRankingFeedUseCase: GetRankingFeedUseCase = KoinInitializerKt.resolveGetRankingFeedUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        loadNativeAdUseCase: LoadNativeAdUseCase = KoinInitializerKt.resolveLoadNativeAdUseCase(),
+        clearNativeAdUseCase: ClearNativeAdUseCase = KoinInitializerKt.resolveClearNativeAdUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getRankingFeedUseCase = getRankingFeedUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.loadNativeAdUseCase = loadNativeAdUseCase
+        self.clearNativeAdUseCase = clearNativeAdUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         
@@ -197,16 +230,19 @@ final class RankingViewModel: ObservableObject {
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
+        loadNativeAd()
     }
 
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
+        clearNativeAdUseCase.invoke()
     }
 
     private enum TaskKey {
         case session
         case cafeDetailEvent
         case castEvent
+        case nativeAd
     }
 }

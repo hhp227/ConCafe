@@ -3,64 +3,67 @@ package com.hhp227.concafe.presentation.castedit
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.HowToReg
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.HowToReg
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.castedit_accessibility_back
+import concafe.composeapp.generated.resources.castedit_alert_image_required_desc
+import concafe.composeapp.generated.resources.castedit_alert_image_required_title
+import concafe.composeapp.generated.resources.castedit_birthday_label
+import concafe.composeapp.generated.resources.castedit_birthday_pick
+import concafe.composeapp.generated.resources.castedit_gallery_add
+import concafe.composeapp.generated.resources.castedit_gallery_guide
+import concafe.composeapp.generated.resources.castedit_gallery_item_label
+import concafe.composeapp.generated.resources.castedit_gallery_remove
+import concafe.composeapp.generated.resources.castedit_gallery_title
+import concafe.composeapp.generated.resources.castedit_label_concept_role
+import concafe.composeapp.generated.resources.castedit_label_intro
+import concafe.composeapp.generated.resources.castedit_label_name
+import concafe.composeapp.generated.resources.castedit_placeholder_concept_role
+import concafe.composeapp.generated.resources.castedit_placeholder_intro
+import concafe.composeapp.generated.resources.castedit_placeholder_name
+import concafe.composeapp.generated.resources.castedit_profile_photo_hint
+import concafe.composeapp.generated.resources.castedit_profile_photo_title
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.common_confirm
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CastEditScreen(
@@ -90,11 +93,11 @@ fun CastEditScreen(
     if (uiState.isImageRequiredAlertVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) },
-            title = { Text("이미지를 등록해주세요") },
-            text = { Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.") },
+            title = { Text(stringResource(Res.string.castedit_alert_image_required_title)) },
+            text = { Text(stringResource(Res.string.castedit_alert_image_required_desc)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(CastEditAction.DismissImageRequiredAlert) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.common_confirm))
                 }
             }
         )
@@ -107,6 +110,9 @@ private fun CastEditContentScreen(
     uiState: CastEditUiState,
     onAction: (CastEditAction) -> Unit
 ) {
+    var isBirthdayPickerVisible by remember { mutableStateOf(false) }
+    val initialBirthdayMillis = remember(uiState.birthday) { TimeUtils.parseBirthdayToEpochMillisOrNull(uiState.birthday) }
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -121,15 +127,19 @@ private fun CastEditContentScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CastEditAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.castedit_accessibility_back)
+                        )
                     }
                 }
             )
         },
         bottomBar = {
             Surface(
-                modifier = Modifier.navigationBarsPadding(),
-                color = Color.White.copy(alpha = 0.92f),
+                modifier = Modifier
+                    .fixedBottomBarInsets(),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -144,15 +154,15 @@ private fun CastEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
-                                color = Color(0xFF2B2330)
+                                color = ConCafeColors.textPrimary
                             )
                         } else {
                             Icon(Icons.Default.HowToReg, contentDescription = null)
@@ -170,19 +180,27 @@ private fun CastEditContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(ConCafeColors.background)
+                    } else {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
         ) {
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFFEF6797))
+                    CircularProgressIndicator(color = ConCafeColors.primary)
                 }
             } else {
                 LazyColumn(
@@ -215,41 +233,33 @@ private fun CastEditContentScreen(
                     }
                     item {
                         ConCafeFormField(
-                            label = "캐스트 이름",
+                            label = stringResource(Res.string.castedit_label_name),
                             value = uiState.castName,
                             onValueChange = { onAction(CastEditAction.ChangeCastName(it)) },
-                            placeholder = "활동명을 입력해주세요"
+                            placeholder = stringResource(Res.string.castedit_placeholder_name)
                         )
                     }
                     item {
                         ConCafeFormField(
-                            label = "컨셉 역할",
+                            label = stringResource(Res.string.castedit_label_concept_role),
                             value = uiState.conceptRole,
                             onValueChange = { onAction(CastEditAction.ChangeConceptRole(it)) },
-                            placeholder = "예: 리드 메이드, 티 마스터, 어프렌티스"
+                            placeholder = stringResource(Res.string.castedit_placeholder_concept_role)
                         )
                     }
                     item {
-                        ConCafeFormField(
-                            label = "생일",
+                        BirthdayInputField(
                             value = uiState.birthday,
                             onValueChange = { onAction(CastEditAction.ChangeBirthday(it)) },
-                            placeholder = "MM / DD / YYYY",
-                            trailingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    tint = Color(0xFFB1A3AC)
-                                )
-                            }
+                            onClickCalendar = { isBirthdayPickerVisible = true }
                         )
                     }
                     item {
                         ConCafeFormField(
-                            label = "소개 및 바이오",
+                            label = stringResource(Res.string.castedit_label_intro),
                             value = uiState.introduction,
                             onValueChange = { onAction(CastEditAction.ChangeIntroduction(it)) },
-                            placeholder = "성격, 특징, 특기를 소개해주세요...",
+                            placeholder = stringResource(Res.string.castedit_placeholder_intro),
                             minLines = 4,
                             singleLine = false
                         )
@@ -262,11 +272,13 @@ private fun CastEditContentScreen(
                         ) { launchImagePicker ->
                             GallerySection(
                                 galleryImages = uiState.galleryImages,
-                                galleryLimitText = uiState.galleryLimitText,
                                 galleryMaxCount = uiState.galleryMaxCount,
                                 onAddClick = {
                                     onAction(CastEditAction.ClickAddGalleryPhoto)
                                     launchImagePicker()
+                                },
+                                onRemoveClick = { index ->
+                                    onAction(CastEditAction.RemoveGalleryImage(index))
                                 }
                             )
                         }
@@ -274,6 +286,94 @@ private fun CastEditContentScreen(
                 }
             }
         }
+    }
+    if (isBirthdayPickerVisible) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialBirthdayMillis)
+
+        DatePickerDialog(
+            onDismissRequest = { isBirthdayPickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val selected = datePickerState.selectedDateMillis
+                        if (selected != null) {
+                            onAction(CastEditAction.ChangeBirthday(TimeUtils.formatBirthdayFromEpochMillis(selected)))
+                        }
+                        isBirthdayPickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.common_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isBirthdayPickerVisible = false }) {
+                    Text(stringResource(Res.string.common_cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+private fun BirthdayInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onClickCalendar: () -> Unit
+) {
+    var birthdayTextFieldValue by remember {
+        mutableStateOf(TextFieldValue())
+    }
+
+    LaunchedEffect(value) {
+        if (birthdayTextFieldValue.text != value) {
+            birthdayTextFieldValue = TextFieldValue(
+                text = value,
+                selection = TextRange(value.length)
+            )
+        }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(Res.string.castedit_birthday_label),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = ConCafeColors.textSecondary
+        )
+        OutlinedTextField(
+            value = birthdayTextFieldValue,
+            onValueChange = { nextValue ->
+                val normalized = TimeUtils.normalizeBirthdayInput(nextValue.text)
+                birthdayTextFieldValue = TextFieldValue(
+                    text = normalized,
+                    selection = TextRange(normalized.length)
+                )
+                onValueChange(normalized)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            ),
+            placeholder = { Text("MM/DD/YYYY", color = ConCafeColors.textMuted) },
+            shape = RoundedCornerShape(16.dp),
+            trailingIcon = {
+                IconButton(onClick = onClickCalendar) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = stringResource(Res.string.castedit_birthday_pick),
+                        tint = ConCafeColors.outlineStrong
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = ConCafeColors.surfaceVariant,
+                unfocusedContainerColor = ConCafeColors.surfaceVariant,
+                focusedBorderColor = ConCafeColors.primaryContainer,
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.3f)
+            )
+        )
     }
 }
 
@@ -286,7 +386,7 @@ private fun ProfilePhotoSection(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        androidx.compose.foundation.layout.Column(
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -300,7 +400,7 @@ private fun ProfilePhotoSection(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFE3EC), Color(0xFFF8C5D7))
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
                             )
                         )
                 ) {
@@ -313,7 +413,7 @@ private fun ProfilePhotoSection(
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFFFD1DC),
+                    color = ConCafeColors.primaryContainer,
                     border = BorderStroke(2.dp, Color.White),
                     shadowElevation = 6.dp
                 ) {
@@ -321,12 +421,20 @@ private fun ProfilePhotoSection(
                         imageVector = Icons.Default.PhotoCamera,
                         contentDescription = null,
                         modifier = Modifier.padding(8.dp),
-                        tint = Color(0xFF2B2330)
+                        tint = ConCafeColors.textPrimary
                     )
                 }
             }
-            Text("캐스트 프로필 사진", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("탭해서 사진을 변경하세요", style = MaterialTheme.typography.bodySmall, color = Color(0xFF8C7E87))
+            Text(
+                stringResource(Res.string.castedit_profile_photo_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                stringResource(Res.string.castedit_profile_photo_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = ConCafeColors.textMuted
+            )
         }
     }
 }
@@ -334,28 +442,36 @@ private fun ProfilePhotoSection(
 @Composable
 private fun GallerySection(
     galleryImages: List<String>,
-    galleryLimitText: String,
     galleryMaxCount: Int,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
+    val galleryLimitText = "${galleryImages.size} / $galleryMaxCount"
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("갤러리 사진", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF665A63))
-            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = Color(0xFFEF6797), fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(Res.string.castedit_gallery_title),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = ConCafeColors.textSecondary
+            )
+            Text(galleryLimitText, style = MaterialTheme.typography.labelMedium, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
         }
         CastGalleryGrid(
             galleryImages = galleryImages,
             galleryMaxCount = galleryMaxCount,
-            onAddClick = onAddClick
+            onAddClick = onAddClick,
+            onRemoveClick = onRemoveClick
         )
         Text(
-            text = "캐스트 갤러리에는 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.",
+            text = stringResource(Res.string.castedit_gallery_guide, galleryMaxCount),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF8A8088)
+            color = ConCafeColors.textMuted
         )
     }
 }
@@ -365,7 +481,8 @@ private fun GallerySection(
 private fun CastGalleryGrid(
     galleryImages: List<String>,
     galleryMaxCount: Int,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -374,9 +491,10 @@ private fun CastGalleryGrid(
     ) {
         galleryImages.forEachIndexed { index, imageUrl ->
             CastGalleryImageTile(
-                label = "이미지 ${index + 1}",
+                label = stringResource(Res.string.castedit_gallery_item_label, index + 1),
                 imageUrl = imageUrl,
-                index = index
+                index = index,
+                onRemoveClick = { onRemoveClick(index) }
             )
         }
         if (galleryImages.size < galleryMaxCount) {
@@ -385,11 +503,15 @@ private fun CastGalleryGrid(
                     .size(96.dp)
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0x1AFFD1DC))
+                    .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                     .clickable(onClick = onAddClick),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Add, contentDescription = "사진 추가", tint = Color(0xFFEF6797))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(Res.string.castedit_gallery_add),
+                    tint = ConCafeColors.primary
+                )
             }
         }
     }
@@ -399,38 +521,61 @@ private fun CastGalleryGrid(
 private fun CastGalleryImageTile(
     label: String,
     imageUrl: String,
-    index: Int
+    index: Int,
+    onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
-        listOf(Color(0xFFFFE6EE), Color(0xFFF7C9D8)),
-        listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5)),
-        listOf(Color(0xFFFFD9CF), Color(0xFFFFF0EA))
+        listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer),
+        listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint),
+        listOf(ConCafeColors.warningContainer, ConCafeColors.warningContainer)
     )
     val colors = gradients[index % gradients.size]
 
     Box(
         modifier = Modifier
             .size(96.dp)
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Brush.linearGradient(colors)),
-        contentAlignment = Alignment.BottomStart
+            .aspectRatio(1f),
+        contentAlignment = Alignment.TopEnd
     ) {
-        CompatImageDisplay(
-            imageUrl = imageUrl,
-            modifier = Modifier.fillMaxSize()
-        )
-        Surface(
-            modifier = Modifier.padding(10.dp),
-            shape = RoundedCornerShape(999.dp),
-            color = Color.Black.copy(alpha = 0.32f)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Brush.linearGradient(colors)),
+            contentAlignment = Alignment.BottomStart
         ) {
-            Text(
-                text = label,
-                color = Color.White,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            CompatImageDisplay(
+                imageUrl = imageUrl,
+                modifier = Modifier.fillMaxSize()
+            )
+            Surface(
+                modifier = Modifier.padding(10.dp),
+                shape = RoundedCornerShape(999.dp),
+                color = Color.Black.copy(alpha = 0.32f)
+            ) {
+                Text(
+                    text = label,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+        Surface(
+            modifier = Modifier
+                .offset(x = 6.dp, y = (-6).dp),
+            shape = CircleShape,
+            color = Color.Black.copy(alpha = 0.52f),
+            onClick = onRemoveClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(Res.string.castedit_gallery_remove),
+                tint = Color.White,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .size(12.dp)
             )
         }
     }
@@ -443,8 +588,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -457,10 +602,14 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
             TextButton(onClick = onDismiss) {
-                Text("닫기", color = Color(0xFF6B5320), fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(Res.string.common_close),
+                    color = ConCafeColors.goldDeep,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,9 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +47,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -54,8 +57,37 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafemgmt_add_cafe_desc
+import concafe.composeapp.generated.resources.cafemgmt_add_cafe_title
+import concafe.composeapp.generated.resources.cafemgmt_cafe_detail_move_content_description
+import concafe.composeapp.generated.resources.cafemgmt_claim_pending_content_description
+import concafe.composeapp.generated.resources.cafemgmt_empty_desc
+import concafe.composeapp.generated.resources.cafemgmt_empty_title
+import concafe.composeapp.generated.resources.cafemgmt_fold_cafe_list
+import concafe.composeapp.generated.resources.cafemgmt_hero_count
+import concafe.composeapp.generated.resources.cafemgmt_hero_desc_empty
+import concafe.composeapp.generated.resources.cafemgmt_hero_desc_with_cafe
+import concafe.composeapp.generated.resources.cafemgmt_hero_title
+import concafe.composeapp.generated.resources.cafemgmt_info_owner_claim_registered
+import concafe.composeapp.generated.resources.cafemgmt_more_cafe_list
+import concafe.composeapp.generated.resources.cafemgmt_register
+import concafe.composeapp.generated.resources.cafemgmt_register_new_cafe
+import concafe.composeapp.generated.resources.cafemgmt_search_existing_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_search_existing_title
+import concafe.composeapp.generated.resources.cafemgmt_search_no_result
+import concafe.composeapp.generated.resources.cafemgmt_search_placeholder
+import concafe.composeapp.generated.resources.cafemgmt_section_claim_status_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_section_claim_status_title
+import concafe.composeapp.generated.resources.cafemgmt_section_my_cafe_subtitle
+import concafe.composeapp.generated.resources.cafemgmt_section_my_cafe_title
+import concafe.composeapp.generated.resources.common_close
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeManagementScreen(
@@ -101,83 +133,179 @@ private fun CafeManagementContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFFFF7FB), Color(0xFFFFEEF6), Color(0xFFFFFBFD))
-                    )
-                )
+                .background(ConCafeColors.background)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                item {
-                    CafeManagementHeroCard(
-                        cafeCount = uiState.ownedCafes.size,
-                        featuredCafe = uiState.featuredCafe
-                    )
-                }
-                uiState.infoMessage?.let { message ->
+            if (!uiState.isLoading) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
                     item {
-                        InfoBanner(
-                            message = message,
-                            onDismiss = { onAction(CafeManagementAction.DismissInfoMessage) }
+                        CafeManagementHeroCard(
+                            cafeCount = uiState.ownedCafes.size,
+                            featuredCafe = uiState.featuredCafe
                         )
                     }
-                }
-                if (uiState.hasOwnedCafes) {
-                    item {
-                        SectionHeader(
-                            title = "내 카페",
-                            subtitle = "카페를 탭하면 운영 대시보드 상세 화면으로 이동합니다"
-                        )
-                    }
-                    items(uiState.visibleOwnedCafes, key = { it.id }) { cafe ->
-                        CompactOwnedCafeCard(
-                            cafe = cafe,
-                            onClick = { onAction(CafeManagementAction.ClickCafe(cafe.id)) },
-                            onArrowClick = { onAction(CafeManagementAction.ClickCafeDetail(cafe.id)) }
-                        )
-                    }
-                    if (uiState.hasHiddenOwnedCafes) {
+                    uiState.infoMessage?.let { message ->
                         item {
-                            ExpandOwnedCafeButton(
-                                isExpanded = uiState.isShowingAllCafes,
-                                hiddenCount = (uiState.ownedCafes.size - uiState.visibleOwnedCafes.size).coerceAtLeast(0),
-                                onClick = { onAction(CafeManagementAction.ToggleCafeListExpanded) }
+                            InfoBanner(
+                                message = when (message) {
+                                    "cafemgmt_info_owner_claim_registered" -> stringResource(Res.string.cafemgmt_info_owner_claim_registered)
+                                    else -> message
+                                },
+                                onDismiss = { onAction(CafeManagementAction.DismissInfoMessage) }
                             )
                         }
                     }
-                    if (uiState.pendingClaims.isNotEmpty()) {
+                    if (uiState.hasOwnedCafes) {
                         item {
                             SectionHeader(
-                                title = "운영자 신청 상태",
-                                subtitle = "기존 카페 연결 요청 현황"
+                                title = stringResource(Res.string.cafemgmt_section_my_cafe_title),
+                                subtitle = stringResource(Res.string.cafemgmt_section_my_cafe_subtitle)
                             )
                         }
-                        items(uiState.pendingClaims, key = { it.cafeName + it.requestedAt }) { claim ->
-                            PendingClaimCard(claim = claim)
+                        item {
+                            OwnedCafeGrid(
+                                cafes = uiState.visibleOwnedCafes,
+                                onCafeClick = { cafeId -> onAction(CafeManagementAction.ClickCafe(cafeId)) },
+                                onCafeDetailClick = { cafeId -> onAction(CafeManagementAction.ClickCafeDetail(cafeId)) }
+                            )
+                        }
+                        if (uiState.hasHiddenOwnedCafes) {
+                            item {
+                                ExpandOwnedCafeButton(
+                                    isExpanded = uiState.isShowingAllCafes,
+                                    hiddenCount = (uiState.ownedCafes.size - uiState.visibleOwnedCafes.size).coerceAtLeast(0),
+                                    onClick = { onAction(CafeManagementAction.ToggleCafeListExpanded) }
+                                )
+                            }
+                        }
+                        if (uiState.pendingClaims.isNotEmpty()) {
+                            item {
+                                SectionHeader(
+                                    title = stringResource(Res.string.cafemgmt_section_claim_status_title),
+                                    subtitle = stringResource(Res.string.cafemgmt_section_claim_status_subtitle)
+                                )
+                            }
+                            items(uiState.pendingClaims, key = { it.cafeName + it.requestedAt }) { claim ->
+                                PendingClaimCard(claim = claim)
+                            }
+                        }
+                        item {
+                            SearchCafeSection(
+                                searchQuery = uiState.cafeSearchQuery,
+                                searchResults = uiState.filteredSearchableCafes,
+                                excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
+                                onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
+                                onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                            )
+                        }
+                        item {
+                            AddCafeCard(
+                                onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
+                            )
+                        }
+                    } else {
+                        item {
+                            SearchCafeSection(
+                                searchQuery = uiState.cafeSearchQuery,
+                                searchResults = uiState.filteredSearchableCafes,
+                                excludedCafeIds = uiState.ownedCafes.map { it.id }.toSet(),
+                                onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
+                                onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                            )
+                        }
+                        item {
+                            EmptyStateCard(
+                                pendingClaims = uiState.pendingClaims,
+                                onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
+                            )
                         }
                     }
-                } else {
-                    item {
-                        SearchCafeSection(
-                            searchQuery = uiState.cafeSearchQuery,
-                            searchResults = uiState.filteredSearchableCafes,
-                            onSearchQueryChange = { onAction(CafeManagementAction.ChangeCafeSearchQuery(it)) },
-                            onClaimCafe = { onAction(CafeManagementAction.ClickClaimCafe(it)) }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OwnedCafeGrid(
+    cafes: List<CafeManagementData.OwnedCafeSummary>,
+    onCafeClick: (String) -> Unit,
+    onCafeDetailClick: (String) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columnCount = if (maxWidth >= OwnedCafeGridTwoColumnMinWidth) 2 else 1
+        val rows = cafes.chunked(columnCount)
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            rows.forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    row.forEach { cafe ->
+                        CompactOwnedCafeCard(
+                            cafe = cafe,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onCafeClick(cafe.id) },
+                            onArrowClick = { onCafeDetailClick(cafe.id) }
                         )
                     }
-                    item {
-                        EmptyStateCard(
-                            pendingClaims = uiState.pendingClaims,
-                            onCreateCafe = { onAction(CafeManagementAction.ClickCreateCafe) }
-                        )
+                    repeat(columnCount - row.size) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddCafeCard(
+    onCreateCafe: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.cafemgmt_add_cafe_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(Res.string.cafemgmt_add_cafe_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = ConCafeColors.textSecondary
+            )
+            Button(
+                onClick = onCreateCafe,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.textSecondary
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(text = stringResource(Res.string.cafemgmt_register_new_cafe), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -197,23 +325,23 @@ private fun CafeManagementHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
+                        colors = listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
                     )
                 )
                 .padding(22.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Cafe Manage",
+                    text = stringResource(Res.string.cafemgmt_hero_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = if (featuredCafe != null) {
-                        "운영 중인 카페를 확인하고 각 카페의 관리 화면으로 이동할 수 있습니다."
+                        stringResource(Res.string.cafemgmt_hero_desc_with_cafe)
                     } else {
-                        "운영 카페 연결 상태를 확인하고 기존 카페 검색 또는 새 카페 등록을 시작하세요."
+                        stringResource(Res.string.cafemgmt_hero_desc_empty)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
@@ -223,7 +351,7 @@ private fun CafeManagementHeroCard(
                     color = Color.White.copy(alpha = 0.18f)
                 ) {
                     Text(
-                        text = "운영 카페 ${cafeCount}개",
+                        text = stringResource(Res.string.cafemgmt_hero_count, cafeCount),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                         color = Color.White,
                         style = MaterialTheme.typography.labelLarge,
@@ -242,8 +370,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -256,10 +384,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "안내 닫기", tint = Color(0xFF6B5320))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = ConCafeColors.goldDeep)
             }
         }
     }
@@ -273,14 +401,14 @@ private fun SectionHeader(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2330)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF786E7A)
+            color = ConCafeColors.textSecondary
         )
     }
 }
@@ -289,28 +417,46 @@ private fun SectionHeader(
 @Composable
 private fun CompactOwnedCafeCard(
     cafe: CafeManagementData.OwnedCafeSummary,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onArrowClick: () -> Unit
 ) {
+    val resolvedThumbnail = cafe.thumbnailImage?.trim().orEmpty()
+
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         onClick = onClick
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1.8f)
-                .background(
-                    Brush.linearGradient(
-                        colors = if (cafe.isApproved) {
-                            listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
-                        } else {
-                            listOf(Color(0xFF3A3240), Color(0xFF6F6272), Color(0xFFB8A8B2))
-                        }
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val dynamicHeight = (maxWidth / 1.8f).coerceIn(220.dp, 500.dp)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dynamicHeight)
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = if (cafe.isApproved) {
+                                listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
+                            } else {
+                                listOf(ConCafeColors.textPrimary, ConCafeColors.textSecondary, ConCafeColors.outlineStrong)
+                            }
+                        )
                     )
+            )
+            if (resolvedThumbnail.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = resolvedThumbnail,
+                    modifier = Modifier.fillMaxSize()
                 )
-        ) {
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -350,13 +496,16 @@ private fun CompactOwnedCafeCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "카페 상세로 이동",
+                    contentDescription = stringResource(Res.string.cafemgmt_cafe_detail_move_content_description),
                     tint = Color.White
                 )
+            }
             }
         }
     }
 }
+
+private val OwnedCafeGridTwoColumnMinWidth = 700.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -368,8 +517,8 @@ private fun ExpandOwnedCafeButton(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F2F6)),
-        border = BorderStroke(1.dp, Color(0xFFE5DCE5)),
+        colors = CardDefaults.cardColors(containerColor = ConCafeColors.surfaceTint),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Row(
@@ -381,18 +530,18 @@ private fun ExpandOwnedCafeButton(
         ) {
             Text(
                 text = if (isExpanded) {
-                    "카페 목록 접기"
+                    stringResource(Res.string.cafemgmt_fold_cafe_list)
                 } else {
-                    "나머지 카페 ${hiddenCount}개 더 보기"
+                    stringResource(Res.string.cafemgmt_more_cafe_list, hiddenCount)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF5E4F5D)
+                color = ConCafeColors.textSecondary
             )
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
-                tint = Color(0xFF7C6B79)
+                tint = ConCafeColors.textSecondary
             )
         }
     }
@@ -402,19 +551,21 @@ private fun ExpandOwnedCafeButton(
 private fun SearchCafeSection(
     searchQuery: String,
     searchResults: List<CafeManagementData.SearchableCafeSummary>,
+    excludedCafeIds: Set<String>,
     onSearchQueryChange: (String) -> Unit,
     onClaimCafe: (String) -> Unit
 ) {
+    val visibleSearchResults = searchResults.filterNot { excludedCafeIds.contains(it.id) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
-            title = "기존 카페 검색",
-            subtitle = "기등록되어있는 카페를 검색해서 등록할수 있습니다."
+            title = stringResource(Res.string.cafemgmt_search_existing_title),
+            subtitle = stringResource(Res.string.cafemgmt_search_existing_subtitle)
         )
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             color = Color.White,
-            border = BorderStroke(1.dp, Color(0xFFE4DDE5))
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Row(
                 modifier = Modifier
@@ -426,20 +577,20 @@ private fun SearchCafeSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = null,
-                    tint = Color(0xFF8E8794)
+                    tint = ConCafeColors.textMuted
                 )
                 BasicTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
                     singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF222222)),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colorFromHex("222222")),
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->
                         if (searchQuery.isBlank()) {
                             Text(
-                                text = "카페 이름 또는 지역 검색",
+                                text = stringResource(Res.string.cafemgmt_search_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color(0xFF8E8794)
+                                color = ConCafeColors.textMuted
                             )
                         }
                         innerTextField()
@@ -451,24 +602,24 @@ private fun SearchCafeSection(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFE4DDE5))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, ConCafeColors.outline)
             ) {
                 Column {
-                    if (searchResults.isEmpty()) {
+                    if (visibleSearchResults.isEmpty()) {
                         Text(
-                            text = "검색 결과가 없습니다",
+                            text = stringResource(Res.string.cafemgmt_search_no_result),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-                            color = Color(0xFF8E8794)
+                            color = ConCafeColors.textMuted
                         )
                     } else {
-                        searchResults.forEachIndexed { index, cafe ->
+                        visibleSearchResults.forEachIndexed { index, cafe ->
                             SearchCafeItem(
                                 cafe = cafe,
                                 onClaimClick = { onClaimCafe(cafe.id) }
                             )
-                            if (index < searchResults.lastIndex) {
-                                Divider(color = Color(0xFFF1EAF1))
+                            if (index < visibleSearchResults.lastIndex) {
+                                Divider(color = ConCafeColors.surfaceTint)
                             }
                         }
                     }
@@ -485,8 +636,8 @@ private fun EmptyStateCard(
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -494,43 +645,43 @@ private fun EmptyStateCard(
         ) {
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFFCE6EF)
+                color = ConCafeColors.surfaceTint
             ) {
                 Icon(
                     imageVector = Icons.Default.AddBusiness,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.padding(14.dp)
                 )
             }
             Text(
-                text = "아직 연결된 운영 카페가 없습니다",
+                text = stringResource(Res.string.cafemgmt_empty_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "검색으로 기존 카페를 찾거나 새 카페를 등록해 운영 권한을 연결하세요.",
+                text = stringResource(Res.string.cafemgmt_empty_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF786E7A)
+                color = ConCafeColors.textSecondary
             )
             Button(
                 onClick = onCreateCafe,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF6EDF4),
-                    contentColor = Color(0xFF6A5666)
+                    containerColor = ConCafeColors.surfaceTint,
+                    contentColor = ConCafeColors.textSecondary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("새 카페 등록")
+                Text(stringResource(Res.string.cafemgmt_register_new_cafe))
             }
             if (pendingClaims.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "운영자 신청 상태",
+                    text = stringResource(Res.string.cafemgmt_section_claim_status_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 pendingClaims.forEach { claim ->
                     PendingClaimCard(claim = claim)
@@ -559,20 +710,20 @@ private fun SearchCafeItem(
             Text(
                 text = cafe.name,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = cafe.location,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8E8794)
+                color = ConCafeColors.textMuted
             )
         }
         Button(
             onClick = onClaimClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF6797)),
+            colors = ButtonDefaults.buttonColors(containerColor = ConCafeColors.primary),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Text("등록")
+            Text(stringResource(Res.string.cafemgmt_register))
         }
     }
 }
@@ -583,8 +734,8 @@ private fun PendingClaimCard(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF8EA),
-        border = BorderStroke(1.dp, Color(0xFFF0DEB1))
+        color = ConCafeColors.warningContainer,
+        border = BorderStroke(1.dp, ConCafeColors.warningContainer)
     ) {
         Column(
             modifier = Modifier
@@ -601,16 +752,16 @@ private fun PendingClaimCard(
                     text = claim.cafeName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFFFE8B8)
+                    color = ConCafeColors.warningContainer
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "승인 대기",
-                        tint = Color(0xFF9A6A11),
+                        contentDescription = stringResource(Res.string.cafemgmt_claim_pending_content_description),
+                        tint = ConCafeColors.goldDeep,
                         modifier = Modifier.padding(7.dp)
                     )
                 }
@@ -618,12 +769,12 @@ private fun PendingClaimCard(
             Text(
                 text = "${claim.status} · ${claim.requestedAt}",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF8B774C)
+                color = ConCafeColors.goldDeep
             )
             Text(
                 text = claim.message,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6E6248)
+                color = ConCafeColors.goldDeep
             )
         }
     }

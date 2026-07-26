@@ -11,7 +11,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,41 +36,57 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.CastScheduleAttendanceUtils
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.core.util.TimeUtils
+import com.hhp227.concafe.domain.model.CastAttendanceStatus
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastRecentReview
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.DetailTooltipBox
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cast_accessibility_back
+import concafe.composeapp.generated.resources.cast_action_refresh
+import concafe.composeapp.generated.resources.cast_activity_follower
+import concafe.composeapp.generated.resources.cast_activity_rating
+import concafe.composeapp.generated.resources.cast_activity_visit_cert
+import concafe.composeapp.generated.resources.cast_error_detail_load_failed
+import concafe.composeapp.generated.resources.cast_follow
+import concafe.composeapp.generated.resources.cast_follower_count
+import concafe.composeapp.generated.resources.cast_follower_label
+import concafe.composeapp.generated.resources.cast_following
+import concafe.composeapp.generated.resources.cast_follow_tooltip
+import concafe.composeapp.generated.resources.cast_schedule_off
+import concafe.composeapp.generated.resources.cast_schedule_title
+import concafe.composeapp.generated.resources.cast_schedule_work
+import concafe.composeapp.generated.resources.cast_section_intro
+import concafe.composeapp.generated.resources.cast_section_recent_activity
+import concafe.composeapp.generated.resources.cast_section_tagged_reviews
+import concafe.composeapp.generated.resources.cast_tagged_reviews_empty_desc
+import concafe.composeapp.generated.resources.cast_tagged_reviews_empty_title
+import concafe.composeapp.generated.resources.cast_today_check_schedule
+import concafe.composeapp.generated.resources.cast_today_finished
+import concafe.composeapp.generated.resources.cast_today_off
+import concafe.composeapp.generated.resources.cast_today_status_title
+import concafe.composeapp.generated.resources.cast_today_upcoming
+import concafe.composeapp.generated.resources.cast_today_working
+import concafe.composeapp.generated.resources.cast_weekday_fri
+import concafe.composeapp.generated.resources.cast_weekday_mon
+import concafe.composeapp.generated.resources.cast_weekday_sat
+import concafe.composeapp.generated.resources.cast_weekday_sun
+import concafe.composeapp.generated.resources.cast_weekday_thu
+import concafe.composeapp.generated.resources.cast_weekday_tue
+import concafe.composeapp.generated.resources.cast_weekday_wed
+import kotlinx.coroutines.delay
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
-import kotlin.collections.List
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.getOrNull
-import kotlin.collections.isNotEmpty
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.mapNotNull
-import kotlin.collections.toSet
-import kotlin.sequences.firstOrNull
-import kotlin.sequences.ifEmpty
-import kotlin.sequences.mapNotNull
-import kotlin.sequences.toSet
-import kotlin.text.contains
-import kotlin.text.firstOrNull
-import kotlin.text.format
-import kotlin.text.isNotEmpty
-import kotlin.text.mapNotNull
-import kotlin.text.orEmpty
-import kotlin.text.replaceFirstChar
-import kotlin.text.split
-import kotlin.text.toIntOrNull
-import kotlin.text.toSet
-import kotlin.text.uppercase
+import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
-private const val CURRENT_DATE = "2026-03-08"
-private val HeroHeight = 340.dp
 private val SummaryTitleTriggerOffset = 22.dp
 
 @Composable
@@ -87,6 +108,7 @@ fun CastScreen(
                 CastEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is CastEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
                 CastEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
+                is CastEvent.NavigateToPicture -> onNavigationAction(NavigationAction.NavigateToPicture(event.imageUrl))
             }
         }
     }
@@ -114,9 +136,8 @@ private fun CastContentScreen(
                 summaryOffset <= with(LocalDensity.current) { SummaryTitleTriggerOffset.roundToPx() }
             } == true)
         )
-
     Scaffold(
-        containerColor = colorFromHex("FFF9FC"),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -129,18 +150,18 @@ private fun CastContentScreen(
                 navigationIcon = {
                     IconButton(onClick = { onAction(CastAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "뒤로가기",
-                            tint = if (topBarVisible) Color(0xFF222222) else Color.White
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.cast_accessibility_back),
+                            tint = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (topBarVisible) Color.White else Color.Transparent,
-                    scrolledContainerColor = Color.White,
-                    titleContentColor = Color(0xFF222222),
-                    navigationIconContentColor = if (topBarVisible) Color(0xFF222222) else Color.White,
-                    actionIconContentColor = if (topBarVisible) Color(0xFF222222) else Color.White
+                    containerColor = if (topBarVisible) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White,
+                    actionIconContentColor = if (topBarVisible) MaterialTheme.colorScheme.onSurface else Color.White
                 )
             )
         }
@@ -151,7 +172,7 @@ private fun CastContentScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(colorFromHex("FFF9FC")),
+                        .background(MaterialTheme.colorScheme.background),
                     contentPadding = PaddingValues(
                         bottom = innerPadding.calculateBottomPadding() + 28.dp
                     ),
@@ -160,13 +181,16 @@ private fun CastContentScreen(
                     item {
                         CastHeroSection(
                             detail = uiState.detail,
-                            scrollOffset = scrollOffset
+                            scrollOffset = scrollOffset,
+                            onAction = onAction
                         )
                     }
                     item {
                         CastSummarySection(
                             detail = uiState.detail,
                             isFollowing = uiState.isFollowing,
+                            isSelfCast = uiState.isSelfCast,
+                            shouldShowFollowTooltip = uiState.shouldShowFollowTooltip,
                             onAction = onAction
                         )
                     }
@@ -210,11 +234,11 @@ private fun CastContentScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = uiState.errorMessage ?: "캐스트 상세 데이터를 불러오지 못했습니다.",
+                            text = stringResource(Res.string.cast_error_detail_load_failed),
                             color = MaterialTheme.colorScheme.error
                         )
                         FilledTonalButton(onClick = { onAction(CastAction.Refresh) }) {
-                            Text("새로고침")
+                            Text(stringResource(Res.string.cast_action_refresh))
                         }
                     }
                 }
@@ -227,10 +251,15 @@ private fun CastContentScreen(
 @Composable
 private fun CastHeroSection(
     detail: CastDetail,
-    scrollOffset: Int
+    scrollOffset: Int,
+    onAction: (CastAction) -> Unit
 ) {
-    val images = detail.images.ifEmpty { listOf("") }
-    val pagerState = rememberPagerState(pageCount = { images.size })
+    val heroHeight = 330.dp
+    val heroImages = resolveHeroImages(
+        images = detail.images,
+        fallbackProfileImage = detail.cast.profileImage
+    )
+    val pagerState = rememberPagerState(pageCount = { heroImages.size })
     val parallaxOffset = if (scrollOffset == Int.MAX_VALUE) {
         120f
     } else {
@@ -240,18 +269,37 @@ private fun CastHeroSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(HeroHeight)
+            .height(heroHeight)
     ) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
+            val imageUrl = heroImages[page]
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { translationY = parallaxOffset }
-                    .background(heroBrush(page))
+                    .clickable(enabled = imageUrl.isNotBlank()) { onAction(CastAction.ClickImage(imageUrl)) }
+                    .background(
+                        if (imageUrl.isBlank()) {
+                            heroBrush(page)
+                        } else {
+                            Brush.verticalGradient(
+                                colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
+                            )
+                        }
+                    )
             ) {
+                if (imageUrl.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = imageUrl,
+                        modifier = Modifier.fillMaxSize(),
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.MEDIUM
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -259,31 +307,33 @@ private fun CastHeroSection(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color(0xA6000000)
+                                    Color(0x66000000)
                                 )
                             )
                         )
                 )
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.18f))
-                        .padding(18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Text(
-                        text = detail.cast.name,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                if (imageUrl.isBlank()) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(56.dp)
+                        )
+                        Text(
+                            text = detail.cast.name,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
                 Text(
                     text = detail.cafe.name,
@@ -294,14 +344,14 @@ private fun CastHeroSection(
                 )
             }
         }
-        if (images.size > 1) {
+        if (heroImages.size > 1) {
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                repeat(images.size) { index ->
+                repeat(heroImages.size) { index ->
                     Box(
                         modifier = Modifier
                             .size(width = if (pagerState.currentPage == index) 18.dp else 8.dp, height = 8.dp)
@@ -317,13 +367,37 @@ private fun CastHeroSection(
     }
 }
 
+private fun resolveHeroImages(
+    images: List<String>,
+    fallbackProfileImage: String?
+): List<String> {
+    val normalized = images
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    if (normalized.isNotEmpty()) {
+        return normalized
+    }
+    val fallback = fallbackProfileImage?.trim().orEmpty()
+    return if (fallback.isNotEmpty()) listOf(fallback) else listOf("")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CastSummarySection(
     detail: CastDetail,
     isFollowing: Boolean,
+    isSelfCast: Boolean,
+    shouldShowFollowTooltip: Boolean,
     onAction: (CastAction) -> Unit
 ) {
-    Surface(color = Color.White) {
+    LaunchedEffect(shouldShowFollowTooltip) {
+        if (shouldShowFollowTooltip) {
+            onAction(CastAction.MarkFollowTooltipShown)
+            delay(DETAIL_TOOLTIP_DURATION_MILLIS)
+            onAction(CastAction.DismissFollowTooltip)
+        }
+    }
+    Surface(color = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -339,18 +413,32 @@ private fun CastSummarySection(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = detail.cast.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = detail.cast.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (!detail.cast.linkedUserId.isNullOrBlank()) {
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = null,
+                                tint = ConCafeColors.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
                     Surface(
                         shape = RoundedCornerShape(999.dp),
-                        color = colorFromHex("FFE7F1")
+                        color = ConCafeColors.surfaceTint
                     ) {
                         Text(
                             text = detail.cast.conceptRole.replaceFirstChar { it.uppercase() },
-                            color = colorFromHex("C9527E"),
+                            color = ConCafeColors.primary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
@@ -366,31 +454,43 @@ private fun CastSummarySection(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = Color(0xFF7A7A7A),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = "${detail.cafe.name} · ${detail.cafe.region.city}",
-                            color = Color(0xFF6F6A70),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
                 }
-                Button(
-                    onClick = { onAction(CastAction.ClickFollow) },
-                    colors = if (isFollowing) {
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF1E3EB),
-                            contentColor = Color(0xFF6A4960)
-                        )
-                    } else {
-                        ButtonDefaults.buttonColors(
-                            containerColor = colorFromHex("EF6797"),
-                            contentColor = Color.White
+                DetailTooltipBox(
+                    visible = shouldShowFollowTooltip,
+                    text = stringResource(Res.string.cast_follow_tooltip)
+                ) {
+                    Button(
+                        onClick = { onAction(CastAction.ClickFollow) },
+                        enabled = !isSelfCast,
+                        colors = if (isFollowing) {
+                            ButtonDefaults.buttonColors(
+                                containerColor = ConCafeColors.primaryContainer,
+                                contentColor = ConCafeColors.primary
+                            )
+                        } else {
+                            ButtonDefaults.buttonColors(
+                                containerColor = ConCafeColors.primary,
+                                contentColor = Color.White
+                            )
+                        }
+                    ) {
+                        Text(
+                            stringResource(if (isFollowing) {
+                                Res.string.cast_following
+                            } else {
+                                Res.string.cast_follow
+                            })
                         )
                     }
-                ) {
-                    Text(if (isFollowing) "팔로잉" else "팔로우")
                 }
             }
             Row(
@@ -399,18 +499,24 @@ private fun CastSummarySection(
             ) {
                 CastStatItem(
                     icon = Icons.Default.Groups,
-                    label = "팔로워",
-                    value = "${detail.cast.followerCount}명"
+                    label = stringResource(Res.string.cast_follower_label),
+                    value = stringResource(Res.string.cast_follower_count, detail.cast.followerCount)
                 )
             }
         }
     }
 }
 
+private const val DETAIL_TOOLTIP_DURATION_MILLIS = 5_000L
+
 @Composable
 private fun CastTodaySection(detail: CastDetail) {
-    val todaySchedule = detail.schedule.firstOrNull { it.date == CURRENT_DATE }
-
+    val todaySchedule = CastScheduleAttendanceUtils.todaySchedule(detail.schedule)
+    val attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(todaySchedule)
+    val statusText = castAttendanceStatusText(attendanceStatus)
+    val timeText = todaySchedule?.let { schedule ->
+        "${schedule.startTime} - ${schedule.endTime}"
+    } ?: stringResource(Res.string.cast_today_check_schedule)
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
@@ -422,8 +528,8 @@ private fun CastTodaySection(detail: CastDetail) {
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            colorFromHex("EF6797"),
-                            colorFromHex("F8A3C5")
+                            ConCafeColors.primary,
+                            ConCafeColors.secondaryContainer
                         )
                     ),
                     shape = RoundedCornerShape(24.dp)
@@ -436,22 +542,34 @@ private fun CastTodaySection(detail: CastDetail) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "오늘의 출근 상태",
+                    text = stringResource(Res.string.cast_today_status_title),
                     color = Color.White.copy(alpha = 0.82f)
                 )
                 Text(
-                    text = if (todaySchedule != null) "출근 예정" else "오늘은 휴무",
+                    text = statusText,
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = todaySchedule?.let { "${it.startTime} - ${it.endTime}" } ?: "다음 스케줄을 확인해 주세요.",
+                    text = timeText,
                     color = Color.White.copy(alpha = 0.88f)
                 )
             }
         }
     }
+}
+
+@Composable
+private fun castAttendanceStatusText(status: CastAttendanceStatus): String {
+    return stringResource(
+        when (status) {
+            CastAttendanceStatus.UPCOMING -> Res.string.cast_today_upcoming
+            CastAttendanceStatus.ON_SHIFT -> Res.string.cast_today_working
+            CastAttendanceStatus.COMPLETED -> Res.string.cast_today_finished
+            CastAttendanceStatus.OFF -> Res.string.cast_today_off
+        }
+    )
 }
 
 @Composable
@@ -466,12 +584,13 @@ private fun CastScheduleSection(detail: CastDetail) {
             Icon(
                 imageVector = Icons.Default.CalendarMonth,
                 contentDescription = null,
-                tint = colorFromHex("EF6797")
+                tint = ConCafeColors.primary
             )
             Text(
-                text = "출근 일정",
+                text = stringResource(Res.string.cast_schedule_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -497,7 +616,7 @@ private fun CastScheduleCard(
     isWorking: Boolean
 ) {
     Surface(
-        color = if (isWorking) colorFromHex("EF6797") else Color.White,
+        color = if (isWorking) ConCafeColors.primary else MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier
     ) {
@@ -511,12 +630,16 @@ private fun CastScheduleCard(
             Text(
                 text = dayLabel,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else Color(0xFF4E4750)
+                color = if (isWorking) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = if (isWorking) "출근" else "휴무",
+                text = stringResource(if (isWorking) {
+                    Res.string.cast_schedule_work
+                } else {
+                    Res.string.cast_schedule_off
+                }),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
+                color = if (isWorking) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -524,23 +647,25 @@ private fun CastScheduleCard(
 
 @Composable
 private fun CastIntroductionSection(detail: CastDetail) {
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "소개",
+            text = stringResource(Res.string.cast_section_intro),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Surface(
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(22.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = detail.cast.desc,
-                color = Color(0xFF4E4750),
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(18.dp),
                 lineHeight = 22.sp
             )
@@ -555,9 +680,10 @@ private fun CastRecentActivitySection(detail: CastDetail) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "최근 활동",
+            text = stringResource(Res.string.cast_section_recent_activity),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -566,20 +692,20 @@ private fun CastRecentActivitySection(detail: CastDetail) {
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
-                value = detail.recentVisitCount().toString(),
-                label = "방문 인증"
+                value = detail.visitCertificationCount.toString(),
+                label = stringResource(Res.string.cast_activity_visit_cert)
             )
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
                 value = detail.cast.followerCount.toString(),
-                label = "팔로워"
+                label = stringResource(Res.string.cast_activity_follower)
             )
             CastActivityCard(
                 modifier = Modifier
                     .weight(1f),
-                value = String.format("%.1f", detail.cast.rating),
-                label = "평점"
+                value = RatingUtils.formatOneDecimal(detail.cast.rating),
+                label = stringResource(Res.string.cast_activity_rating)
             )
         }
     }
@@ -592,7 +718,7 @@ private fun CastActivityCard(
     label: String
 ) {
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         modifier = modifier
     ) {
@@ -607,11 +733,11 @@ private fun CastActivityCard(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = colorFromHex("EF6797")
+                color = ConCafeColors.primary
             )
             Text(
                 text = label,
-                color = Color(0xFF6F6A70),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -625,9 +751,10 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "함께 언급된 후기",
+            text = stringResource(Res.string.cast_section_tagged_reviews),
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         if (reviews.isEmpty()) {
             CastRecentReviewEmptyView()
@@ -635,7 +762,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 reviews.forEach { review ->
                     Surface(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.surface,
                         shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -659,18 +786,18 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = "${review.rating}",
+                                        text = RatingUtils.formatOneDecimal(review.rating),
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(Color(0x1AFFD1DC))
+                                            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                                        color = colorFromHex("EF6797"),
+                                        color = ConCafeColors.primary,
                                         fontSize = 12.sp
                                     )
                                 }
                                 Text(
                                     text = review.createdDateLabel,
-                                    color = Color(0xFF8A8087),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                             }
@@ -681,9 +808,9 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                                             text = castName,
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(999.dp))
-                                                .background(Color(0x1AFFD1DC))
+                                                .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                                 .padding(horizontal = 10.dp, vertical = 5.dp),
-                                            color = colorFromHex("C9527E"),
+                                            color = ConCafeColors.primary,
                                             fontSize = 11.sp
                                         )
                                     }
@@ -691,7 +818,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
                             }
                             Text(
                                 text = review.content,
-                                color = Color(0xFF4E4750)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -704,7 +831,7 @@ private fun CastRecentReviewSection(reviews: List<CastRecentReview>) {
 @Composable
 private fun CastRecentReviewEmptyView() {
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -716,13 +843,13 @@ private fun CastRecentReviewEmptyView() {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "아직 함께 언급된 후기가 없어요.",
+                text = stringResource(Res.string.cast_tagged_reviews_empty_title),
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF4E4750)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "이 캐스트가 태그된 카페 리뷰가 표시됩니다.",
-                color = Color(0xFF8A8087),
+                text = stringResource(Res.string.cast_tagged_reviews_empty_desc),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }
@@ -739,7 +866,7 @@ private fun CastStatItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = colorFromHex("EF6797"),
+            tint = ConCafeColors.primary,
             modifier = Modifier.size(18.dp)
         )
         Row(
@@ -749,7 +876,7 @@ private fun CastStatItem(
         ) {
             Text(
                 text = label,
-                color = Color(0xFF8A8087),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
             Text(
@@ -762,25 +889,29 @@ private fun CastStatItem(
 
 private fun heroBrush(index: Int): Brush {
     val gradients = listOf(
-        listOf(colorFromHex("F8A3C5"), colorFromHex("EF6797")),
-        listOf(colorFromHex("FFC6C7"), colorFromHex("FF8E9E")),
-        listOf(colorFromHex("F8D6E9"), colorFromHex("D98AB7"))
+        listOf(ConCafeColors.secondaryContainer, ConCafeColors.primary),
+        listOf(ConCafeColors.errorContainer, ConCafeColors.tertiary),
+        listOf(ConCafeColors.primaryContainer, ConCafeColors.primary)
     )
     return Brush.verticalGradient(gradients[index % gradients.size])
-}
-
-private fun CastDetail.recentVisitCount(): Int {
-    return (cast.followerCount / 8).coerceAtLeast(schedule.size)
 }
 
 @Composable
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleItem> {
     val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
-    val orderedDays = listOf("월", "화", "수", "목", "금", "토", "일")
-    return orderedDays.map { dayLabel ->
+    val orderedDays = listOf(
+        "월" to stringResource(Res.string.cast_weekday_mon),
+        "화" to stringResource(Res.string.cast_weekday_tue),
+        "수" to stringResource(Res.string.cast_weekday_wed),
+        "목" to stringResource(Res.string.cast_weekday_thu),
+        "금" to stringResource(Res.string.cast_weekday_fri),
+        "토" to stringResource(Res.string.cast_weekday_sat),
+        "일" to stringResource(Res.string.cast_weekday_sun)
+    )
+    return orderedDays.map { day ->
         WeeklyScheduleItem(
-            dayLabel = dayLabel,
-            isWorking = workingDays.contains(dayLabel)
+            dayLabel = day.second,
+            isWorking = workingDays.contains(day.first)
         )
     }
 }

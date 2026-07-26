@@ -5,5 +5,6 @@ data class CastScheduleUpdate(
     val date: String,
     val status: CastScheduleStatus,
     val startTime: String? = null,
-    val endTime: String? = null
+    val endTime: String? = null,
+    val requestBatchId: String? = null
 )

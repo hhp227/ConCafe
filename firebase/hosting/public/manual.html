@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>콘카 이용 가이드 | 카페 운영자 · 캐스트</title>
+    <meta
+      name="description"
+      content="콘카 카페 운영자·캐스트를 위한 이용 가이드입니다. 카페 등록, 캐스트 관리, 팬관리, 메뉴·굿즈 관리 등 핵심 기능을 안내합니다."
+    />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <style>
+      /* ── 매뉴얼 전용 스타일 ── */
+      .manual-hero {
+        background: linear-gradient(140deg, #fff 0%, #fff8fb 50%, #ffeef5 100%);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-card);
+        padding: 36px 32px;
+        margin-top: 12px;
+        text-align: center;
+      }
+      .manual-hero h1 {
+        margin: 12px 0 8px;
+        font-size: clamp(26px, 4vw, 42px);
+        line-height: 1.18;
+        letter-spacing: -0.02em;
+      }
+      .manual-hero p {
+        margin: 0 auto;
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      /* 역할 선택 탭 */
+      .role-tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .role-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: border-color 0.18s, color 0.18s, background 0.18s;
+        text-decoration: none;
+      }
+      .role-tab:hover,
+      .role-tab.is-active {
+        border-color: var(--primary);
+        color: var(--primary-strong);
+        background: #fff1f7;
+      }
+
+      /* 스텝 카드 */
+      .step-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 12px;
+      }
+      .step-card {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        gap: 14px;
+        align-items: start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 18px;
+      }
+      .step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .step-body h4 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        color: #4a3645;
+      }
+      .step-body p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      /* 팁 박스 */
+      .tip-box {
+        background: #fff7fb;
+        border: 1px solid #f0c6d8;
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 13px;
+        color: #7a3a55;
+        margin-top: 12px;
+      }
+      .tip-box strong {
+        color: var(--primary-strong);
+      }
+
+      /* 기능 상세 그리드 */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .feature-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        padding: 18px;
+      }
+      .feature-card .fc-icon {
+        font-size: 22px;
+        margin-bottom: 8px;
+        display: block;
+      }
+      .feature-card h4 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        color: #4a3645;
+      }
+      .feature-card p,
+      .feature-card li {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .feature-card ul {
+        margin: 6px 0 0;
+        padding-left: 16px;
+        display: grid;
+        gap: 4px;
+      }
+
+      /* 상태 배지 */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .badge-pending  { background: #fff3cd; color: #856404; }
+      .badge-approved { background: #d1fce7; color: #1a6e40; }
+      .badge-rejected { background: #ffe0e6; color: #9c1c3a; }
+      .badge-active   { background: #d1fce7; color: #1a6e40; }
+      .badge-draft    { background: #f0e7ff; color: #5a3a8a; }
+
+      /* 역할 구분 띠 */
+      .role-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+        color: #fff;
+        border-radius: 999px;
+        padding: 4px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      /* 앵커 스크롤 오프셋 보정 */
+      .anchor-target {
+        scroll-margin-top: 72px;
+      }
+
+      /* FAQ */
+      .faq-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .faq-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        padding: 16px 18px;
+      }
+      .faq-item .faq-q {
+        font-size: 14px;
+        font-weight: 700;
+        color: #4a3645;
+        margin: 0 0 6px;
+      }
+      .faq-item .faq-a {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.55;
+      }
+
+      /* 퀵 네비 */
+      .quick-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+        margin-bottom: 2px;
+      }
+      .quick-nav a {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 13px;
+        transition: background 0.16s, color 0.16s;
+      }
+      .quick-nav a:hover {
+        background: #fff1f7;
+        color: var(--primary-strong);
+      }
+
+      @media (max-width: 920px) {
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+        .manual-hero {
+          padding: 26px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <nav class="nav-links" aria-label="주요 메뉴">
+            <a class="nav-link" href="/manual" style="color: var(--primary-strong);">이용 가이드</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container">
+
+        <!-- Hero -->
+        <section class="section-first">
+          <div class="manual-hero">
+            <span class="hero-badge">📖 이용 가이드</span>
+            <h1>카페 운영자 · 캐스트<br>이용 가이드</h1>
+            <p>
+              콘카를 처음 사용하는 운영자와 캐스트를 위한 단계별 안내입니다.<br />
+              회원가입부터 카페 운영, 팬 관리까지 빠르게 시작하세요.
+            </p>
+          </div>
+
+          <!-- 퀵 네비 -->
+          <nav class="quick-nav" aria-label="섹션 바로가기">
+            <a href="#owner-start">🏠 운영자 시작하기</a>
+            <a href="#owner-cafe-register">카페 등록</a>
+            <a href="#owner-dashboard">대시보드</a>
+            <a href="#owner-cast-mgmt">캐스트 관리</a>
+            <a href="#owner-menu-goods">메뉴 · 굿즈</a>
+            <a href="#owner-notice">공지 · 이벤트</a>
+            <a href="#owner-banner">홈 배너</a>
+            <a href="#cast-start">🎀 캐스트 시작하기</a>
+            <a href="#cast-profile-link">프로필 연결</a>
+            <a href="#cast-fan-mgmt">팬관리 탭</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+        </section>
+
+        <!-- ─────────────────────────────── -->
+        <!-- SECTION: 카페 운영자             -->
+        <!-- ─────────────────────────────── -->
+        <section class="section anchor-target" id="owner-start">
+          <div class="section-header">
+            <div class="role-label">🏠 카페 운영자 (CAFE_OWNER)</div>
+            <h2 class="section-title">시작하기 — 회원가입 &amp; 인증</h2>
+            <p class="section-subtitle">카페 운영자는 휴대폰 인증이 필수입니다. 아래 순서대로 진행하세요.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-card">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h4>앱 설치 및 회원가입</h4>
+                <p>Android · iOS 앱을 설치하고 <strong>카페 운영자</strong> 역할로 가입합니다. 소셜 로그인 또는 이메일 가입 후 역할 선택 단계에서 <strong>카페 운영자</strong>를 선택하세요.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h4>휴대폰 번호 인증</h4>
+                <p>카페 운영자는 <strong>휴대폰 번호 인증이 필수</strong>입니다. 인증 완료 후 카페 등록 또는 운영자 신청 단계로 이동합니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h4>카페 연결</h4>
+                <p>기존 카페를 검색해 <strong>운영자 신청</strong>을 보내거나, 새 카페를 직접 <strong>등록 신청</strong>합니다. 관리자 승인 후 운영 권한이 부여됩니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <strong>💡 Tip.</strong> 가입 직후 연결된 카페가 없으면 <strong>카페관리 탭</strong>에 빈 상태 화면이 표시됩니다. 화면의 <em>기존 카페 검색</em> 또는 <em>새 카페 등록</em> 버튼으로 바로 진행할 수 있습니다.
+          </div>
+        </section>
+
+        <!-- 카페 등록 -->
+        <section class="section anchor-target" id="owner-cafe-register">
+          <div class="section-header">
+            <h2 class="section-title">카페 등록하기</h2>
+            <p class="section-subtitle">기존 카페 운영자 신청과 신규 카페 등록, 두 가지 방법을 안내합니다.</p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <span class="fc-icon">🔍</span>
+              <h4>방법 ① 기존 카페 운영자 신청</h4>
+              <p>이미 콘카에 등록된 카페의 운영 권한을 신청합니다.</p>
+              <ul>
+                <li>카페관리 탭 → <em>기존 카페 검색</em></li>
+                <li>카페명 · 지역 · 주소로 검색</li>
+                <li>해당 카페 카드의 <em>이 카페 운영자 신청</em> 버튼 클릭</li>
+                <li>신청 메시지 입력 &amp; 운영 증빙 이미지 업로드 후 제출</li>
+                <li>관리자 승인 후 카페관리 탭에 카페가 표시됨</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">✏️</span>
+              <h4>방법 ② 신규 카페 등록 신청</h4>
+              <p>콘카에 아직 없는 카페를 새로 등록합니다.</p>
+              <ul>
+                <li>카페관리 탭 → <em>새 카페 등록</em></li>
+                <li>카페 이름 · 주소 · 소개 · 대표 이미지 입력</li>
+                <li>지도에서 위치 핀 설정</li>
+                <li>등록 신청 후 관리자 심사 → 승인 시 카페 공개</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="step-list" style="margin-top: 16px;">
+            <div class="step-card">
+              <div class="step-num" style="font-size: 13px;">상태</div>
+              <div class="step-body">
+                <h4>신청 상태 확인</h4>
+                <p>
+                  카페관리 탭 신청 상태 카드에서 현재 진행 상황을 확인할 수 있습니다.<br />
+                  <span class="badge badge-pending">승인 대기</span> 관리자 검토 중 &nbsp;
+                  <span class="badge badge-approved">승인 완료</span> 운영 권한 부여 &nbsp;
+                  <span class="badge badge-rejected">반려</span> 재신청 가능
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 대시보드 -->
+        <section class="section anchor-target" id="owner-dashboard">
+          <div class="section-header">
+            <h2 class="section-title">카페 대시보드</h2>
+            <p class="section-subtitle">카페관리 탭에서 운영 중인 카페를 선택하면 대시보드로 진입합니다.</p>
+          </div>
+
+          <div class="grid grid-3">
+            <article class="card">
+              <h3>📊 오늘의 현황</h3>
+              <p>오늘 방문자 수, 체크인 수, 신규 리뷰 수, 평균 평점을 한눈에 확인합니다.</p>
+            </article>
+            <article class="card">
+              <h3>⚡ 빠른 이동</h3>
+              <p>캐스트 관리 · 출근표 · 이벤트 · 카페 설정 · 홈 배너 관리 화면으로 바로 이동합니다.</p>
+            </article>
+            <article class="card">
+              <h3>🔗 외부 링크</h3>
+              <p>SNS, 예약 페이지 등 외부 링크를 등록하면 대시보드 카드 목록으로 노출됩니다. 탭 시 앱 내 WebView로 열립니다.</p>
+            </article>
+          </div>
+
+          <div class="tip-box">
+            <strong>💡 Tip.</strong> 여러 카페를 운영하는 경우 상단 <em>카페 변경</em> 드롭다운으로 운영 중인 카페를 전환할 수 있습니다. 운영 카페가 1개이면 탭 진입 시 대시보드로 바로 이동합니다.
+          </div>
+        </section>
+
+        <!-- 캐스트 관리 -->
+        <section class="section anchor-target" id="owner-cast-mgmt">
+          <div class="section-header">
+            <h2 class="section-title">캐스트 관리</h2>
+            <p class="section-subtitle">소속 캐스트 프로필 등록 · 수정, 출근표 관리, 프로필 연결 요청 처리를 합니다.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-card">
+              <div class="step-num">①</div>
+              <div class="step-body">
+                <h4>새 캐스트 프로필 추가</h4>
+                <p>대시보드 → <em>캐스트 관리</em> → <em>캐스트 추가</em> 버튼을 누릅니다. 활동명, 컨셉 역할, 생일, 소개, 근무 요일을 입력하고 저장합니다. 프로필 이미지는 서버에 업로드됩니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">②</div>
+              <div class="step-body">
+                <h4>출근표 관리</h4>
+                <p>각 캐스트의 근무 요일을 <em>castSchedules</em> 기준으로 등록합니다. 홈 화면의 <em>생일인 메이드</em> 섹션과 탐색 탭 캐스트 카드에 자동 반영됩니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">③</div>
+              <div class="step-body">
+                <h4>프로필 연결 요청 승인 / 반려</h4>
+                <p>캐스트 계정이 본인 프로필 연결을 신청하면 <em>캐스트 관리 섹션</em> 상단에 요청 카드가 나타납니다. 신청자 활동명, 연결 대상 캐스트명, 신청 메시지를 확인 후 <em>승인</em> 또는 <em>반려</em>를 선택합니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice" style="margin-top: 14px;">
+            ⚠️ 프로필 연결 요청은 최신순으로 최대 3건까지 표시됩니다. <em>전체 보기</em>를 누르면 모든 요청을 확인할 수 있습니다.
+          </div>
+        </section>
+
+        <!-- 메뉴·굿즈 관리 -->
+        <section class="section anchor-target" id="owner-menu-goods">
+          <div class="section-header">
+            <h2 class="section-title">메뉴 · 굿즈 관리</h2>
+            <p class="section-subtitle">대시보드 → <em>메뉴&amp;굿즈 관리</em>에서 판매 상품을 등록하고 관리합니다.</p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <span class="fc-icon">☕</span>
+              <h4>메뉴 관리</h4>
+              <ul>
+                <li>메뉴 탭에서 항목 추가 · 수정 · 삭제</li>
+                <li>이름 · 가격 · 설명 · 카테고리 입력</li>
+                <li>판매 상태: <em>판매 중 / 품절</em> 토글</li>
+                <li>삭제 시 확인 다이얼로그 후 최종 반영</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">🎁</span>
+              <h4>굿즈 관리</h4>
+              <ul>
+                <li>굿즈 탭에서 항목 추가 · 수정 · 삭제</li>
+                <li>이름 · 가격 · 이미지 · 재고 수량 입력</li>
+                <li>재고가 0이면 자동으로 <em>품절</em> 표시</li>
+                <li>삭제 시 확인 다이얼로그 후 최종 반영</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="tip-box" style="margin-top: 12px;">
+            <strong>💡 Tip.</strong> 메뉴·굿즈 추가·수정·삭제 후 목록은 화면을 다시 켜지 않아도 <em>실시간으로 갱신</em>됩니다. 저장 후 바로 반영 여부를 확인하세요.
+          </div>
+        </section>
+
+        <!-- 공지·이벤트 -->
+        <section class="section anchor-target" id="owner-notice">
+          <div class="section-header">
+            <h2 class="section-title">공지 · 이벤트 관리</h2>
+            <p class="section-subtitle">대시보드 → <em>공지 및 이벤트 관리</em>에서 팬에게 소식을 전달합니다.</p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <span class="fc-icon">📢</span>
+              <h4>공지사항</h4>
+              <ul>
+                <li>공지 탭 하단 시트 → 제목 · 내용 · 상단 고정 여부 입력</li>
+                <li>고정 공지는 카페 상세 공지 탭 최상단에 표시</li>
+                <li>목록 페이지 크기: 15건씩 표시</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">🎉</span>
+              <h4>이벤트</h4>
+              <ul>
+                <li>이벤트 탭 하단 시트 → 제목 · 내용 · 기간 · 대표 이미지 1장</li>
+                <li>이벤트 기간 설정으로 시작일 · 종료일 지정</li>
+                <li>홈 화면 배너와 연계 가능 (홈 배너 별도 등록)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 홈 배너 -->
+        <section class="section anchor-target" id="owner-banner">
+          <div class="section-header">
+            <h2 class="section-title">홈 배너 관리</h2>
+            <p class="section-subtitle">대시보드 → <em>홈 배너 관리</em>에서 앱 홈 화면 상단 배너를 등록합니다.</p>
+          </div>
+
+          <div class="grid grid-3">
+            <article class="card">
+              <h3>배너 등록</h3>
+              <p>배너 이미지 · 제목 · 서브 문구 · 연결 링크(카페 상세 / 이벤트 / 외부 URL) · 노출 기간을 입력합니다.</p>
+            </article>
+            <article class="card">
+              <h3>배너 상태</h3>
+              <p>
+                <span class="badge badge-draft">DRAFT</span> 임시저장 &nbsp;
+                <span class="badge badge-pending">SCHEDULED</span> 노출 예약 &nbsp;
+                <span class="badge badge-active">ACTIVE</span> 노출 중 &nbsp;
+                종료 · 일시정지 가능
+              </p>
+            </article>
+            <article class="card">
+              <h3>슬롯 제한</h3>
+              <p>동시 활성 배너는 최대 5개입니다. 슬롯이 가득 찬 경우 예약 등록만 가능하며, 기존 배너 종료 후 자동 승격됩니다.(프리미엄 등록시 7개 까지 노출가능)</p>
+            </article>
+          </div>
+
+          <div class="notice" style="margin-top: 12px;">
+            ⚠️ 카페 운영자는 <strong>본인 운영 카페와 관련된 배너만</strong> 등록할 수 있습니다.
+          </div>
+        </section>
+
+        <!-- ─────────────────────────────── -->
+        <!-- SECTION: 캐스트                  -->
+        <!-- ─────────────────────────────── -->
+        <section class="section anchor-target" id="cast-start">
+          <div class="section-header">
+            <div class="role-label">🎀 캐스트 (CAST)</div>
+            <h2 class="section-title">시작하기 — 회원가입 &amp; 소속 카페 선택</h2>
+            <p class="section-subtitle">캐스트 계정으로 가입하고 소속 카페와 본인 프로필을 연결합니다.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-card">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h4>회원가입 — 역할 선택</h4>
+                <p>앱을 설치하고 회원가입 단계에서 <strong>캐스트</strong>를 선택합니다. 활동명 · 생일 · 소속 카페를 입력합니다. 소셜 로그인 또는 이메일 가입 모두 가능합니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h4>소속 카페 선택</h4>
+                <p>콘카에 등록된 카페를 검색해 소속 카페를 선택합니다. 선택한 카페 정보는 연결 대기 상태로 저장됩니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h4>캐스트 프로필 연결 신청</h4>
+                <p>가입 완료 후 <strong>팬관리 탭</strong>에서 기존 캐스트 프로필을 검색해 연결 신청을 보냅니다. 소속 카페 운영자가 승인하면 연결이 완료됩니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <strong>💡 Tip.</strong> 캐스트 계정은 회원가입 자체는 즉시 완료됩니다. 기존 캐스트 프로필과의 연결은 <em>운영자 승인</em>이 필요하며, 승인 전에도 팬관리 탭의 기본 기능을 이용할 수 있습니다.
+          </div>
+        </section>
+
+        <!-- 프로필 연결 -->
+        <section class="section anchor-target" id="cast-profile-link">
+          <div class="section-header">
+            <h2 class="section-title">캐스트 프로필 연결하기</h2>
+            <p class="section-subtitle">팬관리 탭에서 본인 캐스트 프로필을 찾아 연결 요청을 보냅니다.</p>
+          </div>
+
+          <div class="step-list">
+            <div class="step-card">
+              <div class="step-num">①</div>
+              <div class="step-body">
+                <h4>팬관리 → 캐스트 프로필 연결 섹션</h4>
+                <p>하단 탭 <em>팬관리</em>로 이동합니다. 프로필 연결 섹션에서 소속 카페에 등록된 캐스트 목록을 확인합니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">②</div>
+              <div class="step-body">
+                <h4>본인 프로필 선택 → 연결 요청 전송</h4>
+                <p>목록에서 본인의 캐스트 프로필을 찾아 연결 요청을 보냅니다. 요청 후 <span class="badge badge-pending">승인 대기</span> 상태로 표시됩니다. 재신청은 불가하며 운영자 처리를 기다립니다.</p>
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">③</div>
+              <div class="step-body">
+                <h4>승인 완료 또는 반려</h4>
+                <p>
+                  운영자가 <em>승인</em>하면 캐스트 프로필과 계정이 연결됩니다. <span class="badge badge-rejected">반려</span>된 경우에는 반려 상태가 표시되며, 프로필 목록에서 다시 연결 신청이 가능합니다.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice" style="margin-top: 14px;">
+            ⚠️ 콘카에 본인 캐스트 프로필이 없는 경우, 운영자가 먼저 프로필을 등록해야 합니다. 소속 카페 운영자에게 프로필 등록을 요청하세요.
+          </div>
+        </section>
+
+        <!-- 팬관리 탭 -->
+        <section class="section anchor-target" id="cast-fan-mgmt">
+          <div class="section-header">
+            <h2 class="section-title">팬관리 탭 기능</h2>
+            <p class="section-subtitle">캐스트 전용 탭으로, 팬과의 소통과 일정 관리를 지원합니다.</p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <span class="fc-icon">👤</span>
+              <h4>내 프로필 요약</h4>
+              <p>연결된 캐스트 프로필의 팔로워 수, 프로필 이미지, 소개 문구가 표시됩니다. <em>프로필 수정</em>으로 이름 · 컨셉 역할 · 생일 · 소개 · 근무 요일을 업데이트할 수 있습니다.</p>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">📅</span>
+              <h4>출근 일정 바로가기</h4>
+              <p>근무 요일을 등록하면 카페 상세 화면의 오늘 출근 캐스트 섹션에 자동 반영됩니다. 일정 변경 시 <em>프로필 수정</em>에서 근무 요일을 업데이트하세요.</p>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">📣</span>
+              <h4>팬 대상 공지 · 알림</h4>
+              <p>팔로워에게 공지 메시지를 보낼 수 있습니다. 공지는 홈 화면 카페 공지 섹션에도 노출될 수 있습니다.</p>
+            </div>
+            <div class="feature-card">
+              <span class="fc-icon">🔗</span>
+              <h4>소속 카페 대시보드 바로가기</h4>
+              <p>소속 카페의 정보를 확인하는 바로가기 링크입니다. 운영자 권한은 없으며 카페 정보 조회만 가능합니다.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="section anchor-target" id="faq">
+          <div class="section-header">
+            <h2 class="section-title">자주 묻는 질문 (FAQ)</h2>
+          </div>
+
+          <div class="faq-list">
+            <div class="faq-item">
+              <p class="faq-q">Q. 카페 운영자 신청 후 얼마나 기다려야 하나요?</p>
+              <p class="faq-a">관리자가 수동으로 검토하므로 처리 기간은 신청 상황에 따라 다릅니다. <em>카페관리 탭</em>의 신청 상태 카드에서 현재 진행 상황을 확인할 수 있습니다.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 카페 운영자 신청이 반려됐습니다. 어떻게 해야 하나요?</p>
+              <p class="faq-a">반려 상태가 표시되면 신청 카드에서 <em>재신청</em> 버튼이 활성화됩니다. 반려 사유를 확인하고 운영 증빙 이미지 등 필요한 정보를 보완해 다시 신청하세요.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 캐스트 프로필 연결이 필요 없이 캐스트 기능을 사용할 수 있나요?</p>
+              <p class="faq-a">회원가입 자체는 프로필 연결 없이 완료됩니다. 단, 팔로워 수 표시, 팬 공지 등 일부 기능은 캐스트 프로필이 연결된 후에 완전하게 활성화됩니다.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 메뉴를 추가했는데 카페 상세 화면에 바로 반영되지 않습니다.</p>
+              <p class="faq-a">메뉴·굿즈 변경은 저장 후 실시간으로 반영됩니다. 잠시 기다린 후 화면을 아래로 당겨 새로고침해 보세요. 반복적으로 발생하면 앱을 재시작해 주세요.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 홈 배너 슬롯이 모두 찼을 때 새 배너를 어떻게 등록하나요?</p>
+              <p class="faq-a">활성 슬롯이 가득 찬 경우 즉시 게시는 불가하며 <em>예약 등록</em>만 가능합니다. 기존 활성 배너가 종료되면 예약된 배너가 순서대로 자동 활성화됩니다.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 여러 카페를 운영하는데 탭 진입 시 어떤 카페가 표시되나요?</p>
+              <p class="faq-a">운영 카페가 2개 이상이면 진입 시 <em>내 카페 목록</em>이 먼저 표시됩니다. 카드를 탭해 원하는 카페의 대시보드로 이동하거나, 상단 드롭다운으로 카페를 전환할 수 있습니다.</p>
+            </div>
+            <div class="faq-item">
+              <p class="faq-q">Q. 이용 중 문제가 생기면 어디에 문의하나요?</p>
+              <p class="faq-a">앱 내 <em>내 정보 → 설정 → 문의하기</em>를 통해 문의를 남겨주세요. 또는 <a href="/support" style="color: var(--primary-strong);">고객지원 페이지</a>를 방문해 주세요.</p>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span>
+            <a href="/privacy">개인정보처리방침</a>
+          </span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

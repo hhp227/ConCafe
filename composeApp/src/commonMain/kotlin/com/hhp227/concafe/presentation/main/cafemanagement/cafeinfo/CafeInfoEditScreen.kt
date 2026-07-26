@@ -3,11 +3,13 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafeinfo
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,12 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.PhoneNumberTextField
+import com.hhp227.concafe.core.util.TimeUtils
+import com.hhp227.concafe.domain.model.ConceptType
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import kotlin.math.round
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeInfoEditScreen(
@@ -48,7 +61,7 @@ fun CafeInfoEditScreen(
             when (event) {
                 CafeInfoEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 CafeInfoEvent.ShowSaveSuccessMessage -> {
-                    snackbarHostState.showSnackbar("카페 정보가 저장되었습니다.")
+                    snackbarHostState.showSnackbar(getString(Res.string.cafeinfo_info_saved))
                 }
             }
         }
@@ -58,6 +71,18 @@ fun CafeInfoEditScreen(
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState
     )
+    if (uiState.isImageRequiredAlertVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) },
+            title = { Text(stringResource(Res.string.cafeinfo_alert_image_title)) },
+            text = { Text(stringResource(Res.string.cafeinfo_alert_image_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(CafeInfoEditAction.DismissImageRequiredAlert) }) {
+                    Text(stringResource(Res.string.banner_action_ok))
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -67,6 +92,8 @@ private fun CafeInfoEditContent(
     onAction: (CafeInfoEditAction) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = {
@@ -75,25 +102,32 @@ private fun CafeInfoEditContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.screenTitle, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(if (uiState.isRegistrationMode) {
+                            Res.string.cafeinfo_screen_title_registration
+                        } else {
+                            Res.string.cafeinfo_screen_title_edit
+                        }),
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeInfoEditAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.banner_content_back))
                     }
                 }
             )
         },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp,
-                border = BorderStroke(1.dp, Color(0x33FFD1DC))
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding()
+                        .fixedBottomBarInsets()
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -104,13 +138,17 @@ private fun CafeInfoEditContent(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
                         Text(
-                            text = uiState.submitButtonText,
+                            text = stringResource(if (uiState.isRegistrationMode) {
+                                Res.string.cafeinfo_submit_registration
+                            } else {
+                                Res.string.cafeinfo_submit_edit
+                            }),
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -122,16 +160,24 @@ private fun CafeInfoEditContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(ConCafeColors.background)
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), MaterialTheme.colorScheme.background)
+                            )
+                        )
+                    }
                 )
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .imePadding(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -143,28 +189,48 @@ private fun CafeInfoEditContent(
                                 .padding(vertical = 32.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFFEF6797))
+                            CircularProgressIndicator(color = ConCafeColors.primary)
                         }
                     }
                 }
                 uiState.infoMessage?.let { message ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when {
+                                message == "cafeinfo_info_saved" -> stringResource(Res.string.cafeinfo_info_saved)
+                                message == "cafeinfo_info_load_failed" -> stringResource(Res.string.cafeinfo_info_load_failed)
+                                message == "cafeinfo_info_image_required_one_or_more" -> stringResource(Res.string.cafeinfo_info_image_required_one_or_more)
+                                message == "cafeinfo_info_save_failed" -> stringResource(Res.string.cafeinfo_info_save_failed)
+                                message == "cafeinfo_info_registration_rep_required" -> stringResource(Res.string.cafeinfo_info_registration_rep_required)
+                                message == "cafeinfo_info_rep_upload_next_step" -> stringResource(Res.string.cafeinfo_info_rep_upload_next_step)
+                                message == "cafeinfo_info_gallery_add_next_step" -> stringResource(Res.string.cafeinfo_info_gallery_add_next_step)
+                                message == "cafeinfo_info_pin_location_hint" -> stringResource(Res.string.cafeinfo_info_pin_location_hint)
+                                message == "cafeinfo_info_exception_next_step" -> stringResource(Res.string.cafeinfo_info_exception_next_step)
+                                message == "cafeinfo_info_image_upload_failed" -> stringResource(Res.string.cafeinfo_info_image_upload_failed)
+                                message.startsWith("cafeinfo_info_gallery_max_exceeded:") -> {
+                                    val count = message.substringAfter(':').toIntOrNull() ?: 0
+                                    stringResource(Res.string.cafeinfo_info_gallery_max_exceeded, count)
+                                }
+                                else -> message
+                            },
                             onDismiss = { onAction(CafeInfoEditAction.DismissInfoMessage) }
                         )
                     }
                 }
                 item {
-                    EditSectionCard(title = "기본 정보") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_basic)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             CafeInfoTextField(
-                                label = "카페명",
+                                label = stringResource(Res.string.cafeinfo_label_name),
                                 value = uiState.cafeName,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeCafeName(it)) }
                             )
+                            CafeTypeDropdownField(
+                                selectedConceptType = uiState.conceptType,
+                                onSelect = { onAction(CafeInfoEditAction.ChangeConceptType(it)) }
+                            )
                             CafeInfoTextField(
-                                label = "카페 소개",
+                                label = stringResource(Res.string.cafeinfo_label_description),
                                 value = uiState.cafeDescription,
                                 minLines = 5,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeCafeDescription(it)) }
@@ -173,7 +239,7 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "대표 이미지") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_representative)) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             CompatImagePicker(
                                 onImageSelected = { imageUrl ->
@@ -187,7 +253,7 @@ private fun CafeInfoEditContent(
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(
                                             Brush.linearGradient(
-                                                colors = listOf(Color(0xFFFFD8E6), Color(0xFFFFEFF5))
+                                                colors = listOf(ConCafeColors.primaryContainer, MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
                                             ),
                                             RoundedCornerShape(20.dp)
                                         )
@@ -202,12 +268,12 @@ private fun CafeInfoEditContent(
                                             Icon(
                                                 Icons.Default.PhotoCamera,
                                                 contentDescription = null,
-                                                tint = Color(0xFF8B5164),
+                                                tint = ConCafeColors.primary,
                                                 modifier = Modifier.size(34.dp)
                                             )
                                             Text(
-                                                text = uiState.representativeImageTitle,
-                                                color = Color(0xFF5A4954),
+                                                text = stringResource(Res.string.cafeinfo_representative_title),
+                                                color = ConCafeColors.textSecondary,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -221,9 +287,9 @@ private fun CafeInfoEditContent(
                                 }
                             }
                             Text(
-                                text = "검색 결과에 노출되는 대표 이미지입니다",
+                                text = stringResource(Res.string.cafeinfo_representative_hint),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF8A8088),
+                                color = ConCafeColors.textMuted,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -232,9 +298,13 @@ private fun CafeInfoEditContent(
                 if (!uiState.isRegistrationMode) {
                     item {
                         EditSectionCard(
-                            title = "카페 갤러리",
+                            title = stringResource(Res.string.cafeinfo_section_gallery),
                             trailing = {
-                                Text(uiState.galleryLimitText, color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    stringResource(Res.string.cafeinfo_gallery_limit, uiState.galleryLimitCount, uiState.galleryMaxCount),
+                                    color = ConCafeColors.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         ) {
                             FlowRow(
@@ -244,9 +314,10 @@ private fun CafeInfoEditContent(
                             ) {
                                 uiState.galleryImages.forEachIndexed { index, imageUrl ->
                                     GalleryImageTile(
-                                        label = "이미지 ${index + 1}",
+                                        label = stringResource(Res.string.cafeinfo_image_label_prefix, index + 1),
                                         imageUrl = imageUrl,
-                                        index = index
+                                        index = index,
+                                        onRemoveClick = { onAction(CafeInfoEditAction.RemoveGalleryImage(index)) }
                                     )
                                 }
                                 if (uiState.galleryImages.size < uiState.galleryMaxCount) {
@@ -263,13 +334,36 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "위치 및 연락처") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_location_contact)) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             CafeInfoTextField(
-                                label = "지역 / 주소",
+                                label = stringResource(Res.string.cafeinfo_label_address),
                                 value = uiState.address,
                                 trailingIcon = {
-                                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFEF6797))
+                                    IconButton(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                val resolved = resolveCafeAddress(uiState.address)
+                                                if (resolved == null) {
+                                                    snackbarHostState.showSnackbar(getString(Res.string.cafeinfo_info_address_not_found))
+                                                } else {
+                                                    onAction(
+                                                        CafeInfoEditAction.SetPinnedLocation(
+                                                            resolved.latitude,
+                                                            resolved.longitude
+                                                        )
+                                                    )
+                                                    onAction(CafeInfoEditAction.ChangeAddress(resolved.fullAddress))
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.LocationOn,
+                                            contentDescription = stringResource(Res.string.cafeinfo_content_find_by_address),
+                                            tint = ConCafeColors.primary
+                                        )
+                                    }
                                 },
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeAddress(it)) }
                             )
@@ -277,35 +371,59 @@ private fun CafeInfoEditContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
-                                    .background(Color(0xFFF4EFF2), RoundedCornerShape(18.dp))
+                                    .background(ConCafeColors.surfaceTint, RoundedCornerShape(18.dp))
                             ) {
-                                Column(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Map, contentDescription = null, tint = Color(0xFFB5A9B0), modifier = Modifier.size(36.dp))
-                                    Text("지도 미리보기", color = Color(0xFF998D95))
-                                }
+                                CafeInfoLocationPickerMap(
+                                    latitude = uiState.mapLatitude,
+                                    longitude = uiState.mapLongitude,
+                                    onLocationSelected = { latitude, longitude, address ->
+                                        onAction(CafeInfoEditAction.SetPinnedLocation(latitude, longitude))
+                                        if (address.isNullOrBlank()) {
+                                            coroutineScope.launch {
+                                                val fallbackAddress = getString(
+                                                    Res.string.cafeinfo_coordinate_fallback,
+                                                    formatCoordinate(latitude),
+                                                    formatCoordinate(longitude)
+                                                )
+
+                                                onAction(CafeInfoEditAction.ChangeAddress(fallbackAddress))
+                                            }
+                                        } else {
+                                            onAction(CafeInfoEditAction.ChangeAddress(address))
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(18.dp))
+                                )
                                 Surface(
                                     modifier = Modifier
                                         .align(Alignment.BottomEnd)
                                         .padding(10.dp)
                                         .clickable { onAction(CafeInfoEditAction.ClickPinLocation) },
                                     shape = RoundedCornerShape(999.dp),
-                                    color = Color.White.copy(alpha = 0.92f),
-                                    border = BorderStroke(1.dp, Color(0x33FFD1DC))
+                                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
+                                    border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
                                 ) {
                                     Text(
-                                        text = "위치 지정",
+                                        text = stringResource(Res.string.cafeinfo_action_pin_location),
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
-                            CafeInfoTextField(
-                                label = "연락처",
+                            Text(
+                                text = stringResource(
+                                    Res.string.cafeinfo_selected_coordinate,
+                                    formatCoordinate(uiState.mapLatitude),
+                                    formatCoordinate(uiState.mapLongitude)
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ConCafeColors.textSecondary
+                            )
+                            PhoneNumberTextField(
+                                label = stringResource(Res.string.cafeinfo_label_contact),
                                 value = uiState.contactNumber,
                                 onValueChange = { onAction(CafeInfoEditAction.ChangeContactNumber(it)) }
                             )
@@ -313,17 +431,17 @@ private fun CafeInfoEditContent(
                     }
                 }
                 item {
-                    EditSectionCard(title = "영업시간") {
+                    EditSectionCard(title = stringResource(Res.string.cafeinfo_section_business_hours)) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             HoursRow(
-                                label = "평일",
+                                label = stringResource(Res.string.cafeinfo_label_weekday),
                                 open = uiState.weekdayOpen,
                                 close = uiState.weekdayClose,
                                 onOpenChange = { onAction(CafeInfoEditAction.ChangeWeekdayOpen(it)) },
                                 onCloseChange = { onAction(CafeInfoEditAction.ChangeWeekdayClose(it)) }
                             )
                             HoursRow(
-                                label = "주말",
+                                label = stringResource(Res.string.cafeinfo_label_weekend),
                                 open = uiState.weekendOpen,
                                 close = uiState.weekendClose,
                                 onOpenChange = { onAction(CafeInfoEditAction.ChangeWeekendOpen(it)) },
@@ -333,8 +451,8 @@ private fun CafeInfoEditContent(
                                 onClick = { onAction(CafeInfoEditAction.ClickManageExceptionDates) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Default.EditCalendar, contentDescription = null, tint = Color(0xFFEF6797))
-                                Text("예외 영업일 관리", color = Color(0xFFEF6797), fontWeight = FontWeight.SemiBold)
+                                Icon(Icons.Default.EditCalendar, contentDescription = null, tint = ConCafeColors.primary)
+                                Text(stringResource(Res.string.cafeinfo_action_manage_exception), color = ConCafeColors.primary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -342,6 +460,11 @@ private fun CafeInfoEditContent(
             }
         }
     }
+}
+
+private fun formatCoordinate(value: Double): String {
+    val rounded = round(value * 100000.0) / 100000.0
+    return rounded.toString()
 }
 
 @Composable
@@ -352,8 +475,8 @@ private fun EditSectionCard(
 ) {
     Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0x1AFFD1DC))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier
@@ -397,7 +520,8 @@ private fun CafeInfoTextField(
 private fun GalleryImageTile(
     label: String,
     imageUrl: String,
-    index: Int
+    index: Int,
+    onRemoveClick: () -> Unit
 ) {
     val gradients = listOf(
         0xFFFFD8E6L to 0xFFFFF1F6L,
@@ -407,30 +531,50 @@ private fun GalleryImageTile(
     val colors = gradients[index % gradients.size]
 
     Box(
-        modifier = Modifier
-            .size(96.dp)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(colors.first), Color(colors.second))
-                ),
-                RoundedCornerShape(16.dp)
-            )
+        modifier = Modifier.size(96.dp),
+        contentAlignment = Alignment.TopEnd
     ) {
-        if (imageUrl.isNotBlank()) {
-            CompatImageDisplay(
-                imageUrl = imageUrl,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(colors.first), Color(colors.second))
+                    ),
+                    RoundedCornerShape(16.dp)
+                )
+        ) {
+            if (imageUrl.isNotBlank()) {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+                )
+            }
+            Text(
+                text = label,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(10.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = ConCafeColors.textSecondary,
+                fontWeight = FontWeight.SemiBold
             )
         }
-        Text(
-            text = label,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(10.dp),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF5A4954),
-            fontWeight = FontWeight.SemiBold
-        )
+        Surface(
+            modifier = Modifier.offset(x = 6.dp, y = (-6).dp),
+            shape = CircleShape,
+            color = Color.Black.copy(alpha = 0.52f),
+            onClick = onRemoveClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier
+                    .padding(4.dp)
+                    .size(12.dp)
+            )
+        }
     }
 }
 
@@ -439,19 +583,19 @@ private fun AddGalleryTile(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(96.dp)
-            .background(Color(0x1AFFD1DC), RoundedCornerShape(16.dp))
+            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             shape = CircleShape,
             color = Color.Transparent,
-            border = BorderStroke(2.dp, Color(0x66FFD1DC))
+            border = BorderStroke(2.dp, ConCafeColors.primaryContainer.copy(alpha = 0.4f))
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "이미지 추가",
-                tint = Color(0xFFEF6797),
+                contentDescription = stringResource(Res.string.cafeinfo_content_add_image),
+                tint = ConCafeColors.primary,
                 modifier = Modifier.padding(14.dp)
             )
         }
@@ -469,36 +613,161 @@ private fun HoursRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF8F5F6), RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
         SmallTimeField(value = open, onValueChange = onOpenChange)
-        Text("—", color = Color(0xFF8A8088))
+        Text(stringResource(Res.string.cafeinfo_dash), color = ConCafeColors.textMuted)
         SmallTimeField(value = close, onValueChange = onCloseChange)
     }
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun SmallTimeField(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.width(108.dp),
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedBorderColor = Color(0x33FFD1DC),
-            unfocusedBorderColor = Color(0x33FFD1DC)
+    var isTimePickerVisible by remember { mutableStateOf(false) }
+    val (initialHour, initialMinute) = remember(value) {
+        TimeUtils.parseHourMinuteOrDefault(value)
+    }
+
+    Box(modifier = Modifier.width(108.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            readOnly = true,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                focusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f),
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f)
+            ),
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.AccessTime,
+                    contentDescription = stringResource(Res.string.cafeinfo_content_select_time),
+                    tint = ConCafeColors.textMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         )
-    )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { isTimePickerVisible = true }
+        )
+    }
+    if (isTimePickerVisible) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { isTimePickerVisible = false },
+            title = { Text(stringResource(Res.string.cafeinfo_time_picker_title)) },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onValueChange(TimeUtils.formatHourMinute(timePickerState.hour, timePickerState.minute))
+                        isTimePickerVisible = false
+                    }
+                ) {
+                    Text(stringResource(Res.string.banner_action_ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isTimePickerVisible = false }) {
+                    Text(stringResource(Res.string.banner_action_cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CafeTypeDropdownField(
+    selectedConceptType: String,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedType = ConceptType.fromRaw(selectedConceptType) ?: ConceptType.MAID
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            value = cafeTypeLabel(selectedType),
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(Res.string.cafeinfo_label_type)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White,
+                focusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f),
+                unfocusedBorderColor = ConCafeColors.primaryContainer.copy(alpha = 0.2f)
+            )
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            ConceptType.entries.forEach { type ->
+                DropdownMenuItem(
+                    text = { Text(cafeTypeLabel(type)) },
+                    onClick = {
+                        onSelect(type.name)
+                        expanded = false
+                    },
+                    trailingIcon = if (type == selectedType) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = ConCafeColors.primary
+                            )
+                        }
+                    } else {
+                        null
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun cafeTypeLabel(type: ConceptType): String {
+    return when (type) {
+        ConceptType.MAID -> stringResource(Res.string.home_nearby_cafe_type_maid)
+        ConceptType.BUTLER -> stringResource(Res.string.home_nearby_cafe_type_butler)
+        ConceptType.IDOL -> stringResource(Res.string.home_nearby_cafe_type_idol)
+        ConceptType.DEVIL -> stringResource(Res.string.home_nearby_cafe_type_devil)
+        ConceptType.DOLL -> stringResource(Res.string.home_nearby_cafe_type_doll)
+        ConceptType.COSPLAY -> stringResource(Res.string.home_nearby_cafe_type_cosplay)
+        ConceptType.NAMJANG -> stringResource(Res.string.home_nearby_cafe_type_namjang)
+        ConceptType.YOKAI -> stringResource(Res.string.home_nearby_cafe_type_yokai)
+        ConceptType.CAT -> stringResource(Res.string.home_nearby_cafe_type_cat)
+        ConceptType.OTHER -> stringResource(Res.string.home_nearby_cafe_type_other)
+    }
 }
 
 @Composable
@@ -508,8 +777,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -522,10 +791,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
             TextButton(onClick = onDismiss) {
-                Text("닫기", color = Color(0xFF6B5320))
+                Text(stringResource(Res.string.banneredit_action_close), color = ConCafeColors.goldDeep)
             }
         }
     }

@@ -1,16 +1,13 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.PagingDataSource
-import com.hhp227.concafe.data.source.VisitDataSource
+import com.hhp227.concafe.data.source.VisitRemoteDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Visit
 import com.hhp227.concafe.domain.model.VisitVerificationResult
 import com.hhp227.concafe.domain.repository.VisitRepository
-import kotlinx.datetime.Clock
 
 class VisitRepositoryImpl(
-    private val visitDataSource: VisitDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val visitRemoteDataSource: VisitRemoteDataSource
 ) : VisitRepository {
     override suspend fun verifyVisit(
         cafeId: String,
@@ -18,25 +15,64 @@ class VisitRepositoryImpl(
         longitude: Double,
         visitedAt: String
     ): VisitVerificationResult {
-        return visitDataSource.verifyVisitResult(cafeId, latitude, longitude)
+        return visitRemoteDataSource.verifyVisit(cafeId, latitude, longitude)
     }
 
     override suspend fun createVisit(
         userId: String,
         cafeId: String,
         visitedAt: String,
+        memo: String?,
+        latitude: Double,
+        longitude: Double
+    ): Visit {
+        val normalizedMemo = memo?.trim().takeIf { !it.isNullOrBlank() }
+        val verification = visitRemoteDataSource.verifyVisit(cafeId, latitude, longitude)
+
+        if (!verification.verified) {
+            throw IllegalArgumentException(verification.message)
+        } else {
+            return visitRemoteDataSource.createVisit(
+                userId = userId,
+                cafeId = cafeId,
+                visitedAt = visitedAt,
+                memo = normalizedMemo,
+                latitude = latitude,
+                longitude = longitude
+            )
+        }
+    }
+
+    override suspend fun createQrVisit(
+        userId: String,
+        cafeId: String,
+        visitedAt: String,
         memo: String?
     ): Visit {
-        val visit = Visit(
-            id = nextEntityId("visit"),
+        return visitRemoteDataSource.createQrVisit(
             userId = userId,
             cafeId = cafeId,
             visitedAt = visitedAt,
-            memo = memo,
-            verified = false
+            memo = memo?.trim().takeIf { !it.isNullOrBlank() }
         )
-        visitDataSource.visits.add(visit)
-        return visit
+    }
+
+    override suspend fun updateVisit(
+        visitId: String,
+        userId: String,
+        visitedAt: String,
+        memo: String?
+    ): Visit {
+        return visitRemoteDataSource.updateVisit(
+            visitId = visitId,
+            userId = userId,
+            visitedAt = visitedAt,
+            memo = memo
+        )
+    }
+
+    override suspend fun deleteVisit(visitId: String, userId: String) {
+        visitRemoteDataSource.deleteVisit(visitId = visitId, userId = userId)
     }
 
     override suspend fun getVisits(
@@ -44,12 +80,14 @@ class VisitRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Visit> {
-        val items = visitDataSource.visits.filter { it.userId == userId }.sortedByDescending { it.visitedAt }
-        return pagingDataSource.toPaged(items, cursor, pageSize)
+        return visitRemoteDataSource.fetchVisits(userId = userId, cursor = cursor, pageSize = pageSize)
     }
-}
 
-private fun nextEntityId(prefix: String): String {
-    val now = Clock.System.now().toEpochMilliseconds()
-    return "$prefix-$now"
+    override suspend fun getVerifiedVisitUserIdsByCafe(cafeId: String): Set<String> {
+        return visitRemoteDataSource.fetchVerifiedVisitUserIdsByCafe(cafeId)
+    }
+
+    override suspend fun hasVerifiedVisitAtCafe(userId: String, cafeId: String): Boolean {
+        return visitRemoteDataSource.hasVerifiedVisitAtCafe(userId = userId, cafeId = cafeId)
+    }
 }

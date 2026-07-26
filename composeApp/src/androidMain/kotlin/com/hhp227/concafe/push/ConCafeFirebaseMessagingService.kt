@@ -1,0 +1,65 @@
+package com.hhp227.concafe.push
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.hhp227.concafe.R
+import com.hhp227.concafe.di.resolveRegisterPushTokenUseCase
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
+class ConCafeFirebaseMessagingService : FirebaseMessagingService() {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        val notification = remoteMessage.notification
+        val data = remoteMessage.data
+        val title = notification?.title ?: data["title"] ?: getString(R.string.app_name)
+        val body = notification?.body ?: data["body"] ?: ""
+        val notificationId = (data["notificationId"] ?: remoteMessage.messageId ?: System.currentTimeMillis().toString())
+            .hashCode()
+
+        if (body.isEmpty()) {
+            return
+        } else {
+            PushNotificationChannels.ensureDefaultChannel(this)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+
+                if (permission != PackageManager.PERMISSION_GRANTED) {
+                    return
+                }
+            }
+            val builder = NotificationCompat.Builder(this, DEFAULT_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+            NotificationManagerCompat.from(this).notify(notificationId, builder.build())
+        }
+    }
+
+    override fun onNewToken(token: String) {
+        resolveAndroidPushTokenClient().saveToken(token = token)
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching {
+                resolveRegisterPushTokenUseCase().invoke(
+                    platform = "ANDROID",
+                    token = token
+                )
+            }
+        }
+    }
+
+    companion object {
+        const val DEFAULT_CHANNEL_ID = PushNotificationChannels.DEFAULT_CHANNEL_ID
+    }
+}

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 import Shared
 
 struct AccountSettingsView: View {
@@ -24,6 +25,8 @@ struct AccountSettingsView: View {
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .navigateToMain:
+                onNavigationAction(.navigateToMain())
             case .navigateToCastEdit(let cafeId, let castId):
                 onNavigationAction(.navigateToCastEdit(cafeId: cafeId, castId: castId))
             case .navigateToChangePassword:
@@ -32,15 +35,15 @@ struct AccountSettingsView: View {
                 alertMessage = message
             }
         }
-        .alert("계정 관리", isPresented: Binding(
+        .alert(String(localized: String.LocalizationValue("account_settings_title"), table: "Localizable"), isPresented: Binding(
             get: { alertMessage != nil },
             set: { if !$0 { alertMessage = nil } }
         )) {
-            Button("확인", role: .cancel) { alertMessage = nil }
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
         } message: {
             Text(alertMessage ?? "")
         }
-        .navigationTitle("계정 관리")
+        .navigationTitle(String(localized: String.LocalizationValue("account_settings_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -51,8 +54,11 @@ private struct AccountSettingsContentView: View {
     let onAction: (AccountSettingsAction) -> Void
 
     private var myInfoFeed: Shared.MyInfoFeed? { uiState.myInfoFeed }
+
     private var currentUser: User? { myInfoFeed?.user }
+
     private var currentCast: Cast? { myInfoFeed?.castDetail?.cast }
+
     private var linkedCafeName: String? { myInfoFeed?.castDetail?.cafe.name }
 
     var body: some View {
@@ -77,18 +83,21 @@ private struct AccountSettingsContentView: View {
                 }
             }
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(ConCafeColors.background)
         .sheet(isPresented: Binding(
             get: { uiState.isDeleteDialogVisible },
             set: { if !$0 { onAction(.dismissDeleteDialogTapped) } }
         )) {
             AccountDeleteConfirmationSheet(
-                confirmationText: Binding(
-                    get: { uiState.deleteConfirmation },
-                    set: { onAction(.deleteConfirmationChanged($0)) }
+                authProvider: uiState.authProvider,
+                passwordText: Binding(
+                    get: { uiState.deletePassword },
+                    set: { onAction(.deletePasswordChanged($0)) }
                 ),
+                errorMessage: uiState.deletePasswordErrorMessage,
                 onDismiss: { onAction(.dismissDeleteDialogTapped) },
-                onDelete: { onAction(.deleteAccountTapped) }
+                onDelete: { onAction(.deleteAccountTapped) },
+                onAppleTokenReceived: { onAction(.appleDeleteIdTokenReceived($0)) }
             )
         }
     }
@@ -104,19 +113,19 @@ private struct AccountSettingsContentView: View {
     }
 
     private var basicInfoSection: some View {
-        settingsCard(title: "기본 정보", symbol: "person.crop.circle") {
-            sectionEyebrow("내 계정에서 바로 수정 가능한 정보")
+        settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_basic"), table: "Localizable"), symbol: "person.crop.circle") {
+            sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_basic_eyebrow"), table: "Localizable"))
             ConCafeFormField(
-                label: "닉네임",
+                label: String(localized: String.LocalizationValue("account_settings_label_nickname"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.nicknameInput },
                     set: { onAction(.nicknameChanged($0)) }
                 ),
-                placeholder: "닉네임을 입력하세요"
+                placeholder: String(localized: String.LocalizationValue("account_settings_placeholder_nickname"), table: "Localizable")
             )
             infoSummaryCard
             if uiState.role == .cafeOwner {
-                Text("운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.")
+                Text(String(localized: String.LocalizationValue("account_settings_owner_hint"), table: "Localizable"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,23 +135,33 @@ private struct AccountSettingsContentView: View {
 
     private var infoSummaryCard: some View {
         VStack(spacing: 10) {
-            infoRow(label: "권한", value: uiState.role?.displayText ?? "")
-            infoRow(label: "가입일", value: (currentUser?.createdAt.isEmpty == false ? currentUser?.createdAt : "연동 예정") ?? "연동 예정")
+            infoRow(label: String(localized: String.LocalizationValue("account_settings_meta_role"), table: "Localizable"), value: uiState.role?.displayText ?? String(localized: String.LocalizationValue("account_settings_role_guest"), table: "Localizable"))
+            infoRow(
+                label: String(localized: String.LocalizationValue("account_settings_meta_joined_at"), table: "Localizable"),
+                value: (currentUser?.createdAt.isEmpty == false ? currentUser?.createdAt : String(localized: String.LocalizationValue("account_settings_meta_joined_pending"), table: "Localizable")) ?? String(localized: String.LocalizationValue("account_settings_meta_joined_pending"), table: "Localizable")
+            )
             if uiState.role == .cafeOwner {
-                infoRow(label: "운영 카페 수", value: "\(myInfoFeed?.ownedCafes.count ?? 0)곳")
+                infoRow(
+                    label: String(localized: String.LocalizationValue("account_settings_meta_owned_cafe_count_label"), table: "Localizable"),
+                    value: String(
+                        format: String(localized: String.LocalizationValue("account_settings_meta_owned_cafe_count_value"), table: "Localizable"),
+                        locale: Locale.current,
+                        myInfoFeed?.ownedCafes.count ?? 0
+                    )
+                )
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var saveSection: some View {
-        settingsCard(title: "저장", symbol: "square.and.arrow.down") {
-            sectionEyebrow("닉네임 변경 사항을 반영합니다")
-            primaryButton(title: "사용자 정보 저장") {
+        settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_save"), table: "Localizable"), symbol: "square.and.arrow.down") {
+            sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_save_eyebrow"), table: "Localizable"))
+            primaryButton(title: String(localized: String.LocalizationValue("account_settings_save_user"), table: "Localizable")) {
                 onAction(.saveUserInfoTapped)
             }
         }
@@ -151,11 +170,11 @@ private struct AccountSettingsContentView: View {
     @ViewBuilder
     private var castStatusSection: some View {
         if uiState.role == .cast {
-            settingsCard(title: "캐스트 연결 상태", symbol: "person.crop.rectangle.stack") {
-                sectionEyebrow("현재 연결된 프로필 요약")
+            settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_cast_status"), table: "Localizable"), symbol: "person.crop.rectangle.stack") {
+                sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_cast_status_eyebrow"), table: "Localizable"))
                 Text(castDescriptionText)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "6F6673"))
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -164,8 +183,8 @@ private struct AccountSettingsContentView: View {
     @ViewBuilder
     private var ownerStatusSection: some View {
         if uiState.role == .cafeOwner || uiState.role == .admin {
-            settingsCard(title: "권한 연결 상태", symbol: "storefront") {
-                sectionEyebrow("현재 계정에 연결된 운영 권한")
+            settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_owner_status"), table: "Localizable"), symbol: "storefront") {
+                sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_owner_status_eyebrow"), table: "Localizable"))
                 Text(ownerStatusText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -175,20 +194,22 @@ private struct AccountSettingsContentView: View {
     }
 
     private var securitySection: some View {
-        settingsCard(title: "보안 및 연결", symbol: "lock.shield") {
-            sectionEyebrow("전용 화면으로 이동해 안전하게 처리합니다")
-            linkedDestinationCard(
-                title: "비밀번호 변경",
-                description: "현재 비밀번호 확인 후 새 비밀번호를 설정합니다.",
-                supporting: "비밀번호는 전용 화면에서만 변경합니다.",
-                symbol: "lock.shield",
-                onTap: { onAction(.openChangePasswordTapped) }
-            )
+        settingsCard(title: String(localized: String.LocalizationValue("account_settings_section_security"), table: "Localizable"), symbol: "lock.shield") {
+            sectionEyebrow(String(localized: String.LocalizationValue("account_settings_section_security_eyebrow"), table: "Localizable"))
+            if uiState.canChangePassword {
+                linkedDestinationCard(
+                    title: String(localized: String.LocalizationValue("account_settings_link_change_password_title"), table: "Localizable"),
+                    description: String(localized: String.LocalizationValue("account_settings_link_change_password_desc"), table: "Localizable"),
+                    supporting: String(localized: String.LocalizationValue("account_settings_link_default_supporting"), table: "Localizable"),
+                    symbol: "lock.shield",
+                    onTap: { onAction(.openChangePasswordTapped) }
+                )
+            }
             if uiState.role == .cast {
                 linkedDestinationCard(
-                    title: "캐스트 정보 수정",
+                    title: String(localized: String.LocalizationValue("account_settings_link_cast_edit_title"), table: "Localizable"),
                     description: castLinkDescription,
-                    supporting: linkedCafeName ?? "캐스트 프로필 전체 편집 화면으로 이동합니다.",
+                    supporting: linkedCafeName ?? String(localized: String.LocalizationValue("account_settings_link_cast_edit_supporting"), table: "Localizable"),
                     symbol: "person.text.rectangle",
                     onTap: { onAction(.openCastEditTapped) }
                 )
@@ -200,9 +221,9 @@ private struct AccountSettingsContentView: View {
         Button {
             onAction(.showDeleteDialogTapped)
         } label: {
-            Text(uiState.isDeleteRequested ? "회원탈퇴 요청 완료" : "회원탈퇴")
+            Text(uiState.isDeleteRequested ? String(localized: String.LocalizationValue("account_settings_delete_requested"), table: "Localizable") : String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
                 .font(.footnote)
-                .foregroundStyle(uiState.isDeleteRequested ? Color(hex: "B84473") : Color(hex: "8E8794"))
+                .foregroundStyle(uiState.isDeleteRequested ? ConCafeColors.primary : ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
@@ -210,14 +231,18 @@ private struct AccountSettingsContentView: View {
 
     private var castDescriptionText: String {
         (currentCast?.desc.isEmpty == false ? currentCast?.desc : nil)
-        ?? "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다."
+        ?? String(localized: String.LocalizationValue("account_settings_cast_desc_empty"), table: "Localizable")
     }
 
     private var ownerStatusText: String {
         if uiState.role == .admin {
-            return "관리자 계정은 운영 승인과 검토 작업을 수행합니다."
+            return String(localized: String.LocalizationValue("account_settings_admin_status_desc"), table: "Localizable")
         }
-        return "운영 카페 \(myInfoFeed?.ownedCafes.count ?? 0)곳이 현재 계정과 연결되어 있습니다."
+        return String(
+            format: String(localized: String.LocalizationValue("account_settings_owner_status_desc"), table: "Localizable"),
+            locale: Locale.current,
+            myInfoFeed?.ownedCafes.count ?? 0
+        )
     }
 
     private var castLinkDescription: String {
@@ -228,11 +253,11 @@ private struct AccountSettingsContentView: View {
 
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(currentUser?.nickname.isEmpty == false ? (currentUser?.nickname ?? "") : "ConCafe User")
+            Text(currentUser?.nickname.isEmpty == false ? (currentUser?.nickname ?? "") : String(localized: String.LocalizationValue("account_settings_default_user_name"), table: "Localizable"))
                 .font(.title3)
                 .bold()
                 .foregroundStyle(.white)
-            Text(currentUser?.email.isEmpty == false ? (currentUser?.email ?? "") : "로그인 정보 없음")
+            Text(currentUser?.email.isEmpty == false ? (currentUser?.email ?? "") : String(localized: String.LocalizationValue("account_settings_no_login_info"), table: "Localizable"))
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.92))
             Text(uiState.role?.roleSummary ?? "")
@@ -244,7 +269,7 @@ private struct AccountSettingsContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -255,7 +280,7 @@ private struct AccountSettingsContentView: View {
     private func sectionEyebrow(_ text: String) -> some View {
         Text(text)
             .font(.caption)
-            .foregroundStyle(Color(hex: "8E8794"))
+            .foregroundStyle(ConCafeColors.textMuted)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -267,16 +292,16 @@ private struct AccountSettingsContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 Text(title)
-                    .font(.title3)
+                    .font(.headline)
                     .bold()
             }
             content()
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
@@ -290,11 +315,11 @@ private struct AccountSettingsContentView: View {
         Button(action: onTap) {
             HStack(spacing: 14) {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(hex: "FFF1F7"))
+                    .fill(ConCafeColors.background)
                     .frame(width: 46, height: 46)
                     .overlay(
                         Image(systemName: symbol)
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     )
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -304,7 +329,7 @@ private struct AccountSettingsContentView: View {
                     if !description.isEmpty {
                         Text(description)
                             .font(.subheadline)
-                            .foregroundStyle(Color(hex: "302732"))
+                            .foregroundStyle(.primary)
                     }
                     Text(supporting)
                         .font(.caption)
@@ -313,11 +338,11 @@ private struct AccountSettingsContentView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color(hex: "B3ACB7"))
+                    .foregroundStyle(ConCafeColors.outlineStrong)
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -328,10 +353,10 @@ private struct AccountSettingsContentView: View {
             Text(title)
                 .font(.headline)
                 .fontWeight(.bold)
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(Color(hex: "FFD1DC"))
+                .background(ConCafeColors.primaryContainer)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -355,91 +380,135 @@ private extension UserRole {
     var displayText: String {
         switch self {
         case .admin:
-            return "관리자"
+            return String(localized: String.LocalizationValue("account_settings_role_admin"), table: "Localizable")
         case .cafeOwner:
-            return "카페 운영자"
+            return String(localized: String.LocalizationValue("account_settings_role_owner"), table: "Localizable")
         case .cast:
-            return "캐스트"
+            return String(localized: String.LocalizationValue("account_settings_role_cast"), table: "Localizable")
         case .visitor:
-            return "일반 유저"
+            return String(localized: String.LocalizationValue("account_settings_role_visitor"), table: "Localizable")
         default:
-            return "게스트"
+            return String(localized: String.LocalizationValue("account_settings_role_guest"), table: "Localizable")
         }
     }
 
     var roleSummary: String {
         switch self {
         case .cast:
-            return "캐스트 계정으로 팬과의 접점을 관리하고 있어요."
+            return String(localized: String.LocalizationValue("account_settings_role_summary_cast"), table: "Localizable")
         case .cafeOwner:
-            return "운영 카페와 함께 계정 권한을 관리하고 있어요."
+            return String(localized: String.LocalizationValue("account_settings_role_summary_owner"), table: "Localizable")
         case .admin:
-            return "운영 관리용 관리자 계정입니다."
+            return String(localized: String.LocalizationValue("account_settings_role_summary_admin"), table: "Localizable")
         case .visitor:
-            return "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
+            return String(localized: String.LocalizationValue("account_settings_role_summary_visitor"), table: "Localizable")
         default:
-            return "로그인이 필요한 화면입니다."
+            return String(localized: String.LocalizationValue("account_settings_role_summary_guest"), table: "Localizable")
         }
     }
 }
 
 private struct AccountDeleteConfirmationSheet: View {
-    @Binding var confirmationText: String
+    let authProvider: AuthProvider
+
+    @Binding var passwordText: String
+
+    let errorMessage: String?
 
     let onDismiss: () -> Void
 
     let onDelete: () -> Void
 
+    let onAppleTokenReceived: (String) -> Void
+
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("회원탈퇴")
+                    Text(String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
                         .font(.title3.bold())
-                    Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
+                    Text(deleteDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                ConCafeFormField(
-                    label: "확인 문구",
-                    text: $confirmationText,
-                    placeholder: "탈퇴"
-                )
-                .textInputAutocapitalization(.never)
+                if authProvider == .email || authProvider == .unknown {
+                    ConCafeFormField(
+                        label: String(localized: String.LocalizationValue("account_settings_delete_password_label"), table: "Localizable"),
+                        text: $passwordText,
+                        placeholder: String(localized: String.LocalizationValue("account_settings_delete_password_placeholder"), table: "Localizable"),
+                        isSecure: true
+                    )
+                    .textInputAutocapitalization(.never)
+                } else if authProvider == .apple {
+                    SignInWithAppleButton(.continue) { request in
+                        request.requestedScopes = []
+                    } onCompletion: { result in
+                        if case let .success(authorization) = result,
+                           let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                           let identityTokenData = credential.identityToken,
+                           let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                            onAppleTokenReceived(identityToken)
+                        }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                if let errorMessage, !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(Color.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 HStack(spacing: 12) {
                     Button(action: onDismiss) {
-                        Text("취소")
+                        Text(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"))
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color(hex: "6F6673"))
+                            .foregroundStyle(ConCafeColors.textSecondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
-                            .background(Color(hex: "F4EDF1"))
+                            .background(ConCafeColors.surfaceTint)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    Button(action: onDelete) {
-                        Text("회원탈퇴")
-                            .font(.subheadline.weight(.bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .background(Color(hex: "C9527E"))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    if authProvider != .apple {
+                        Button(action: onDelete) {
+                            Text(String(localized: String.LocalizationValue("account_settings_delete"), table: "Localizable"))
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(ConCafeColors.primary)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 Spacer()
             }
             .padding(20)
-            .background(Color(hex: "FFFBFD"))
+            .background(ConCafeColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") {
+                    Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                         onDismiss()
                     }
                 }
             }
+        }
+    }
+
+    private var deleteDescription: String {
+        switch authProvider {
+        case .google:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_google"), table: "Localizable")
+        case .kakao:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_kakao"), table: "Localizable")
+        case .apple:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc_apple"), table: "Localizable")
+        default:
+            return String(localized: String.LocalizationValue("account_settings_delete_dialog_desc"), table: "Localizable")
         }
     }
 }

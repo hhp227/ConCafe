@@ -6,4 +6,6 @@ sealed interface CastEvent {
     data class NavigateToCafe(val id: String) : CastEvent
 
     data object NavigateToSignIn : CastEvent
+
+    data class NavigateToPicture(val imageUrl: String) : CastEvent
 }

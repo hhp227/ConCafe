@@ -26,6 +26,28 @@
 - 비로그인 사용자가 카페/캐스트 카드를 탭하면 네비게이션은 차단하고 로그인 유도 Dialog/Alert를 노출한다.
 - 로그인 유도 Dialog/Alert의 기본 액션은 `로그인`(SignIn 이동) / `취소`다.
 
+### 구현 정합성 메모 (2026-03-22)
+- 런타임 앱 데이터소스는 `FirestoreConCafeDataSource` + Firebase Auth/Firestore/Storage REST 경로를 사용한다.
+- `MockConCafeDataSource`는 현재 `shared/src/commonTest` 테스트 전용으로만 남아 있고 앱 런타임에서는 사용하지 않는다.
+- 세션 복원은 3플랫폼 공통으로 `restoreSession` + `observeCurrentUser` 조합으로 동작한다.
+- 지도는 Android(Compose GoogleMap), iOS(Apple Map), Desktop(Google Maps JavaScript WebView)로 분기 구현되어 있다.
+- `운영관리`의 승인 대기 목록은 Firestore pending claim 조회 경로를 사용한다.
+
+### 구현 정합성 메모 (2026-03-26)
+- 카페 상세/리뷰 탭의 고비용 N+1 집계를 축소했다.
+- 카페 상세의 근무 캐스트 판별은 `castSchedules` 단건 반복 조회 대신 `카페+날짜` 기준 1회 조회로 정리했다.
+- 리뷰 리스트의 방문인증 뱃지는 백엔드가 유지하는 `reviews.visitVerified` 필드를 우선 사용한다.
+- 리뷰/공지 탭은 최초 미캐시 진입 시에만 원격 동기화를 수행하고, 탭 재진입 시 불필요한 전체 재조회는 하지 않는다.
+- iOS/Compose 카페 상세에서 리뷰 이벤트 발생 시 전체 상세 재조회 대신 리뷰 섹션 갱신 중심으로 동작한다.
+
+### 구현 정합성 메모 (2026-03-27)
+- Claim 화면 동기화는 `메타 확인 -> 변경 시 본조회` 패턴을 사용한다.
+  - `castClaims`: `cafes/{cafeId}/castClaims/sync`
+  - `cafeOwnerClaims`: `cafeOwnerClaims/sync`
+  - `cafeRegistrationClaims`: `cafeRegistrationClaims/sync`
+- 팬관리 탭의 캐스트 프로필 연결 상태는 전체 팬데이터 재조회 대신 Claim 상태 섹션을 경량 갱신한다.
+- 운영관리(Admin) / 카페관리 탭은 실행 중에도 다른 클라이언트의 Claim 변경(생성/승인/반려)을 반영하도록 주기 동기화(5초)를 사용한다.
+
 ---
 
 # 1️⃣ 🏠 홈 (Home)
@@ -234,6 +256,11 @@
 - 운영자는 `카페 관리 대시보드 > 캐스트 관리 섹션` 상단에서 요청을 검토하고 승인 / 반려한다.
 - 승인되면 해당 캐스트 문서의 `linkedUserId`가 현재 유저 id로 연결된다.
 - 연결된 캐스트 프로필이 삭제되면 계정은 다시 `미연결` 상태가 되며 팬관리에서 재신청할 수 있다.
+
+### 캐스트 프로필 연결 상태 복원 규칙 (2026-03-27)
+- 상태 계산은 `affiliatedCafeId` 캐시만 사용하지 않는다.
+- 사용자 claim 이력에서 `PENDING` 최신 항목을 우선 참조하고, 없으면 최신 claim의 카페를 fallback으로 사용한다.
+- 반려(`REJECTED`) 이후에는 같은 소속 카페의 요청 가능 캐스트 목록을 다시 노출해야 한다.
 
 ---
 

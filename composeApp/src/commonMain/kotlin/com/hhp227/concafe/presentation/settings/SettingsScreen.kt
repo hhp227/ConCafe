@@ -1,33 +1,14 @@
 package com.hhp227.concafe.presentation.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.HeadsetMic
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.QuestionAnswer
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,8 +22,37 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.theme.AppBrandTheme
+import com.hhp227.concafe.presentation.theme.AppThemeMode
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.settings_account_desc
+import concafe.composeapp.generated.resources.settings_account_title
+import concafe.composeapp.generated.resources.settings_app_info_desc
+import concafe.composeapp.generated.resources.settings_app_info_title
+import concafe.composeapp.generated.resources.settings_general_title
+import concafe.composeapp.generated.resources.settings_inquiry_desc
+import concafe.composeapp.generated.resources.settings_inquiry_title
+import concafe.composeapp.generated.resources.settings_notification_desc
+import concafe.composeapp.generated.resources.settings_notification_title
+import concafe.composeapp.generated.resources.settings_preferences_title
+import concafe.composeapp.generated.resources.settings_privacy_desc
+import concafe.composeapp.generated.resources.settings_privacy_title
+import concafe.composeapp.generated.resources.settings_sign_out_desc
+import concafe.composeapp.generated.resources.settings_sign_out_title
+import concafe.composeapp.generated.resources.settings_brand_theme_desc
+import concafe.composeapp.generated.resources.settings_brand_theme_maid
+import concafe.composeapp.generated.resources.settings_brand_theme_mens
+import concafe.composeapp.generated.resources.settings_brand_theme_title
+import concafe.composeapp.generated.resources.settings_theme_dark
+import concafe.composeapp.generated.resources.settings_theme_desc
+import concafe.composeapp.generated.resources.settings_theme_light
+import concafe.composeapp.generated.resources.settings_theme_title
+import concafe.composeapp.generated.resources.settings_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,14 +88,15 @@ fun SettingsScreen(
         }
     }
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("설정") },
+                title = { Text(stringResource(Res.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(SettingsAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
                         )
                     }
                 }
@@ -109,12 +120,14 @@ private fun SettingsContentScreen(
     val settingsItems = settingsItems(uiState.appVersion)
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 16.dp,
             end = 16.dp,
-            bottom = 24.dp
+            bottom = innerPadding.calculateBottomPadding() + 24.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -123,9 +136,22 @@ private fun SettingsContentScreen(
                 Text(
                     text = uiState.errorMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFD1436F)
+                    color = ConCafeColors.primary
                 )
             }
+        }
+        item {
+            SettingsSectionTitle(stringResource(Res.string.settings_preferences_title))
+        }
+        item {
+            SettingsThemeCard(
+                selectedThemeMode = uiState.themeMode,
+                selectedBrandTheme = uiState.brandTheme,
+                onAction = onAction
+            )
+        }
+        item {
+            SettingsSectionTitle(stringResource(Res.string.settings_general_title))
         }
         items(settingsItems, key = { it.id }) { item ->
             SettingsItemCard(
@@ -136,6 +162,123 @@ private fun SettingsContentScreen(
     }
 }
 
+@Composable
+private fun SettingsSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+    )
+}
+
+@Composable
+private fun SettingsThemeCard(
+    selectedThemeMode: AppThemeMode,
+    selectedBrandTheme: AppBrandTheme,
+    onAction: (SettingsAction) -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Palette,
+                    contentDescription = null,
+                    tint = ConCafeColors.primary
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 14.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.settings_theme_title),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = stringResource(Res.string.settings_theme_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_theme_light),
+                    selected = selectedThemeMode == AppThemeMode.LIGHT,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectThemeMode(AppThemeMode.LIGHT)) }
+                )
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_theme_dark),
+                    selected = selectedThemeMode == AppThemeMode.DARK,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectThemeMode(AppThemeMode.DARK)) }
+                )
+            }
+            Text(
+                text = stringResource(Res.string.settings_brand_theme_title),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(Res.string.settings_brand_theme_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_brand_theme_maid),
+                    selected = selectedBrandTheme == AppBrandTheme.MAID_CAFE,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectBrandTheme(AppBrandTheme.MAID_CAFE)) }
+                )
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_brand_theme_mens),
+                    selected = selectedBrandTheme == AppBrandTheme.MENS_CON_CAFE,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAction(SettingsAction.SelectBrandTheme(AppBrandTheme.MENS_CON_CAFE)) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeOptionButton(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(text) },
+        leadingIcon = {
+            RadioButton(
+                selected = selected,
+                onClick = onClick
+            )
+        },
+        modifier = modifier
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsItemCard(
@@ -143,7 +286,7 @@ private fun SettingsItemCard(
     onAction: (SettingsAction) -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         enabled = item.action != null,
         onClick = {
             item.action?.let(onAction)
@@ -158,11 +301,7 @@ private fun SettingsItemCard(
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                tint = if (item.action == SettingsAction.ClickSignOut) {
-                    Color(0xFFD1436F)
-                } else {
-                    Color(0xFFEF6797)
-                }
+                tint = if (item.action == SettingsAction.ClickSignOut) ConCafeColors.primary else ConCafeColors.primary
             )
             Column(
                 modifier = Modifier
@@ -173,7 +312,7 @@ private fun SettingsItemCard(
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7C7480)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             when {
@@ -181,14 +320,14 @@ private fun SettingsItemCard(
                     Text(
                         text = item.trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7C7480)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 item.action != null -> {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = Color(0xFFB3ACB7)
+                        tint = ConCafeColors.outlineStrong
                     )
                 }
             }
@@ -196,55 +335,49 @@ private fun SettingsItemCard(
     }
 }
 
+@Composable
 private fun settingsItems(appVersion: String): List<SettingsItem> = listOf(
     SettingsItem(
         id = "account",
-        title = "계정 관리",
-        description = "프로필과 로그인 정보를 관리합니다.",
+        title = stringResource(Res.string.settings_account_title),
+        description = stringResource(Res.string.settings_account_desc),
         icon = Icons.Default.PersonOutline,
         action = SettingsAction.ClickAccountSettings
     ),
     SettingsItem(
         id = "notification",
-        title = "알림 설정",
-        description = "출근, 생일, 공지 알림 설정 영역입니다.",
+        title = stringResource(Res.string.settings_notification_title),
+        description = stringResource(Res.string.settings_notification_desc),
         icon = Icons.Default.Notifications,
         action = SettingsAction.ClickNotificationSettings
     ),
     SettingsItem(
-        id = "customerSupport",
-        title = "고객지원",
-        description = "서비스 이용 관련 문의를 남길 수 있습니다.",
-        icon = Icons.Default.HeadsetMic,
-        action = SettingsAction.ClickCustomerSupport
-    ),
-    SettingsItem(
         id = "inquiry",
-        title = "문의하기",
-        description = "불편사항이나 제안을 입력 폼으로 전달합니다.",
+        title = stringResource(Res.string.settings_inquiry_title),
+        description = stringResource(Res.string.settings_inquiry_desc),
         icon = Icons.Default.QuestionAnswer,
         action = SettingsAction.ClickInquiry
     ),
     SettingsItem(
         id = "privacyPolicy",
-        title = "개인정보 처리방침",
-        description = "개인정보 처리방침 외부 링크를 확인합니다.",
+        title = stringResource(Res.string.settings_privacy_title),
+        description = stringResource(Res.string.settings_privacy_desc),
         icon = Icons.Default.Policy,
         action = SettingsAction.ClickPrivacyPolicy
     ),
     SettingsItem(
         id = "appInfo",
-        title = "앱 정보",
-        description = "현재 설치된 앱 버전을 확인합니다.",
+        title = stringResource(Res.string.settings_app_info_title),
+        description = stringResource(Res.string.settings_app_info_desc),
         icon = Icons.Default.Info,
         action = null,
         trailingLabel = "v$appVersion"
     ),
     SettingsItem(
         id = "signout",
-        title = "로그아웃",
-        description = "현재 계정에서 로그아웃합니다.",
-        icon = Icons.Default.Logout,
+        title = stringResource(Res.string.settings_sign_out_title),
+        description = stringResource(Res.string.settings_sign_out_desc),
+        icon = Icons.AutoMirrored.Filled.Logout,
         action = SettingsAction.ClickSignOut
     )
 )

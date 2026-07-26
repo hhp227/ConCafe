@@ -2,7 +2,9 @@ package com.hhp227.concafe.presentation.main.home
 
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.domain.model.HomeBanner
+import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.model.Notice
 
 data class HomeUiState(
@@ -13,6 +15,7 @@ data class HomeUiState(
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
     val popularCastCafeNames: Map<String, String>,
+    val popularCastCafeRegions: Map<String, String> = emptyMap(),
     val popularCastCursor: String? = null,
     val canLoadMorePopularCasts: Boolean,
     val isLoadingMorePopularCasts: Boolean = false,
@@ -21,7 +24,13 @@ data class HomeUiState(
     val canLoadMoreNearbyCafes: Boolean,
     val isLoadingMoreNearbyCafes: Boolean = false,
     val birthdayCasts: List<Cast>,
-    val notices: List<Notice>
+    val birthdayCastCafeNames: Map<String, String> = emptyMap(),
+    val notices: List<Notice>,
+    val cafeEvents: List<HomeCafeEvent>,
+    val cafeEventCursor: String? = null,
+    val canLoadMoreCafeEvents: Boolean = false,
+    val isLoadingMoreCafeEvents: Boolean = false,
+    val communityPosts: List<CommunityPost> = emptyList()
 ) {
     companion object {
         fun empty() = HomeUiState(
@@ -30,6 +39,7 @@ data class HomeUiState(
             banners = emptyList(),
             popularCasts = emptyList(),
             popularCastCafeNames = emptyMap(),
+            popularCastCafeRegions = emptyMap(),
             popularCastCursor = null,
             canLoadMorePopularCasts = false,
             isLoadingMorePopularCasts = false,
@@ -38,7 +48,13 @@ data class HomeUiState(
             canLoadMoreNearbyCafes = false,
             isLoadingMoreNearbyCafes = false,
             birthdayCasts = emptyList(),
-            notices = emptyList()
+            birthdayCastCafeNames = emptyMap(),
+            notices = emptyList(),
+            cafeEvents = emptyList(),
+            cafeEventCursor = null,
+            canLoadMoreCafeEvents = false,
+            isLoadingMoreCafeEvents = false,
+            communityPosts = emptyList()
         )
     }
 }

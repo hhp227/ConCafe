@@ -18,6 +18,8 @@ class ExploreViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let castEventPublisher: CastEventPublisher
@@ -44,6 +46,27 @@ class ExploreViewModel: ObservableObject {
         }
     }
 
+    private func observeCafeRegistrationClaimEvent() {
+        tasks[.cafeRegistrationClaimEvent]?.cancel()
+        tasks[.cafeRegistrationClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
+                    if let approved = event as? CafeRegistrationClaimEvent.Approved {
+                        let approvedCafeId = approved.approvedCafeId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        let alreadyVisible = !approvedCafeId.isEmpty &&
+                            self.uiState.cafes.contains { $0.id == approvedCafeId }
+
+                        if !alreadyVisible {
+                            self.loadCafePage(cursor: nil, append: false)
+                        }
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
     private func refreshCurrentTab() {
         tasks[.cafePage]?.cancel()
         tasks[.maidPage]?.cancel()
@@ -54,11 +77,13 @@ class ExploreViewModel: ObservableObject {
 
         if uiState.selectedTab == .cafe {
             uiState.cafes = []
+            uiState.hasLoadedCafes = false
             uiState.cafesNextCursor = nil
             uiState.canLoadMoreCafes = false
             loadCafePage(cursor: nil, append: false)
         } else {
             uiState.maids = []
+            uiState.hasLoadedMaids = false
             uiState.maidsNextCursor = nil
             uiState.canLoadMoreMaids = false
             loadMaidPage(cursor: nil, append: false)
@@ -73,6 +98,10 @@ class ExploreViewModel: ObservableObject {
         tasks[.cafePage] = Task {
             uiState.isLoadingMoreCafes = append
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getExploreCafePageUseCase.invoke(
                     query: queryOrNil,
                     regionKey: uiState.selectedRegion.rawValue,
@@ -86,6 +115,7 @@ class ExploreViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.cafes = append ? (uiState.cafes + (page.items as! [Cafe])) : (page.items as! [Cafe])
+                    uiState.hasLoadedCafes = true
                     uiState.cafesNextCursor = page.nextCursor
                     uiState.canLoadMoreCafes = page.hasNext
                 }
@@ -113,6 +143,10 @@ class ExploreViewModel: ObservableObject {
         tasks[.maidPage] = Task {
             uiState.isLoadingMoreMaids = append
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getExploreCastPageUseCase.invoke(
                     query: queryOrNil,
                     regionKey: uiState.selectedRegion.rawValue,
@@ -126,6 +160,7 @@ class ExploreViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.errorMessage = nil
                     uiState.maids = append ? (uiState.maids + (page.items as! [Cast])) : (page.items as! [Cast])
+                    uiState.hasLoadedMaids = true
                     uiState.maidsNextCursor = page.nextCursor
                     uiState.canLoadMoreMaids = page.hasNext
                 }
@@ -171,7 +206,7 @@ class ExploreViewModel: ObservableObject {
                     case let updated as Shared.CastEvent.Updated:
                         self.patchCast(updated.cast)
                     case let deleted as Shared.CastEvent.Deleted:
-                        self.uiState.maids.removeAll { $0.id == deleted.castId }
+                        self.removeCast(deleted.castId)
                     default:
                         break
                     }
@@ -195,16 +230,26 @@ class ExploreViewModel: ObservableObject {
     }
 
     private func addCastIfVisible(_ cast: Cast) {
-        guard !uiState.maids.contains(where: { $0.id == cast.id }), matchesCastFilters(cast) else { return }
+        guard uiState.hasLoadedMaids,
+              !uiState.maids.contains(where: { $0.id == cast.id }),
+              matchesCastFilters(cast) else { return }
         uiState.maids = (uiState.maids + [cast]).sortedCasts(by: uiState.selectedSort)
     }
 
     private func patchCast(_ cast: Cast) {
+        guard uiState.hasLoadedMaids else { return }
         uiState.maids = uiState.maids.compactMap { item in
             guard item.id == cast.id else { return item }
             return matchesCastFilters(cast) ? cast : nil
         }.sortedCasts(by: uiState.selectedSort)
     }
+
+    private func removeCast(_ castId: String) {
+        guard uiState.hasLoadedMaids else { return }
+        uiState.maids.removeAll { $0.id == castId }
+    }
+
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
 
     private func matchesCafeFilters(_ cafe: Cafe) -> Bool {
         let query = uiState.query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -216,12 +261,21 @@ class ExploreViewModel: ObservableObject {
         case .seoul:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Seoul") == .orderedSame
+        case .busan:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Busan") == .orderedSame
+        case .daegu:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("KR") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Daegu") == .orderedSame
         case .tokyo:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Tokyo") == .orderedSame
         case .osaka:
             matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
                 && cafe.region.city.caseInsensitiveCompare("Osaka") == .orderedSame
+        case .etc:
+            matchesRegion = cafe.region.country.caseInsensitiveCompare("JP") == .orderedSame
+                && cafe.region.city.caseInsensitiveCompare("Yokohama") == .orderedSame
         }
         return matchesQuery && matchesRegion
     }
@@ -254,9 +308,9 @@ class ExploreViewModel: ObservableObject {
             refreshCurrentTab()
         case .tabChanged(let tab):
             uiState.selectedTab = tab
-            if tab == .cafe, uiState.cafes.isEmpty {
+            if tab == .cafe, !uiState.hasLoadedCafes {
                 refreshCurrentTab()
-            } else if tab == .maid, uiState.maids.isEmpty {
+            } else if tab == .maid, !uiState.hasLoadedMaids {
                 refreshCurrentTab()
             }
         case .cafeTapped(let id):
@@ -285,16 +339,19 @@ class ExploreViewModel: ObservableObject {
         getExploreCafePageUseCase: GetExploreCafePageUseCase = KoinInitializerKt.resolveGetExploreCafePageUseCase(),
         getExploreCastPageUseCase: GetExploreCastPageUseCase = KoinInitializerKt.resolveGetExploreCastPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
     ) {
         self.getExploreCafePageUseCase = getExploreCafePageUseCase
         self.getExploreCastPageUseCase = getExploreCastPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
 
         observeSession()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -307,6 +364,7 @@ class ExploreViewModel: ObservableObject {
 
     private enum TaskKey {
         case session
+        case cafeRegistrationClaimEvent
         case cafeDetailEvent
         case castEvent
         case cafePage

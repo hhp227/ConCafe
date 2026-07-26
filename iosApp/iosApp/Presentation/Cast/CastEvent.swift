@@ -11,4 +11,5 @@ enum CastEvent {
     case navigateBack
     case navigateToCafe(id: String)
     case navigateToSignIn
+    case navigateToPicture(imageUrl: String)
 }

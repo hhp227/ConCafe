@@ -4,5 +4,8 @@ sealed interface HomeEvent {
     data class NavigateToExternalLink(val title: String, val url: String) : HomeEvent
     data class NavigateToCast(val id: String) : HomeEvent
     data class NavigateToCafe(val id: String) : HomeEvent
+    data class NavigateToCafeEvent(val cafeId: String, val eventId: String) : HomeEvent
     data object NavigateToSignIn : HomeEvent
+    data object NavigateToCommunity : HomeEvent
+    data class NavigateToPostDetail(val postId: String) : HomeEvent
 }

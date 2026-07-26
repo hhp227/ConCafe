@@ -7,6 +7,8 @@
 
 import SwiftUI
 import UIKit
+import MapKit
+import CoreLocation
 
 struct CafeInfoEditView: View {
     let cafeId: String?
@@ -25,6 +27,9 @@ struct CafeInfoEditView: View {
         CafeInfoEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
+            onSearchAddressLocation: { query in
+                resolveAddressAndUpdateMap(query: query)
+            },
             onRepresentativeImagePick: {
                 imagePickTarget = .representative
                 isPhotoPickerPresented = true
@@ -34,7 +39,11 @@ struct CafeInfoEditView: View {
                 isPhotoPickerPresented = true
             }
         )
-        .navigationTitle(viewModel.uiState.screenTitle)
+        .navigationTitle(
+            viewModel.uiState.isRegistrationMode
+            ? String(localized: String.LocalizationValue("cafeinfo_screen_title_registration"), table: "Localizable")
+            : String(localized: String.LocalizationValue("cafeinfo_screen_title_edit"), table: "Localizable")
+        )
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
@@ -44,6 +53,23 @@ struct CafeInfoEditView: View {
                 break
             }
         }
+        .alert(
+            String(localized: String.LocalizationValue("cafeinfo_alert_image_title"), table: "Localizable"),
+            isPresented: Binding(
+                get: { viewModel.uiState.isImageRequiredAlertVisible },
+                set: { presented in
+                    if !presented {
+                        viewModel.onAction(.dismissImageRequiredAlert)
+                    }
+                }
+            )
+        ) {
+            Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
+                viewModel.onAction(.dismissImageRequiredAlert)
+            }
+        } message: {
+            Text(String(localized: String.LocalizationValue("cafeinfo_alert_image_message"), table: "Localizable"))
+        }
         .sheet(isPresented: $isPhotoPickerPresented) {
             CompatImagePicker(
                 onImageSelected: { image in
@@ -51,24 +77,61 @@ struct CafeInfoEditView: View {
                     isPhotoPickerPresented = false
 
                     guard let target else { return }
-                    guard let imageUrl = saveImageToTemporaryFile(image) else {
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        guard let imageUrl else {
+                            imagePickTarget = nil
+                            return
+                        }
+
+                        switch target {
+                        case .representative:
+                            viewModel.onAction(.selectRepresentativeImage(imageUrl))
+                        case .gallery:
+                            viewModel.onAction(.addGalleryImage(imageUrl))
+                        }
+
                         imagePickTarget = nil
-                        return
                     }
-
-                    switch target {
-                    case .representative:
-                        viewModel.onAction(.selectRepresentativeImage(imageUrl))
-                    case .gallery:
-                        viewModel.onAction(.addGalleryImage(imageUrl))
-                    }
-
-                    imagePickTarget = nil
                 },
                 onDismiss: {
                     isPhotoPickerPresented = false
                 }
             )
+        }
+    }
+
+    private func resolveAddressAndUpdateMap(query: String) {
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if normalizedQuery.isEmpty {
+            return
+        }
+        let geocoder = CLGeocoder()
+
+        geocoder.geocodeAddressString(normalizedQuery) { placemarks, _ in
+            guard let location = placemarks?.first?.location else { return }
+            let fullAddress = placemarks?
+                .first
+                .flatMap { placemark -> String? in
+                    let address = [
+                        placemark.administrativeArea,
+                        placemark.locality,
+                        placemark.thoroughfare,
+                        placemark.subThoroughfare
+                    ]
+                        .compactMap { $0 }
+                        .joined(separator: " ")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    return address.isEmpty ? nil : address
+                } ?? normalizedQuery
+
+            DispatchQueue.main.async {
+                viewModel.onAction(.setPinnedLocation(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                ))
+                viewModel.onAction(.changeAddress(fullAddress))
+            }
         }
     }
 
@@ -94,50 +157,78 @@ private struct CafeInfoEditContentView: View {
 
     let onAction: (CafeInfoEditAction) -> Void
 
+    let onSearchAddressLocation: (String) -> Void
+
     let onRepresentativeImagePick: () -> Void
 
     let onGalleryImagePick: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if uiState.isLoading {
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 16) {
+                    if uiState.isLoading {
+                        ProgressView()
+                            .tint(ConCafeColors.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 32)
+                    }
+                    if let infoMessage = uiState.infoMessage {
+                        infoBanner(
+                            message: {
+                                switch infoMessage {
+                                case "cafeinfo_info_saved",
+                                     "cafeinfo_info_load_failed",
+                                     "cafeinfo_info_image_required_one_or_more",
+                                     "cafeinfo_info_save_failed",
+                                     "cafeinfo_info_registration_rep_required",
+                                     "cafeinfo_info_rep_upload_next_step",
+                                     "cafeinfo_info_gallery_add_next_step",
+                                     "cafeinfo_info_pin_location_hint",
+                                     "cafeinfo_info_exception_next_step",
+                                     "cafeinfo_info_image_upload_failed":
+                                    return String(localized: String.LocalizationValue(infoMessage), table: "Localizable")
+                                default:
+                                    if infoMessage.hasPrefix("cafeinfo_info_gallery_max_exceeded:") {
+                                        let value = infoMessage.split(separator: ":").last.flatMap { Int($0) } ?? 0
+                                        return String(
+                                            format: String(localized: String.LocalizationValue("cafeinfo_info_gallery_max_exceeded"), table: "Localizable"),
+                                            value
+                                        )
+                                    }
+                                    return infoMessage
+                                }
+                            }()
+                        )
+                    }
+                    basicInformationSection
+                    representativeImageSection
+                    if !uiState.isRegistrationMode {
+                        gallerySection
+                    }
+                    locationContactSection
+                    businessHoursSection
                 }
-                if let infoMessage = uiState.infoMessage {
-                    infoBanner(message: infoMessage)
-                }
-                basicInformationSection
-                representativeImageSection
-                if !uiState.isRegistrationMode {
-                    gallerySection
-                }
-                locationContactSection
-                businessHoursSection
+                .padding(16)
+                .padding(.bottom, 100)
             }
-            .padding(16)
-            .padding(.bottom, 100)
+            bottomSaveBar()
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomSaveBar
-        }
-        .background(Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
     }
 
     private var basicInformationSection: some View {
-        editSectionCard(title: "기본 정보") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_basic"), table: "Localizable")) {
             ConCafeFormField(
-                label: "카페명",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_name"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.cafeName },
                     set: { onAction(.changeCafeName($0)) }
                 )
             )
+            cafeTypeDropdown
             ConCafeFormEditor(
-                label: "카페 소개",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_description"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.cafeDescription },
                     set: { onAction(.changeCafeDescription($0)) }
@@ -146,8 +237,51 @@ private struct CafeInfoEditContentView: View {
         }
     }
 
+    private var cafeTypeDropdown: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(localized: String.LocalizationValue("cafeinfo_label_type"), table: "Localizable"))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+            Menu {
+                ForEach(CafeTypeOption.allCases) { option in
+                    Button {
+                        onAction(.changeConceptType(option.rawValue))
+                    } label: {
+                        if option.rawValue == uiState.conceptType {
+                            Label(option.title, systemImage: "checkmark")
+                        } else {
+                            Text(option.title)
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedCafeTypeTitle)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(ConCafeColors.textMuted)
+                }
+                .frame(height: 52)
+                .padding(.horizontal, 16)
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var selectedCafeTypeTitle: String {
+        CafeTypeOption(rawValue: uiState.conceptType)?.title ?? CafeTypeOption.maid.title
+    }
+
     private var representativeImageSection: some View {
-        editSectionCard(title: "대표 이미지") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_representative"), table: "Localizable")) {
             Button {
                 onRepresentativeImagePick()
             } label: {
@@ -156,7 +290,7 @@ private struct CafeInfoEditContentView: View {
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                    colors: [ConCafeColors.primaryContainer, Color(uiColor: .secondarySystemGroupedBackground)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -169,15 +303,15 @@ private struct CafeInfoEditContentView: View {
                                     VStack(spacing: 8) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 32, weight: .semibold))
-                                            .foregroundStyle(Color(hex: "8B5164"))
-                                        Text(uiState.representativeImageTitle)
+                                            .foregroundStyle(ConCafeColors.primary)
+                                        Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                             .font(.subheadline.weight(.bold))
-                                            .foregroundStyle(Color(hex: "5A4954"))
+                                            .foregroundStyle(ConCafeColors.textSecondary)
                                     }
                                 },
                                 loading: {
                                     ProgressView()
-                                        .tint(Color(hex: "9C7A88"))
+                                        .tint(ConCafeColors.textMuted)
                                 }
                             )
                             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -186,10 +320,10 @@ private struct CafeInfoEditContentView: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "camera.fill")
                                     .font(.system(size: 32, weight: .semibold))
-                                    .foregroundStyle(Color(hex: "8B5164"))
-                                Text(uiState.representativeImageTitle)
+                                    .foregroundStyle(ConCafeColors.primary)
+                                Text(String(localized: String.LocalizationValue("cafeinfo_representative_title"), table: "Localizable"))
                                     .font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Color(hex: "5A4954"))
+                                    .foregroundStyle(ConCafeColors.textSecondary)
                             }
                         }
                     }
@@ -201,18 +335,18 @@ private struct CafeInfoEditContentView: View {
                 .frame(height: 200)
             }
             .buttonStyle(.plain)
-            Text("검색 결과에 노출되는 대표 이미지입니다")
+            Text(String(localized: String.LocalizationValue("cafeinfo_representative_hint"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var gallerySection: some View {
-        editSectionCard(title: "카페 갤러리", trailing: {
-            Text(uiState.galleryLimitText)
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_gallery"), table: "Localizable"), trailing: {
+            Text(String(format: String(localized: String.LocalizationValue("cafeinfo_gallery_limit"), table: "Localizable"), uiState.galleryLimitCount, uiState.galleryMaxCount))
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
         }) {
             LazyVGrid(
                 columns: [
@@ -224,7 +358,7 @@ private struct CafeInfoEditContentView: View {
             ) {
                 ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
                     galleryItem(
-                        label: "이미지 \(index + 1)",
+                        label: String(format: String(localized: String.LocalizationValue("cafeinfo_image_label_prefix"), table: "Localizable"), index + 1),
                         imageUrl: imageUrl,
                         index: index
                     )
@@ -237,62 +371,88 @@ private struct CafeInfoEditContentView: View {
     }
 
     private var locationContactSection: some View {
-        editSectionCard(title: "위치 및 연락처") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_location_contact"), table: "Localizable")) {
             ConCafeFormField(
-                label: "지역 / 주소",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_address"), table: "Localizable"),
                 text: Binding(
                     get: { uiState.address },
                     set: { onAction(.changeAddress($0)) }
                 ),
                 trailingContent: {
-                    Image(systemName: "location.fill")
-                        .foregroundStyle(Color(hex: "EF6797"))
+                    Button {
+                        onSearchAddressLocation(uiState.address)
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .foregroundStyle(ConCafeColors.primary)
+                    }
+                    .buttonStyle(.plain)
                 }
             )
             ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(hex: "F4EFF2"))
-                    .frame(height: 160)
-                VStack(spacing: 8) {
-                    Image(systemName: "map")
-                        .font(.system(size: 36))
-                        .foregroundStyle(Color(hex: "B5A9B0"))
-                    Text("지도 미리보기")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(hex: "998D95"))
+                CafeInfoLocationMapView(
+                    latitude: uiState.mapLatitude,
+                    longitude: uiState.mapLongitude
+                ) { latitude, longitude, address in
+                    onAction(.setPinnedLocation(latitude: latitude, longitude: longitude))
+                    let resolvedAddress: String
+                    if let address, !address.isEmpty {
+                        resolvedAddress = address
+                    } else {
+                        resolvedAddress = String(format: String(localized: String.LocalizationValue("cafeinfo_coordinate_fallback"), table: "Localizable"), formatCoordinate(latitude), formatCoordinate(longitude))
+                    }
+                    onAction(.changeAddress(resolvedAddress))
                 }
+                    .frame(height: 160)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 Button {
                     onAction(.clickPinLocation)
                 } label: {
-                    Text("위치 지정")
+                    Text(String(localized: String.LocalizationValue("cafeinfo_action_pin_location"), table: "Localizable"))
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color(hex: "2B2330"))
+                        .foregroundStyle(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.92))
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92))
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color(hex: "FFD1DC").opacity(0.4), lineWidth: 1)
+                                .stroke(ConCafeColors.primaryContainer.opacity(0.4), lineWidth: 1)
                         )
                 }
                 .buttonStyle(.plain)
                 .padding(10)
             }
-            ConCafeFormField(
-                label: "연락처",
-                text: Binding(
-                    get: { uiState.contactNumber },
-                    set: { onAction(.changeContactNumber($0)) }
+            Text(String(format: String(localized: String.LocalizationValue("cafeinfo_selected_coordinate"), table: "Localizable"), formatCoordinate(uiState.mapLatitude), formatCoordinate(uiState.mapLongitude)))
+                .font(.caption)
+                .foregroundStyle(ConCafeColors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(localized: String.LocalizationValue("cafeinfo_label_contact"), table: "Localizable"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                PhoneTextField(
+                    text: Binding(
+                        get: { uiState.contactNumber },
+                        set: { onAction(.changeContactNumber($0)) }
+                    ),
+                    placeholder: String(localized: String.LocalizationValue("cafeinfo_label_contact_placeholder"), table: "Localizable")
                 )
-            )
+                .frame(height: 52)
+                .padding(.horizontal, 16)
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
+                )
+            }
         }
     }
 
     private var businessHoursSection: some View {
-        editSectionCard(title: "영업시간") {
+        editSectionCard(title: String(localized: String.LocalizationValue("cafeinfo_section_business_hours"), table: "Localizable")) {
             hoursRow(
-                label: "평일",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_weekday"), table: "Localizable"),
                 open: Binding(
                     get: { uiState.weekdayOpen },
                     set: { onAction(.changeWeekdayOpen($0)) }
@@ -303,7 +463,7 @@ private struct CafeInfoEditContentView: View {
                 )
             )
             hoursRow(
-                label: "주말",
+                label: String(localized: String.LocalizationValue("cafeinfo_label_weekend"), table: "Localizable"),
                 open: Binding(
                     get: { uiState.weekendOpen },
                     set: { onAction(.changeWeekendOpen($0)) }
@@ -318,20 +478,20 @@ private struct CafeInfoEditContentView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar.badge.clock")
-                    Text("예외 영업일 관리")
+                    Text(String(localized: String.LocalizationValue("cafeinfo_action_manage_exception"), table: "Localizable"))
                         .fontWeight(.semibold)
                 }
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
         }
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar() -> some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
             Button {
                 onAction(.clickSave)
@@ -342,7 +502,11 @@ private struct CafeInfoEditContentView: View {
                         ProgressView()
                             .progressViewStyle(.circular)
                     } else {
-                        Text(uiState.submitButtonText)
+                        Text(
+                            uiState.isRegistrationMode
+                            ? String(localized: String.LocalizationValue("cafeinfo_submit_registration"), table: "Localizable")
+                            : String(localized: String.LocalizationValue("cafeinfo_submit_edit"), table: "Localizable")
+                        )
                             .font(.headline.weight(.bold))
                     }
                     Spacer()
@@ -350,13 +514,17 @@ private struct CafeInfoEditContentView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .tint(Color(hex: "FFD1DC"))
-            .foregroundStyle(Color(hex: "2B2330"))
+            .tint(ConCafeColors.primaryContainer)
+            .foregroundStyle(.primary)
             .disabled(uiState.isSaving)
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 14)
-            .background(Color.white.opacity(0.92))
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                ? ConCafeColors.background
+                : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.92)
+            )
         }
     }
 
@@ -369,18 +537,18 @@ private struct CafeInfoEditContentView: View {
             HStack {
                 Text(title)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
                 Spacer()
                 trailing()
             }
             content()
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color(hex: "FFD1DC").opacity(0.1), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer.opacity(0.1), lineWidth: 1)
         )
     }
 
@@ -402,52 +570,66 @@ private struct CafeInfoEditContentView: View {
             ("FFD9CF", "FFF0EA")
         ]
         let colors = gradients[index % gradients.count]
-        return GeometryReader { proxy in
-            ZStack(alignment: .bottomLeading) {
-                let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
-                if !imageUrl.isEmpty {
-                    CafeInfoImageView(
-                        imageUrl: imageUrl,
-                        placeholder: {
-                            backgroundShape
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+        return ZStack(alignment: .topTrailing) {
+            GeometryReader { proxy in
+                ZStack(alignment: .bottomLeading) {
+                    let backgroundShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    if !imageUrl.isEmpty {
+                        CafeInfoImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                backgroundShape
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                        },
-                        loading: {
-                            ProgressView()
-                        }
-                    )
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                } else {
-                    backgroundShape
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            },
+                            loading: {
+                                ProgressView()
+                            }
                         )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        backgroundShape
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    Text(label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.32))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.black.opacity(0.32))
-                    .clipShape(Capsule())
-                    .padding(10)
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .aspectRatio(1, contentMode: .fit)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            Button {
+                onAction(.removeGalleryImage(index))
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 22, height: 22)
+                    .background(.black.opacity(0.52))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .offset(x: 6, y: -6)
         }
-        .aspectRatio(1, contentMode: .fit)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {
@@ -455,13 +637,13 @@ private struct CafeInfoEditContentView: View {
             onGalleryImagePick()
         } label: {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(hex: "FFD1DC").opacity(0.1))
+                .fill(ConCafeColors.primaryContainer.opacity(0.1))
                 .overlay {
                     Circle()
-                        .stroke(Color(hex: "FFD1DC").opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
                         .overlay {
                             Image(systemName: "plus")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                         .padding(22)
                 }
@@ -479,53 +661,98 @@ private struct CafeInfoEditContentView: View {
             Text(label)
                 .font(.subheadline.weight(.medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-            smallTimeField(text: open)
-            Text("—")
-                .foregroundStyle(Color(hex: "8A8088"))
-            smallTimeField(text: close)
+            TimeFieldPicker(text: open)
+            Text(String(localized: String.LocalizationValue("cafeinfo_dash"), table: "Localizable"))
+                .foregroundStyle(ConCafeColors.textMuted)
+            TimeFieldPicker(text: close)
         }
         .padding(12)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func smallTimeField(text: Binding<String>) -> some View {
-        TextField("", text: text)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.2), lineWidth: 1)
-            )
-            .frame(width: 108)
     }
 
     private func infoBanner(message: String) -> some View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("banneredit_action_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 
+}
+
+private struct TimeFieldPicker: View {
+    @Binding var text: String
+
+    @State private var isPresented = false
+
+    @State private var selectedTime = Date()
+
+    var body: some View {
+        Button {
+            selectedTime = TimeUtils.parseHourMinute(text)
+            isPresented = true
+        } label: {
+            HStack(spacing: 6) {
+                Text(normalizedText(text))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                Image(systemName: "clock")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ConCafeColors.textSecondary)
+            }
+            .frame(width: 108, height: 38)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $isPresented) {
+            CompatNavigationContainer(title: String(localized: String.LocalizationValue("cafeinfo_time_picker_title"), table: "Localizable")) {
+                VStack {
+                    DatePicker(
+                        String(localized: String.LocalizationValue("cafeinfo_time_picker_title"), table: "Localizable"),
+                        selection: $selectedTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .padding()
+                    Spacer()
+                }
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(String(localized: String.LocalizationValue("banner_action_ok"), table: "Localizable")) {
+                            text = TimeUtils.formatHourMinute(selectedTime)
+                            isPresented = false
+                        }
+                    }
+                }
+            }
+            .compatFractionSheetDetent(0.35)
+        }
+    }
+
+    private func normalizedText(_ raw: String) -> String {
+        return TimeUtils.formatHourMinute(TimeUtils.parseHourMinute(raw))
+    }
 }
 
 private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
@@ -565,6 +792,106 @@ private struct CafeInfoImageView<Placeholder: View, Loading: View>: View {
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
+}
+
+private func formatCoordinate(_ value: Double) -> String {
+    String(format: "%.5f", value)
+}
+
+private struct CafeInfoLocationMapView: UIViewRepresentable {
+    let latitude: Double
+
+    let longitude: Double
+
+    let onLocationSelected: (Double, Double, String?) -> Void
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+
+        let tapRecognizer = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleMapTap(_:))
+        )
+        mapView.addGestureRecognizer(tapRecognizer)
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        context.coordinator.onLocationSelected = onLocationSelected
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let region = MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+
+        mapView.setRegion(region, animated: false)
+        context.coordinator.updateAnnotation(on: mapView, coordinate: coordinate)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onLocationSelected: onLocationSelected)
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var onLocationSelected: (Double, Double, String?) -> Void
+
+        private var selectedAnnotation: MKPointAnnotation?
+
+        private let geocoder = CLGeocoder()
+
+        @objc func handleMapTap(_ recognizer: UITapGestureRecognizer) {
+            guard let mapView = recognizer.view as? MKMapView else { return }
+            let point = recognizer.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+            updateAnnotation(on: mapView, coordinate: coordinate)
+            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            geocoder.reverseGeocodeLocation(location) { placemarks, _ in
+                let first = placemarks?.first
+                let address = [
+                    first?.administrativeArea,
+                    first?.locality,
+                    first?.thoroughfare,
+                    first?.subThoroughfare
+                ]
+                    .compactMap { $0 }
+                    .joined(separator: " ")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let normalizedAddress = address.isEmpty ? nil : address
+                DispatchQueue.main.async {
+                    self.onLocationSelected(
+                        coordinate.latitude,
+                        coordinate.longitude,
+                        normalizedAddress
+                    )
+                }
+            }
+        }
+
+        func updateAnnotation(on mapView: MKMapView, coordinate: CLLocationCoordinate2D) {
+            if let selectedAnnotation {
+                selectedAnnotation.coordinate = coordinate
+            } else {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = coordinate
+                mapView.addAnnotation(annotation)
+                selectedAnnotation = annotation
+            }
+        }
+
+        init(onLocationSelected: @escaping (Double, Double, String?) -> Void) {
+            self.onLocationSelected = onLocationSelected
+        }
+    }
 }
 
 private enum CafeInfoImagePickTarget {

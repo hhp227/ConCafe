@@ -2,40 +2,16 @@ package com.hhp227.concafe.presentation.notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PersonAddAlt1
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,8 +30,19 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.NotificationListItem
 import com.hhp227.concafe.domain.model.NotificationSection
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_notification
+import concafe.composeapp.generated.resources.notification_login_required_desc
+import concafe.composeapp.generated.resources.notification_login_required_title
+import concafe.composeapp.generated.resources.notification_summary_desc
+import concafe.composeapp.generated.resources.notification_summary_title
+import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.signin_submit
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +62,7 @@ fun NotificationScreen(
                 NotificationEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
                 is NotificationEvent.NavigateToCafe -> onNavigationAction(NavigationAction.NavigateToCafe(event.id))
                 is NotificationEvent.NavigateToCast -> onNavigationAction(NavigationAction.NavigateToCast(event.id))
+                is NotificationEvent.NavigateToPost -> onNavigationAction(NavigationAction.NavigateToPostDetail(event.id))
                 NotificationEvent.NavigateToSignIn -> onNavigationAction(NavigationAction.NavigateToSignIn)
             }
         }
@@ -92,14 +80,15 @@ private fun NotificationContentScreen(
     onAction: (NotificationAction) -> Unit
 ) {
     Scaffold(
+        containerColor = ConCafeColors.background,
         topBar = {
             TopAppBar(
-                title = { Text("알림") },
+                title = { Text(stringResource(Res.string.common_notification)) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(NotificationAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.signin_back_content_description)
                         )
                     }
                 }
@@ -142,7 +131,7 @@ private fun NotificationSignInRequiredScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(ConCafeColors.background)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -150,7 +139,7 @@ private fun NotificationSignInRequiredScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 420.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -160,19 +149,19 @@ private fun NotificationSignInRequiredScreen(
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    text = "알림은 로그인 후 확인할 수 있어요",
+                    text = stringResource(Res.string.notification_login_required_title),
                     modifier = Modifier.fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "팔로우/출근/공지 알림을 보려면 로그인해 주세요.",
+                    text = stringResource(Res.string.notification_login_required_desc),
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF7C7480),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -180,7 +169,7 @@ private fun NotificationSignInRequiredScreen(
                     onClick = { onAction(NotificationAction.ClickSignIn) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("로그인하기")
+                    Text(stringResource(Res.string.signin_submit))
                 }
             }
         }
@@ -196,7 +185,7 @@ private fun NotificationSectionsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
@@ -210,16 +199,16 @@ private fun NotificationSectionsScreen(
                         .clip(RoundedCornerShape(24.dp))
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                                listOf(ConCafeColors.primary, ConCafeColors.secondary)
                             )
                         )
                         .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("새 알림 ${uiState.unreadCount}개", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.notification_summary_title, uiState.unreadCount), color = Color.White, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("출근, 생일, 공지를 섹션별로 빠르게 확인하세요.", color = Color.White.copy(alpha = 0.92f))
+                        Text(stringResource(Res.string.notification_summary_desc), color = Color.White.copy(alpha = 0.92f))
                     }
                     Icon(
                         imageVector = Icons.Filled.Notifications,
@@ -267,7 +256,7 @@ private fun NotificationItemCard(
     onAction: (NotificationAction) -> Unit
 ) {
     val visual = notificationVisual(item.type)
-    val containerColor = if (item.isRead) Color.White else Color(0xFFFFF3F8)
+    val containerColor = if (item.isRead) MaterialTheme.colorScheme.surface else ConCafeColors.background
 
     Card(
         modifier = Modifier
@@ -287,19 +276,31 @@ private fun NotificationItemCard(
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(visual.backgroundColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = visual.icon,
-                    contentDescription = null,
-                    tint = visual.iconColor,
-                    modifier = Modifier.size(22.dp)
-                )
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(visual.backgroundColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = visual.icon,
+                        contentDescription = null,
+                        tint = visual.iconColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                if (!item.isRead) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(12.dp)
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
+                            .padding(2.dp)
+                            .background(ConCafeColors.primary, CircleShape)
+                    )
+                }
             }
             Spacer(modifier = Modifier.size(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -312,14 +313,14 @@ private fun NotificationItemCard(
                     )
                     Text(
                         text = item.relativeTime,
-                        color = Color(0xFF8E8794),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = item.message,
-                    color = Color(0xFF6D6671),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -335,10 +336,17 @@ private data class NotificationVisual(
 
 private fun notificationVisual(type: String): NotificationVisual {
     return when (type) {
-        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, Color(0xFFE4F7EC), Color(0xFF2E9E5B))
-        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, Color(0xFFFFE6F1), Color(0xFFEB5F97))
-        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, Color(0xFFE8F0FF), Color(0xFF4A79E8))
-        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, Color(0xFFF1E8FF), Color(0xFF8A52E2))
-        else -> NotificationVisual(Icons.Filled.Notifications, Color(0xFFF2F2F2), Color(0xFF666666))
+        "CAST_SHIFT" -> NotificationVisual(Icons.Filled.Place, ConCafeColors.successContainer, ConCafeColors.success)
+        "CAST_SCHEDULE_ASSIGNED" -> NotificationVisual(Icons.Filled.EventAvailable, ConCafeColors.successContainer, ConCafeColors.success)
+        "BIRTHDAY" -> NotificationVisual(Icons.Filled.Cake, ConCafeColors.surfaceTint, ConCafeColors.primary)
+        "CAFE_NOTICE" -> NotificationVisual(Icons.Filled.Campaign, ConCafeColors.infoContainer, ConCafeColors.info)
+        "CAFE_EVENT" -> NotificationVisual(Icons.Filled.Celebration, ConCafeColors.warningContainer, ConCafeColors.warning)
+        "CAST_SCHEDULE_CREATED" -> NotificationVisual(Icons.Filled.EventAvailable, ConCafeColors.infoContainer, ConCafeColors.info)
+        "CAFE_TABLE_COUNT_UPDATE" -> NotificationVisual(Icons.Filled.TableRestaurant, ConCafeColors.successContainer, ConCafeColors.success)
+        "FOLLOW_UPDATE" -> NotificationVisual(Icons.Filled.PersonAddAlt1, ConCafeColors.primaryContainer, ConCafeColors.primary)
+        "COMMUNITY_COMMENT" -> NotificationVisual(Icons.Filled.Forum, ConCafeColors.infoContainer, ConCafeColors.info)
+        "COMMUNITY_LIKE" -> NotificationVisual(Icons.Filled.Favorite, ConCafeColors.surfaceTint, ConCafeColors.primary)
+        "WEEKLY_COMMUNITY_HIGHLIGHT" -> NotificationVisual(Icons.Filled.Whatshot, ConCafeColors.warningContainer, ConCafeColors.warning)
+        else -> NotificationVisual(Icons.Filled.Notifications, ConCafeColors.surfaceVariant, ConCafeColors.textSecondary)
     }
 }

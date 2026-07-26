@@ -4,5 +4,6 @@ data class CastDetail(
     val cast: Cast,
     val cafe: Cafe,
     val images: List<String>,
-    val schedule: List<CastSchedule>
+    val schedule: List<CastSchedule>,
+    val visitCertificationCount: Int = 0
 )

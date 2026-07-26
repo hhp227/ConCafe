@@ -5,5 +5,5 @@ data class ExternalLinkUiState(
     val url: String
 ) {
     val displayTitle: String
-        get() = title.ifBlank { "외부 링크" }
+        get() = title
 }

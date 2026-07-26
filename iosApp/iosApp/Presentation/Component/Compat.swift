@@ -9,10 +9,145 @@ import Foundation
 import SwiftUI
 import UIKit
 import PhotosUI
+import UniformTypeIdentifiers
+import Shared
 
 enum CompatNavigationBarStyle {
     case opaque
     case transparentScrollEdge
+}
+
+enum AppBarAppearance {
+    static func configureDefaultAppearance() {
+        let navigationBarAppearance = makeOpaqueNavigationBarAppearance()
+        let navigationBar = UINavigationBar.appearance()
+        navigationBar.isTranslucent = false
+        navigationBar.standardAppearance = navigationBarAppearance
+        navigationBar.scrollEdgeAppearance = navigationBarAppearance
+        navigationBar.compactAppearance = navigationBarAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = navigationBarAppearance
+        }
+
+        let tabBarAppearance = makeOpaqueTabBarAppearance()
+        let tabBar = UITabBar.appearance()
+        tabBar.standardAppearance = tabBarAppearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = tabBarAppearance
+        }
+    }
+
+    static func makeOpaqueNavigationBarAppearance() -> UINavigationBarAppearance {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = UIColor.separator
+        return appearance
+    }
+
+    static func makeTransparentNavigationBarAppearance() -> UINavigationBarAppearance {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
+        return appearance
+    }
+
+    static func applyNavigationBarStyle(_ style: CompatNavigationBarStyle, to navigationBar: UINavigationBar) {
+        applyNavigationBarStyle(style, to: navigationBar, updatesTranslucency: true)
+    }
+
+    fileprivate static func applyNavigationBarTransitionStyle(
+        _ style: CompatNavigationBarStyle,
+        to navigationBar: UINavigationBar
+    ) {
+        switch style {
+        case .opaque:
+            applyNavigationBarStyle(.opaque, to: navigationBar)
+        case .transparentScrollEdge:
+            let transparentAppearance = makeTransparentNavigationBarAppearance()
+            navigationBar.isTranslucent = true
+            navigationBar.standardAppearance = transparentAppearance
+            navigationBar.scrollEdgeAppearance = transparentAppearance
+            navigationBar.compactAppearance = transparentAppearance
+            if #available(iOS 15.0, *) {
+                navigationBar.compactScrollEdgeAppearance = transparentAppearance
+            }
+        }
+    }
+
+    private static func applyNavigationBarStyle(
+        _ style: CompatNavigationBarStyle,
+        to navigationBar: UINavigationBar,
+        updatesTranslucency: Bool
+    ) {
+        let standardAppearance = makeOpaqueNavigationBarAppearance()
+        let scrollEdgeAppearance: UINavigationBarAppearance
+
+        switch style {
+        case .opaque:
+            if updatesTranslucency {
+                navigationBar.isTranslucent = false
+            }
+            scrollEdgeAppearance = standardAppearance
+        case .transparentScrollEdge:
+            if updatesTranslucency {
+                navigationBar.isTranslucent = true
+            }
+            scrollEdgeAppearance = makeTransparentNavigationBarAppearance()
+        }
+
+        navigationBar.standardAppearance = standardAppearance
+        navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
+        navigationBar.compactAppearance = standardAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = scrollEdgeAppearance
+        }
+    }
+
+    private static func applyNavigationBarStyle(
+        _ style: CompatNavigationBarStyle,
+        in viewController: UIViewController?
+    ) {
+        guard let viewController else { return }
+
+        if let navigationController = viewController as? UINavigationController {
+            applyNavigationBarStyle(style, to: navigationController.navigationBar)
+        }
+
+        viewController.children.forEach {
+            applyNavigationBarStyle(style, in: $0)
+        }
+
+        applyNavigationBarStyle(style, in: viewController.presentedViewController)
+    }
+
+    fileprivate static func updateScrollContentInsetAdjustmentBehavior(
+        from view: UIView,
+        behavior: UIScrollView.ContentInsetAdjustmentBehavior
+    ) {
+        var currentView = view.superview
+
+        while let unwrappedView = currentView {
+            if let scrollView = unwrappedView as? UIScrollView {
+                scrollView.contentInsetAdjustmentBehavior = behavior
+                scrollView.contentInset.top = 0
+                scrollView.scrollIndicatorInsets.top = 0
+                break
+            } else {
+                currentView = unwrappedView.superview
+            }
+        }
+    }
+
+    private static func makeOpaqueTabBarAppearance() -> UITabBarAppearance {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = UIColor.separator
+        return appearance
+    }
+
 }
 
 struct ExploreKeyboardDismissModifier: ViewModifier {
@@ -56,6 +191,78 @@ struct ScrollViewKeyboardDismissConfigurator: UIViewRepresentable {
     }
 }
 
+struct ScrollViewContentInsetAdjustmentConfigurator: UIViewRepresentable {
+    let behavior: UIScrollView.ContentInsetAdjustmentBehavior
+
+    func makeUIView(context: Context) -> ContentInsetAdjustmentView {
+        ContentInsetAdjustmentView(behavior: behavior)
+    }
+
+    func updateUIView(_ uiView: ContentInsetAdjustmentView, context: Context) {
+        uiView.behavior = behavior
+        uiView.updateContentInsetAdjustmentBehavior()
+    }
+
+    final class ContentInsetAdjustmentView: UIView {
+        var behavior: UIScrollView.ContentInsetAdjustmentBehavior {
+            didSet {
+                updateContentInsetAdjustmentBehavior()
+            }
+        }
+
+        init(behavior: UIScrollView.ContentInsetAdjustmentBehavior) {
+            self.behavior = behavior
+            super.init(frame: .zero)
+            isHidden = true
+            isUserInteractionEnabled = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        override func didMoveToSuperview() {
+            super.didMoveToSuperview()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            updateContentInsetAdjustmentBehavior()
+        }
+
+        func updateContentInsetAdjustmentBehavior() {
+            AppBarAppearance.updateScrollContentInsetAdjustmentBehavior(from: self, behavior: behavior)
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func compatScrollTargetLayout() -> some View {
+        if #available(iOS 17.0, *) {
+            self.scrollTargetLayout()
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func compatViewAlignedScrollSnap() -> some View {
+        if #available(iOS 17.0, *) {
+            self.scrollTargetBehavior(.viewAligned)
+        } else {
+            self
+        }
+    }
+}
+
 struct CompatNavigationContainer<Content: View>: View {
     private let title: String?
 
@@ -94,10 +301,32 @@ struct CompatNavigationContainer<Content: View>: View {
     }
 }
 
+struct CompatPresentationBackgroundModifier: ViewModifier {
+    let color: Color
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content.presentationBackground(color)
+        } else {
+            content
+        }
+    }
+}
+
 struct CompatLargeSheetDetentModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 16.0, *) {
             content.presentationDetents([.large])
+        } else {
+            content
+        }
+    }
+}
+
+struct CompatMediumSheetDetentModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.presentationDetents([.medium])
         } else {
             content
         }
@@ -116,65 +345,126 @@ struct CompatFractionSheetDetentModifier: ViewModifier {
     }
 }
 
-final class NavigationBarAppearanceHostingController: UIViewController {
+struct CompatPresentationDragIndicatorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.presentationDragIndicator(.visible)
+        } else {
+            content
+        }
+    }
+}
+
+struct CompatSafeAreaBottomPaddingModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.padding(.bottom, Self.bottomSafeAreaInset)
+    }
+
+    private static var bottomSafeAreaInset: CGFloat {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }
+        return keyWindow?.safeAreaInsets.bottom ?? 0
+    }
+}
+
+struct CompatVerticalTextField: View {
+    let placeholder: String
+
+    @Binding var text: String
+
+    var body: some View {
+        if #available(iOS 16.0, *) {
+            TextField(placeholder, text: $text, axis: .vertical)
+                .lineLimit(1...3)
+        } else {
+            TextField(placeholder, text: $text)
+                .lineLimit(1)
+        }
+    }
+}
+
+final class NavigationBarAppearanceHostingController: UIViewController, UINavigationControllerDelegate {
+    private static var transitionStyle: CompatNavigationBarStyle?
+
     var style: CompatNavigationBarStyle = .opaque
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        installNavigationControllerDelegate()
         applyAppearanceIfNeeded()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        guard Self.transitionStyle == nil else { return }
         restoreOpaqueAppearance()
     }
 
     func applyAppearanceIfNeeded() {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
-        let standardAppearance = Self.makeOpaqueAppearance()
-        let scrollEdgeAppearance: UINavigationBarAppearance
-
-        switch style {
-        case .opaque:
-            scrollEdgeAppearance = standardAppearance
-        case .transparentScrollEdge:
-            scrollEdgeAppearance = Self.makeTransparentAppearance()
-        }
-
-        navigationBar.standardAppearance = standardAppearance
-        navigationBar.scrollEdgeAppearance = scrollEdgeAppearance
-        navigationBar.compactAppearance = standardAppearance
+        AppBarAppearance.applyNavigationBarStyle(style, to: navigationBar)
     }
 
     private func restoreOpaqueAppearance() {
         guard let navigationBar = navigationController?.navigationBar else { return }
 
-        let opaqueAppearance = Self.makeOpaqueAppearance()
+        let opaqueAppearance = AppBarAppearance.makeOpaqueNavigationBarAppearance()
+        navigationBar.isTranslucent = false
         navigationBar.standardAppearance = opaqueAppearance
         navigationBar.scrollEdgeAppearance = opaqueAppearance
         navigationBar.compactAppearance = opaqueAppearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = opaqueAppearance
+        }
     }
 
-    private static func makeOpaqueAppearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground
-        appearance.shadowColor = UIColor.separator
-        return appearance
+    static func prepareTransition(to style: CompatNavigationBarStyle) {
+        transitionStyle = style
     }
 
-    private static func makeTransparentAppearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.shadowColor = .clear
-        return appearance
+    private func installNavigationControllerDelegate() {
+        guard let navigationController else { return }
+        guard navigationController.delegate !== self else { return }
+        navigationController.delegate = self
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
+
+        UIView.performWithoutAnimation {
+            AppBarAppearance.applyNavigationBarTransitionStyle(
+                transitionStyle,
+                to: navigationController.navigationBar
+            )
+        }
+    }
+
+    func navigationController(
+        _ navigationController: UINavigationController,
+        didShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        guard let transitionStyle = Self.transitionStyle else { return }
+
+        AppBarAppearance.applyNavigationBarStyle(
+            transitionStyle,
+            to: navigationController.navigationBar
+        )
+        Self.transitionStyle = nil
     }
 }
 
@@ -226,12 +516,80 @@ struct NavigationBarVisibilityConfigurator: UIViewControllerRepresentable {
 }
 
 extension View {
+    @ViewBuilder
+    func compatOpaqueNavigationBarBackground() -> some View {
+        if #available(iOS 16.0, *) {
+            self
+                .toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .background(
+                    NavigationBarAppearanceConfigurator(style: .opaque)
+                        .frame(width: 0, height: 0)
+                )
+        } else {
+            self.background(
+                NavigationBarAppearanceConfigurator(style: .opaque)
+                    .frame(width: 0, height: 0)
+            )
+        }
+    }
+
+    @ViewBuilder
+    func compatMapNavigationBarAppearance() -> some View {
+        if #available(iOS 16.0, *) {
+            self
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+        } else {
+            self.background(
+                NavigationBarAppearanceConfigurator(style: .transparentScrollEdge)
+                    .frame(width: 0, height: 0)
+            )
+        }
+    }
+
+    @ViewBuilder
+    func compatSearchSuggestions(
+        cafes: [CheckInCafeSummary],
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        if #available(iOS 16.0, *) {
+            self.searchSuggestions {
+                ForEach(cafes, id: \.id) { cafe in
+                    Button(cafe.name) {
+                        onSelect(cafe.name)
+                    }
+                }
+            }
+        } else {
+            self
+        }
+    }
+}
+
+extension View {
+    func compatPresentationBackground(_ color: Color) -> some View {
+        modifier(CompatPresentationBackgroundModifier(color: color))
+    }
+
     func compatLargeSheetDetent() -> some View {
         modifier(CompatLargeSheetDetentModifier())
     }
 
+    func compatMediumSheetDetent() -> some View {
+        modifier(CompatMediumSheetDetentModifier())
+    }
+
     func compatFractionSheetDetent(_ fraction: CGFloat) -> some View {
         modifier(CompatFractionSheetDetentModifier(fraction: fraction))
+    }
+
+    func compatPresentationDragIndicator() -> some View {
+        modifier(CompatPresentationDragIndicatorModifier())
+    }
+
+    func compatSafeAreaBottomPadding() -> some View {
+        modifier(CompatSafeAreaBottomPaddingModifier())
     }
 
     func compatNavigationBarStyle(_ style: CompatNavigationBarStyle) -> some View {
@@ -250,6 +608,10 @@ extension View {
     func compatNavigationBarTransition(hideOnDisappear: Bool) -> some View {
         background(NavigationBarVisibilityConfigurator(hideOnDisappear: hideOnDisappear))
     }
+
+    func compatScrollContentInsetAdjustmentNever() -> some View {
+        background(ScrollViewContentInsetAdjustmentConfigurator(behavior: .never))
+    }
 }
 
 func compatSystemImageName(iOS16: String, fallback: String) -> String {
@@ -266,17 +628,11 @@ struct CompatImagePicker: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        if #available(iOS 16.0, *) {
-            PhotosUICompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        } else {
-            PHPickerCompatImagePicker(
-                onImageSelected: onImageSelected,
-                onDismiss: onDismiss
-            )
-        }
+        // Use one stable picker path across iOS 15/16 to avoid callback-loss regressions.
+        PHPickerCompatImagePicker(
+            onImageSelected: onImageSelected,
+            onDismiss: onDismiss
+        )
     }
 }
 
@@ -289,7 +645,6 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
         var configuration = PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
         configuration.selectionLimit = 1
         configuration.filter = .images
-
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         return picker
@@ -313,17 +668,56 @@ private struct PHPickerCompatImagePicker: UIViewControllerRepresentable {
             _ picker: PHPickerViewController,
             didFinishPicking results: [PHPickerResult]
         ) {
-            picker.dismiss(animated: true)
-            parent.onDismiss()
-
-            guard let provider = results.first?.itemProvider,
-                  provider.canLoadObject(ofClass: UIImage.self) else { return }
-
-            provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
-                guard let image = object as? UIImage else { return }
+            guard let provider = results.first?.itemProvider else {
                 DispatchQueue.main.async {
-                    self?.parent.onImageSelected(image)
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
                 }
+                return
+            }
+            loadImage(from: provider) { image in
+                DispatchQueue.main.async {
+                    if let image {
+                        self.parent.onImageSelected(image)
+                    }
+                    picker.dismiss(animated: true)
+                    self.parent.onDismiss()
+                }
+            }
+        }
+
+        private func loadImage(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    if let image = object as? UIImage {
+                        completion(image)
+                    } else {
+                        self.loadImageFromDataRepresentation(from: provider, completion: completion)
+                    }
+                }
+                return
+            }
+            loadImageFromDataRepresentation(from: provider, completion: completion)
+        }
+
+        private func loadImageFromDataRepresentation(
+            from provider: NSItemProvider,
+            completion: @escaping (UIImage?) -> Void
+        ) {
+            let imageTypeIdentifier = UTType.image.identifier
+            guard provider.hasItemConformingToTypeIdentifier(imageTypeIdentifier) else {
+                completion(nil)
+                return
+            }
+            provider.loadDataRepresentation(forTypeIdentifier: imageTypeIdentifier) { data, _ in
+                guard let data, let image = UIImage(data: data) else {
+                    completion(nil)
+                    return
+                }
+                completion(image)
             }
         }
 
@@ -400,6 +794,110 @@ private struct PhotosUICompatImagePicker: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct RoundedCornerShape: Shape {
+    var topLeft: CGFloat = 0
+    
+    var topRight: CGFloat = 0
+    
+    var bottomLeft: CGFloat = 0
+    
+    var bottomRight: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath()
+        let tl = min(min(topLeft, rect.width / 2), rect.height / 2)
+        let tr = min(min(topRight, rect.width / 2), rect.height / 2)
+        let bl = min(min(bottomLeft, rect.width / 2), rect.height / 2)
+        let br = min(min(bottomRight, rect.width / 2), rect.height / 2)
+
+        path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+
+        // top
+        path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+        path.addArc(withCenter: CGPoint(x: rect.maxX - tr, y: rect.minY + tr),
+                    radius: tr,
+                    startAngle: -.pi / 2,
+                    endAngle: 0,
+                    clockwise: true)
+
+        // right
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+        path.addArc(withCenter: CGPoint(x: rect.maxX - br, y: rect.maxY - br),
+                    radius: br,
+                    startAngle: 0,
+                    endAngle: .pi / 2,
+                    clockwise: true)
+
+        // bottom
+        path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+        path.addArc(withCenter: CGPoint(x: rect.minX + bl, y: rect.maxY - bl),
+                    radius: bl,
+                    startAngle: .pi / 2,
+                    endAngle: .pi,
+                    clockwise: true)
+
+        // left
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+        path.addArc(withCenter: CGPoint(x: rect.minX + tl, y: rect.minY + tl),
+                    radius: tl,
+                    startAngle: .pi,
+                    endAngle: 3 * .pi / 2,
+                    clockwise: true)
+
+        path.close()
+        return Path(path.cgPath)
+    }
+}
+
+extension View {
+
+    /// iOS 15 compatible corner radius (각 코너별 지정 가능)
+    func cornerRadius(
+        topLeft: CGFloat = 0,
+        topRight: CGFloat = 0,
+        bottomLeft: CGFloat = 0,
+        bottomRight: CGFloat = 0
+    ) -> some View {
+        clipShape(
+            RoundedCornerShape(
+                topLeft: topLeft,
+                topRight: topRight,
+                bottomLeft: bottomLeft,
+                bottomRight: bottomRight
+            )
+        )
+    }
+
+    /// iOS 16 이상이면 native API 사용, 아니면 fallback
+    @ViewBuilder
+    func cornerRadiusCompat(
+        topLeft: CGFloat = 0,
+        topRight: CGFloat = 0,
+        bottomLeft: CGFloat = 0,
+        bottomRight: CGFloat = 0
+    ) -> some View {
+        if #available(iOS 16.0, *) {
+            self.clipShape(
+                .rect(
+                    topLeadingRadius: topLeft,
+                    bottomLeadingRadius: bottomLeft,
+                    bottomTrailingRadius: bottomRight,
+                    topTrailingRadius: topRight
+                )
+            )
+        } else {
+            self.clipShape(
+                RoundedCornerShape(
+                    topLeft: topLeft,
+                    topRight: topRight,
+                    bottomLeft: bottomLeft,
+                    bottomRight: bottomRight
+                )
+            )
         }
     }
 }

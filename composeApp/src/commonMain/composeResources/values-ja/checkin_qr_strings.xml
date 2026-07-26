@@ -1,0 +1,4 @@
+<resources>
+    <string name="checkin_qr_sheet_title">QRチェックイン</string>
+    <string name="checkin_qr_sheet_desc">カフェのQRコードを読み取るとすぐにチェックインできます。</string>
+</resources>

@@ -20,7 +20,27 @@ final class MyInfoViewModel: ObservableObject {
 
     private let castEventPublisher: CastEventPublisher
 
-    @Published private(set) var uiState = MyInfoUiState.empty
+    private let visitEventPublisher: VisitEventPublisher
+
+    private let userEventPublisher: UserEventPublisher
+
+    private let scheduleManagementEventPublisher: ScheduleManagementEventPublisher
+
+    @Published private(set) var uiState = MyInfoUiState(
+        isLoading: true,
+        errorMessage: nil,
+        isLoggedIn: false,
+        user: nil,
+        summary: nil,
+        castDetail: nil,
+        ownedCafes: [],
+        badges: [],
+        popularCafes: [],
+        recentVisits: [],
+        favorites: [],
+        followedMaids: [],
+        isLoginPromptVisible: false
+    )
 
     let event = PassthroughSubject<MyInfoEvent, Never>()
 
@@ -40,15 +60,25 @@ final class MyInfoViewModel: ObservableObject {
     }
     
     private func loadMyInfo() {
+        tasks[.loadMyInfo]?.cancel()
+
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        Task {
+        tasks[.loadMyInfo] = Task {
             do {
                 let result = try await getMyInfoUseCase.invoke()
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                 let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedRecentVisits = normalizeCafes(
+                        feed.recentVisits,
+                        maxCount: feed.recentVisits.count
+                    )
+                    let normalizedFavorites = normalizeCafes(
+                        feed.favorites,
+                        maxCount: feed.favorites.count
+                    )
                     uiState = MyInfoUiState(
                         isLoading: false,
                         errorMessage: nil,
@@ -59,8 +89,8 @@ final class MyInfoViewModel: ObservableObject {
                         ownedCafes: feed.ownedCafes,
                         badges: feed.badges,
                         popularCafes: feed.popularCafes,
-                        recentVisits: feed.recentVisits,
-                        favorites: feed.favorites,
+                        recentVisits: normalizedRecentVisits,
+                        favorites: normalizedFavorites,
                         followedMaids: feed.followedMaids,
                         isLoginPromptVisible: false
                     )
@@ -72,6 +102,7 @@ final class MyInfoViewModel: ObservableObject {
                 }
             } catch {
                 if Task.isCancelled { return }
+
                 uiState = .empty
                 uiState.errorMessage = error.localizedDescription
             }
@@ -85,10 +116,80 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: cafeDetailEventPublisher.events) {
                     if let updated = event as? CafeDetailEvent.CafeInfoUpdated {
                         self.patchCafe(updated.cafe)
+                    } else if let toggled = event as? CafeDetailEvent.FavoriteToggled {
+                        if toggled.isFavorite {
+                            self.refreshFavoritesSection()
+                        } else {
+                            self.removeFavoriteCafe(toggled.cafeId)
+                        }
                     }
                 }
             } catch {
                 print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeVisitEvent() {
+        tasks[.visitEvent]?.cancel()
+        tasks[.visitEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: visitEventPublisher.events) {
+                    switch event {
+                    case is VisitEvent.Created:
+                        self.applyVisitCountDelta(1)
+                        self.refreshRecentVisitsSection()
+                    case is VisitEvent.Deleted:
+                        self.applyVisitCountDelta(-1)
+                        self.refreshRecentVisitsSection()
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func refreshRecentVisitsSection() {
+        tasks[.refreshRecentVisits]?.cancel()
+        tasks[.refreshRecentVisits] = Task {
+            do {
+                let result = try await getMyInfoUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedRecentVisits = normalizeCafes(
+                        feed.recentVisits,
+                        maxCount: feed.recentVisits.count
+                    )
+                    uiState.recentVisits = normalizedRecentVisits
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    private func refreshFavoritesSection() {
+        tasks[.refreshFavorites]?.cancel()
+        tasks[.refreshFavorites] = Task {
+            do {
+                let result = try await getMyInfoUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let feed = success.data as? Shared.MyInfoFeed {
+                    let normalizedFavorites = normalizeCafes(
+                        feed.favorites,
+                        maxCount: feed.favorites.count
+                    )
+                    uiState.summary = feed.summary
+                    uiState.badges = feed.badges
+                    uiState.favorites = normalizedFavorites
+                }
+            } catch {
+                if Task.isCancelled { return }
             }
         }
     }
@@ -100,7 +201,11 @@ final class MyInfoViewModel: ObservableObject {
                 for try await event in asyncSequence(for: castEventPublisher.events) {
                     switch event {
                     case let updated as Shared.CastEvent.Updated:
-                        self.patchCast(updated.cast)
+                        if let isFollowing = updated.isFollowing?.boolValue {
+                            self.updateFollowedCast(updated.cast, isFollowing: isFollowing)
+                        } else {
+                            self.patchCast(updated.cast)
+                        }
                     case let deleted as Shared.CastEvent.Deleted:
                         self.removeCast(deleted.castId)
                     default:
@@ -111,6 +216,66 @@ final class MyInfoViewModel: ObservableObject {
                 print("Error: \(error)")
             }
         }
+    }
+
+    private func observeUserEvent() {
+        tasks[.userEvent]?.cancel()
+        tasks[.userEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: userEventPublisher.events) {
+                    switch event {
+                    case let updated as Shared.UserEvent.ProfileUpdated:
+                        self.patchUser(updated.user)
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeScheduleManagementEvent() {
+        tasks[.scheduleManagementEvent]?.cancel()
+        tasks[.scheduleManagementEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    if let updated = event as? Shared.ScheduleManagementEvent.Updated {
+                        self.patchCastSchedule(updated)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func patchCastSchedule(_ event: Shared.ScheduleManagementEvent.Updated) {
+        guard let detail = uiState.castDetail, detail.cast.id == event.castId else { return }
+        let filteredSchedule = detail.schedule.filter { $0.date != event.date }
+        let updatedSchedule: [CastSchedule]
+        if event.status == .work, let startTime = event.startTime, let endTime = event.endTime {
+            let existing = detail.schedule.first { $0.date == event.date }
+            let newEntry = CastSchedule(
+                id: existing?.id ?? "schedule-\(event.castId)-\(event.date.replacingOccurrences(of: "-", with: ""))",
+                castId: event.castId,
+                cafeId: detail.cafe.id,
+                date: event.date,
+                startTime: startTime,
+                endTime: endTime
+            )
+            updatedSchedule = filteredSchedule + [newEntry]
+        } else {
+            updatedSchedule = filteredSchedule
+        }
+        uiState.castDetail = CastDetail(
+            cast: detail.cast,
+            cafe: detail.cafe,
+            images: detail.images,
+            schedule: updatedSchedule,
+            visitCertificationCount: detail.visitCertificationCount
+        )
     }
 
     private func patchCafe(_ cafe: Cafe) {
@@ -127,7 +292,8 @@ final class MyInfoViewModel: ObservableObject {
                 rating: cafe.ratingAvg,
                 castCount: item.castCount,
                 noticeCount: item.noticeCount,
-                externalLinkCount: item.externalLinkCount
+                externalLinkCount: item.externalLinkCount,
+                thumbnailImage: cafe.thumbnailImage
             )
         }
         uiState.popularCafes = uiState.popularCafes.map { $0.id == cafe.id ? cafe : $0 }
@@ -138,8 +304,84 @@ final class MyInfoViewModel: ObservableObject {
                 cast: detail.cast,
                 cafe: cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
+        }
+    }
+
+    private func removeFavoriteCafe(_ cafeId: String) {
+        guard uiState.favorites.contains(where: { $0.id == cafeId }) else { return }
+
+        uiState.favorites.removeAll { $0.id == cafeId }
+
+        if let summary = uiState.summary {
+            let nextFavoritesCount = max(Int(summary.favoritesCount) - 1, 0)
+            uiState.summary = MyPageSummary(
+                userId: summary.userId,
+                totalVisits: summary.totalVisits,
+                favoritesCount: Int32(nextFavoritesCount),
+                followedCastsCount: summary.followedCastsCount,
+                badgesCount: summary.badgesCount,
+                level: summary.level
+            )
+
+            let totalVisits = Int(summary.totalVisits)
+            let followedCount = Int(summary.followedCastsCount)
+            let badgesCount = Int(summary.badgesCount)
+            let level = Int(summary.level)
+            uiState.badges = uiState.badges.map { badge in
+                let unlocked: Bool
+
+                switch badge.id {
+                case "badge-checkin-starter":
+                    unlocked = badgesCount >= 1
+                case "badge-stamp-collector":
+                    unlocked = badgesCount >= 3
+                case "badge-regular-visitor":
+                    unlocked = totalVisits >= 5
+                case "badge-checkin-veteran":
+                    unlocked = totalVisits >= 10
+                case "badge-favorite-curator":
+                    unlocked = nextFavoritesCount >= 3
+                case "badge-favorite-master":
+                    unlocked = nextFavoritesCount >= 10
+                case "badge-cast-supporter":
+                    unlocked = followedCount >= 3
+                case "badge-cast-ambassador":
+                    unlocked = followedCount >= 10
+                case "badge-level-up":
+                    unlocked = level >= 3
+                case "badge-concafe-master":
+                    unlocked = badgesCount >= 10
+                default:
+                    unlocked = badge.unlocked
+                }
+                let currentCount: Int32 = {
+                    switch badge.id {
+                    case "badge-checkin-starter", "badge-stamp-collector", "badge-concafe-master":
+                        return Int32(badgesCount)
+                    case "badge-regular-visitor", "badge-checkin-veteran":
+                        return Int32(totalVisits)
+                    case "badge-favorite-curator", "badge-favorite-master":
+                        return Int32(nextFavoritesCount)
+                    case "badge-cast-supporter", "badge-cast-ambassador":
+                        return Int32(followedCount)
+                    case "badge-level-up":
+                        return Int32(level)
+                    default:
+                        return badge.currentCount
+                    }
+                }()
+                return ProfileBadge(
+                    id: badge.id,
+                    name: badge.name,
+                    icon: badge.icon,
+                    unlocked: unlocked,
+                    currentCount: currentCount,
+                    goalCount: badge.goalCount
+                )
+            }
         }
     }
 
@@ -150,7 +392,8 @@ final class MyInfoViewModel: ObservableObject {
                 cast: cast,
                 cafe: detail.cafe,
                 images: detail.images,
-                schedule: detail.schedule
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
             )
         }
     }
@@ -159,6 +402,119 @@ final class MyInfoViewModel: ObservableObject {
         uiState.followedMaids.removeAll { $0.id == castId }
         if uiState.castDetail?.cast.id == castId {
             uiState.castDetail = nil
+        }
+    }
+
+    private func patchUser(_ user: User) {
+        if uiState.user?.id == user.id {
+            uiState.user = user
+        }
+    }
+
+    private func updateFollowedCast(_ cast: Cast, isFollowing: Bool) {
+        if isFollowing {
+            uiState.followedMaids = upsertFollowedCast(uiState.followedMaids, cast: cast)
+        } else {
+            uiState.followedMaids.removeAll { $0.id == cast.id }
+        }
+        if let summary = uiState.summary {
+            uiState.summary = MyPageSummary(
+                userId: summary.userId,
+                totalVisits: summary.totalVisits,
+                favoritesCount: summary.favoritesCount,
+                followedCastsCount: Int32(uiState.followedMaids.count),
+                badgesCount: summary.badgesCount,
+                level: summary.level
+            )
+        }
+        if let detail = uiState.castDetail, detail.cast.id == cast.id {
+            uiState.castDetail = CastDetail(
+                cast: cast,
+                cafe: detail.cafe,
+                images: detail.images,
+                schedule: detail.schedule,
+                visitCertificationCount: detail.visitCertificationCount
+            )
+        }
+    }
+
+    private func upsertFollowedCast(_ items: [Cast], cast: Cast) -> [Cast] {
+        var result = items
+        if let index = result.firstIndex(where: { $0.id == cast.id }) {
+            result[index] = cast
+        } else {
+            result.insert(cast, at: 0)
+        }
+        return result
+    }
+
+    private func applyVisitCountDelta(_ delta: Int) {
+        guard delta != 0, let summary = uiState.summary else { return }
+
+        let nextVisitCount = max(Int(summary.totalVisits) + delta, 0)
+        let nextStampCount = max(Int(summary.badgesCount) + delta, 0)
+        let nextLevel = max(1, 1 + (nextVisitCount / 5))
+        uiState.summary = MyPageSummary(
+            userId: summary.userId,
+            totalVisits: Int32(nextVisitCount),
+            favoritesCount: summary.favoritesCount,
+            followedCastsCount: summary.followedCastsCount,
+            badgesCount: Int32(nextStampCount),
+            level: Int32(nextLevel)
+        )
+        let favoritesCount = Int(summary.favoritesCount)
+        let followedCount = Int(summary.followedCastsCount)
+        uiState.badges = uiState.badges.map { badge in
+            let unlocked: Bool
+
+            switch badge.id {
+            case "badge-checkin-starter":
+                unlocked = nextStampCount >= 1
+            case "badge-stamp-collector":
+                unlocked = nextStampCount >= 3
+            case "badge-regular-visitor":
+                unlocked = nextVisitCount >= 5
+            case "badge-checkin-veteran":
+                unlocked = nextVisitCount >= 10
+            case "badge-favorite-curator":
+                unlocked = favoritesCount >= 3
+            case "badge-favorite-master":
+                unlocked = favoritesCount >= 10
+            case "badge-cast-supporter":
+                unlocked = followedCount >= 3
+            case "badge-cast-ambassador":
+                unlocked = followedCount >= 10
+            case "badge-level-up":
+                unlocked = nextLevel >= 3
+            case "badge-concafe-master":
+                unlocked = nextStampCount >= 10
+            default:
+                unlocked = badge.unlocked
+            }
+            let currentCount: Int32 = {
+                switch badge.id {
+                case "badge-checkin-starter", "badge-stamp-collector", "badge-concafe-master":
+                    return Int32(nextStampCount)
+                case "badge-regular-visitor", "badge-checkin-veteran":
+                    return Int32(nextVisitCount)
+                case "badge-favorite-curator", "badge-favorite-master":
+                    return Int32(favoritesCount)
+                case "badge-cast-supporter", "badge-cast-ambassador":
+                    return Int32(followedCount)
+                case "badge-level-up":
+                    return Int32(nextLevel)
+                default:
+                    return badge.currentCount
+                }
+            }()
+            return ProfileBadge(
+                id: badge.id,
+                name: badge.name,
+                icon: badge.icon,
+                unlocked: unlocked,
+                currentCount: currentCount,
+                goalCount: badge.goalCount
+            )
         }
     }
 
@@ -192,16 +548,26 @@ final class MyInfoViewModel: ObservableObject {
         getMyInfoUseCase: GetMyInfoUseCase = KoinInitializerKt.resolveGetMyInfoUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher(),
+        userEventPublisher: UserEventPublisher = KoinInitializerKt.resolveUserEventPublisher(),
+        scheduleManagementEventPublisher: ScheduleManagementEventPublisher = KoinInitializerKt.resolveScheduleManagementEventPublisher()
     ) {
         self.getMyInfoUseCase = getMyInfoUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.visitEventPublisher = visitEventPublisher
+        self.userEventPublisher = userEventPublisher
+        self.scheduleManagementEventPublisher = scheduleManagementEventPublisher
 
+        loadMyInfo()
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
+        observeVisitEvent()
+        observeUserEvent()
+        observeScheduleManagementEvent()
     }
 
     deinit {
@@ -210,8 +576,29 @@ final class MyInfoViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case loadMyInfo
+        case refreshRecentVisits
+        case refreshFavorites
         case session
         case cafeDetailEvent
         case castEvent
+        case visitEvent
+        case userEvent
+        case scheduleManagementEvent
+    }
+
+    private func normalizeCafes(_ cafes: [Cafe], maxCount: Int) -> [Cafe] {
+        var seen = Set<String>()
+        var normalized: [Cafe] = []
+
+        for cafe in cafes {
+            if seen.contains(cafe.id) { continue }
+            seen.insert(cafe.id)
+            normalized.append(cafe)
+            if maxCount > 0 && normalized.count >= maxCount {
+                break
+            }
+        }
+        return normalized
     }
 }

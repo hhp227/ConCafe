@@ -1,54 +1,15 @@
 package com.hhp227.concafe.presentation.main.fanmanagement
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,17 +17,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CastSchedule
+import com.hhp227.concafe.domain.model.FanFollower
 import com.hhp227.concafe.domain.model.FanManagementData
-import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,6 +91,19 @@ fun FanManagementScreen(
                 )
             }
         }
+        if (uiState.isAnnouncementSheetVisible) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.onAction(FanManagementAction.DismissAnnouncementSheet) },
+                sheetState = sheetState
+            ) {
+                FanAnnouncementSheetContent(
+                    uiState = uiState,
+                    onAction = viewModel::onAction
+                )
+            }
+        }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -142,11 +122,7 @@ private fun FanManagementContentScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFF8FB), Color(0xFFFFEFF5))
-                )
-            )
+            .background(ConCafeColors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
@@ -157,7 +133,7 @@ private fun FanManagementContentScreen(
                 LoadingState()
             }
             uiState.fanManagementData == null && uiState.castClaimStatus == null -> {
-                EmptySectionCard(message = uiState.errorMessage ?: "로그인한 캐스트 정보를 찾을 수 없습니다.")
+                EmptySectionCard(message = uiState.errorMessage ?: stringResource(Res.string.fanmanagement_error_cast_not_found))
             }
             else -> Unit
         }
@@ -196,14 +172,14 @@ private fun CastClaimStatusCard(
     onClick: () -> Unit
 ) {
     val accent = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> Color(0xFFFFD1DC)
-        FanManagementUiState.Accent.LINKED -> Color(0xFFEAF8EF)
-        FanManagementUiState.Accent.REJECTED -> Color(0xFFF8E9EE)
+        FanManagementUiState.Accent.PENDING -> ConCafeColors.primaryContainer
+        FanManagementUiState.Accent.LINKED -> ConCafeColors.successContainer
+        FanManagementUiState.Accent.REJECTED -> ConCafeColors.surfaceTint
     }
     val contentColor = when (status.accent) {
-        FanManagementUiState.Accent.PENDING -> Color(0xFF6B3050)
-        FanManagementUiState.Accent.LINKED -> Color(0xFF2E8B57)
-        FanManagementUiState.Accent.REJECTED -> Color(0xFF8B4A5A)
+        FanManagementUiState.Accent.PENDING -> ConCafeColors.onPrimaryContainer
+        FanManagementUiState.Accent.LINKED -> ConCafeColors.success
+        FanManagementUiState.Accent.REJECTED -> ConCafeColors.onTertiaryContainer
     }
 
     Card(
@@ -211,7 +187,7 @@ private fun CastClaimStatusCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -233,12 +209,12 @@ private fun CastClaimStatusCard(
                 text = status.headline,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF24161E)
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = status.body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6C6270)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -246,12 +222,12 @@ private fun CastClaimStatusCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "프로필 연결 상태 보기",
+                    text = stringResource(Res.string.fanmanagement_action_profile_link_status),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFEF6797)
+                    color = ConCafeColors.primary
                 )
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ConCafeColors.primary)
             }
         }
     }
@@ -270,7 +246,7 @@ private fun ProfileSummaryCard(
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -287,17 +263,17 @@ private fun ProfileSummaryCard(
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                                colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                             )
                         )
-                        .border(2.dp, Color(0xFFFFD1DC), CircleShape),
+                        .border(2.dp, ConCafeColors.primaryContainer, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = profileAccent,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF7C3F67)
+                        color = ConCafeColors.primary
                     )
                 }
                 if (isOnline) {
@@ -306,8 +282,8 @@ private fun ProfileSummaryCard(
                             .align(Alignment.BottomEnd)
                             .size(18.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF37B26C))
-                            .border(2.dp, Color.White, CircleShape)
+                            .background(ConCafeColors.success)
+                            .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
                     )
                 }
             }
@@ -325,21 +301,21 @@ private fun ProfileSummaryCard(
                             text = cast.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         if (localizedName.isNotBlank()) {
                             Text(
                                 text = localizedName,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF7A707A)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Surface(
                         modifier = Modifier.clickable { onAction(FanManagementAction.ClickEditProfile) },
                         shape = RoundedCornerShape(999.dp),
-                        color = Color(0x14FFD1DC)
+                        color = ConCafeColors.primaryContainer
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -348,15 +324,15 @@ private fun ProfileSummaryCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "프로필 수정",
-                                tint = Color(0xFF7C3F67),
+                                contentDescription = stringResource(Res.string.fanmanagement_accessibility_edit_profile),
+                                tint = ConCafeColors.primary,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "수정",
+                                text = stringResource(Res.string.fanmanagement_action_edit),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7C3F67)
+                                color = ConCafeColors.primary
                             )
                         }
                     }
@@ -368,13 +344,13 @@ private fun ProfileSummaryCard(
                     Icon(
                         imageVector = Icons.Default.Storefront,
                         contentDescription = null,
-                        tint = Color(0xFFEF6797),
+                        tint = ConCafeColors.primary,
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = cafe.name,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF5B4A57)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -389,8 +365,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -402,18 +378,18 @@ private fun InfoBanner(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320),
+                color = ConCafeColors.goldDeep,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.common_close),
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable(onClick = onDismiss)
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
         }
     }
@@ -428,9 +404,9 @@ private fun PrimaryAnnouncementButton(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
-            containerColor = Color(0xFFFFD1DC),
-            contentColor = Color(0xFF24161E)
+        colors = ButtonDefaults.elevatedButtonColors(
+            containerColor = ConCafeColors.primaryContainer,
+            contentColor = ConCafeColors.onPrimaryContainer
         )
     ) {
         Row(
@@ -444,7 +420,7 @@ private fun PrimaryAnnouncementButton(
             ) {
                 Icon(imageVector = Icons.Default.Campaign, contentDescription = null)
                 Text(
-                    text = "팬 공지 작성하기",
+                    text = stringResource(Res.string.fanmanagement_announcement_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -474,8 +450,8 @@ private fun QuickActionGrid(
                     .weight(1f)
                     .clickable { onActionClick(quickAction) },
                 shape = RoundedCornerShape(20.dp),
-                color = Color.White.copy(alpha = 0.92f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, ConCafeColors.outline)
             ) {
                 Box {
                     Column(
@@ -489,26 +465,32 @@ private fun QuickActionGrid(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0x14FFD1DC)),
+                                .background(ConCafeColors.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = Color(0xFF5D525B)
+                                tint = ConCafeColors.primary
                             )
                         }
                         Text(
-                            text = quickAction.title,
+                            text = when (quickAction) {
+                                FanManagementUiState.QuickAction.WORK_SCHEDULE -> stringResource(Res.string.fanmanagement_quick_action_schedule_title)
+                                FanManagementUiState.QuickAction.CAFE_DASHBOARD -> stringResource(Res.string.fanmanagement_quick_action_profile_title)
+                            },
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = quickAction.subtitle,
+                            text = when (quickAction) {
+                                FanManagementUiState.QuickAction.WORK_SCHEDULE -> stringResource(Res.string.fanmanagement_quick_action_schedule_subtitle)
+                                FanManagementUiState.QuickAction.CAFE_DASHBOARD -> stringResource(Res.string.fanmanagement_quick_action_profile_subtitle)
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
-                            color = Color(0xFF7A707A)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -529,7 +511,6 @@ private fun CastClaimSheet(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .imePadding()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -545,15 +526,15 @@ private fun CastClaimSheet(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(sheet.headline, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = Color(0xFFEF6797))
+                        Text(sheet.affiliatedCafeName, style = MaterialTheme.typography.labelLarge, color = ConCafeColors.primary)
                     }
                     TextButton(onClick = onDismiss) {
-                        Text("닫기")
+                        Text(stringResource(Res.string.common_close))
                     }
                 }
             }
             item {
-                Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6270))
+                Text(sheet.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (sheet.requestableCasts.isNotEmpty()) {
                 itemsIndexed(sheet.requestableCasts, key = { _, candidate -> candidate.castId }) { index, candidate ->
@@ -567,15 +548,15 @@ private fun CastClaimSheet(
                             .fillMaxWidth()
                             .clickable { onSelect(candidate.castId) },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (sheet.selectedCastId == candidate.castId) Color(0xFFFFD1DC) else Color.White,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+                        color = if (sheet.selectedCastId == candidate.castId) ConCafeColors.primaryContainer else MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, ConCafeColors.outline)
                     ) {
                         Text(
                             text = candidate.castName,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -583,9 +564,9 @@ private fun CastClaimSheet(
             if (sheet.canLoadMore || sheet.isLoadingMore) {
                 item {
                     Text(
-                        text = if (sheet.isLoadingMore) "다음 캐스트 목록을 불러오는 중입니다." else "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다.",
+                        text = if (sheet.isLoadingMore) stringResource(Res.string.fanmanagement_claim_load_more_loading) else stringResource(Res.string.fanmanagement_claim_load_more_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A707A)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -593,7 +574,7 @@ private fun CastClaimSheet(
         }
         if (sheet.canSubmit) {
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 10.dp
             ) {
                 ElevatedButton(
@@ -603,12 +584,15 @@ private fun CastClaimSheet(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     contentPadding = PaddingValues(vertical = 14.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF24161E)
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
-                    Text(if (sheet.isSubmitting) "요청 보내는 중..." else "연결 요청 보내기", fontWeight = FontWeight.Bold)
+                    Text(
+                        if (sheet.isSubmitting) stringResource(Res.string.fanmanagement_claim_submitting) else stringResource(Res.string.fanmanagement_claim_submit),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -617,14 +601,14 @@ private fun CastClaimSheet(
 
 @Composable
 private fun RecentFollowersSection(
-    followers: List<User>,
+    followers: List<FanFollower>,
     onFollowerClick: (String) -> Unit
 ) {
-    SectionCard(
-        title = "최근 팔로워"
+    SectionContainer(
+        title = stringResource(Res.string.fanmanagement_section_recent_followers)
     ) {
         if (followers.isEmpty()) {
-            EmptySectionCard(message = "최근 팔로워 데이터가 아직 없습니다.")
+            EmptySectionCard(message = stringResource(Res.string.fanmanagement_followers_empty))
         } else {
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -632,12 +616,7 @@ private fun RecentFollowersSection(
             ) {
                 followers.take(10).forEachIndexed { index, follower ->
                     val accent = index == 0
-                    val joinedLabel = when (index) {
-                        0 -> "방금 전"
-                        1 -> "2시간 전"
-                        2 -> "5시간 전"
-                        else -> "최근"
-                    }
+                    val joinedLabel = follower.followedAt.toRelativeFollowerTimeLabel()
                     Column(
                         modifier = Modifier
                             .width(74.dp)
@@ -651,14 +630,14 @@ private fun RecentFollowersSection(
                                 .clip(CircleShape)
                                 .background(
                                     if (accent) Brush.linearGradient(
-                                        colors = listOf(Color(0xFFFFD7E5), Color(0xFFF2ADC2))
+                                        colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer)
                                     ) else Brush.linearGradient(
-                                        colors = listOf(Color(0xFFF2EEF1), Color(0xFFE3D9E2))
+                                        colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.outline)
                                     )
                                 )
                                 .border(
                                     width = if (accent) 2.dp else 0.dp,
-                                    color = if (accent) Color(0xFFFFD1DC) else Color.Transparent,
+                                    color = if (accent) ConCafeColors.primaryContainer else Color.Transparent,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -667,20 +646,20 @@ private fun RecentFollowersSection(
                                 text = follower.nickname.take(1).uppercase(),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6E5566)
+                                color = ConCafeColors.textSecondary
                             )
                         }
                         Text(
                             text = follower.nickname,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF24161E),
+                            color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )
                         Text(
                             text = joinedLabel,
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF9C8C98),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -692,16 +671,149 @@ private fun RecentFollowersSection(
 }
 
 @Composable
+private fun String.toRelativeFollowerTimeLabel(): String {
+    val followedAt = runCatching {
+        Instant.parse(this)
+    }.getOrNull()
+    if (followedAt == null) {
+        return stringResource(Res.string.fanmanagement_relative_recent)
+    }
+    val now = Clock.System.now()
+    val diffSeconds = (now.epochSeconds - followedAt.epochSeconds).coerceAtLeast(0)
+    return when {
+        diffSeconds < 60 -> stringResource(Res.string.fanmanagement_relative_just_now)
+        diffSeconds < 3600 -> stringResource(Res.string.fanmanagement_relative_minutes_ago, diffSeconds / 60)
+        diffSeconds < 86_400 -> stringResource(Res.string.fanmanagement_relative_hours_ago, diffSeconds / 3600)
+        diffSeconds < 2_592_000 -> stringResource(Res.string.fanmanagement_relative_days_ago, diffSeconds / 86_400)
+        else -> stringResource(Res.string.fanmanagement_relative_long_ago)
+    }
+}
+
+@Composable
+private fun FanAnnouncementSheetContent(
+    uiState: FanManagementUiState,
+    onAction: (FanManagementAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.82f)
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.fanmanagement_announcement_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = { onAction(FanManagementAction.DismissAnnouncementSheet) }) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.fanmanagement_accessibility_close),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        LazyColumn(
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            item {
+                ConCafeFormField(
+                    label = stringResource(Res.string.fanmanagement_announcement_label_title),
+                    value = uiState.announcementTitle,
+                    onValueChange = { onAction(FanManagementAction.ChangeAnnouncementTitle(it)) },
+                    placeholder = stringResource(Res.string.fanmanagement_announcement_placeholder_title)
+                )
+            }
+            item {
+                ConCafeFormField(
+                    label = stringResource(Res.string.fanmanagement_announcement_label_body),
+                    value = uiState.announcementBody,
+                    onValueChange = { onAction(FanManagementAction.ChangeAnnouncementBody(it)) },
+                    placeholder = stringResource(Res.string.fanmanagement_announcement_placeholder_body),
+                    minLines = 7,
+                    singleLine = false
+                )
+            }
+            item {
+                Text(
+                    text = stringResource(Res.string.fanmanagement_announcement_hint_push),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Surface(
+            color = Color.Transparent,
+            modifier = Modifier.imePadding()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    )
+            ) {
+                Button(
+                    onClick = { onAction(FanManagementAction.SubmitAnnouncement) },
+                    enabled = uiState.isAnnouncementSubmitEnabled,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 18.dp)
+                        .navigationBarsPadding()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = ConCafeColors.onPrimaryContainer,
+                        disabledContainerColor = ConCafeColors.surfaceTint,
+                        disabledContentColor = ConCafeColors.outlineStrong
+                    )
+                ) {
+                    if (uiState.isSendingAnnouncement) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(22.dp),
+                            color = ConCafeColors.onPrimaryContainer
+                        )
+                    } else {
+                        Text(
+                            stringResource(Res.string.fanmanagement_announcement_submit),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 17.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun WeeklyScheduleSection(
     schedule: List<CastSchedule>
 ) {
     val weeklyStatus = rememberWeeklySchedule(schedule)
 
-    SectionCard(title = "주간 출근") {
+    SectionContainer(title = stringResource(Res.string.fanmanagement_section_weekly_work)) {
         Surface(
             shape = RoundedCornerShape(22.dp),
-            color = Color.White.copy(alpha = 0.88f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
             Column(
                 modifier = Modifier
@@ -717,27 +829,27 @@ private fun WeeklyScheduleSection(
                         modifier = Modifier
                             .size(34.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x14FFD1DC)),
+                            .background(ConCafeColors.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            tint = Color(0xFFEF6797),
+                            tint = ConCafeColors.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "이번 주 스케줄",
+                            text = stringResource(Res.string.fanmanagement_weekly_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF24161E)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "출근 관리에서 일정을 바로 조정할 수 있습니다.",
+                            text = stringResource(Res.string.fanmanagement_weekly_subtitle),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF7A707A)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -767,10 +879,10 @@ private fun WeeklyScheduleItemCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isWorking) Color(0xFFEF6797) else Color(0xFFFDF8FA),
-        border = androidx.compose.foundation.BorderStroke(
+        color = if (isWorking) ConCafeColors.primary else ConCafeColors.surfaceVariant,
+        border = BorderStroke(
             1.dp,
-            if (isWorking) Color.Transparent else Color(0x1AFFD1DC)
+            if (isWorking) Color.Transparent else ConCafeColors.outline
         )
     ) {
         Column(
@@ -784,12 +896,12 @@ private fun WeeklyScheduleItemCard(
                 text = dayLabel,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isWorking) Color.White else Color(0xFF4E4750)
+                color = if (isWorking) ConCafeColors.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = if (isWorking) "출근" else "휴무",
+                text = if (isWorking) stringResource(Res.string.schedule_status_work) else stringResource(Res.string.schedule_status_off),
                 fontSize = 12.sp,
-                color = if (isWorking) Color.White.copy(alpha = 0.92f) else Color(0xFF8A8087)
+                color = if (isWorking) ConCafeColors.onPrimary.copy(alpha = 0.92f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -806,21 +918,21 @@ private fun AddFollowerButton() {
             modifier = Modifier
                 .size(58.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF8F1F4))
-                .border(1.dp, Color(0xFFD9CBD4), CircleShape),
+                .background(ConCafeColors.surfaceTint)
+                .border(1.dp, ConCafeColors.outline, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Groups,
                 contentDescription = null,
-                tint = Color(0xFFA28E9B)
+                tint = ConCafeColors.textMuted
             )
         }
         Text(
-            text = "팬 확장",
+            text = stringResource(Res.string.fanmanagement_fan_expand),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF7A707A),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }
@@ -831,12 +943,21 @@ private data class WeeklyScheduleStatus(
     val isWorking: Boolean
 )
 
+@Composable
 private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklyScheduleStatus> {
     val workingDays = schedule.mapNotNull { TimeUtils.weekdayLabelFromIsoDateOrNull(it.date) }.toSet()
-
     return listOf("월", "화", "수", "목", "금", "토", "일").map { dayLabel ->
         WeeklyScheduleStatus(
-            dayLabel = dayLabel,
+            dayLabel = when (dayLabel) {
+                "월" -> stringResource(Res.string.fanmanagement_weekday_mon)
+                "화" -> stringResource(Res.string.fanmanagement_weekday_tue)
+                "수" -> stringResource(Res.string.fanmanagement_weekday_wed)
+                "목" -> stringResource(Res.string.fanmanagement_weekday_thu)
+                "금" -> stringResource(Res.string.fanmanagement_weekday_fri)
+                "토" -> stringResource(Res.string.fanmanagement_weekday_sat)
+                "일" -> stringResource(Res.string.fanmanagement_weekday_sun)
+                else -> dayLabel
+            },
             isWorking = workingDays.contains(dayLabel)
         )
     }
@@ -846,7 +967,7 @@ private fun rememberWeeklySchedule(schedule: List<CastSchedule>): List<WeeklySch
 private fun LoadingState() {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = Color.White.copy(alpha = 0.9f)
+        color = MaterialTheme.colorScheme.surface
     ) {
         Box(
             modifier = Modifier
@@ -855,9 +976,9 @@ private fun LoadingState() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "팬관리 정보를 불러오는 중입니다.",
+                text = stringResource(Res.string.fanmanagement_loading),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7A707A)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -867,8 +988,8 @@ private fun LoadingState() {
 private fun EmptySectionCard(message: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color.White.copy(alpha = 0.88f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1AFFD1DC))
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Text(
             text = message,
@@ -876,52 +997,43 @@ private fun EmptySectionCard(message: String) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 18.dp),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF7A707A),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }
 }
 
 @Composable
-private fun SectionCard(
+private fun SectionContainer(
     title: String,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Column(
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Transparent)
+                .padding(bottom = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (actionLabel != null) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF24161E)
+                    text = actionLabel,
+                    modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (actionLabel != null) {
-                    Text(
-                        text = actionLabel,
-                        modifier = if (onActionClick != null) Modifier.clickable(onClick = onActionClick) else Modifier,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF7A707A)
-                    )
-                }
             }
-            content()
         }
+        content()
     }
 }

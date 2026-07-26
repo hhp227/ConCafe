@@ -9,11 +9,13 @@ import Foundation
 import Shared
 
 struct HomeUiState {
+    var isLoading: Bool = false
     var isLoggedIn: Bool
     var isLoginPromptVisible: Bool
     let banners: [HomeBanner]
     let popularCasts: [Cast]
     let popularCastCafeNames: [String: String]
+    let popularCastCafeRegions: [String: String]
     let popularCastCursor: String?
     let canLoadMorePopularCasts: Bool
     let isLoadingMorePopularCasts: Bool
@@ -22,14 +24,22 @@ struct HomeUiState {
     let canLoadMoreNearbyCafes: Bool
     let isLoadingMoreNearbyCafes: Bool
     let birthdayCasts: [Cast]
+    let birthdayCastCafeNames: [String: String]
     let notices: [Notice]
+    let cafeEvents: [HomeCafeEvent]
+    let cafeEventCursor: String?
+    let canLoadMoreCafeEvents: Bool
+    let isLoadingMoreCafeEvents: Bool
+    var communityPosts: [CommunityPost]
 
     static let empty = HomeUiState(
+        isLoading: false,
         isLoggedIn: false,
         isLoginPromptVisible: false,
         banners: [],
         popularCasts: [],
         popularCastCafeNames: [:],
+        popularCastCafeRegions: [:],
         popularCastCursor: nil,
         canLoadMorePopularCasts: false,
         isLoadingMorePopularCasts: false,
@@ -38,6 +48,12 @@ struct HomeUiState {
         canLoadMoreNearbyCafes: false,
         isLoadingMoreNearbyCafes: false,
         birthdayCasts: [],
-        notices: []
+        birthdayCastCafeNames: [:],
+        notices: [],
+        cafeEvents: [],
+        cafeEventCursor: nil,
+        canLoadMoreCafeEvents: false,
+        isLoadingMoreCafeEvents: false,
+        communityPosts: []
     )
 }

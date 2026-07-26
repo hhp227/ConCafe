@@ -19,8 +19,6 @@ struct ExploreView: View {
             uiState: viewModel.uiState,
             onAction: viewModel.onAction
         )
-        .navigationTitle("탐색")
-        .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateToCast(let id):
@@ -32,7 +30,7 @@ struct ExploreView: View {
             }
         }
         .alert(
-            "로그인이 필요합니다",
+            String(localized: String.LocalizationValue("auth_login_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isLoginPromptVisible },
                 set: { presented in
@@ -42,53 +40,77 @@ struct ExploreView: View {
                 }
             )
         ) {
-            Button("취소", role: .cancel) {
+            Button(String(localized: String.LocalizationValue("common_cancel"), table: "Localizable"), role: .cancel) {
                 viewModel.onAction(.dismissLoginPrompt)
             }
-            Button("로그인") {
+            Button(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable")) {
                 viewModel.onAction(.loginPromptSignInTapped)
             }
         } message: {
-            Text("카페/캐스트 상세는 로그인 후 이용할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("auth_login_required_message"), table: "Localizable"))
         }
     }
 }
 
 private struct ExploreContentView: View {
     @FocusState private var isSearchFocused: Bool
-    
+
+    @State private var countBeforeLoad = (cafe: 0, maid: 0)
+
     let uiState: ExploreUiState
-    
+
     let onAction: (ExploreAction) -> Void
-    
+
     private var cafeNameById: [String: String] {
         Dictionary(uniqueKeysWithValues: uiState.cafes.map { ($0.id, $0.name) })
     }
-    
+
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
-                searchSection
-                Section {
-                    gridContent
-                        .padding(.horizontal, 12)
-                } header: {
-                    tabHeader
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
+                        searchSection
+                        Section {
+                            gridContent(contentWidth: geometry.size.width)
+                                .padding(.horizontal, 12)
+                        } header: {
+                            tabHeader
+                        }
+                    }
+                    .padding(.vertical, 12)
+                }
+                .background(ScrollViewKeyboardDismissConfigurator())
+                .background(ConCafeColors.background)
+                .modifier(ExploreKeyboardDismissModifier())
+                .onChange(of: uiState.cafes.count) { newCount in
+                    guard countBeforeLoad.cafe != 0, countBeforeLoad.cafe != -1 else { return }
+                    let preCount = abs(countBeforeLoad.cafe)
+                    let wasSubsequent = countBeforeLoad.cafe > 0
+                    countBeforeLoad.cafe = -1
+                    guard newCount > preCount else { return }
+                    guard wasSubsequent else { return }
+                    proxy.scrollTo(uiState.cafes[preCount - 1].id, anchor: .bottom)
+                }
+                .onChange(of: uiState.maids.count) { newCount in
+                    guard countBeforeLoad.maid != 0, countBeforeLoad.maid != -1 else { return }
+                    let preCount = abs(countBeforeLoad.maid)
+                    let wasSubsequent = countBeforeLoad.maid > 0
+                    countBeforeLoad.maid = -1
+                    guard newCount > preCount else { return }
+                    guard wasSubsequent else { return }
+                    proxy.scrollTo(uiState.maids[preCount - 1].id, anchor: .bottom)
                 }
             }
-            .padding(.vertical, 12)
         }
-        .background(ScrollViewKeyboardDismissConfigurator())
-        .background(Color(hex: "FFF9FC"))
-        .modifier(ExploreKeyboardDismissModifier())
     }
-    
+
     private var searchSection: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("카페나 메이드를 검색하세요...", text: Binding(
+                TextField(String(localized: String.LocalizationValue("explore_search_placeholder"), table: "Localizable"), text: Binding(
                     get: { uiState.query },
                     set: { onAction(.queryChanged($0)) }
                 ))
@@ -96,12 +118,12 @@ private struct ExploreContentView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(
-                        isSearchFocused ? Color(hex: "EF6797") : .clear,
+                        isSearchFocused ? ConCafeColors.primary : .clear,
                         lineWidth: isSearchFocused ? 1 : 0
                     )
             )
@@ -134,7 +156,7 @@ private struct ExploreContentView: View {
         ConCafeTabBar(
             labels: ExploreUiState.TabType.allCases.map { $0.rawValue },
             selectedIndex: ExploreUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: Color(hex: "FFF9FC"),
+            backgroundColor: ConCafeColors.background,
             onSelect: { index in
                 onAction(.tabChanged(ExploreUiState.TabType.allCases[index]))
             }
@@ -143,42 +165,66 @@ private struct ExploreContentView: View {
     }
 
     @ViewBuilder
-    private var gridContent: some View {
+    private func gridContent(contentWidth: CGFloat) -> some View {
         if uiState.isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else if uiState.errorMessage != nil {
-            Text("탐색 데이터를 불러오지 못했습니다.")
+            Text(String(localized: String.LocalizationValue("explore_error_load_failed"), table: "Localizable"))
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            LazyVGrid(columns: exploreGridColumns(for: contentWidth), spacing: 12) {
                 if uiState.selectedTab == .cafe {
                     ForEach(Array(uiState.cafes.enumerated()), id: \.element.id) { index, cafe in
                         cafeCard(cafe)
-                            .onAppear {
-                                guard index == uiState.cafes.indices.last,
-                                      uiState.canLoadMoreCafes,
-                                      !uiState.isLoadingMoreCafes else { return }
-                                onAction(.loadMoreCafes)
-                            }
+                            .lazyListImagePrefetch(
+                                index: index,
+                                imageUrls: uiState.cafes.map { $0.thumbnailImage },
+                                aheadCount: 12,
+                                displaySize: .thumbnail
+                            )
                     }
                 } else {
                     ForEach(Array(uiState.maids.enumerated()), id: \.element.id) { index, maid in
                         maidCard(maid)
-                            .onAppear {
-                                guard index == uiState.maids.indices.last,
-                                      uiState.canLoadMoreMaids,
-                                      !uiState.isLoadingMoreMaids else { return }
-                                onAction(.loadMoreMaids)
-                            }
+                            .lazyListImagePrefetch(
+                                index: index,
+                                imageUrls: uiState.maids.map { $0.profileImage },
+                                aheadCount: 12,
+                                displaySize: .thumbnail
+                            )
                     }
                 }
             }
+            if (uiState.selectedTab == .cafe && !uiState.cafes.isEmpty) || (uiState.selectedTab == .maid && !uiState.maids.isEmpty) {
+                EmptyView()
+            } else {
+                    ExploreEmptyPlaceholderCard(
+                        title: uiState.selectedTab == .cafe ? String(localized: String.LocalizationValue("explore_empty_cafe_title"), table: "Localizable") : String(localized: String.LocalizationValue("explore_empty_cast_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("explore_empty_hint"), table: "Localizable")
+                    )
+                }
             pagingFooter
         }
+    }
+
+    private func exploreGridColumns(for contentWidth: CGFloat) -> [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: exploreGridItemSpacing),
+            count: exploreGridColumnCount(for: contentWidth)
+        )
+    }
+
+    private func exploreGridColumnCount(for contentWidth: CGFloat) -> Int {
+        let availableWidth = contentWidth - exploreGridHorizontalPadding
+        let minimumGridWidth = (exploreGridMinimumCellWidth * 2) + exploreGridItemSpacing
+        let normalizedWidth = max(availableWidth, minimumGridWidth)
+        let rawCount = Int((normalizedWidth + exploreGridItemSpacing) /
+            (exploreGridMinimumCellWidth + exploreGridItemSpacing))
+        return min(max(rawCount, exploreGridMinimumColumnCount), exploreGridMaximumColumnCount)
     }
 
     @ViewBuilder
@@ -186,25 +232,54 @@ private struct ExploreContentView: View {
         let isLoadingMore = uiState.selectedTab == .cafe ? uiState.isLoadingMoreCafes : uiState.isLoadingMoreMaids
         let canLoadMore = uiState.selectedTab == .cafe ? uiState.canLoadMoreCafes : uiState.canLoadMoreMaids
 
-        if isLoadingMore {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.top, 12)
-        } else if canLoadMore {
-            Text("스크롤 하단에서 다음 목록을 불러옵니다.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 1)
+                    .onAppear {
+                        guard canLoadMore, !isLoadingMore else { return }
+                        if uiState.selectedTab == .cafe {
+                            let count = uiState.cafes.count
+                            countBeforeLoad.cafe = (countBeforeLoad.cafe == 0) ? -count : count
+                            onAction(.loadMoreCafes)
+                        } else {
+                            let count = uiState.maids.count
+                            countBeforeLoad.maid = (countBeforeLoad.maid == 0) ? -count : count
+                            onAction(.loadMoreMaids)
+                        }
+                    }
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 12)
+                } else if canLoadMore {
+                    Text(String(localized: String.LocalizationValue("explore_paging_hint"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 8)
+                }
+                Color.clear
+                    .frame(height: 1)
+                    .onDisappear {
+                        if uiState.selectedTab == .cafe {
+                            countBeforeLoad.cafe = -1
+                        } else {
+                            countBeforeLoad.maid = -1
+                        }
+                    }
+            }
         }
     }
 
     private func cafeCard(_ cafe: Cafe) -> some View {
         CafeSummaryCard(
             name: cafe.name,
-            rating: String(format: "%.1f", cafe.ratingAvg),
-            location: cafe.region.city,
+            rating: RatingUtils.formatOneDecimal(cafe.ratingAvg),
+            conceptType: localizedCafeConceptType(cafe.conceptType),
+            location: localizedRegionCity(cafe.region.city),
             thumbnailImage: cafe.thumbnailImage,
+            showLocationIcon: false,
             trailingLabel: nil,
             onTap: {
                 onAction(.cafeTapped(id: cafe.id))
@@ -212,41 +287,71 @@ private struct ExploreContentView: View {
         )
     }
 
+    private func localizedCafeConceptType(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        case "DOLL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_doll"), table: "Localizable")
+        case "COSPLAY":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cosplay"), table: "Localizable")
+        case "NAMJANG":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_namjang"), table: "Localizable")
+        case "YOKAI":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_yokai"), table: "Localizable")
+        case "CAT":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cat"), table: "Localizable")
+        case "OTHER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_other"), table: "Localizable")
+        default:
+            return normalized
+        }
+    }
+
     private func maidCard(_ maid: Cast) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                if let urlString = maid.profileImage,
-                   let url = URL(string: urlString) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            placeholderMaidImage
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        case .failure:
-                            placeholderMaidImage
-                        @unknown default:
-                            placeholderMaidImage
-                        }
-                    }
-                } else {
+            GeometryReader { proxy in
+                ZStack {
                     placeholderMaidImage
+                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage) {
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear,
+                            displaySize: .thumbnail
+                        )
+                    }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipped()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
+                )
             }
             .frame(height: 120)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 4) {
                 Text(maid.name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(UITraitCollection.current.userInterfaceStyle == .dark ? .white : .primary)
                     .lineLimit(1)
                 Text(cafeNameById[maid.cafeId] ?? maid.cafeId)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Text("👥 \(maid.followerCount)")
+                Text(String(format: String(localized: String.LocalizationValue("explore_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount))
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             .padding(.horizontal, 4)
         }
@@ -257,11 +362,33 @@ private struct ExploreContentView: View {
 
     private var placeholderMaidImage: some View {
         LinearGradient(
-            colors: [Color(hex: "FFDFEA"), Color(hex: "FFBED5")],
+            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
             startPoint: .top,
             endPoint: .bottom
         )
         .overlay(Image(systemName: "person.fill").foregroundStyle(Color.white.opacity(0.85)))
+    }
+}
+
+private struct ExploreEmptyPlaceholderCard: View {
+    let title: String
+
+    let description: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -270,3 +397,9 @@ struct ExploreView_Previews: PreviewProvider {
         ExploreContentView(uiState: .empty, onAction: { _ in })
     }
 }
+
+private let exploreGridMinimumColumnCount = 2
+private let exploreGridMaximumColumnCount = 6
+private let exploreGridHorizontalPadding: CGFloat = 24
+private let exploreGridItemSpacing: CGFloat = 12
+private let exploreGridMinimumCellWidth: CGFloat = 180

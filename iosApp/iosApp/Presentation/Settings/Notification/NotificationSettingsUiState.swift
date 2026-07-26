@@ -6,19 +6,34 @@
 //
 
 import Foundation
+import Shared
 
 struct NotificationSettingsUiState {
+    var isLoading: Bool
+    var isSaving: Bool
+    var errorMessage: String?
+    var isCastRole: Bool
     var isPushNotificationsEnabled: Bool
     var isShiftNotificationsEnabled: Bool
     var isBirthdayNotificationsEnabled: Bool
     var isNoticeNotificationsEnabled: Bool
-    var quietHoursOption: NotificationQuietHoursOption
+    var isFollowNotificationsEnabled: Bool
+    var isEventNotificationsEnabled: Bool
+    var isCommunityNotificationsEnabled: Bool
+    var quietHoursOption: NotificationQuietHoursMode
 
     static let initial = NotificationSettingsUiState(
+        isLoading: false,
+        isSaving: false,
+        errorMessage: nil,
+        isCastRole: false,
         isPushNotificationsEnabled: true,
         isShiftNotificationsEnabled: true,
         isBirthdayNotificationsEnabled: true,
-        isNoticeNotificationsEnabled: false,
-        quietHoursOption: .night
+        isNoticeNotificationsEnabled: true,
+        isFollowNotificationsEnabled: true,
+        isEventNotificationsEnabled: true,
+        isCommunityNotificationsEnabled: true,
+        quietHoursOption: .off
     )
 }

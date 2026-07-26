@@ -1,0 +1,475 @@
+package com.hhp227.concafe.data.source.firestore
+
+import com.hhp227.concafe.domain.model.AuthProvider
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.datetime.Clock
+
+class FirebaseAuthRestTokenProvider(
+    private val apiKey: String,
+    @Suppress("unused")
+    private val fallbackApiKeys: List<String> = emptyList(),
+    private val kakaoOidcProviderId: String = DEFAULT_KAKAO_OIDC_PROVIDER_ID,
+    private val restClient: FirebaseAuthRestClient
+) : FirestoreAuthTokenProvider {
+    private var currentSession: FirebaseAuthSession? = null
+
+    override suspend fun getIdToken(): String? {
+        val session = currentSession ?: return null
+        val refreshed = refreshSessionIfNeeded(session)
+        currentSession = refreshed
+        return refreshed.idToken
+    }
+
+    override suspend fun signInAnonymously(): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        val body = """
+            {
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signUpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = true,
+            authProvider = AuthProvider.UNKNOWN
+        )
+
+        currentSession = session
+        return session
+    }
+
+    override suspend fun signInWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+
+        val body = """
+            {
+              "email": "${escapeJson(email)}",
+              "password": "${escapeJson(password)}",
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signInWithGoogleIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("google idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=google.com",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInWithIdpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.GOOGLE
+        )
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signInWithAppleIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("apple idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=apple.com",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInWithIdpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.APPLE
+        )
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signInWithKakaoIdToken(idToken: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank()) {
+            throw IllegalArgumentException("kakao idToken is required")
+        }
+
+        val body = """
+            {
+              "postBody": "id_token=${escapeJson(idToken)}&providerId=${escapeJson(kakaoOidcProviderId)}",
+              "requestUri": "http://localhost",
+              "returnSecureToken": true,
+              "returnIdpCredential": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signInWithIdpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = true,
+            fallbackEmailPrefix = "kakao",
+            authProvider = AuthProvider.KAKAO
+        )
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signUpWithEmailPassword(email: String, password: String): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+
+        val body = """
+            {
+              "email": "${escapeJson(email)}",
+              "password": "${escapeJson(password)}",
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> signUpUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
+
+        currentSession = session
+
+        return session
+    }
+
+    override suspend fun signOut() {
+        currentSession = null
+    }
+
+    override suspend fun sendPasswordResetEmail(email: String) {
+        if (!supportsEmailPasswordAuth()) {
+            throw IllegalArgumentException("email/password auth not supported")
+        }
+        if (email.isBlank()) {
+            throw IllegalArgumentException("email is required")
+        }
+
+        val body = """
+            {
+              "requestType": "PASSWORD_RESET",
+              "email": "${escapeJson(email)}"
+            }
+        """.trimIndent()
+
+        postJsonWithApiKeyFallback(
+            buildUrl = { key -> sendOobCodeUrl(key) },
+            body = body
+        )
+    }
+
+    override suspend fun updateCurrentUserPassword(
+        idToken: String,
+        newPassword: String
+    ): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        if (idToken.isBlank() || newPassword.isBlank()) {
+            throw IllegalArgumentException("idToken/newPassword is required")
+        }
+        val body = """
+            {
+              "idToken": "${escapeJson(idToken)}",
+              "password": "${escapeJson(newPassword)}",
+              "returnSecureToken": true
+            }
+        """.trimIndent()
+        val response = postJsonWithApiKeyFallback(
+            buildUrl = { key -> updatePasswordUrl(key) },
+            body = body
+        )
+        val session = parseSessionFromResponse(
+            response = response,
+            allowMissingEmail = false,
+            authProvider = AuthProvider.EMAIL
+        )
+        currentSession = session
+        return session
+    }
+
+    override suspend fun deleteCurrentUser(idToken: String?) {
+        if (!supportsEmailPasswordAuth()) {
+            return
+        }
+
+        val resolvedIdToken = idToken ?: currentSession?.idToken
+
+        if (resolvedIdToken.isNullOrBlank()) {
+            throw IllegalStateException("Firebase auth delete requires idToken")
+        }
+
+        val body = """
+            {
+              "idToken": "${escapeJson(resolvedIdToken)}"
+            }
+        """.trimIndent()
+
+        postJsonWithApiKeyFallback(
+            buildUrl = { key -> deleteAccountUrl(key) },
+            body = body
+        )
+
+        currentSession = null
+    }
+
+    override suspend fun refreshSession(session: FirebaseAuthSession): FirebaseAuthSession? {
+        if (!supportsEmailPasswordAuth()) {
+            return null
+        }
+        val refreshToken = session.refreshToken
+        if (refreshToken.isNullOrBlank()) {
+            return null
+        }
+        val body = "grant_type=refresh_token&refresh_token=${escapeFormValue(refreshToken)}"
+        val response = postFormUrlEncodedWithApiKeyFallback(
+            buildUrl = { key -> refreshUrl(key) },
+            body = body
+        )
+        val root = Json.parseToJsonElement(response).jsonObject
+        val userId = root["user_id"]?.jsonPrimitive?.content.orEmpty()
+        val idToken = root["id_token"]?.jsonPrimitive?.content
+        val nextRefreshToken = root["refresh_token"]?.jsonPrimitive?.content ?: refreshToken
+        val expiresInSeconds = root["expires_in"]?.jsonPrimitive?.content?.toLongOrNull()
+        val email = session.email
+
+        if (userId.isBlank() || email.isBlank()) {
+            return null
+        }
+        return FirebaseAuthSession(
+            userId = userId,
+            email = email,
+            displayName = session.displayName,
+            authProvider = session.authProvider,
+            idToken = idToken,
+            refreshToken = nextRefreshToken,
+            expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }
+        )
+    }
+
+    override fun getCurrentUserId(): String? {
+        return currentSession?.userId
+    }
+
+    override fun getCurrentUserEmail(): String? {
+        return currentSession?.email
+    }
+
+    override fun getCurrentAuthProvider(): AuthProvider {
+        return currentSession?.authProvider ?: AuthProvider.UNKNOWN
+    }
+
+    override fun supportsEmailPasswordAuth(): Boolean {
+        return apiKey.isNotBlank()
+    }
+
+    override fun getCachedSignupCompleted(): Boolean? {
+        return currentSession?.signupCompleted
+    }
+
+    override fun setCachedSignupCompleted(value: Boolean) {
+        currentSession = currentSession?.copy(signupCompleted = value)
+    }
+
+    private fun signInUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:signInWithPassword?key=$apiKey"
+    }
+
+    private fun signUpUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:signUp?key=$apiKey"
+    }
+
+    private fun signInWithIdpUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:signInWithIdp?key=$apiKey"
+    }
+
+    private fun deleteAccountUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:delete?key=$apiKey"
+    }
+
+    private fun updatePasswordUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:update?key=$apiKey"
+    }
+
+    private fun sendOobCodeUrl(apiKey: String): String {
+        return "$FIREBASE_AUTH_BASE_URL/accounts:sendOobCode?key=$apiKey"
+    }
+
+    private fun refreshUrl(apiKey: String): String {
+        return "$FIREBASE_TOKEN_BASE_URL/token?key=$apiKey"
+    }
+
+    private suspend fun postJsonWithApiKeyFallback(
+        buildUrl: (String) -> String,
+        body: String
+    ): String {
+        val key = authApiKey()
+
+        if (key.isBlank()) {
+            throw IllegalStateException("Firebase auth request failed: API key is missing")
+        }
+        return runCatching {
+            restClient.postJson(buildUrl(key), body)
+        }.getOrElse { error ->
+            if (error is FirebaseAuthRestException) {
+                throw error
+            }
+            val message = error.message ?: "unknown"
+
+            throw IllegalStateException("Firebase auth request failed: $message", error)
+        }
+    }
+
+    private suspend fun postFormUrlEncodedWithApiKeyFallback(
+        buildUrl: (String) -> String,
+        body: String
+    ): String {
+        val key = authApiKey()
+
+        if (key.isBlank()) {
+            throw IllegalStateException("Firebase auth refresh failed: API key is missing")
+        }
+        return runCatching {
+            restClient.postFormUrlEncoded(buildUrl(key), body)
+        }.getOrElse { error ->
+            if (error is FirebaseAuthRestException) {
+                throw error
+            }
+            val message = error.message ?: "unknown"
+
+            throw IllegalStateException("Firebase auth refresh failed: $message", error)
+        }
+    }
+
+    private fun authApiKey(): String {
+        return apiKey.trim()
+    }
+
+    private fun parseSessionFromResponse(
+        response: String,
+        allowMissingEmail: Boolean,
+        fallbackEmailPrefix: String = "anonymous",
+        authProvider: AuthProvider
+    ): FirebaseAuthSession {
+        val root = Json.parseToJsonElement(response).jsonObject
+        val userId = root["localId"]?.jsonPrimitive?.content.orEmpty()
+        val rawEmail = root["email"]?.jsonPrimitive?.content.orEmpty()
+        val email = if (rawEmail.isNotBlank()) {
+            rawEmail
+        } else {
+            "$fallbackEmailPrefix-$userId@concafe.local"
+        }
+        val displayName = root["displayName"]?.jsonPrimitive?.contentOrNull
+        val idToken = root["idToken"]?.jsonPrimitive?.content
+        val refreshToken = root["refreshToken"]?.jsonPrimitive?.content
+        val expiresInSeconds = root["expiresIn"]?.jsonPrimitive?.content?.toLongOrNull()
+
+        if (userId.isBlank() || (!allowMissingEmail && email.isBlank())) {
+            throw IllegalStateException("Firebase auth response is missing localId/email")
+        }
+        return FirebaseAuthSession(
+            userId = userId,
+            email = email,
+            displayName = displayName,
+            authProvider = authProvider,
+            idToken = idToken,
+            refreshToken = refreshToken,
+            expiresAtEpochSeconds = expiresInSeconds?.let { nowEpochSeconds() + it }
+        )
+    }
+
+    private suspend fun refreshSessionIfNeeded(session: FirebaseAuthSession): FirebaseAuthSession {
+        val expiresAt = session.expiresAtEpochSeconds
+        val shouldRefresh = expiresAt != null && (expiresAt - nowEpochSeconds()) <= TOKEN_REFRESH_BUFFER_SECONDS
+
+        if (!shouldRefresh) {
+            return session
+        }
+
+        val refreshed = runCatching { refreshSession(session) }.getOrNull()
+        return refreshed ?: session
+    }
+}
+
+private const val FIREBASE_AUTH_BASE_URL = "https://identitytoolkit.googleapis.com/v1"
+private const val FIREBASE_TOKEN_BASE_URL = "https://securetoken.googleapis.com/v1"
+private const val TOKEN_REFRESH_BUFFER_SECONDS = 60L
+private const val DEFAULT_KAKAO_OIDC_PROVIDER_ID = "oidc.kakao"
+
+private fun escapeJson(value: String): String {
+    return value.replace("\\", "\\\\").replace("\"", "\\\"")
+}
+
+private fun escapeFormValue(value: String): String {
+    return value.replace("+", "%2B").replace("=", "%3D").replace("&", "%26")
+}
+
+private fun nowEpochSeconds(): Long {
+    return Clock.System.now().epochSeconds
+}

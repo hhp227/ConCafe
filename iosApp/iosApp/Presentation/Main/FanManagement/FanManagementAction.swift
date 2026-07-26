@@ -15,6 +15,10 @@ enum FanManagementAction {
     case dismissClaimSheet
     case clickEditProfile
     case clickPrimaryAnnouncement
+    case changeAnnouncementTitle(String)
+    case changeAnnouncementBody(String)
+    case submitAnnouncement
+    case dismissAnnouncementSheet
     case clickQuickAction(FanManagementUiState.QuickAction)
     case clickViewAllFollowers
     case clickRecentFollower(id: String)

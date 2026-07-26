@@ -17,6 +17,13 @@ sealed interface Route {
     data class Cafe(val param: String) : Route
 
     @Serializable
+    data class CafeEvent(
+        val cafeId: String,
+        val eventId: String,
+        val showCafeButton: Boolean = false
+    ) : Route
+
+    @Serializable
     data class CafeDashboard(val param: String) : Route
 
     @Serializable
@@ -47,6 +54,12 @@ sealed interface Route {
     data class Schedule(val castId: String? = null) : Route
 
     @Serializable
+    data class CastManagement(val cafeId: String, val cafeName: String) : Route
+
+    @Serializable
+    data class CastList(val cafeId: String) : Route
+
+    @Serializable
     data class MenuGoods(val param: String) : Route
 
     @Serializable
@@ -56,13 +69,22 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data class ReviewEdit(val cafeId: String) : Route
+    data class ReviewEdit(val cafeId: String, val reviewId: String? = null) : Route
+
+    @Serializable
+    data class Picture(val imageUrl: String) : Route
+
+    @Serializable
+    data class CheckInMap(val initialRegionKey: String? = null) : Route
 
     @Serializable
     data object SignIn : Route
 
     @Serializable
     data object SignUp : Route
+
+    @Serializable
+    data object ResetPassword : Route
 
     @Serializable
     data object Notification : Route
@@ -80,5 +102,17 @@ sealed interface Route {
     data object Inquiry : Route
 
     @Serializable
+    data object UserManagement : Route
+
+    @Serializable
     data object ChangePassword : Route
+
+    @Serializable
+    data object Community : Route
+
+    @Serializable
+    data class PostEdit(val postId: String? = null) : Route
+
+    @Serializable
+    data class PostDetail(val postId: String) : Route
 }

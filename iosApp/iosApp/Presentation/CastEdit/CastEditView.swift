@@ -17,19 +17,17 @@ struct CastEditView: View {
 
     @StateObject private var viewModel: CastEditViewModel
 
-    @State private var isPhotoPickerPresented = false
-
-    @State private var isGalleryPhotoPickerPresented = false
+    @State private var imagePickerTarget: CastEditImagePickerTarget? = nil
 
     var body: some View {
         CastEditContentView(
             uiState: viewModel.uiState,
             onAction: viewModel.onAction,
             onPickProfileImage: {
-                isPhotoPickerPresented = true
+                imagePickerTarget = .profile
             },
             onPickGalleryImage: {
-                isGalleryPhotoPickerPresented = true
+                imagePickerTarget = .gallery
             }
         )
         .navigationTitle(viewModel.uiState.screenTitle)
@@ -40,34 +38,36 @@ struct CastEditView: View {
                 onNavigationAction(.navigateBack)
             }
         }
-        .sheet(isPresented: $isPhotoPickerPresented) {
-            CompatImagePicker(
-                onImageSelected: { image in
-                    isPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.selectProfilePhoto(imageUrl))
+        .sheet(
+            isPresented: Binding(
+                get: { imagePickerTarget != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        imagePickerTarget = nil
                     }
-                },
-                onDismiss: {
-                    isPhotoPickerPresented = false
                 }
             )
-        }
-        .sheet(isPresented: $isGalleryPhotoPickerPresented) {
+        ) {
             CompatImagePicker(
                 onImageSelected: { image in
-                    isGalleryPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.addGalleryImage(imageUrl))
+                    let target = imagePickerTarget
+                    imagePickerTarget = nil
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        guard let imageUrl else { return }
+                        if target == .profile {
+                            viewModel.onAction(.selectProfilePhoto(imageUrl))
+                        } else if target == .gallery {
+                            viewModel.onAction(.addGalleryImage(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
-                    isGalleryPhotoPickerPresented = false
+                    imagePickerTarget = nil
                 }
             )
         }
         .alert(
-            "이미지를 등록해주세요",
+            String(localized: String.LocalizationValue("castedit_alert_image_required_title"), table: "Localizable"),
             isPresented: Binding(
                 get: { viewModel.uiState.isImageRequiredAlertVisible },
                 set: { presented in
@@ -77,11 +77,11 @@ struct CastEditView: View {
                 }
             )
         ) {
-            Button("확인") {
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
                 viewModel.onAction(.dismissImageRequiredAlert)
             }
         } message: {
-            Text("프로필 또는 갤러리 이미지 중 최소 1장은 필수입니다.")
+            Text(String(localized: String.LocalizationValue("castedit_alert_image_required_desc"), table: "Localizable"))
         }
     }
 
@@ -98,6 +98,7 @@ struct CastEditView: View {
 }
 
 private struct CastEditContentView: View {
+
     let uiState: CastEditUiState
 
     let onAction: (CastEditAction) -> Void
@@ -106,73 +107,107 @@ private struct CastEditContentView: View {
 
     let onPickGalleryImage: () -> Void
 
+    @State private var isBirthdayPickerPresented = false
+
+    @State private var selectedBirthdayDate = Date()
+
     var body: some View {
-        Group {
-            if uiState.isLoading {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .tint(Color(hex: "EF6797"))
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        profilePhotoSection
-                        if let infoMessage = uiState.infoMessage {
-                            infoBanner(message: infoMessage)
-                        }
-                        ConCafeFormField(
-                            label: "캐스트 이름",
-                            text: Binding(
-                                get: { uiState.castName },
-                                set: { onAction(.changeCastName($0)) }
-                            )
-                        )
-                        ConCafeFormField(
-                            label: "컨셉 역할",
-                            text: Binding(
-                                get: { uiState.conceptRole },
-                                set: { onAction(.changeConceptRole($0)) }
-                            )
-                        )
-                        ConCafeFormField(
-                            label: "생일",
-                            text: Binding(
-                                get: { uiState.birthday },
-                                set: { onAction(.changeBirthday($0)) }
-                            ),
-                            trailingContent: {
-                                Image(systemName: "calendar")
-                                    .foregroundStyle(Color(hex: "B1A3AC"))
-                            }
-                        )
-                        ConCafeFormEditor(
-                            label: "소개 및 바이오",
-                            text: Binding(
-                                get: { uiState.introduction },
-                                set: { onAction(.changeIntroduction($0)) }
-                            )
-                        )
-                        gallerySection
+        ZStack(alignment: .bottom) {
+            Group {
+                if uiState.isLoading {
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .tint(ConCafeColors.primary)
+                        Spacer()
                     }
-                    .padding(16)
-                    .padding(.bottom, 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            profilePhotoSection
+                            if let infoMessage = uiState.infoMessage {
+                                infoBanner(message: infoMessage)
+                            }
+                            ConCafeFormField(
+                                label: String(localized: String.LocalizationValue("castedit_label_name"), table: "Localizable"),
+                                text: Binding(
+                                    get: { uiState.castName },
+                                    set: { onAction(.changeCastName($0)) }
+                                )
+                            )
+                            ConCafeFormField(
+                                label: String(localized: String.LocalizationValue("castedit_label_concept_role"), table: "Localizable"),
+                                text: Binding(
+                                    get: { uiState.conceptRole },
+                                    set: { onAction(.changeConceptRole($0)) }
+                                )
+                            )
+                            BirthdayInputField(
+                                text: Binding(
+                                    get: { uiState.birthday },
+                                    set: { onAction(.changeBirthday($0)) }
+                                ),
+                                onTapCalendar: {
+                                    selectedBirthdayDate = TimeUtils.parseBirthdayDate(uiState.birthday) ?? Date()
+                                    isBirthdayPickerPresented = true
+                                }
+                            )
+                            ConCafeFormEditor(
+                                label: String(localized: String.LocalizationValue("castedit_label_intro"), table: "Localizable"),
+                                text: Binding(
+                                    get: { uiState.introduction },
+                                    set: { onAction(.changeIntroduction($0)) }
+                                )
+                            )
+                            gallerySection
+                        }
+                        .padding(16)
+                        .padding(.bottom, 24)
+                        .padding(.bottom, 60)
+                    }
                 }
+                bottomSaveBar()
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            bottomSaveBar
-        }
         .background(
-            LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Group {
+                if UITraitCollection.current.userInterfaceStyle == .dark {
+                    ConCafeColors.background
+                } else {
+                    LinearGradient(
+                        colors: [ConCafeColors.surfaceVariant, ConCafeColors.background],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            }
         )
-        .background(Color(hex: "F8F5F6"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : ConCafeColors.surfaceVariant)
+        .sheet(isPresented: $isBirthdayPickerPresented) {
+            CompatNavigationContainer(title: String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable")) {
+                VStack {
+                    DatePicker(
+                        String(localized: String.LocalizationValue("castedit_birthday_pick"), table: "Localizable"),
+                        selection: $selectedBirthdayDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .padding()
+                    Spacer()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable")) {
+                        onAction(.changeBirthday(TimeUtils.formatBirthdayDate(selectedBirthdayDate)))
+                        isBirthdayPickerPresented = false
+                    }
+                }
+            }
+            .compatFractionSheetDetent(0.45)
+        }
     }
 
     private var profilePhotoSection: some View {
@@ -186,7 +221,7 @@ private struct CastEditContentView: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                                    colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -199,12 +234,12 @@ private struct CastEditContentView: View {
                                 .clipped()
                         }
                         Circle()
-                            .fill(Color(hex: "FFD1DC"))
+                            .fill(ConCafeColors.primaryContainer)
                             .frame(width: 34, height: 34)
                             .overlay {
                                 Image(systemName: "camera.fill")
                                     .font(.caption.weight(.bold))
-                                    .foregroundStyle(Color(hex: "2B2330"))
+                                    .foregroundStyle(ConCafeColors.textPrimary)
                             }
                             .overlay(
                                 Circle()
@@ -217,26 +252,27 @@ private struct CastEditContentView: View {
                 .frame(width: 128, height: 128)
             }
             .buttonStyle(.plain)
-            Text("캐스트 프로필 사진")
-                .font(.title3.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
-            Text("탭해서 사진을 변경하세요")
+            Text(String(localized: String.LocalizationValue("castedit_profile_photo_title"), table: "Localizable"))
+                .font(.headline.weight(.bold))
+                .foregroundStyle(ConCafeColors.textPrimary)
+            Text(String(localized: String.LocalizationValue("castedit_profile_photo_hint"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8C7E87"))
+                .foregroundStyle(ConCafeColors.textMuted)
         }
         .frame(maxWidth: .infinity)
     }
 
     private var gallerySection: some View {
+        let galleryLimitText = "\(uiState.galleryImages.count) / \(uiState.galleryMaxCount)"
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("갤러리 사진")
+                Text(String(localized: String.LocalizationValue("castedit_gallery_title"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "665A63"))
+                    .foregroundStyle(ConCafeColors.textSecondary)
                 Spacer()
-                Text(uiState.galleryLimitText)
+                Text(galleryLimitText)
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
             }
             LazyVGrid(
                 columns: [
@@ -248,18 +284,31 @@ private struct CastEditContentView: View {
             ) {
                 ForEach(Array(uiState.galleryImages.enumerated()), id: \.offset) { index, imageUrl in
                     castGalleryItem(
-                        label: "이미지 \(index + 1)",
+                        label: String(
+                            format: String(localized: String.LocalizationValue("castedit_gallery_item_label"), table: "Localizable"),
+                            locale: Locale.current,
+                            index + 1
+                        ),
                         imageUrl: imageUrl,
-                        index: index
+                        index: index,
+                        onRemoveTap: {
+                            onAction(.removeGalleryImage(index))
+                        }
                     )
                 }
                 if uiState.galleryImages.count < uiState.galleryMaxCount {
                     addGalleryItem
                 }
             }
-            Text("캐스트 갤러리에는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("castedit_gallery_guide"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.galleryMaxCount
+                )
+            )
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(ConCafeColors.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -267,7 +316,8 @@ private struct CastEditContentView: View {
     private func castGalleryItem(
         label: String,
         imageUrl: String,
-        index: Int
+        index: Int,
+        onRemoveTap: @escaping () -> Void
     ) -> some View {
         let gradients = [
             ("FFE6EE", "F7C9D8"),
@@ -276,47 +326,62 @@ private struct CastEditContentView: View {
         ]
         let colors = gradients[index % gradients.count]
         return GeometryReader { proxy in
-            ZStack(alignment: .bottomLeading) {
-                if !imageUrl.isEmpty {
-                    CastEditImageView(
-                        imageUrl: imageUrl,
-                        placeholder: {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+            ZStack(alignment: .topTrailing) {
+                ZStack(alignment: .bottomLeading) {
+                    if !imageUrl.isEmpty {
+                        CastEditImageView(
+                            imageUrl: imageUrl,
+                            placeholder: {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                        }
-                    )
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: colors.0), Color(hex: colors.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            }
                         )
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                    } else {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: colors.0), Color(hex: colors.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    Text(label)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.black.opacity(0.32))
+                        .clipShape(Capsule())
+                        .padding(10)
                 }
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.black.opacity(0.32))
-                    .clipShape(Capsule())
-                    .padding(10)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Button {
+                    onRemoveTap()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(.black.opacity(0.52))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: 6, y: -6)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .aspectRatio(1, contentMode: .fit)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var addGalleryItem: some View {
@@ -325,13 +390,13 @@ private struct CastEditContentView: View {
             onPickGalleryImage()
         } label: {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(hex: "FFD1DC").opacity(0.1))
+                .fill(ConCafeColors.primaryContainer.opacity(0.1))
                 .overlay {
                     Circle()
-                        .stroke(Color(hex: "FFD1DC").opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [5]))
                         .overlay {
                             Image(systemName: "plus")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                         .padding(22)
                 }
@@ -340,32 +405,36 @@ private struct CastEditContentView: View {
         .buttonStyle(.plain)
     }
 
-    private var bottomSaveBar: some View {
+    private func bottomSaveBar() -> some View {
         Button {
             onAction(.clickSave)
         } label: {
             HStack(spacing: 8) {
                 if uiState.isSaving {
                     ProgressView()
-                        .tint(Color(hex: "2B2330"))
+                        .tint(ConCafeColors.textPrimary)
                 } else {
                     Image(systemName: "person.crop.circle.badge.checkmark")
                 }
                 Text(uiState.saveButtonLabel)
                     .fontWeight(.bold)
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(ConCafeColors.textPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
-            .background(Color(hex: "FFD1DC"))
+            .background(ConCafeColors.primaryContainer)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(16)
-        .background(Color.white.opacity(0.92))
+        .background(
+            UITraitCollection.current.userInterfaceStyle == .dark
+                ? ConCafeColors.background
+                : Color.white.opacity(0.92)
+        )
         .overlay(alignment: .top) {
             Rectangle()
-                .fill(Color(hex: "FFD1DC").opacity(0.2))
+                .fill(ConCafeColors.primaryContainer.opacity(0.2))
                 .frame(height: 1)
         }
     }
@@ -374,22 +443,117 @@ private struct CastEditContentView: View {
         HStack(spacing: 10) {
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button("닫기") {
+            Button(String(localized: String.LocalizationValue("common_close"), table: "Localizable")) {
                 onAction(.dismissInfoMessage)
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(Color(hex: "6B5320"))
+            .foregroundStyle(ConCafeColors.goldDeep)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
+    }
+
+}
+
+private struct BirthdayInputField: View {
+
+    @Binding var text: String
+
+    let onTapCalendar: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(localized: String.LocalizationValue("castedit_birthday_label"), table: "Localizable"))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(ConCafeColors.textSecondary)
+            HStack(spacing: 8) {
+                MaskedBirthdayTextField(text: $text)
+                    .frame(maxWidth: .infinity)
+                Button(action: onTapCalendar) {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(ConCafeColors.outlineStrong)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 52)
+            .background(
+                UITraitCollection.current.userInterfaceStyle == .dark
+                    ? Color(uiColor: .tertiarySystemBackground)
+                    : ConCafeColors.surfaceVariant
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
+            )
+        }
+    }
+}
+
+private struct MaskedBirthdayTextField: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.delegate = context.coordinator
+        textField.keyboardType = .numberPad
+        textField.placeholder = "MM/DD/YYYY"
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.borderStyle = .none
+        textField.backgroundColor = .clear
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+        if uiView.isFirstResponder {
+            moveCursorToEnd(uiView)
+        }
+    }
+
+    private func moveCursorToEnd(_ textField: UITextField) {
+        let endPosition = textField.endOfDocument
+        textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding private var text: String
+
+        func textField(
+            _ textField: UITextField,
+            shouldChangeCharactersIn range: NSRange,
+            replacementString string: String
+        ) -> Bool {
+            let currentText = textField.text ?? ""
+            guard let currentRange = Range(range, in: currentText) else { return false }
+            let updatedText = currentText.replacingCharacters(in: currentRange, with: string)
+            let normalized = TimeUtils.normalizeBirthdayInput(updatedText)
+            text = normalized
+            textField.text = normalized
+            let endPosition = textField.endOfDocument
+            textField.selectedTextRange = textField.textRange(from: endPosition, to: endPosition)
+            return false
+        }
+
+        init(text: Binding<String>) {
+            self._text = text
+        }
     }
 }
 
@@ -404,7 +568,7 @@ private struct CastEditProfileImageView: View {
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [Color(hex: "FFE3EC"), Color(hex: "F8C5D7")],
+                    colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -414,6 +578,7 @@ private struct CastEditProfileImageView: View {
 
 private struct CastEditImageView<Placeholder: View>: View {
     let imageUrl: String
+
     let placeholder: () -> Placeholder
 
     var body: some View {
@@ -428,7 +593,7 @@ private struct CastEditImageView<Placeholder: View>: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()
@@ -449,10 +614,22 @@ private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
 }
 
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
+}
+
 struct CastEditView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             CastEditView(castId: nil, onNavigationAction: { _ in })
         }
     }
+}
+
+private enum CastEditImagePickerTarget {
+    case profile
+    case gallery
 }

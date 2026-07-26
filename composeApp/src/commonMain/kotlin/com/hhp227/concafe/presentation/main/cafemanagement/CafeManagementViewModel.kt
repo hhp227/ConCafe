@@ -3,19 +3,23 @@ package com.hhp227.concafe.presentation.main.cafemanagement
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.event.CafeDetailEvent
+import com.hhp227.concafe.domain.event.CafeOwnerClaimEvent
 import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
@@ -25,6 +29,7 @@ class CafeManagementViewModel(
     private val getCafeManagementUseCase: GetCafeManagementUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
+    private val cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeManagementUiState())
@@ -34,17 +39,23 @@ class CafeManagementViewModel(
     val event = _event.asSharedFlow()
 
     private val jobs = mutableMapOf<TaskKey, Job>()
-    private var currentUserId: String? = null
 
     private fun loadCafeManagement() {
-        viewModelScope.launch {
+        jobs[TaskKey.LOAD_CAFE_MANAGEMENT]?.cancel()
+        jobs[TaskKey.LOAD_CAFE_MANAGEMENT] = viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    isLoading = true
+                )
+            }
             when (val result = getCafeManagementUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         state.copy(
                             ownedCafes = result.data.ownedCafes,
                             searchableCafes = result.data.searchableCafes,
-                            pendingClaims = result.data.pendingClaims
+                            pendingClaims = result.data.pendingClaims,
+                            isLoading = false
                         )
                     }
                 }
@@ -54,7 +65,32 @@ class CafeManagementViewModel(
                             ownedCafes = emptyList(),
                             searchableCafes = emptyList(),
                             pendingClaims = emptyList(),
+                            isLoading = false,
                             infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun refreshPendingClaims(resetMessage: Boolean = true) {
+        viewModelScope.launch {
+            when (val result = getCafeManagementUseCase.invoke()) {
+                is AppResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            ownedCafes = result.data.ownedCafes,
+                            searchableCafes = result.data.searchableCafes,
+                            pendingClaims = result.data.pendingClaims,
+                            infoMessage = if (resetMessage) null else state.infoMessage
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            infoMessage = if (resetMessage) result.error.toString() else state.infoMessage
                         )
                     }
                 }
@@ -84,13 +120,12 @@ class CafeManagementViewModel(
     }
 
     private fun clickClaimCafe(cafeId: String) {
-        val cafeName = _uiState.value.searchableCafes.firstOrNull { it.id == cafeId }?.name ?: "선택한 카페"
         viewModelScope.launch {
             when (val result = createCafeOwnerClaimUseCase.invoke(cafeId)) {
                 is AppResult.Success -> {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
                     _uiState.update {
-                        it.copy(infoMessage = "$cafeName 운영자 신청을 등록했습니다.")
+                        it.copy(infoMessage = MSG_OWNER_CLAIM_REGISTERED)
                     }
                 }
                 is AppResult.Failure -> {
@@ -125,8 +160,7 @@ class CafeManagementViewModel(
     private fun observeSession() {
         jobs[TaskKey.OBSERVE_SESSION]?.cancel()
         jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest { user ->
-                currentUserId = user?.id
+            observeCurrentUserUseCase.invoke().collectLatest {
                 loadCafeManagement()
             }
         }
@@ -147,14 +181,48 @@ class CafeManagementViewModel(
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
             cafeRegistrationClaimEventPublisher.events.collectLatest { claimEvent ->
-                val userId = currentUserId ?: return@collectLatest
                 val shouldRefresh = when (claimEvent) {
-                    is CafeRegistrationClaimEvent.Created -> claimEvent.requesterUserId == userId
-                    is CafeRegistrationClaimEvent.Approved -> claimEvent.requesterUserId == userId
-                    is CafeRegistrationClaimEvent.Rejected -> claimEvent.requesterUserId == userId
+                    is CafeRegistrationClaimEvent.Created -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeRegistrationClaimEvent.Approved -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeRegistrationClaimEvent.Rejected -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
                 }
                 if (shouldRefresh) {
-                    loadCafeManagement()
+                    refreshPendingClaims(resetMessage = false)
+                }
+            }
+        }
+    }
+
+    private fun observeCafeOwnerClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_OWNER_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_OWNER_CLAIM_EVENT] = viewModelScope.launch {
+            cafeOwnerClaimEventPublisher.events.collectLatest { claimEvent ->
+                val shouldRefresh = when (claimEvent) {
+                    is CafeOwnerClaimEvent.Created -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeOwnerClaimEvent.Approved -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                    is CafeOwnerClaimEvent.Rejected -> _uiState.value.pendingClaims
+                        .any { pendingClaim -> pendingClaim.claimId == claimEvent.claimId }
+                }
+                if (shouldRefresh) {
+                    refreshPendingClaims(resetMessage = false)
+                }
+            }
+        }
+    }
+
+    private fun startClaimPolling() {
+        jobs[TaskKey.POLL_CLAIM]?.cancel()
+        jobs[TaskKey.POLL_CLAIM] = viewModelScope.launch {
+            while (isActive) {
+                delay(CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    refreshPendingClaims(resetMessage = false)
                 }
             }
         }
@@ -204,7 +272,8 @@ class CafeManagementViewModel(
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
-        loadCafeManagement()
+        observeCafeOwnerClaimEvent()
+        startClaimPolling()
     }
 
     override fun onCleared() {
@@ -214,8 +283,17 @@ class CafeManagementViewModel(
     }
 
     private enum class TaskKey {
+        LOAD_CAFE_MANAGEMENT,
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
-        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
+        OBSERVE_CAFE_OWNER_CLAIM_EVENT,
+        POLL_CLAIM
+    }
+
+    companion object {
+        private const val MSG_OWNER_CLAIM_REGISTERED = "cafemgmt_info_owner_claim_registered"
     }
 }
+
+private const val CAFE_MANAGEMENT_CLAIM_POLLING_INTERVAL_MILLIS = 60_000L

@@ -6,5 +6,6 @@ data class Visit(
     val cafeId: String,
     val visitedAt: String,
     val memo: String?,
-    val verified: Boolean
+    val verified: Boolean,
+    val checkInMethod: String? = null
 )

@@ -12,10 +12,18 @@ enum CafeAction {
     case changeTab(CafeUiState.TabType)
     case maidTapped(id: String)
     case favoriteTapped
+    case favoriteTooltipShown
+    case dismissFavoriteTooltip
     case writeReviewTapped
     case loadMoreCasts
     case loadMoreNotices
+    case eventTapped(eventId: String)
     case loadMoreReviews
     case refresh
+    case pagingTriggerDisappeared(CafeUiState.TabType)
     case consumeScrollToTopOnReturn
+    case editReview(reviewId: String)
+    case deleteReview(reviewId: String)
+    case reviewImageTapped(imageUrl: String)
+    case reportReview(reviewId: String)
 }

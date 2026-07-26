@@ -10,10 +10,11 @@ import Combine
 import Shared
 import KMPNativeCoroutinesAsync
 
+@MainActor
 final class BannerViewModel: ObservableObject {
     private let cafeId: String?
 
-    private let getHomeFeedUseCase: GetHomeFeedUseCase
+    private let getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase
 
     private let deleteHomeBannerUseCase: DeleteHomeBannerUseCase
 
@@ -29,14 +30,11 @@ final class BannerViewModel: ObservableObject {
         tasks[.load]?.cancel()
         tasks[.load] = Task {
             do {
-                let result = try await getHomeFeedUseCase.invoke(popularCastCursor: nil, nearbyCafeCursor: nil)
+                let result = try await getHomeBannerManagementUseCase.invoke(cafeId: cafeId)
+
                 if let success = result as? AppResultSuccess<AnyObject>,
-                   let feed = success.data as? HomeFeed {
-                    let mapped = feed.banners
-                        .filter { banner in
-                            guard let cafeId else { return true }
-                            return banner.cafeId == cafeId
-                        }
+                   let banners = success.data as? [HomeBanner] {
+                    let mapped = banners
                         .map { $0.toBannerItem() }
                     uiState.banners = mapped
                     if let pendingDeleteBannerId = uiState.pendingDeleteBannerId,
@@ -44,11 +42,11 @@ final class BannerViewModel: ObservableObject {
                         uiState.pendingDeleteBannerId = nil
                     }
                 } else {
-                    event.send(.showMessage("배너 목록을 불러오지 못했습니다."))
+                    event.send(.showMessage(MessageKey.bannerLoadFailed))
                 }
             } catch {
                 if Task.isCancelled { return }
-                event.send(.showMessage("배너 목록을 불러오지 못했습니다."))
+                event.send(.showMessage(MessageKey.bannerLoadFailed))
             }
         }
     }
@@ -145,15 +143,16 @@ final class BannerViewModel: ObservableObject {
                 let result = try await deleteHomeBannerUseCase.invoke(bannerId: bannerId)
                 if result is AppResultSuccess<AnyObject> {
                     removeBanner(id: bannerId)
-                    event.send(.showMessage("배너를 삭제했습니다."))
+                    event.send(.showMessage(MessageKey.bannerDeleted))
                 } else if let failure = result as? AppResultFailure {
-                    event.send(.showMessage("\(failure.error)"))
+                    let _ = failure
+                    event.send(.showMessage(MessageKey.bannerDeleteFailed))
                 } else {
-                    event.send(.showMessage("배너 삭제에 실패했습니다."))
+                    event.send(.showMessage(MessageKey.bannerDeleteFailed))
                 }
             } catch {
                 if Task.isCancelled { return }
-                event.send(.showMessage("배너 삭제에 실패했습니다."))
+                event.send(.showMessage(MessageKey.bannerDeleteFailed))
             }
         }
     }
@@ -167,12 +166,12 @@ final class BannerViewModel: ObservableObject {
 
     init(
         cafeId: String? = nil,
-        getHomeFeedUseCase: GetHomeFeedUseCase = KoinInitializerKt.resolveGetHomeFeedUseCase(),
+        getHomeBannerManagementUseCase: GetHomeBannerManagementUseCase = KoinInitializerKt.resolveGetHomeBannerManagementUseCase(),
         deleteHomeBannerUseCase: DeleteHomeBannerUseCase = KoinInitializerKt.resolveDeleteHomeBannerUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher()
     ) {
         self.cafeId = cafeId
-        self.getHomeFeedUseCase = getHomeFeedUseCase
+        self.getHomeBannerManagementUseCase = getHomeBannerManagementUseCase
         self.deleteHomeBannerUseCase = deleteHomeBannerUseCase
         self.bannerEventPublisher = bannerEventPublisher
         observeBannerEvent()
@@ -182,6 +181,12 @@ final class BannerViewModel: ObservableObject {
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
+    }
+
+    private enum MessageKey {
+        static let bannerLoadFailed = "banner_info_load_failed"
+        static let bannerDeleted = "banner_info_deleted"
+        static let bannerDeleteFailed = "banner_info_delete_failed"
     }
 }
 
@@ -202,14 +207,14 @@ private extension HomeBanner {
         default:
             tab = .active
         }
-        let statusLabel: String
+        let statusLabelKey: String
         switch tab {
         case .active:
-            statusLabel = "진행 중"
+            statusLabelKey = "banner_status_active"
         case .scheduled:
-            statusLabel = "예약"
+            statusLabelKey = "banner_status_scheduled"
         case .ended:
-            statusLabel = "종료"
+            statusLabelKey = "banner_status_ended"
         }
         let icon: String
         switch targetType {
@@ -227,11 +232,12 @@ private extension HomeBanner {
             cafeId: cafeId,
             title: title,
             description: subtitle,
-            periodText: "노출 \(displayDays)일",
-            statusLabel: statusLabel,
+            periodDays: displayDays,
+            statusLabelKey: statusLabelKey,
             tab: tab,
             accentHex: startColorHex,
-            imageIcon: icon
+            imageIcon: icon,
+            imageUrl: imageUrl
         )
     }
 }

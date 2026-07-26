@@ -6,15 +6,22 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct CafeSummaryCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let name: String
 
     let rating: String
 
+    let conceptType: String?
+
     let location: String
 
     let thumbnailImage: String?
+
+    let showLocationIcon: Bool
 
     let trailingLabel: String?
 
@@ -26,22 +33,38 @@ struct CafeSummaryCard: View {
                 .frame(height: 120)
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ConCafeColors.outline, lineWidth: 1)
+                )
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(1)
-                Text("⭐ \(rating)")
-                    .font(.caption)
-                HStack(alignment: .center) {
-                    Text("📍 \(location)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if let conceptType = conceptType?.trimmingCharacters(in: .whitespacesAndNewlines), !conceptType.isEmpty {
+                    Text(conceptType)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(ConCafeColors.primary)
                         .lineLimit(1)
+                }
+                HStack(alignment: .center) {
+                    HStack(spacing: 4) {
+                        if showLocationIcon {
+                            Image(systemName: "mappin.and.ellipse")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(location)
+                            .font(.caption)
+                            .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 8)
                     if let trailingLabel {
                         Text(trailingLabel)
                             .font(.caption)
-                            .foregroundColor(Color(hex: "EF6797"))
+                            .foregroundColor(ConCafeColors.primary)
                             .fontWeight(.semibold)
                             .lineLimit(1)
                     }
@@ -57,30 +80,27 @@ struct CafeSummaryCard: View {
 
     @ViewBuilder
     private var cafeImage: some View {
-        if let thumbnailImage,
-           let url = URL(string: thumbnailImage) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    placeholderCafeImage
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    placeholderCafeImage
-                @unknown default:
-                    placeholderCafeImage
-                }
+        GeometryReader { geometry in
+            let imageSize = geometry.size
+
+            ZStack(alignment: .topTrailing) {
+                placeholderCafeImage
+                CachedAsyncImage(
+                    url: ImageUrlUtils.normalizedRemoteUrl(from: thumbnailImage),
+                    placeholder: EmptyView()
+                )
+                .frame(width: imageSize.width, height: imageSize.height)
+                .clipped()
+                RatingBox(rating: rating)
+                    .padding(.top, 8)
+                    .padding(.trailing, 8)
             }
-        } else {
-            placeholderCafeImage
         }
     }
 
     private var placeholderCafeImage: some View {
         LinearGradient(
-            colors: [Color(hex: "FFE2D2"), Color(hex: "FFC9A9")],
+            colors: [ConCafeColors.warningContainer, ConCafeColors.warningContainer],
             startPoint: .top,
             endPoint: .bottom
         )

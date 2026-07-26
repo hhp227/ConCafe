@@ -20,6 +20,10 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.cast(param: id)))
         case .navigateToCafe(let id):
             event.send(.navigateTo(.cafe(param: id)))
+        case .navigateToCafeEvent(let cafeId, let eventId, let showCafeButton):
+            event.send(.navigateTo(.cafeEvent(cafeId: cafeId, eventId: eventId, showCafeButton: showCafeButton)))
+        case .replaceWithCafe(let id):
+            event.send(.replaceCurrent(.cafe(param: id)))
         case .navigateToCafeDashboard(let id):
             event.send(.navigateTo(.cafeDashboard(param: id)))
         case .navigateToBanner(let cafeId):
@@ -36,16 +40,26 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.castEdit(cafeId: cafeId, castId: castId)))
         case .navigateToSchedule(let castId):
             event.send(.navigateTo(.schedule(castId: castId)))
+        case .navigateToCastManagement(let cafeId, let cafeName):
+            event.send(.navigateTo(.castManagement(cafeId: cafeId, cafeName: cafeName)))
+        case .navigateToCastList(let cafeId):
+            event.send(.navigateTo(.castList(cafeId: cafeId)))
         case .navigateToMenuGoods(let id):
             event.send(.navigateTo(.menuGoods(param: id)))
         case .navigateToMenuGoodsEdit(let cafeId, let itemId):
             event.send(.navigateTo(.menuGoodsEdit(cafeId: cafeId, itemId: itemId)))
-        case .navigateToReviewEdit(let cafeId):
-            event.send(.navigateTo(.reviewEdit(cafeId: cafeId)))
+        case .navigateToReviewEdit(let cafeId, let reviewId):
+            event.send(.navigateTo(.reviewEdit(cafeId: cafeId, reviewId: reviewId)))
+        case .navigateToPicture(let imageUrl):
+            event.send(.navigateTo(.picture(imageUrl: imageUrl)))
+        case .navigateToCheckInMap(let initialRegionKey):
+            event.send(.navigateTo(.checkInMap(initialRegionKey: initialRegionKey)))
         case .navigateToSignIn:
             event.send(.navigateTo(.signIn))
         case .navigateToSignUp:
             event.send(.navigateTo(.signUp))
+        case .navigateToResetPassword:
+            event.send(.navigateTo(.resetPassword))
         case .navigateToNotification:
             event.send(.navigateTo(.notification))
         case .navigateToSettings:
@@ -56,10 +70,20 @@ final class NavigationViewModel: ObservableObject {
             event.send(.navigateTo(.accountSettings))
         case .navigateToInquiry:
             event.send(.navigateTo(.inquiry))
+        case .navigateToUserManagement:
+            event.send(.navigateTo(.userManagement))
         case .navigateToChangePassword:
             event.send(.navigateTo(.changePassword))
+        case .navigateToCommunity:
+            event.send(.navigateTo(.community))
+        case .navigateToPostEdit(let postId):
+            event.send(.navigateTo(.postEdit(postId: postId)))
+        case .navigateToPostDetail(let postId):
+            event.send(.navigateTo(.postDetail(postId: postId)))
         case .navigateBack:
             event.send(.navigateBack)
+        case .refreshUnreadNotificationCount:
+            event.send(.refreshUnreadNotificationCount)
         }
     }
 }

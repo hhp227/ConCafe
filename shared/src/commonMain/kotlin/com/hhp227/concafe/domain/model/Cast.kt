@@ -10,5 +10,6 @@ data class Cast(
     val birthday: String?,
     val conceptRole: String,
     val followerCount: Int,
-    val rating: Double
+    val rating: Double,
+    val visitCertificationCount: Int = 0
 )

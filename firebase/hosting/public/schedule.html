@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>콘카 캐스트 스케줄 조회</title>
+    <meta
+      name="description"
+      content="카페를 선택하고 실제 서비스의 캐스트 스케줄을 조회하는 페이지입니다."
+    />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f1f3;
+        --surface: rgba(255, 255, 255, 0.94);
+        --surface-soft: #fdf8fa;
+        --line: #e7d9df;
+        --line-strong: #cfb8c2;
+        --text: #23161c;
+        --muted: #6d5d64;
+        --accent: #ef6797;
+        --accent-soft: #ffd7e5;
+        --success: #1f8b5f;
+        --warning: #9a6700;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 229, 0.72), transparent 34%),
+          linear-gradient(180deg, #fff8fb 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .topbar .nav-link {
+        font-size: 14px;
+        color: var(--muted);
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: transparent;
+        border: 0;
+      }
+
+      .topbar .nav-link:hover,
+      .topbar .nav-link:focus-visible {
+        background: var(--surface-soft);
+        color: #da4e84;
+      }
+
+      .container {
+        max-width: 1100px;
+      }
+
+      .page {
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 0 40px;
+      }
+
+      .hero,
+      .page-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero {
+        grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+      }
+
+      .page-grid {
+        grid-template-columns: minmax(0, 1fr);
+        margin-top: 20px;
+      }
+
+      .download-strip {
+        margin: 18px 0 20px;
+        padding: 20px 24px;
+      }
+
+      .download-strip-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .download-strip-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .store-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .store-links a,
+      .desktop-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .store-links img {
+        height: 52px;
+        width: auto;
+        display: block;
+      }
+
+      .desktop-link {
+        height: 52px;
+        padding: 0 18px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .surface {
+        background: var(--surface);
+        border: 1px solid rgba(207, 184, 194, 0.82);
+        border-radius: 8px;
+        box-shadow: 0 18px 44px rgba(75, 41, 53, 0.08);
+      }
+
+      .hero-copy,
+      .hero-meta,
+      .section {
+        padding: 24px;
+      }
+
+      .eyebrow,
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+
+      .eyebrow {
+        gap: 8px;
+        padding: 7px 12px;
+        background: var(--accent-soft);
+        color: #5d2740;
+        font-size: 13px;
+      }
+
+      h1 {
+        margin: 16px 0 10px;
+        font-size: clamp(30px, 4vw, 44px);
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 23px;
+      }
+
+      p,
+      .empty {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stat-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: 8px;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+      }
+
+      .stat-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .nav-row,
+      .toolbar,
+      .button-row,
+      .chip-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .nav-link,
+      .button {
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .nav-link {
+        padding: 11px 14px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+      }
+
+      .nav-link.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: #5b2238;
+      }
+
+      .toolbar {
+        margin-top: 16px;
+        margin-bottom: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        min-width: 240px;
+        flex: 1 1 240px;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        padding: 13px 14px;
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(239, 103, 151, 0.14);
+      }
+
+      .button {
+        border: 0;
+        cursor: pointer;
+        padding: 13px 18px;
+      }
+
+      .button-secondary {
+        background: var(--accent-soft);
+        color: #4f2536;
+      }
+
+      .status-banner {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 8px;
+        border: 1px solid #efd89a;
+        background: #fff7dd;
+        color: var(--warning);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .list-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-soft);
+        padding: 16px;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .item-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        background: #f4e3ea;
+        color: #6a3147;
+        font-size: 12px;
+      }
+
+      .chip.neutral {
+        background: #f0eef1;
+        color: #655a62;
+      }
+
+      .chip.success {
+        background: #e6f8ef;
+        color: #247950;
+      }
+
+      .chip.warning {
+        background: #fff2d6;
+        color: #946200;
+      }
+
+      .weekday-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .weekday-chip {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .weekday-chip.work {
+        background: #ffe2ec;
+        border-color: #ef6797;
+        color: #9d2759;
+      }
+
+      .weekday-chip.vacation {
+        background: #fff2d6;
+        border-color: #efcf7d;
+        color: #946200;
+      }
+
+      .cafe-schedule-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .cafe-schedule-title {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .schedule-view-field {
+        min-width: 0;
+      }
+
+      .schedule-controls {
+        display: grid;
+        gap: 8px;
+        width: min(100%, 420px);
+      }
+
+      .schedule-download-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .schedule-download-actions .button {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 10px;
+        text-align: center;
+      }
+
+      .schedule-block {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 14px;
+      }
+
+      .schedule-period-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+        color: #4a3645;
+      }
+
+      .week-schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .week-schedule-table th,
+      .week-schedule-table td {
+        border: 1px solid var(--line);
+        padding: 10px;
+        vertical-align: top;
+      }
+
+      .week-schedule-table th {
+        width: 210px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 800;
+        color: #5f4b55;
+        background: #fff8fb;
+      }
+
+      .week-schedule-table td {
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .week-cast-col {
+        text-align: left !important;
+        font-weight: 700;
+        color: #4a3645;
+        min-width: 150px;
+        background: #fffdfd;
+      }
+
+      .week-status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6b5a63;
+        background: #fff;
+      }
+
+      .week-status-chip.work {
+        border-color: #c8efd9;
+        background: #ecfff5;
+        color: #1f8b5f;
+      }
+
+      .week-status-chip.vacation {
+        border-color: #f2d4c4;
+        background: #fff3eb;
+        color: #99624a;
+      }
+
+      .cast-name-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .cast-name-chip {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #5d4b55;
+        background: #fff;
+      }
+
+      .cast-name-chip.work {
+        border-color: #c8efd9;
+        background: #ecfff5;
+        color: #1f8b5f;
+      }
+
+      .cast-name-chip.vacation {
+        border-color: #f2d4c4;
+        background: #fff3eb;
+        color: #99624a;
+      }
+
+      .cast-name-chip.guest {
+        border-color: #f0c4df;
+        background: #fff0f7;
+        color: #b33b78;
+      }
+
+      .month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .month-weekday {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        padding: 6px 0;
+      }
+
+      .month-cell {
+        min-height: 116px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .month-cell.empty {
+        background: transparent;
+        border-style: dashed;
+      }
+
+      .month-day {
+        font-size: 14px;
+        font-weight: 800;
+        color: #4a3645;
+      }
+
+      .month-casts {
+        display: grid;
+        gap: 4px;
+      }
+
+      .month-cast-line {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #5d4b55;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .empty {
+        padding-top: 18px;
+      }
+
+      .small {
+        font-size: 12px;
+      }
+
+      /* ── Topbar right group ── */
+      .topbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+      /* ── Auth widget ── */
+      .auth-widget { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+      /* ── Auth modal ── */
+      .auth-modal {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(35, 22, 28, 0.48); backdrop-filter: blur(4px);
+        opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      }
+      .auth-modal.is-open { opacity: 1; pointer-events: auto; }
+      .auth-modal-box {
+        position: relative; background: #fff; border-radius: 20px;
+        padding: 32px 28px; width: calc(100% - 32px); max-width: 360px;
+        box-shadow: 0 8px 40px rgba(74, 54, 69, 0.22);
+        transform: translateY(16px); transition: transform 0.2s;
+      }
+      .auth-modal.is-open .auth-modal-box { transform: translateY(0); }
+      .auth-modal-close {
+        position: absolute; top: 14px; right: 14px;
+        background: none; border: none; cursor: pointer;
+        font-size: 16px; color: #a07a8f; line-height: 1; padding: 4px;
+      }
+      .auth-modal-close:hover { color: #3d2c38; }
+      .auth-modal-title { font-size: 20px; font-weight: 800; color: #23161c; margin: 0 0 20px; }
+      .auth-modal-form { display: flex; flex-direction: column; gap: 12px; }
+      .auth-modal-field { display: flex; flex-direction: column; gap: 5px; }
+      .auth-modal-field label { font-size: 12px; font-weight: 700; color: #6d5d64; }
+      .auth-modal-field input {
+        padding: 10px 14px; border-radius: 12px;
+        border: 1px solid #e7d9df; background: #fff8fb;
+        font: inherit; font-size: 14px; color: #23161c; outline: none;
+      }
+      .auth-modal-field input:focus { border-color: #ef6797; }
+      .auth-modal-error { font-size: 12px; color: #c4415f; margin: 0; }
+      .auth-modal-submit {
+        margin-top: 4px; padding: 12px; border-radius: 14px;
+        background: linear-gradient(135deg, #ef6797, #da4e84);
+        color: #fff; border: none; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      }
+      .auth-modal-submit:hover { background: linear-gradient(135deg, #da4e84, #c73d73); }
+      .auth-modal-divider {
+        display: flex; align-items: center; gap: 10px;
+        margin: 16px 0; color: #a07a8f; font-size: 12px;
+      }
+      .auth-modal-divider::before, .auth-modal-divider::after {
+        content: ""; flex: 1; height: 1px; background: #e7d9df;
+      }
+      .auth-modal-google {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; padding: 11px; border-radius: 14px;
+        border: 1px solid #e7d9df; background: #fff;
+        font: inherit; font-size: 13px; font-weight: 700; color: #3d2c38; cursor: pointer;
+      }
+      .auth-modal-google:hover { background: #fdf8fa; border-color: #cfb8c2; }
+      .auth-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 20px;
+        border: 1px solid rgba(239, 103, 151, 0.5);
+        background: #fff1f7; color: #9d2759;
+        font: inherit; font-size: 13px; font-weight: 700;
+        cursor: pointer; white-space: nowrap;
+      }
+      .auth-btn:hover { background: #ffe4ef; }
+      .auth-btn.signout {
+        background: transparent; border-color: rgba(207, 184, 194, 0.5);
+        color: #6d5d64; font-weight: 400; font-size: 12px; padding: 6px 12px;
+      }
+      .auth-user-info { display: flex; align-items: center; gap: 6px; }
+      .auth-user-photo {
+        width: 28px; height: 28px; border-radius: 50%;
+        object-fit: cover; border: 1.5px solid rgba(239, 103, 151, 0.4); flex-shrink: 0;
+      }
+      .auth-user-name {
+        font-size: 13px; font-weight: 700; color: #23161c;
+        max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      @media (max-width: 960px) {
+        .hero {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding-top: 12px;
+        }
+
+        .hero-copy,
+        .hero-meta,
+        .section {
+          padding: 18px;
+        }
+
+        .stat-list {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        h1 {
+          font-size: 30px;
+        }
+
+        .download-strip {
+          padding: 18px;
+        }
+
+        .download-strip-head {
+          display: grid;
+        }
+
+        .week-schedule-table th,
+        .week-schedule-table td {
+          display: block;
+          width: 100%;
+        }
+
+        .month-grid {
+          gap: 6px;
+        }
+
+        .month-cell {
+          min-height: 102px;
+          padding: 7px;
+        }
+      }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links" aria-label="조회 페이지 메뉴">
+              <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+    <div class="page">
+      <section class="hero">
+        <div class="surface hero-copy">
+          <div class="eyebrow">스케줄 조회</div>
+          <h1>카페를 선택하고 실제 캐스트 스케줄을 확인</h1>
+          <p>
+            카페를 선택하면 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
+          </p>
+          <div class="status-banner" id="pageStatus">카페 목록을 불러오는 중입니다.</div>
+        </div>
+
+        <aside class="surface hero-meta">
+          <div class="stat-list">
+            <div class="stat">
+              <span class="stat-label">카페 목록</span>
+              <strong class="stat-value" id="cafeCount">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">선택된 카페</span>
+              <strong class="stat-value" id="selectedCafeLabel">없음</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">캐스트 수</span>
+              <strong class="stat-value" id="castCount">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">표시 중인 스케줄</span>
+              <strong class="stat-value" id="scheduleCount">0</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <div class="page-grid">
+        <section class="surface section">
+          <div>
+            <h2>카페 선택</h2>
+            <p>카페를 선택하면 해당 카페의 실제 캐스트 목록과 스케줄을 불러옵니다.</p>
+          </div>
+
+          <div class="toolbar">
+            <div class="field">
+              <label for="cafeSearch">카페 검색</label>
+              <input id="cafeSearch" type="search" placeholder="카페 이름 또는 지역으로 검색" />
+            </div>
+            <div class="field">
+              <label for="cafeSelect">카페 목록</label>
+              <select id="cafeSelect">
+                <option value="">카페를 선택하세요</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="castFilter">캐스트 필터</label>
+              <select id="castFilter">
+                <option value="">전체 캐스트</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="button button-secondary" id="refreshButton" type="button">목록 새로고침</button>
+          </div>
+
+          <section style="margin-top: 24px;">
+            <div class="cafe-schedule-head">
+              <div>
+                <h2 class="cafe-schedule-title">카페 스케줄</h2>
+                <p>선택한 카페의 캐스트 스케줄을 1주/1달 기준으로 확인할 수 있습니다.</p>
+              </div>
+              <div class="schedule-controls">
+                <div class="field schedule-view-field">
+                  <label for="cafeScheduleView">조회 기간</label>
+                  <select id="cafeScheduleView">
+                    <option value="week">1주</option>
+                    <option value="month">1달</option>
+                  </select>
+                </div>
+                <div class="schedule-download-actions">
+                  <button class="button button-secondary" id="downloadScheduleImageButton" type="button">
+                    스케줄 이미지 다운로드
+                  </button>
+                  <button class="button button-secondary" id="downloadScheduleExcelButton" type="button">
+                    스케줄 엑셀 다운로드
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="schedule-block" id="cafeScheduleCapture">
+              <h3 class="schedule-period-title" id="cafeScheduleTitle">카페를 먼저 선택해주세요.</h3>
+              <div id="cafeScheduleContent">
+                <p class="empty">카페 선택 후 스케줄을 확인할 수 있습니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section style="margin-top: 24px;">
+            <h2>캐스트 목록</h2>
+            <div class="list" id="castList" style="margin-top: 16px;"></div>
+            <p class="empty" id="castEmptyState">선택한 카페의 캐스트가 아직 없습니다.</p>
+          </section>
+
+        </section>
+      </div>
+      <section class="surface download-strip">
+        <div class="download-strip-head">
+          <h2 class="download-strip-title">앱 다운로드</h2>
+          <div class="store-links">
+            <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">
+              <img src="/assets/images/googleplay.png" alt="Google Play에서 다운로드" />
+            </a>
+            <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">
+              <img src="/assets/images/appleappstore.png" alt="App Store에서 다운로드" />
+            </a>
+            <a class="desktop-link" href="/downloads">데스크톱 다운로드</a>
+          </div>
+        </div>
+      </section>
+    </div>
+      <footer class="footer">
+        <span>© 2026 콘카(ConCafe)</span>
+        <span><a href="/privacy">개인정보처리방침</a></span>
+      </footer>
+      </main>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="로그인">
+      <div class="auth-modal-box">
+        <button class="auth-modal-close" id="authModalClose" type="button" aria-label="닫기">✕</button>
+        <h2 class="auth-modal-title">로그인</h2>
+        <form class="auth-modal-form" id="emailLoginForm" novalidate>
+          <div class="auth-modal-field">
+            <label for="loginEmail">이메일</label>
+            <input type="email" id="loginEmail" placeholder="이메일 주소" autocomplete="email" />
+          </div>
+          <div class="auth-modal-field">
+            <label for="loginPassword">비밀번호</label>
+            <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" />
+          </div>
+          <p class="auth-modal-error" id="emailLoginError" style="display:none;"></p>
+          <button class="auth-modal-submit" type="submit">로그인</button>
+        </form>
+        <div class="auth-modal-divider"><span>또는</span></div>
+        <button class="auth-modal-google" id="googleSignInModalBtn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google로 로그인
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const firebaseConfig = {
+          apiKey: "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI",
+          authDomain: "concafe-5f7fd.firebaseapp.com",
+          projectId: "concafe-5f7fd",
+          storageBucket: "concafe-5f7fd.firebasestorage.app",
+          messagingSenderId: "387905493709",
+          appId: "1:387905493709:web:schedule-page",
+        };
+
+        const state = {
+          cafes: [],
+          filteredCafes: [],
+          selectedCafeId: "",
+          casts: [],
+          schedules: [],
+          guestSchedules: [],
+        };
+
+        const el = {
+          pageStatus: document.getElementById("pageStatus"),
+          cafeCount: document.getElementById("cafeCount"),
+          selectedCafeLabel: document.getElementById("selectedCafeLabel"),
+          castCount: document.getElementById("castCount"),
+          scheduleCount: document.getElementById("scheduleCount"),
+          cafeSearch: document.getElementById("cafeSearch"),
+          cafeSelect: document.getElementById("cafeSelect"),
+          castFilter: document.getElementById("castFilter"),
+          cafeScheduleView: document.getElementById("cafeScheduleView"),
+          downloadScheduleImageButton: document.getElementById("downloadScheduleImageButton"),
+          downloadScheduleExcelButton: document.getElementById("downloadScheduleExcelButton"),
+          refreshButton: document.getElementById("refreshButton"),
+          castList: document.getElementById("castList"),
+          castEmptyState: document.getElementById("castEmptyState"),
+          cafeScheduleTitle: document.getElementById("cafeScheduleTitle"),
+          cafeScheduleContent: document.getElementById("cafeScheduleContent"),
+          cafeScheduleCapture: document.getElementById("cafeScheduleCapture"),
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = app.firestore();
+        const auth = app.auth();
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function setStatus(message) {
+          if (!message) {
+            el.pageStatus.style.display = "none";
+            el.pageStatus.textContent = "";
+            return;
+          }
+          el.pageStatus.style.display = "";
+          el.pageStatus.textContent = message;
+        }
+
+        function normalizeRegionLabel(region) {
+          if (!region || typeof region !== "object") {
+            return "";
+          }
+          return [region.prefecture, region.city, region.district]
+            .filter(function (value) {
+              return typeof value === "string" && value.trim();
+            })
+            .map(function (value) {
+              return value.trim();
+            })
+            .join(" ");
+        }
+
+        function normalizeText(value, fallback) {
+          if (typeof value === "string" && value.trim()) {
+            return value.trim();
+          }
+          return fallback;
+        }
+
+        function getSelectedCafe() {
+          return state.cafes.find(function (item) {
+            return item.id === state.selectedCafeId;
+          }) || null;
+        }
+
+        function startOfCurrentWeek(baseDate) {
+          const now = baseDate || new Date();
+          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const day = start.getDay();
+          const diff = day === 0 ? -6 : 1 - day;
+          start.setDate(start.getDate() + diff);
+          start.setHours(0, 0, 0, 0);
+          return start;
+        }
+
+        function endOfCurrentWeek(baseDate) {
+          const end = startOfCurrentWeek(baseDate);
+          end.setDate(end.getDate() + 6);
+          end.setHours(23, 59, 59, 999);
+          return end;
+        }
+
+        function parseDateKey(value) {
+          if (!value || typeof value !== "string") {
+            return null;
+          }
+          const parsed = new Date(value + "T00:00:00");
+          return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function pad2(value) {
+          return String(value).padStart(2, "0");
+        }
+
+        function formatDateKey(date) {
+          return date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate());
+        }
+
+        function weekOrdinalLabel(date) {
+          const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+          const weekIndex = Math.floor((firstDay + date.getDate() - 1) / 7) + 1;
+          const labels = ["첫째", "둘째", "셋째", "넷째", "다섯째", "여섯째"];
+          return labels[Math.max(0, Math.min(labels.length - 1, weekIndex - 1))];
+        }
+
+        function getSchedulesByDateMap() {
+          const map = {};
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date) {
+              return;
+            }
+            if (!map[schedule.date]) {
+              map[schedule.date] = [];
+            }
+            map[schedule.date].push(schedule);
+          });
+          Object.keys(map).forEach(function (dateKey) {
+            map[dateKey].sort(function (a, b) {
+              return String(a.castName || "").localeCompare(String(b.castName || ""), "ko");
+            });
+          });
+          return map;
+        }
+
+        function renderCastNameChips(schedules) {
+          if (!schedules.length) {
+            return '<span class="cast-name-chip">등록된 캐스트 없음</span>';
+          }
+          return schedules.map(function (schedule) {
+            const statusClass = schedule.status === "WORK"
+              ? " work"
+              : schedule.status === "VACATION"
+                ? " vacation"
+                : "";
+            return '<span class="cast-name-chip' + statusClass + '">' + escapeHtml(schedule.castName || "이름 없음") + "</span>";
+          }).join("");
+        }
+
+        function renderWeeklyCafeSchedule() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            el.cafeScheduleTitle.textContent = "카페를 먼저 선택해주세요.";
+            el.cafeScheduleContent.innerHTML = '<p class="empty">카페 선택 후 1주 스케줄을 확인할 수 있습니다.</p>';
+            return;
+          }
+
+          const now = new Date();
+          const weekStart = startOfCurrentWeek(now);
+          const labels = ["월", "화", "수", "목", "금", "토", "일"];
+          const targetCasts = state.casts.filter(function (cast) {
+            return !el.castFilter.value || cast.id === el.castFilter.value;
+          });
+
+          el.cafeScheduleTitle.textContent =
+            (now.getMonth() + 1) + "월 " + weekOrdinalLabel(now) + "주 " + selectedCafe.name + " 스케줄";
+
+          if (!targetCasts.length) {
+            el.cafeScheduleContent.innerHTML = '<p class="empty">표시할 캐스트가 없습니다.</p>';
+            return;
+          }
+
+          const targetCastIdSet = {};
+          targetCasts.forEach(function (cast) {
+            targetCastIdSet[cast.id] = true;
+          });
+
+          const castNamesByDay = {
+            0: [],
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
+          };
+          const addedByDay = {
+            0: {},
+            1: {},
+            2: {},
+            3: {},
+            4: {},
+            5: {},
+            6: {},
+          };
+          const weekEnd = endOfCurrentWeek(now);
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.castId || !schedule.date) {
+              return;
+            }
+            if (!targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return;
+            }
+            if (parsed < weekStart || parsed > weekEnd) {
+              return;
+            }
+            if (schedule.status !== "WORK") {
+              return;
+            }
+            const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+            const castName = schedule.castName || "이름 없음";
+            if (addedByDay[dayIndex][castName]) {
+              return;
+            }
+            addedByDay[dayIndex][castName] = true;
+            castNamesByDay[dayIndex].push(castName);
+          });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed < weekStart || parsed > weekEnd) {
+                return;
+              }
+              const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedByDay[dayIndex][guestName]) {
+                return;
+              }
+              addedByDay[dayIndex][guestName] = true;
+              castNamesByDay[dayIndex].push({ name: guestName, guest: true });
+            });
+          }
+
+          const headerDates = labels.map(function (_, index) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + index);
+            return (date.getMonth() + 1) + "/" + date.getDate();
+          });
+
+          const header =
+            "<thead><tr><th>요일</th>" +
+            labels.map(function (label, index) {
+              return "<th>" + label + "<br><span class=\"small\">" + headerDates[index] + "</span></th>";
+            }).join("") +
+            "</tr></thead>";
+
+          const dayCells = labels.map(function (_, dayIndex) {
+            const castNames = castNamesByDay[dayIndex] || [];
+            if (!castNames.length) {
+              return '<td><span class="cast-name-chip">-</span></td>';
+            }
+            const chips = castNames
+              .sort(function (a, b) {
+                return String(a.name || a).localeCompare(String(b.name || b), "ko");
+              })
+              .map(function (item) {
+                const name = item.name || item;
+                return '<span class="cast-name-chip ' + (item.guest ? "guest" : "work") + '">' + escapeHtml(name) + "</span>";
+              })
+              .join("");
+            return '<td><div class="cast-name-row">' + chips + "</div></td>";
+          }).join("");
+
+          const body = "<tbody><tr><th class=\"week-cast-col\" scope=\"row\">근무 캐스트</th>" + dayCells + "</tr></tbody>";
+
+          el.cafeScheduleContent.innerHTML =
+            '<table class="week-schedule-table">' + header + body + "</table>";
+        }
+
+        function renderMonthlyCafeSchedule() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            el.cafeScheduleTitle.textContent = "카페를 먼저 선택해주세요.";
+            el.cafeScheduleContent.innerHTML = '<p class="empty">카페 선택 후 1달 스케줄을 확인할 수 있습니다.</p>';
+            return;
+          }
+
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDate = new Date(year, month, 1);
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const offset = (firstDate.getDay() + 6) % 7;
+          const targetCastIdSet = {};
+          state.casts
+            .filter(function (cast) {
+              return !el.castFilter.value || cast.id === el.castFilter.value;
+            })
+            .forEach(function (cast) {
+              targetCastIdSet[cast.id] = true;
+            });
+
+          const workCastNamesByDate = {};
+          const addedNamesByDate = {};
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date || !schedule.castId || schedule.status !== "WORK") {
+              return;
+            }
+            if (!targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+              return;
+            }
+            if (!workCastNamesByDate[schedule.date]) {
+              workCastNamesByDate[schedule.date] = [];
+              addedNamesByDate[schedule.date] = {};
+            }
+            const castName = schedule.castName || "이름 없음";
+            if (addedNamesByDate[schedule.date][castName]) {
+              return;
+            }
+            addedNamesByDate[schedule.date][castName] = true;
+            workCastNamesByDate[schedule.date].push(castName);
+          });
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              if (!schedule.date) {
+                return;
+              }
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+                return;
+              }
+              if (!workCastNamesByDate[schedule.date]) {
+                workCastNamesByDate[schedule.date] = [];
+                addedNamesByDate[schedule.date] = {};
+              }
+              const guestName = (schedule.name || "게스트") + " · 게스트";
+              if (addedNamesByDate[schedule.date][guestName]) {
+                return;
+              }
+              addedNamesByDate[schedule.date][guestName] = true;
+              workCastNamesByDate[schedule.date].push({ name: guestName, guest: true });
+            });
+          }
+          el.cafeScheduleTitle.textContent = (month + 1) + "월 " + selectedCafe.name + " 스케줄";
+
+          let cells = "";
+          for (let i = 0; i < offset; i += 1) {
+            cells += '<div class="month-cell empty"></div>';
+          }
+
+          for (let day = 1; day <= daysInMonth; day += 1) {
+            const current = new Date(year, month, day);
+            const key = formatDateKey(current);
+            const castNames = (workCastNamesByDate[key] || []).slice().sort(function (a, b) {
+              return String(a.name || a).localeCompare(String(b.name || b), "ko");
+            });
+            const lines = castNames.length
+              ? castNames.map(function (item) {
+                  const name = item.name || item;
+                  return '<div class="month-cast-line">' + escapeHtml(name) + "</div>";
+                }).join("")
+              : '<div class="month-cast-line">-</div>';
+
+            cells +=
+              '<div class="month-cell">' +
+              '<div class="month-day">' + day + "</div>" +
+              '<div class="month-casts">' + lines + "</div>" +
+              "</div>";
+          }
+
+          el.cafeScheduleContent.innerHTML =
+            '<div class="month-grid">' +
+            '<div class="month-weekday">월</div><div class="month-weekday">화</div><div class="month-weekday">수</div><div class="month-weekday">목</div><div class="month-weekday">금</div><div class="month-weekday">토</div><div class="month-weekday">일</div>' +
+            cells +
+            "</div>";
+        }
+
+        function renderCafeScheduleSection() {
+          if (el.cafeScheduleView.value === "month") {
+            renderMonthlyCafeSchedule();
+            return;
+          }
+          renderWeeklyCafeSchedule();
+        }
+
+        function buildScheduleImageFileName() {
+          const selectedCafe = getSelectedCafe();
+          const cafeName = selectedCafe ? selectedCafe.name : "카페";
+          const viewLabel = el.cafeScheduleView.value === "month" ? "1달" : "1주";
+          const now = new Date();
+          const stamp = String(now.getFullYear()) + pad2(now.getMonth() + 1) + pad2(now.getDate());
+          const raw = cafeName + "_" + viewLabel + "_스케줄_" + stamp + ".png";
+          return raw.replace(/[\\/:*?"<>|]/g, "_");
+        }
+
+        function buildScheduleExcelFileName() {
+          const selectedCafe = getSelectedCafe();
+          const cafeName = selectedCafe ? selectedCafe.name : "카페";
+          const viewLabel = el.cafeScheduleView.value === "month" ? "1달" : "1주";
+          const now = new Date();
+          const stamp = String(now.getFullYear()) + pad2(now.getMonth() + 1) + pad2(now.getDate());
+          const raw = cafeName + "_" + viewLabel + "_스케줄_" + stamp + ".xls";
+          return raw.replace(/[\\/:*?"<>|]/g, "_");
+        }
+
+        function getTargetCastIdSet() {
+          const targetCastIdSet = {};
+          state.casts
+            .filter(function (cast) {
+              return !el.castFilter.value || cast.id === el.castFilter.value;
+            })
+            .forEach(function (cast) {
+              targetCastIdSet[cast.id] = true;
+            });
+          return targetCastIdSet;
+        }
+
+        function appendUniqueScheduleName(groupedNames, addedNames, key, item) {
+          const name = item.name || item;
+          if (!groupedNames[key]) {
+            groupedNames[key] = [];
+            addedNames[key] = {};
+          }
+          if (addedNames[key][name]) {
+            return;
+          }
+          addedNames[key][name] = true;
+          groupedNames[key].push(item);
+        }
+
+        function getSortedScheduleNames(items) {
+          return (items || []).slice().sort(function (a, b) {
+            return String(a.name || a).localeCompare(String(b.name || b), "ko");
+          }).map(function (item) {
+            return item.name || item;
+          });
+        }
+
+        function buildWeeklyScheduleExcelRows() {
+          const now = new Date();
+          const weekStart = startOfCurrentWeek(now);
+          const weekEnd = endOfCurrentWeek(now);
+          const labels = ["월", "화", "수", "목", "금", "토", "일"];
+          const targetCastIdSet = getTargetCastIdSet();
+          const namesByDay = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+          const addedByDay = { 0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.castId || !schedule.date || schedule.status !== "WORK" || !targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed < weekStart || parsed > weekEnd) {
+              return;
+            }
+            const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+            appendUniqueScheduleName(namesByDay, addedByDay, dayIndex, schedule.castName || "이름 없음");
+          });
+
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!parsed || parsed < weekStart || parsed > weekEnd) {
+                return;
+              }
+              const dayIndex = parsed.getDay() === 0 ? 6 : parsed.getDay() - 1;
+              appendUniqueScheduleName(namesByDay, addedByDay, dayIndex, (schedule.name || "게스트") + " · 게스트");
+            });
+          }
+
+          const header = ["구분"].concat(labels.map(function (label, index) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + index);
+            return label + " " + (date.getMonth() + 1) + "/" + date.getDate();
+          }));
+          const body = ["근무 캐스트"].concat(labels.map(function (_, dayIndex) {
+            const names = getSortedScheduleNames(namesByDay[dayIndex]);
+            return names.length ? names.join("\n") : "-";
+          }));
+          return [header, body];
+        }
+
+        function buildMonthlyScheduleExcelRows() {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const firstDate = new Date(year, month, 1);
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const offset = (firstDate.getDay() + 6) % 7;
+          const targetCastIdSet = getTargetCastIdSet();
+          const namesByDate = {};
+          const addedByDate = {};
+
+          state.schedules.forEach(function (schedule) {
+            if (!schedule.date || !schedule.castId || schedule.status !== "WORK" || !targetCastIdSet[schedule.castId]) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+              return;
+            }
+            appendUniqueScheduleName(namesByDate, addedByDate, schedule.date, schedule.castName || "이름 없음");
+          });
+
+          if (!el.castFilter.value) {
+            state.guestSchedules.forEach(function (schedule) {
+              const parsed = parseDateKey(schedule.date);
+              if (!schedule.date || !parsed || parsed.getFullYear() !== year || parsed.getMonth() !== month) {
+                return;
+              }
+              appendUniqueScheduleName(namesByDate, addedByDate, schedule.date, (schedule.name || "게스트") + " · 게스트");
+            });
+          }
+
+          const rows = [["월", "화", "수", "목", "금", "토", "일"]];
+          let row = [];
+          for (let i = 0; i < offset; i += 1) {
+            row.push("");
+          }
+          for (let day = 1; day <= daysInMonth; day += 1) {
+            const key = formatDateKey(new Date(year, month, day));
+            const names = getSortedScheduleNames(namesByDate[key]);
+            row.push(String(day) + (names.length ? "\n" + names.join("\n") : "\n-"));
+            if (row.length === 7) {
+              rows.push(row);
+              row = [];
+            }
+          }
+          if (row.length) {
+            while (row.length < 7) {
+              row.push("");
+            }
+            rows.push(row);
+          }
+          return rows;
+        }
+
+        function excelCellHtml(value) {
+          return "<td>" + escapeHtml(value).replace(/\n/g, "<br>") + "</td>";
+        }
+
+        function downloadScheduleExcel() {
+          const selectedCafe = getSelectedCafe();
+          if (!selectedCafe) {
+            setStatus("카페를 먼저 선택해주세요.");
+            return;
+          }
+
+          const title = el.cafeScheduleTitle.textContent || (selectedCafe.name + " 스케줄");
+          const rows = el.cafeScheduleView.value === "month"
+            ? buildMonthlyScheduleExcelRows()
+            : buildWeeklyScheduleExcelRows();
+          const columnCount = rows.reduce(function (max, row) {
+            return Math.max(max, row.length);
+          }, 1);
+          const tableRows =
+            '<tr><th colspan="' + columnCount + '">' + escapeHtml(title) + "</th></tr>" +
+            rows.map(function (row) {
+              return "<tr>" + row.map(excelCellHtml).join("") + "</tr>";
+            }).join("");
+          const html =
+            "\uFEFF" +
+            '<html><head><meta charset="UTF-8" /></head><body>' +
+            '<table border="1">' + tableRows + "</table>" +
+            "</body></html>";
+          const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = buildScheduleExcelFileName();
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          setStatus("스케줄 엑셀 파일을 다운로드했습니다.");
+          setTimeout(function () {
+            setStatus("");
+          }, 1500);
+        }
+
+        async function downloadScheduleImage() {
+          if (!state.selectedCafeId) {
+            setStatus("카페를 먼저 선택해주세요.");
+            return;
+          }
+          if (!window.html2canvas) {
+            setStatus("이미지 캡처 도구를 불러오지 못했습니다.");
+            return;
+          }
+          try {
+            const canvas = await window.html2canvas(el.cafeScheduleCapture, {
+              scale: 2,
+              backgroundColor: "#ffffff",
+              useCORS: true,
+            });
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = buildScheduleImageFileName();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setStatus("스케줄 이미지를 다운로드했습니다.");
+            setTimeout(function () {
+              setStatus("");
+            }, 1500);
+          } catch (error) {
+            setStatus("스케줄 이미지를 생성하지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        function getVisibleScheduleCount() {
+          const weekStart = startOfCurrentWeek();
+          const weekEnd = endOfCurrentWeek();
+          const castScheduleCount = state.schedules.filter(function (schedule) {
+            if (el.castFilter.value && schedule.castId !== el.castFilter.value) {
+              return false;
+            }
+            if (!schedule.date) {
+              return false;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return false;
+            }
+            return parsed >= weekStart && parsed <= weekEnd;
+          }).length;
+          if (el.castFilter.value) {
+            return castScheduleCount;
+          }
+          const guestScheduleCount = state.guestSchedules.filter(function (schedule) {
+            if (!schedule.date) {
+              return false;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return false;
+            }
+            return parsed >= weekStart && parsed <= weekEnd;
+          }).length;
+          return castScheduleCount + guestScheduleCount;
+        }
+
+        function updateSummary() {
+          const selectedCafe = getSelectedCafe();
+          el.cafeCount.textContent = String(state.cafes.length);
+          el.selectedCafeLabel.textContent = selectedCafe ? selectedCafe.name : "없음";
+          el.castCount.textContent = String(state.casts.length);
+          el.scheduleCount.textContent = String(getVisibleScheduleCount());
+        }
+
+        function renderCafeOptions() {
+          const currentValue = state.selectedCafeId;
+          el.cafeSelect.innerHTML =
+            '<option value="">카페를 선택하세요</option>' +
+            state.filteredCafes.map(function (cafe) {
+              const label = cafe.regionLabel ? cafe.name + " · " + cafe.regionLabel : cafe.name;
+              return '<option value="' + escapeHtml(cafe.id) + '">' + escapeHtml(label) + "</option>";
+            }).join("");
+          if (currentValue && state.filteredCafes.some(function (item) { return item.id === currentValue; })) {
+            el.cafeSelect.value = currentValue;
+          }
+        }
+
+        function filterCafes() {
+          const query = el.cafeSearch.value.trim().toLowerCase();
+          state.filteredCafes = !query
+            ? state.cafes.slice()
+            : state.cafes.filter(function (cafe) {
+                return [cafe.name, cafe.regionLabel].join(" ").toLowerCase().includes(query);
+              });
+          renderCafeOptions();
+        }
+
+        function renderCastFilter() {
+          el.castFilter.innerHTML =
+            '<option value="">전체 캐스트</option>' +
+            state.casts.map(function (cast) {
+              return '<option value="' + escapeHtml(cast.id) + '">' + escapeHtml(cast.name) + "</option>";
+            }).join("");
+        }
+
+        function renderCastList() {
+          const casts = state.casts.filter(function (cast) {
+            return !el.castFilter.value || cast.id === el.castFilter.value;
+          });
+          if (!casts.length) {
+            el.castList.innerHTML = "";
+            el.castEmptyState.style.display = "block";
+            updateSummary();
+            return;
+          }
+          el.castEmptyState.style.display = "none";
+          el.castList.innerHTML = casts.map(function (cast) {
+            const birthday = cast.birthday ? '<span class="chip neutral">생일 ' + escapeHtml(cast.birthday) + "</span>" : "";
+            const linked = cast.linkedUserId ? '<span class="chip warning">계정 연결됨</span>' : '<span class="chip success">팬 등록 캐스트 가능</span>';
+            const weekdays = renderWeekdayChips(cast.id);
+            return '<article class="list-item"><div class="item-head"><div><h3 class="item-title">' +
+              escapeHtml(cast.name) +
+              '</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">' +
+              escapeHtml(cast.conceptRole) +
+              "</span>" + birthday + linked +
+              '</div>' + weekdays + '</div><span class="chip neutral small">' +
+              escapeHtml(cast.createdVia || "서비스") +
+              "</span></div></article>";
+          }).join("");
+          updateSummary();
+        }
+
+        function renderWeekdayChips(castId) {
+          const labels = ["월", "화", "수", "목", "금", "토", "일"];
+          const dateByDay = {};
+          const weekStart = startOfCurrentWeek();
+          const weekEnd = endOfCurrentWeek();
+          state.schedules.forEach(function (schedule) {
+            if (schedule.castId !== castId || !schedule.date) {
+              return;
+            }
+            const parsed = parseDateKey(schedule.date);
+            if (!parsed) {
+              return;
+            }
+            if (parsed < weekStart || parsed > weekEnd) {
+              return;
+            }
+            const jsDay = parsed.getDay();
+            const index = jsDay === 0 ? 6 : jsDay - 1;
+            dateByDay[index] = schedule;
+          });
+
+          return '<div class="weekday-row">' + labels.map(function (label, index) {
+            const schedule = dateByDay[index];
+            if (!schedule) {
+              return '<span class="weekday-chip">' + label + '</span>';
+            }
+            const statusClass = schedule.status === "WORK"
+              ? " work"
+              : schedule.status === "VACATION"
+                ? " vacation"
+                : "";
+            const title = schedule.status === "WORK" && schedule.startTime && schedule.endTime
+              ? schedule.date + " " + schedule.startTime + " - " + schedule.endTime
+              : schedule.date + " " + (schedule.status === "VACATION" ? "휴가" : "휴무");
+            return '<span class="weekday-chip' + statusClass + '" title="' + escapeHtml(title) + '">' + label + '</span>';
+          }).join("") + '</div>';
+        }
+
+        async function loadCafes() {
+          setStatus("카페 목록을 불러오는 중입니다.");
+          try {
+            const snapshot = await db.collection("cafes").get();
+            state.cafes = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                name: typeof data.name === "string" && data.name.trim() ? data.name.trim() : "이름 없는 카페",
+                regionLabel: normalizeRegionLabel(data.region),
+              };
+            }).sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+            state.filteredCafes = state.cafes.slice();
+            renderCafeOptions();
+            updateSummary();
+            setStatus("");
+          } catch (error) {
+            setStatus("카페 목록을 불러오지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        async function loadSelectedCafeData() {
+          if (!state.selectedCafeId) {
+            state.casts = [];
+            state.schedules = [];
+            state.guestSchedules = [];
+            renderCastFilter();
+            renderCafeScheduleSection();
+            renderCastList();
+            updateSummary();
+            return;
+          }
+
+          setStatus("선택한 카페의 실제 캐스트와 스케줄을 불러오는 중입니다.");
+          try {
+            const castRef = db.collection("cafes").doc(state.selectedCafeId).collection("casts");
+            const results = await Promise.allSettled([
+              castRef.get(),
+              db.collection("castSchedules").where("cafeId", "==", state.selectedCafeId).get(),
+              db.collection("guestCastSchedules").where("cafeId", "==", state.selectedCafeId).get(),
+            ]);
+
+            if (results[0].status === "rejected" || results[1].status === "rejected") {
+              console.error("Failed to load selected cafe data", {
+                casts: results[0].status === "rejected" ? results[0].reason : null,
+                schedules: results[1].status === "rejected" ? results[1].reason : null,
+              });
+              throw new Error("Required cafe schedule data failed to load.");
+            }
+            if (results[2].status === "rejected") {
+              console.error("Failed to load guest cast schedules", results[2].reason);
+            }
+
+            const castNameById = {};
+            state.casts = results[0].value.docs.map(function (doc) {
+              const data = doc.data() || {};
+              const castName = normalizeText(data.name, "이름 없음");
+              castNameById[doc.id] = castName;
+              return {
+                id: doc.id,
+                name: castName,
+                conceptRole: normalizeText(data.conceptRole, "역할 없음"),
+                birthday: normalizeText(data.birthday, ""),
+                linkedUserId: normalizeText(data.linkedUserId, ""),
+                createdVia: normalizeText(data.createdVia, ""),
+              };
+            }).sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+
+            state.schedules = results[1].value.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                castId: normalizeText(data.castId, ""),
+                castName: castNameById[data.castId] || normalizeText(data.castName, "이름 없음"),
+                date: normalizeText(data.date, ""),
+                status: normalizeText(data.status, "OFF"),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
+                createdAt: data.createdAt || "",
+                updatedAt: data.updatedAt || "",
+                createdVia: normalizeText(data.createdVia, ""),
+              };
+            });
+            state.guestSchedules = results[2].status === "fulfilled" ? results[2].value.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                cafeId: normalizeText(data.cafeId, ""),
+                date: normalizeText(data.date, ""),
+                name: normalizeText(data.name, "게스트"),
+                profileImage: normalizeText(data.profileImage, ""),
+                startTime: normalizeText(data.startTime, ""),
+                endTime: normalizeText(data.endTime, ""),
+                memo: normalizeText(data.memo, ""),
+              };
+            }) : [];
+
+            renderCastFilter();
+            renderCafeScheduleSection();
+            renderCastList();
+            setStatus("");
+          } catch (error) {
+            setStatus("캐스트 또는 스케줄을 불러오지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        async function boot() {
+          // Auth widget
+          var googleProvider = new firebase.auth.GoogleAuthProvider();
+          var authUserInfo = document.getElementById("authUserInfo");
+          var authUserPhoto = document.getElementById("authUserPhoto");
+          var authUserName = document.getElementById("authUserName");
+          var signInBtn = document.getElementById("signInBtn");
+          var signOutBtnEl = document.getElementById("signOutBtn");
+
+          auth.onAuthStateChanged(function (user) {
+            if (user) {
+              if (authUserPhoto) { authUserPhoto.src = user.photoURL || ""; authUserPhoto.style.display = user.photoURL ? "" : "none"; }
+              if (authUserName) authUserName.textContent = user.displayName || user.email || "사용자";
+              if (authUserInfo) authUserInfo.style.display = "flex";
+              if (signInBtn) signInBtn.style.display = "none";
+            } else {
+              if (authUserInfo) authUserInfo.style.display = "none";
+              if (signInBtn) signInBtn.style.display = "";
+            }
+          });
+          var authModal = document.getElementById("authModal");
+          var authModalClose = document.getElementById("authModalClose");
+          var emailLoginForm = document.getElementById("emailLoginForm");
+          var emailLoginError = document.getElementById("emailLoginError");
+          var googleSignInModalBtn = document.getElementById("googleSignInModalBtn");
+
+          function openAuthModal() { authModal.classList.add("is-open"); }
+          function closeAuthModal() {
+            authModal.classList.remove("is-open");
+            emailLoginError.style.display = "none";
+            emailLoginForm.reset();
+          }
+
+          if (signInBtn) signInBtn.addEventListener("click", openAuthModal);
+          if (authModalClose) authModalClose.addEventListener("click", closeAuthModal);
+          if (authModal) {
+            authModal.addEventListener("click", function (e) { if (e.target === authModal) closeAuthModal(); });
+          }
+          document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAuthModal(); });
+
+          if (emailLoginForm) emailLoginForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var email = document.getElementById("loginEmail").value.trim();
+            var password = document.getElementById("loginPassword").value;
+            emailLoginError.style.display = "none";
+            auth.signInWithEmailAndPassword(email, password).then(function () {
+              closeAuthModal();
+            }).catch(function (err) {
+              emailLoginError.textContent = err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
+                ? "이메일 또는 비밀번호가 올바르지 않습니다."
+                : "로그인에 실패했습니다: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+          if (googleSignInModalBtn) googleSignInModalBtn.addEventListener("click", function () {
+            auth.signInWithPopup(googleProvider).then(function () {
+              closeAuthModal();
+            }).catch(function (err) {
+              emailLoginError.textContent = "Google 로그인 실패: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+
+          if (signOutBtnEl) signOutBtnEl.addEventListener("click", function () { auth.signOut(); });
+
+          el.cafeSearch.addEventListener("input", filterCafes);
+          el.cafeSelect.addEventListener("change", function () {
+            state.selectedCafeId = el.cafeSelect.value;
+            updateSummary();
+            loadSelectedCafeData();
+          });
+          el.castFilter.addEventListener("change", function () {
+            renderCafeScheduleSection();
+            renderCastList();
+          });
+          el.cafeScheduleView.addEventListener("change", renderCafeScheduleSection);
+          el.downloadScheduleImageButton.addEventListener("click", downloadScheduleImage);
+          el.downloadScheduleExcelButton.addEventListener("click", downloadScheduleExcel);
+          el.refreshButton.addEventListener("click", loadSelectedCafeData);
+
+          await loadCafes();
+          renderCafeScheduleSection();
+        }
+
+        boot();
+      })();
+    </script>
+  </body>
+</html>

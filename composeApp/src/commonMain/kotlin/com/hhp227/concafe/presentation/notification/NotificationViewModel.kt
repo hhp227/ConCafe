@@ -86,8 +86,9 @@ class NotificationViewModel(
                     }
                     if (targetId != null) {
                         when (type) {
-                            "CAST_SHIFT", "BIRTHDAY" -> _event.emit(NotificationEvent.NavigateToCast(targetId))
-                            "CAFE_NOTICE" -> _event.emit(NotificationEvent.NavigateToCafe(targetId))
+                            "CAST_SHIFT", "BIRTHDAY", "CAST_SCHEDULE_ASSIGNED" -> _event.emit(NotificationEvent.NavigateToCast(targetId))
+                            "CAFE_NOTICE", "CAFE_EVENT", "CAFE_TABLE_COUNT_UPDATE", "CAST_SCHEDULE_CREATED" -> _event.emit(NotificationEvent.NavigateToCafe(targetId))
+                            "COMMUNITY_COMMENT", "COMMUNITY_LIKE", "WEEKLY_COMMUNITY_HIGHLIGHT" -> _event.emit(NotificationEvent.NavigateToPost(targetId))
                         }
                     }
                 }

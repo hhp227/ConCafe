@@ -7,12 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,46 +19,96 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.NotificationQuietHoursMode
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.notification_quiet_all_day_desc
+import concafe.composeapp.generated.resources.notification_quiet_all_day_title
+import concafe.composeapp.generated.resources.notification_quiet_night_desc
+import concafe.composeapp.generated.resources.notification_quiet_night_title
+import concafe.composeapp.generated.resources.notification_quiet_off_desc
+import concafe.composeapp.generated.resources.notification_quiet_off_title
+import concafe.composeapp.generated.resources.notification_settings_basic_title
+import concafe.composeapp.generated.resources.notification_settings_birthday_desc
+import concafe.composeapp.generated.resources.notification_settings_birthday_title
+import concafe.composeapp.generated.resources.notification_settings_community_desc
+import concafe.composeapp.generated.resources.notification_settings_community_title
+import concafe.composeapp.generated.resources.notification_settings_event_desc
+import concafe.composeapp.generated.resources.notification_settings_event_title
+import concafe.composeapp.generated.resources.notification_settings_follow_desc
+import concafe.composeapp.generated.resources.notification_settings_follow_title
+import concafe.composeapp.generated.resources.notification_settings_hero_summary
+import concafe.composeapp.generated.resources.notification_settings_hero_title
+import concafe.composeapp.generated.resources.notification_settings_notice_desc
+import concafe.composeapp.generated.resources.notification_settings_notice_title
+import concafe.composeapp.generated.resources.notification_settings_push_desc
+import concafe.composeapp.generated.resources.notification_settings_push_title
+import concafe.composeapp.generated.resources.notification_settings_quiet_desc
+import concafe.composeapp.generated.resources.notification_settings_quiet_title
+import concafe.composeapp.generated.resources.notification_settings_shift_desc
+import concafe.composeapp.generated.resources.notification_settings_shift_title
+import concafe.composeapp.generated.resources.notification_settings_title
+import concafe.composeapp.generated.resources.notification_settings_type_title
+import org.jetbrains.compose.resources.stringResource
+import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
-    viewModel: NotificationSettingsViewModel = viewModel(),
+    viewModel: NotificationSettingsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { GlobalContext.get().get<NotificationSettingsViewModel>() }
+        }
+    ),
     onNavigationAction: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
             when (event) {
-                NotificationSettingsEvent.NavigateBack -> {
-                    onNavigationAction(NavigationAction.NavigateBack)
-                }
+                NotificationSettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                is NotificationSettingsEvent.ShowMessage -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
-
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("알림 설정") },
+                title = { Text(stringResource(Res.string.notification_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(NotificationSettingsAction.ClickBack) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "뒤로가기"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
                         )
                     }
                 }
             )
         }
     ) { innerPadding ->
-        NotificationSettingsContentScreen(
-            uiState = uiState,
-            innerPadding = innerPadding,
-            onAction = viewModel::onAction
-        )
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            NotificationSettingsContentScreen(
+                uiState = uiState,
+                innerPadding = innerPadding,
+                onAction = viewModel::onAction
+            )
+        }
     }
 }
 
@@ -74,7 +122,7 @@ private fun NotificationSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -87,88 +135,116 @@ private fun NotificationSettingsContentScreen(
             NotificationSettingsHeroCard(uiState = uiState)
         }
         item {
-            NotificationSettingCard(
-                title = "기본 수신"
-            ) {
+            NotificationSettingCard(title = stringResource(Res.string.notification_settings_basic_title)) {
                 NotificationToggleRow(
                     icon = Icons.Default.Notifications,
-                    iconBackground = Color(0xFFFFE6F1),
-                    iconTint = Color(0xFFEB5F97),
-                    title = "푸시 알림 받기",
-                    description = "새 공지와 팬 활동 업데이트를 앱 푸시로 받아요.",
+                    iconBackground = ConCafeColors.surfaceTint,
+                    iconTint = ConCafeColors.primary,
+                    title = stringResource(Res.string.notification_settings_push_title),
+                    description = stringResource(Res.string.notification_settings_push_desc),
                     checked = uiState.isPushNotificationsEnabled,
-                    onCheckedChange = {
-                        onAction(NotificationSettingsAction.TogglePushNotifications(it))
-                    }
+                    onCheckedChange = { onAction(NotificationSettingsAction.TogglePushNotifications(it)) },
+                    enabled = !uiState.isSaving
                 )
             }
         }
         item {
-            NotificationSettingCard(
-                title = "알림 종류"
-            ) {
+            NotificationSettingCard(title = stringResource(Res.string.notification_settings_type_title)) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     NotificationToggleRow(
                         icon = Icons.Default.WorkHistory,
-                        iconBackground = Color(0xFFE4F7EC),
-                        iconTint = Color(0xFF2E9E5B),
-                        title = "출근 알림",
-                        description = "팔로우한 캐스트의 오늘 출근 소식을 빠르게 받아요.",
+                        iconBackground = ConCafeColors.successContainer,
+                        iconTint = ConCafeColors.success,
+                        title = stringResource(Res.string.notification_settings_shift_title),
+                        description = stringResource(Res.string.notification_settings_shift_desc),
                         checked = uiState.isShiftNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleShiftNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleShiftNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Cake,
-                        iconBackground = Color(0xFFFFE6F1),
-                        iconTint = Color(0xFFEB5F97),
-                        title = "생일 알림",
-                        description = "생일이 다가오는 캐스트와 당일 이벤트를 놓치지 않아요.",
+                        iconBackground = ConCafeColors.surfaceTint,
+                        iconTint = ConCafeColors.primary,
+                        title = stringResource(Res.string.notification_settings_birthday_title),
+                        description = stringResource(Res.string.notification_settings_birthday_desc),
                         checked = uiState.isBirthdayNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleBirthdayNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleBirthdayNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                     NotificationToggleRow(
                         icon = Icons.Default.Campaign,
-                        iconBackground = Color(0xFFE8F0FF),
-                        iconTint = Color(0xFF4A79E8),
-                        title = "공지 알림",
-                        description = "카페 공지와 이벤트 업데이트를 우선적으로 받아요.",
+                        iconBackground = ConCafeColors.infoContainer,
+                        iconTint = ConCafeColors.info,
+                        title = stringResource(Res.string.notification_settings_notice_title),
+                        description = stringResource(Res.string.notification_settings_notice_desc),
                         checked = uiState.isNoticeNotificationsEnabled,
-                        onCheckedChange = {
-                            onAction(NotificationSettingsAction.ToggleNoticeNotifications(it))
-                        }
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleNoticeNotifications(it)) },
+                        enabled = !uiState.isSaving
+                    )
+                    if (uiState.isCastRole) {
+                        NotificationToggleRow(
+                            icon = Icons.Default.PersonAddAlt1,
+                            iconBackground = ConCafeColors.primaryContainer,
+                            iconTint = ConCafeColors.primary,
+                            title = stringResource(Res.string.notification_settings_follow_title),
+                            description = stringResource(Res.string.notification_settings_follow_desc),
+                            checked = uiState.isFollowNotificationsEnabled,
+                            onCheckedChange = { onAction(NotificationSettingsAction.ToggleFollowNotifications(it)) },
+                            enabled = !uiState.isSaving
+                        )
+                    }
+                    NotificationToggleRow(
+                        icon = Icons.Default.Celebration,
+                        iconBackground = ConCafeColors.warningContainer,
+                        iconTint = ConCafeColors.warning,
+                        title = stringResource(Res.string.notification_settings_event_title),
+                        description = stringResource(Res.string.notification_settings_event_desc),
+                        checked = uiState.isEventNotificationsEnabled,
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleEventNotifications(it)) },
+                        enabled = !uiState.isSaving
+                    )
+                    NotificationToggleRow(
+                        icon = Icons.Default.Forum,
+                        iconBackground = ConCafeColors.infoContainer,
+                        iconTint = ConCafeColors.info,
+                        title = stringResource(Res.string.notification_settings_community_title),
+                        description = stringResource(Res.string.notification_settings_community_desc),
+                        checked = uiState.isCommunityNotificationsEnabled,
+                        onCheckedChange = { onAction(NotificationSettingsAction.ToggleCommunityNotifications(it)) },
+                        enabled = !uiState.isSaving
                     )
                 }
             }
         }
         item {
-            NotificationSettingCard(
-                title = "조용한 시간"
-            ) {
+            NotificationSettingCard(title = stringResource(Res.string.notification_settings_quiet_title)) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "밤 시간이나 하루 요약 모드를 선택해 알림 강도를 조절할 수 있어요.",
+                        text = stringResource(Res.string.notification_settings_quiet_desc),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF7C7480)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        NotificationQuietHoursOption.entries.forEach { option ->
+                        NotificationQuietHoursMode.entries.forEach { option ->
                             FilterChip(
                                 selected = uiState.quietHoursOption == option,
-                                onClick = {
-                                    onAction(NotificationSettingsAction.SelectQuietHours(option))
-                                },
-                                label = { Text(option.title) }
+                                onClick = { onAction(NotificationSettingsAction.SelectQuietHours(option)) },
+                                label = { Text(option.titleText()) },
+                                enabled = !uiState.isSaving
                             )
                         }
                     }
                     QuietHoursDescriptionCard(option = uiState.quietHoursOption)
+                    if (!uiState.errorMessage.isNullOrBlank()) {
+                        Text(
+                            text = uiState.errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ConCafeColors.primary
+                        )
+                    }
                 }
             }
         }
@@ -176,9 +252,7 @@ private fun NotificationSettingsContentScreen(
 }
 
 @Composable
-private fun NotificationSettingsHeroCard(
-    uiState: NotificationSettingsUiState
-) {
+private fun NotificationSettingsHeroCard(uiState: NotificationSettingsUiState) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -187,7 +261,7 @@ private fun NotificationSettingsHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondary)
                     ),
                     RoundedCornerShape(24.dp)
                 )
@@ -196,7 +270,7 @@ private fun NotificationSettingsHeroCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "알림 스타일을 취향에 맞게 조절하세요",
+                    text = stringResource(Res.string.notification_settings_hero_title),
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     style = MaterialTheme.typography.titleMedium
@@ -230,7 +304,7 @@ private fun NotificationSettingCard(
     content: @Composable () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(
@@ -255,7 +329,8 @@ private fun NotificationToggleRow(
     title: String,
     description: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -285,53 +360,86 @@ private fun NotificationToggleRow(
             )
             Text(
                 text = description,
-                color = Color(0xFF7C7480),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = ConCafeColors.primary
+            )
         )
     }
 }
 
 @Composable
-private fun QuietHoursDescriptionCard(
-    option: NotificationQuietHoursOption
-) {
+private fun QuietHoursDescriptionCard(option: NotificationQuietHoursMode) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = Color(0xFFFFD6E5),
+                color = ConCafeColors.primaryContainer,
                 shape = RoundedCornerShape(18.dp)
             )
-            .background(Color(0xFFFFF6FA), RoundedCornerShape(18.dp))
+            .background(ConCafeColors.background, RoundedCornerShape(18.dp))
             .padding(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = option.title,
+                text = option.titleText(),
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFB84473)
+                color = ConCafeColors.primary
             )
             Text(
-                text = option.description,
+                text = option.descriptionText(),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF7C7480)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
+@Composable
 private fun heroSummary(uiState: NotificationSettingsUiState): String {
-    val enabledCount = listOf(
+    val toggles = mutableListOf(
         uiState.isPushNotificationsEnabled,
         uiState.isShiftNotificationsEnabled,
         uiState.isBirthdayNotificationsEnabled,
-        uiState.isNoticeNotificationsEnabled
-    ).count { it }
-    return "현재 ${enabledCount}개 알림을 켜 두었고, ${uiState.quietHoursOption.title} 모드로 받을 예정입니다."
+        uiState.isNoticeNotificationsEnabled,
+        uiState.isEventNotificationsEnabled,
+        uiState.isCommunityNotificationsEnabled
+    )
+
+    if (uiState.isCastRole) {
+        toggles.add(uiState.isFollowNotificationsEnabled)
+    }
+    val enabledCount = toggles.count { it }
+    return stringResource(
+        Res.string.notification_settings_hero_summary,
+        enabledCount,
+        uiState.quietHoursOption.titleText()
+    )
+}
+
+@Composable
+private fun NotificationQuietHoursMode.titleText(): String {
+    return when (this) {
+        NotificationQuietHoursMode.OFF -> stringResource(Res.string.notification_quiet_off_title)
+        NotificationQuietHoursMode.NIGHT -> stringResource(Res.string.notification_quiet_night_title)
+        NotificationQuietHoursMode.ALL_DAY -> stringResource(Res.string.notification_quiet_all_day_title)
+    }
+}
+
+@Composable
+private fun NotificationQuietHoursMode.descriptionText(): String {
+    return when (this) {
+        NotificationQuietHoursMode.OFF -> stringResource(Res.string.notification_quiet_off_desc)
+        NotificationQuietHoursMode.NIGHT -> stringResource(Res.string.notification_quiet_night_desc)
+        NotificationQuietHoursMode.ALL_DAY -> stringResource(Res.string.notification_quiet_all_day_desc)
+    }
 }

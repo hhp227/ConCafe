@@ -49,10 +49,13 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.isLoading = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
+                    uiState.conceptType = Self.normalizeConceptType(detail.cafe.conceptType)
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
-                    uiState.contactNumber = detail.phoneNumber
+                    uiState.mapLatitude = detail.cafe.region.location.latitude
+                    uiState.mapLongitude = detail.cafe.region.location.longitude
+                    uiState.contactNumber = detail.phoneNumber == MessageKey.contactPlaceholder ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -61,18 +64,25 @@ final class CafeInfoEditViewModel: ObservableObject {
                 } else {
                     uiState.detail = nil
                     uiState.isLoading = false
-                    uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.loadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.detail = nil
                 uiState.isLoading = false
-                uiState.infoMessage = "카페 정보를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.loadFailed
             }
         }
     }
 
     private func saveCafeInfo() {
+        if (uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+            && uiState.galleryImages.allSatisfy({ $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) {
+            uiState.isImageRequiredAlertVisible = true
+            uiState.infoMessage = MessageKey.imageRequiredOneOrMore
+            return
+        }
+
         if isRegistrationMode {
             submitCafeRegistration()
             return
@@ -98,8 +108,13 @@ final class CafeInfoEditViewModel: ObservableObject {
                         cafeId: cafeId,
                         name: uiState.cafeName,
                         description: uiState.cafeDescription,
+                        conceptType: Self.normalizeConceptType(uiState.conceptType),
                         representativeImageUrl: uploadedRepresentativeImage,
                         galleryImages: uploadedGalleryImages,
+                        location: GeoPoint(
+                            latitude: uiState.mapLatitude,
+                            longitude: uiState.mapLongitude
+                        ),
                         address: uiState.address,
                         contactNumber: uiState.contactNumber,
                         weekdayOpen: uiState.weekdayOpen,
@@ -118,10 +133,13 @@ final class CafeInfoEditViewModel: ObservableObject {
                     uiState.isSaving = false
                     uiState.cafeName = detail.cafe.name
                     uiState.cafeDescription = detail.cafe.desc
+                    uiState.conceptType = Self.normalizeConceptType(detail.cafe.conceptType)
                     uiState.representativeImageUrl = cafeImages.first ?? detail.cafe.thumbnailImage
                     uiState.galleryImages = Array(cafeImages.dropFirst().prefix(uiState.galleryMaxCount))
                     uiState.address = detail.cafe.region.address
-                    uiState.contactNumber = detail.phoneNumber
+                    uiState.mapLatitude = detail.cafe.region.location.latitude
+                    uiState.mapLongitude = detail.cafe.region.location.longitude
+                    uiState.contactNumber = detail.phoneNumber == MessageKey.contactPlaceholder ? "" : detail.phoneNumber
                     uiState.weekdayOpen = parsedHours.weekdayOpen
                     uiState.weekdayClose = parsedHours.weekdayClose
                     uiState.weekendOpen = parsedHours.weekendOpen
@@ -130,17 +148,23 @@ final class CafeInfoEditViewModel: ObservableObject {
                     event.send(.navigateBack)
                 } else {
                     uiState.isSaving = false
-                    uiState.infoMessage = "카페 정보 저장에 실패했습니다."
+                    uiState.infoMessage = MessageKey.saveFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isSaving = false
-                uiState.infoMessage = "카페 정보 저장에 실패했습니다."
+                uiState.infoMessage = MessageKey.saveFailed
             }
         }
     }
 
     private func submitCafeRegistration() {
+        if uiState.representativeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true {
+            uiState.isImageRequiredAlertVisible = true
+            uiState.infoMessage = MessageKey.registrationRepRequired
+            return
+        }
+
         uiState.isSaving = true
         uiState.infoMessage = nil
 
@@ -159,10 +183,13 @@ final class CafeInfoEditViewModel: ObservableObject {
                             country: "KR",
                             city: "Seoul",
                             address: uiState.address.trimmingCharacters(in: .whitespacesAndNewlines),
-                            location: GeoPoint(latitude: 37.5665, longitude: 126.9780)
+                            location: GeoPoint(
+                                latitude: uiState.mapLatitude,
+                                longitude: uiState.mapLongitude
+                            )
                         ),
                         thumbnailImage: uploadedRepresentativeImage,
-                        conceptType: "MAID",
+                        conceptType: Self.normalizeConceptType(uiState.conceptType),
                         businessHours: formatBusinessHours(),
                         phoneNumber: uiState.contactNumber.trimmingCharacters(in: .whitespacesAndNewlines)
                     )
@@ -211,6 +238,8 @@ final class CafeInfoEditViewModel: ObservableObject {
             uiState.cafeName = value
         case .changeCafeDescription(let value):
             uiState.cafeDescription = value
+        case .changeConceptType(let value):
+            uiState.conceptType = Self.normalizeConceptType(value)
         case .changeAddress(let value):
             uiState.address = value
         case .changeContactNumber(let value):
@@ -227,19 +256,25 @@ final class CafeInfoEditViewModel: ObservableObject {
             uiState.representativeImageUrl = imageUrl
         case .addGalleryImage(let imageUrl):
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
-                showInfo("카페 갤러리는 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다.")
+                showInfo("\(MessageKey.galleryMaxExceeded):\(uiState.galleryMaxCount)")
                 return
             }
             if imageUrl.isEmpty { return }
             uiState.galleryImages.append(imageUrl)
+        case .removeGalleryImage(let index):
+            guard index >= 0 && index < uiState.galleryImages.count else { return }
+            uiState.galleryImages.remove(at: index)
         case .clickRepresentativeImage:
             break
         case .clickAddGalleryImage:
             break
         case .clickPinLocation:
-            showInfo("지도 핀 위치 조정은 다음 단계에서 연결됩니다.")
+            showInfo(MessageKey.pinLocationHint)
+        case .setPinnedLocation(let latitude, let longitude):
+            uiState.mapLatitude = latitude
+            uiState.mapLongitude = longitude
         case .clickManageExceptionDates:
-            showInfo("예외 영업일 관리는 다음 단계에서 연결됩니다.")
+            showInfo(MessageKey.exceptionNextStep)
         case .dismissImageRequiredAlert:
             uiState.isImageRequiredAlertVisible = false
         case .clickSave:
@@ -254,21 +289,12 @@ final class CafeInfoEditViewModel: ObservableObject {
     }
 
     private func parseBusinessHours(_ businessHours: String) -> (weekdayOpen: String, weekdayClose: String, weekendOpen: String, weekendClose: String) {
-        let pattern = #"(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})"#
-        let regex = try? NSRegularExpression(pattern: pattern)
-        let range = NSRange(location: 0, length: businessHours.utf16.count)
-
-        guard
-            let match = regex?.firstMatch(in: businessHours, range: range),
-            let openRange = Range(match.range(at: 1), in: businessHours),
-            let closeRange = Range(match.range(at: 2), in: businessHours)
-        else {
-            return ("", "", "", "")
-        }
-
-        let open = String(businessHours[openRange])
-        let close = String(businessHours[closeRange])
-        return (open, close, open, close)
+        let times = TimeUtils.extractNormalizedHourMinuteList(from: businessHours)
+        let weekdayOpen = times.indices.contains(0) ? times[0] : ""
+        let weekdayClose = times.indices.contains(1) ? times[1] : ""
+        let weekendOpen = times.indices.contains(2) ? times[2] : weekdayOpen
+        let weekendClose = times.indices.contains(3) ? times[3] : weekdayClose
+        return (weekdayOpen, weekdayClose, weekendOpen, weekendClose)
     }
 
     init(
@@ -294,6 +320,15 @@ final class CafeInfoEditViewModel: ObservableObject {
         }
     }
 
+    private static func normalizeConceptType(_ value: String) -> String {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
+        return CafeTypeOption.allCases.contains { $0.rawValue == normalized } ? normalized : CafeTypeOption.maid.rawValue
+    }
+
     deinit {
         loadTask?.cancel()
     }
@@ -309,7 +344,7 @@ final class CafeInfoEditViewModel: ObservableObject {
         if let failure = result as? AppResultFailure, let validation = failure.error as? AppErrorValidationFailed {
             throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: validation.reason])
         }
-        throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: "이미지를 업로드하지 못했습니다."])
+        throw NSError(domain: "CafeInfoEdit", code: 1, userInfo: [NSLocalizedDescriptionKey: MessageKey.imageUploadFailed])
     }
 
     private func uploadImagesIfNeeded(_ imageUrls: [String], folder: String) async throws -> [String] {
@@ -320,5 +355,17 @@ final class CafeInfoEditViewModel: ObservableObject {
             }
         }
         return uploaded
+    }
+
+    private enum MessageKey {
+        static let loadFailed = "cafeinfo_info_load_failed"
+        static let imageRequiredOneOrMore = "cafeinfo_info_image_required_one_or_more"
+        static let saveFailed = "cafeinfo_info_save_failed"
+        static let registrationRepRequired = "cafeinfo_info_registration_rep_required"
+        static let galleryMaxExceeded = "cafeinfo_info_gallery_max_exceeded"
+        static let pinLocationHint = "cafeinfo_info_pin_location_hint"
+        static let exceptionNextStep = "cafeinfo_info_exception_next_step"
+        static let imageUploadFailed = "cafeinfo_info_image_upload_failed"
+        static let contactPlaceholder = "연락처 정보 준비중"
     }
 }

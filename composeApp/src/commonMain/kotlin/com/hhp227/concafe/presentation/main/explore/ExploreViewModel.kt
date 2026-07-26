@@ -3,6 +3,7 @@ package com.hhp227.concafe.presentation.main.explore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.event.CafeRegistrationClaimEvent
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
+import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
@@ -26,6 +29,7 @@ class ExploreViewModel(
     private val getExploreCafePageUseCase: GetExploreCafePageUseCase,
     private val getExploreCastPageUseCase: GetExploreCastPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -37,6 +41,37 @@ class ExploreViewModel(
 
     private val jobs = mutableMapOf<TaskKey, Job>()
 
+    private fun observeSession() {
+        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
+        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
+            observeCurrentUserUseCase.invoke().collectLatest { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoggedIn = user != null,
+                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeCafeRegistrationClaimEvent() {
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT] = viewModelScope.launch {
+            cafeRegistrationClaimEventPublisher.events.collectLatest { event ->
+                if (event is CafeRegistrationClaimEvent.Approved) {
+                    val approvedCafeId = event.approvedCafeId?.trim().orEmpty()
+                    val alreadyVisible = approvedCafeId.isNotEmpty() &&
+                        _uiState.value.cafes.any { cafe -> cafe.id == approvedCafeId }
+
+                    if (!alreadyVisible) {
+                        loadCafePage(cursor = null, append = false)
+                    }
+                }
+            }
+        }
+    }
+
     private fun refreshCurrentTab() {
         jobs[TaskKey.CAFE_PAGE]?.cancel()
         jobs[TaskKey.MAID_PAGE]?.cancel()
@@ -45,10 +80,12 @@ class ExploreViewModel(
                 isLoading = true,
                 errorMessage = null,
                 cafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) emptyList() else it.cafes,
+                hasLoadedCafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) false else it.hasLoadedCafes,
                 cafesNextCursor = if (it.selectedTab == ExploreUiState.TabType.CAFE) null else it.cafesNextCursor,
                 canLoadMoreCafes = if (it.selectedTab == ExploreUiState.TabType.CAFE) false else it.canLoadMoreCafes,
                 isLoadingMoreCafes = false,
                 maids = if (it.selectedTab == ExploreUiState.TabType.MAID) emptyList() else it.maids,
+                hasLoadedMaids = if (it.selectedTab == ExploreUiState.TabType.MAID) false else it.hasLoadedMaids,
                 maidsNextCursor = if (it.selectedTab == ExploreUiState.TabType.MAID) null else it.maidsNextCursor,
                 canLoadMoreMaids = if (it.selectedTab == ExploreUiState.TabType.MAID) false else it.canLoadMoreMaids,
                 isLoadingMoreMaids = false
@@ -65,6 +102,7 @@ class ExploreViewModel(
         jobs[TaskKey.CAFE_PAGE]?.cancel()
         jobs[TaskKey.CAFE_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreCafes = append) }
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             val state = _uiState.value
             when (
                 val result = getExploreCafePageUseCase.invoke(
@@ -81,6 +119,7 @@ class ExploreViewModel(
                             isLoading = false,
                             errorMessage = null,
                             cafes = if (append) it.cafes + result.data.items else result.data.items,
+                            hasLoadedCafes = true,
                             cafesNextCursor = result.data.nextCursor,
                             canLoadMoreCafes = result.data.hasNext,
                             isLoadingMoreCafes = false
@@ -111,6 +150,7 @@ class ExploreViewModel(
         jobs[TaskKey.MAID_PAGE]?.cancel()
         jobs[TaskKey.MAID_PAGE] = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMoreMaids = append) }
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             val state = _uiState.value
             when (
                 val result = getExploreCastPageUseCase.invoke(
@@ -127,6 +167,7 @@ class ExploreViewModel(
                             isLoading = false,
                             errorMessage = null,
                             maids = if (append) it.maids + result.data.items else result.data.items,
+                            hasLoadedMaids = true,
                             maidsNextCursor = result.data.nextCursor,
                             canLoadMoreMaids = result.data.hasNext,
                             isLoadingMoreMaids = false
@@ -175,20 +216,6 @@ class ExploreViewModel(
         }
     }
 
-    private fun observeSession() {
-        jobs[TaskKey.OBSERVE_SESSION]?.cancel()
-        jobs[TaskKey.OBSERVE_SESSION] = viewModelScope.launch {
-            observeCurrentUserUseCase.invoke().collectLatest { user ->
-                _uiState.update {
-                    it.copy(
-                        isLoggedIn = user != null,
-                        isLoginPromptVisible = if (user == null) it.isLoginPromptVisible else false
-                    )
-                }
-            }
-        }
-    }
-
     private fun patchCafe(cafe: Cafe) {
         _uiState.update { state ->
             val cafeMatches = matchesCafeFilters(state, cafe)
@@ -212,7 +239,7 @@ class ExploreViewModel(
 
     private fun addCastIfVisible(cast: Cast) {
         _uiState.update { state ->
-            if (state.maids.any { it.id == cast.id } || !matchesCastFilters(state, cast)) {
+            if (!state.hasLoadedMaids || state.maids.any { it.id == cast.id } || !matchesCastFilters(state, cast)) {
                 state
             } else {
                 state.copy(maids = (state.maids + cast).sortedCasts(state))
@@ -222,20 +249,24 @@ class ExploreViewModel(
 
     private fun patchCast(cast: Cast) {
         _uiState.update { state ->
-            val nextMaids = state.maids.mapNotNull { item ->
-                when {
-                    item.id != cast.id -> item
-                    matchesCastFilters(state, cast) -> cast
-                    else -> null
-                }
-            }.sortedCasts(state)
-            state.copy(maids = nextMaids)
+            if (!state.hasLoadedMaids) {
+                state
+            } else {
+                val nextMaids = state.maids.mapNotNull { item ->
+                    when {
+                        item.id != cast.id -> item
+                        matchesCastFilters(state, cast) -> cast
+                        else -> null
+                    }
+                }.sortedCasts(state)
+                state.copy(maids = nextMaids)
+            }
         }
     }
 
     private fun removeCast(castId: String) {
         _uiState.update { state ->
-            state.copy(maids = state.maids.filterNot { it.id == castId })
+            if (!state.hasLoadedMaids) state else state.copy(maids = state.maids.filterNot { it.id == castId })
         }
     }
 
@@ -256,9 +287,9 @@ class ExploreViewModel(
             is ExploreAction.TabChanged -> {
                 _uiState.update { it.copy(selectedTab = action.tab) }
                 val nextState = _uiState.value
-                if (action.tab == ExploreUiState.TabType.CAFE && nextState.cafes.isEmpty()) {
+                if (action.tab == ExploreUiState.TabType.CAFE && !nextState.hasLoadedCafes) {
                     refreshCurrentTab()
-                } else if (action.tab == ExploreUiState.TabType.MAID && nextState.maids.isEmpty()) {
+                } else if (action.tab == ExploreUiState.TabType.MAID && !nextState.hasLoadedMaids) {
                     refreshCurrentTab()
                 }
             }
@@ -289,6 +320,7 @@ class ExploreViewModel(
 
     init {
         observeSession()
+        observeCafeRegistrationClaimEvent()
         observeCafeDetailEvent()
         observeCastEvent()
         refreshCurrentTab()
@@ -301,6 +333,7 @@ class ExploreViewModel(
     }
 
     private enum class TaskKey {
+        OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
         OBSERVE_SESSION,
@@ -310,6 +343,7 @@ class ExploreViewModel(
 
     private companion object {
         private const val PAGE_SIZE = 15
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }
 
@@ -320,10 +354,16 @@ private fun matchesCafeFilters(state: ExploreUiState, cafe: Cafe): Boolean {
         ExploreUiState.RegionFilter.ALL -> true
         ExploreUiState.RegionFilter.SEOUL -> cafe.region.country.equals("KR", ignoreCase = true) &&
             cafe.region.city.equals("Seoul", ignoreCase = true)
+        ExploreUiState.RegionFilter.BUSAN -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Busan", ignoreCase = true)
+        ExploreUiState.RegionFilter.DAEGU -> cafe.region.country.equals("KR", ignoreCase = true) &&
+                cafe.region.city.equals("Daegu", ignoreCase = true)
         ExploreUiState.RegionFilter.TOKYO -> cafe.region.country.equals("JP", ignoreCase = true) &&
             cafe.region.city.equals("Tokyo", ignoreCase = true)
         ExploreUiState.RegionFilter.OSAKA -> cafe.region.country.equals("JP", ignoreCase = true) &&
             cafe.region.city.equals("Osaka", ignoreCase = true)
+        ExploreUiState.RegionFilter.ETC -> cafe.region.country.equals("JP", ignoreCase = true) &&
+            cafe.region.city.equals("Yokohama", ignoreCase = true)
     }
     return matchesQuery && matchesRegion
 }

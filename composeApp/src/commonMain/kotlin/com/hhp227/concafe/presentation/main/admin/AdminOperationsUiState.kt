@@ -2,12 +2,30 @@ package com.hhp227.concafe.presentation.main.admin
 
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
+import com.hhp227.concafe.domain.model.Inquiry
+import com.hhp227.concafe.domain.model.Report
 
 data class AdminOperationsUiState(
-    val metrics: List<AdminMetricCard> = buildAdminMetrics(0),
+    val totalUsersCount: Int = 0,
+    val activeCafesCount: Int = 0,
+    val reportItemsCount: Int = 0,
+    val metrics: List<AdminMetricCard> = buildAdminMetrics(
+        totalUsersCount = 0,
+        activeCafesCount = 0,
+        pendingCount = 0,
+        reportItemsCount = 0
+    ),
     val selectedPendingFilter: PendingFilter = PendingFilter.CAFE_REGISTRATION,
     val pendingCafeRegistrationClaims: List<PendingCafeRegistrationClaimPreview> = emptyList(),
     val pendingCafeOwnerClaims: List<PendingCafeOwnerClaimPreview> = emptyList(),
+    val inquiries: List<Inquiry> = emptyList(),
+    val reports: List<Report> = emptyList(),
+    val inquiryNextCursor: String? = null,
+    val reportNextCursor: String? = null,
+    val canLoadMoreInquiries: Boolean = false,
+    val canLoadMoreReports: Boolean = false,
+    val isLoadingMoreInquiries: Boolean = false,
+    val isLoadingMoreReports: Boolean = false,
     val quickMenus: List<AdminQuickMenu> = defaultQuickMenus,
     val hasUnreadNotifications: Boolean = true,
     val infoMessage: String? = null
@@ -68,6 +86,7 @@ enum class AdminMetricIcon {
 }
 
 enum class QuickMenuIcon {
+    USERS,
     BANNER,
     MODERATION,
     ANALYTICS
@@ -79,14 +98,20 @@ enum class QuickMenuAccent {
     BLUE
 }
 
-internal fun buildAdminMetrics(pendingCount: Int) = listOf(
-    AdminMetricCard("전체 사용자", "12,540", "1.2%", AdminMetricIcon.USERS, MetricTrend.UP),
-    AdminMetricCard("활성 카페", "842", "0.5%", AdminMetricIcon.CAFE, MetricTrend.UP),
+internal fun buildAdminMetrics(
+    totalUsersCount: Int,
+    activeCafesCount: Int,
+    pendingCount: Int,
+    reportItemsCount: Int
+) = listOf(
+    AdminMetricCard("전체 사용자", totalUsersCount.toString(), "실시간", AdminMetricIcon.USERS, MetricTrend.UP),
+    AdminMetricCard("활성 카페", activeCafesCount.toString(), "실시간", AdminMetricIcon.CAFE, MetricTrend.UP),
     AdminMetricCard("승인 대기", pendingCount.toString(), "${pendingCount}건 대기", AdminMetricIcon.PENDING, MetricTrend.NEW),
-    AdminMetricCard("신고 항목", "32", "8%", AdminMetricIcon.REPORT, MetricTrend.DOWN)
+    AdminMetricCard("신고 항목", reportItemsCount.toString(), "실시간", AdminMetricIcon.REPORT, MetricTrend.DOWN)
 )
 
 private val defaultQuickMenus = listOf(
+    AdminQuickMenu("users", "유저 관리", "카페 운영자 및 차단 사용자 조회", QuickMenuIcon.USERS, QuickMenuAccent.BLUE),
     AdminQuickMenu("banner", "홈 배너 관리", "이벤트 및 공지 배너 수정", QuickMenuIcon.BANNER, QuickMenuAccent.PRIMARY),
     AdminQuickMenu("moderation", "신고 및 제재", "부적절한 컨텐츠 및 유저 차단", QuickMenuIcon.MODERATION, QuickMenuAccent.ROSE),
     AdminQuickMenu("analytics", "시스템 통계", "유입 분석 및 매출 리포트", QuickMenuIcon.ANALYTICS, QuickMenuAccent.BLUE)

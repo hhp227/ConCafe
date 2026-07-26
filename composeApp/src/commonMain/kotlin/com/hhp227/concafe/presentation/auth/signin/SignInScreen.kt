@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,13 +53,26 @@ import kotlinx.coroutines.flow.collectLatest
 import com.hhp227.concafe.presentation.component.SignInDivider
 import com.hhp227.concafe.presentation.component.SignInLogoSection
 import com.hhp227.concafe.presentation.component.SignInSocialButton
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.apple_icon
 import concafe.composeapp.generated.resources.google_logo
 import concafe.composeapp.generated.resources.kakao_icon
+import concafe.composeapp.generated.resources.signin_back_content_description
+import concafe.composeapp.generated.resources.signin_email_label
+import concafe.composeapp.generated.resources.signin_forgot_password
+import concafe.composeapp.generated.resources.signin_loading
+import concafe.composeapp.generated.resources.signin_password_label
+import concafe.composeapp.generated.resources.signin_sign_up
+import concafe.composeapp.generated.resources.signin_submit
+import concafe.composeapp.generated.resources.signup_social_apple
+import concafe.composeapp.generated.resources.signup_social_google
+import concafe.composeapp.generated.resources.signup_social_kakao
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun SignInScreen(
@@ -80,6 +95,7 @@ fun SignInScreen(
     SignInContentScreen(
         uiState = uiState,
         onBack = { onNavigate(NavigationAction.NavigateBack) },
+        onResetPassword = { onNavigate(NavigationAction.NavigateToResetPassword) },
         onSignUp = { onNavigate(NavigationAction.NavigateToSignUp) },
         onAction = viewModel::onAction
     )
@@ -90,6 +106,7 @@ fun SignInScreen(
 private fun SignInContentScreen(
     uiState: SignInUiState,
     onBack: () -> Unit,
+    onResetPassword: () -> Unit,
     onSignUp: () -> Unit,
     onAction: (SignInAction) -> Unit
 ) {
@@ -101,7 +118,15 @@ private fun SignInContentScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFFFF2F7), Color(0xFFFFFBFD), Color(0xFFFDEDF4))
+                        if (isSystemInDarkTheme()) {
+                            listOf(
+                                ConCafeColors.background,
+                                ConCafeColors.background,
+                                ConCafeColors.background
+                            )
+                        } else {
+                            listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint)
+                        }
                     )
                 )
         ) {
@@ -131,26 +156,52 @@ private fun SignInContentScreen(
                         OutlinedTextField(
                             value = uiState.email,
                             onValueChange = { onAction(SignInAction.ChangeEmail(it)) },
-                            label = { Text("이메일") },
+                            label = { Text(stringResource(Res.string.signin_email_label)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = ConCafeColors.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
+                                focusedLabelColor = ConCafeColors.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         OutlinedTextField(
                             value = uiState.password,
                             onValueChange = { onAction(SignInAction.ChangePassword(it)) },
-                            label = { Text("비밀번호") },
+                            label = { Text(stringResource(Res.string.signin_password_label)) },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                unfocusedContainerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                                focusedBorderColor = ConCafeColors.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = if (isSystemInDarkTheme()) 0.65f else 0.35f),
+                                focusedLabelColor = ConCafeColors.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                         if (uiState.errorMessage != null) {
                             Text(
                                 text = uiState.errorMessage,
-                                color = Color(0xFFD1436F),
+                                color = ConCafeColors.primary,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -159,14 +210,14 @@ private fun SignInContentScreen(
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFD1DC),
-                                contentColor = Color(0xFF2B2330)
+                                containerColor = ConCafeColors.primaryContainer,
+                                contentColor = ConCafeColors.textPrimary
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
                         ) {
-                            Text(if (uiState.isLoading) "로그인 중..." else "로그인")
+                            Text(if (uiState.isLoading) stringResource(Res.string.signin_loading) else stringResource(Res.string.signin_submit))
                         }
                     }
                 }
@@ -176,24 +227,24 @@ private fun SignInContentScreen(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         SignInSocialButton(
-                            label = "카카오로 시작하기",
+                            label = stringResource(Res.string.signup_social_kakao),
                             icon = painterResource(Res.drawable.kakao_icon),
-                            containerColor = Color(0xFFFEE500),
-                            contentColor = Color.Black,
+                            containerColor = colorFromHex("FEE500"),
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.KAKAO)) }
                         )
                         SignInSocialButton(
-                            label = "구글로 시작하기",
+                            label = stringResource(Res.string.signup_social_google),
                             icon = painterResource(Res.drawable.google_logo),
                             containerColor = Color.White,
-                            contentColor = Color(0xFF222222),
+                            contentColor = colorFromHex("222222"),
                             outlined = true,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.GOOGLE)) }
                         )
                         SignInSocialButton(
-                            label = "애플로 시작하기",
+                            label = stringResource(Res.string.signup_social_apple),
                             icon = painterResource(Res.drawable.apple_icon),
-                            containerColor = Color(0xFF111111),
+                            containerColor = colorFromHex("111111"),
                             contentColor = Color.White,
                             onClick = { onAction(SignInAction.ClickSocialSignIn(SignInProvider.APPLE)) }
                         )
@@ -205,14 +256,19 @@ private fun SignInContentScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "비밀번호 찾기",
-                            color = Color(0xFF8E8794),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        TextButton(
+                            onClick = onResetPassword,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.signin_forgot_password),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                         Text(
                             text = " | ",
-                            color = Color(0xFFB5AEB9),
+                            color = MaterialTheme.colorScheme.outline,
                             style = MaterialTheme.typography.bodySmall
                         )
                         TextButton(
@@ -220,8 +276,8 @@ private fun SignInContentScreen(
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(
-                                text = "회원가입",
-                                color = Color(0xFF8E8794),
+                                text = stringResource(Res.string.signin_sign_up),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -233,11 +289,11 @@ private fun SignInContentScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
-                    .padding(start = 4.dp, top = 4.dp)
+                    .padding(start = 5.dp, top = 8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "뒤로가기"
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = stringResource(Res.string.signin_back_content_description)
                 )
             }
         }

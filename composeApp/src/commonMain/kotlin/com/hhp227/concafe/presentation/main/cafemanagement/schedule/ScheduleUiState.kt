@@ -7,21 +7,26 @@ import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 
 data class ScheduleUiState(
     val managedCastId: String = "",
+    val managedCafeId: String = "",
+    val managedCafeName: String = "",
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val isEditSheetVisible: Boolean = false,
     val errorMessage: String? = null,
     val castSummary: CastSummary = CastSummary(),
+    val schedulePeriod: SchedulePeriod = SchedulePeriod.ONE_WEEK,
     val weekRangeLabel: String = "",
     val weekDays: List<ScheduleManagementWeekDay> = emptyList(),
     val schedules: List<ScheduleManagementDaySchedule> = emptyList(),
+    val allWeekDays: List<ScheduleManagementWeekDay> = emptyList(),
+    val allSchedules: List<ScheduleManagementDaySchedule> = emptyList(),
     val selectedDayId: String = "",
     val infoMessage: String? = null,
     val editingScheduleId: String? = null,
     val editingScheduleTitle: String = "",
     val editStatus: CastScheduleStatus = CastScheduleStatus.WORK,
-    val editStartTime: String = "10:00",
-    val editEndTime: String = "19:00",
+    val editStartTime: String = DEFAULT_START_TIME,
+    val editEndTime: String = DEFAULT_END_TIME,
     val pendingUpdates: List<PendingScheduleUpdate> = emptyList(),
     val timeOptions: List<String> = defaultTimeOptions()
 ) {
@@ -33,19 +38,38 @@ data class ScheduleUiState(
 
     val totalWorkDurationLabel: String
         get() {
-            if (!isEditingWorking) return "0시간"
+            if (!isEditingWorking) return "schedule_duration_hours_only:0"
             val durationMinutes = TimeUtils.computeDurationMinutes(editStartTime, editEndTime)
             val actualMinutes = (durationMinutes - 60).coerceAtLeast(0)
             val hours = actualMinutes / 60
             val minutes = actualMinutes % 60
-            return if (minutes == 0) "${hours}시간" else "${hours}시간 ${minutes}분"
+            return if (minutes == 0) {
+                "schedule_duration_hours_only:$hours"
+            } else {
+                "schedule_duration_hours_minutes:$hours:$minutes"
+            }
         }
+
+    fun withSchedulePeriod(period: SchedulePeriod): ScheduleUiState {
+        val visibleDayCount = period.visibleDayCount(allWeekDays.size)
+        val visibleWeekDays = allWeekDays.take(visibleDayCount)
+        val visibleSchedules = allSchedules.take(visibleDayCount)
+        return copy(
+            schedulePeriod = period,
+            weekRangeLabel = resolveRangeLabel(visibleWeekDays),
+            weekDays = visibleWeekDays,
+            schedules = visibleSchedules,
+            selectedDayId = selectedDayId.takeIf { selected -> visibleWeekDays.any { it.id == selected } }
+                ?: visibleWeekDays.firstOrNull()?.id.orEmpty()
+        )
+    }
 
     data class CastSummary(
         val title: String = "",
         val subtitle: String = "",
         val badge: String = "Cast Member",
-        val initials: String = ""
+        val initials: String = "",
+        val profileImageUrl: String? = null
     )
 
     data class PendingScheduleUpdate(
@@ -56,6 +80,29 @@ data class ScheduleUiState(
     )
 
     companion object {
-        private fun defaultTimeOptions(): List<String> = TimeUtils.defaultHalfHourTimeOptions()
+        const val DEFAULT_START_TIME = "14:00"
+        const val DEFAULT_END_TIME = "22:00"
+
+        private fun defaultTimeOptions(): List<String> = TimeUtils.defaultHourlyTimeOptions()
     }
+}
+
+enum class SchedulePeriod {
+    ONE_WEEK,
+    TWO_WEEKS,
+    ONE_MONTH;
+
+    fun visibleDayCount(totalDayCount: Int): Int {
+        return when (this) {
+            ONE_WEEK -> minOf(7, totalDayCount)
+            TWO_WEEKS -> minOf(14, totalDayCount)
+            ONE_MONTH -> totalDayCount
+        }
+    }
+}
+
+private fun resolveRangeLabel(days: List<ScheduleManagementWeekDay>): String {
+    val first = days.firstOrNull()?.id ?: return ""
+    val last = days.lastOrNull()?.id ?: return ""
+    return "${first.substring(0, 4)}년 ${first.substring(5, 7).toIntOrNull() ?: 0}월 ${first.substring(8, 10).toIntOrNull() ?: 0}일 - ${last.substring(5, 7).toIntOrNull() ?: 0}월 ${last.substring(8, 10).toIntOrNull() ?: 0}일"
 }

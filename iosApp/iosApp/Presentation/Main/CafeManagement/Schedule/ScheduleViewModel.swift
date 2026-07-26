@@ -60,11 +60,11 @@ final class ScheduleViewModel: ObservableObject {
                             let conceptRole: String
                             switch event.cast.conceptRole.lowercased() {
                             case "maid":
-                                conceptRole = "메이드"
+                                conceptRole = "schedule_concept_maid"
                             case "butler":
-                                conceptRole = "버틀러"
+                                conceptRole = "schedule_concept_butler"
                             case "idol":
-                                conceptRole = "아이돌"
+                                conceptRole = "schedule_concept_idol"
                             default:
                                 conceptRole = event.cast.conceptRole.prefix(1).uppercased() + event.cast.conceptRole.dropFirst()
                             }
@@ -72,7 +72,8 @@ final class ScheduleViewModel: ObservableObject {
                                 title: event.cast.name,
                                 subtitle: "\(conceptRole) / \(cafeName)",
                                 badge: self.uiState.castSummary.badge,
-                                initials: String(event.cast.name.prefix(2)).uppercased()
+                                initials: String(event.cast.name.prefix(2)).uppercased(),
+                                profileImageUrl: event.cast.profileImage
                             )
                         }
                     case let event as Shared.CastEvent.Deleted:
@@ -94,21 +95,21 @@ final class ScheduleViewModel: ObservableObject {
         tasks[.scheduleEvent] = Task {
             do {
                 for try await event in asyncSequence(for: scheduleManagementEventPublisher.events) {
+                    if self.uiState.isSaving {
+                        continue
+                    }
                     switch event {
                     case let event as Shared.ScheduleManagementEvent.Updated:
                         if event.castId == castId {
-                            if self.uiState.isSaving {
-                                return
-                            }
                             self.loadSchedule(showLoading: false)
                             let message: String
                             switch event.status {
                             case .work:
-                                message = "근무 시간이 저장되었습니다."
+                                message = "schedule_info_saved_work"
                             case .off:
-                                message = "휴무로 변경되었습니다."
+                                message = "schedule_info_saved_off"
                             default:
-                                message = "휴가 일정으로 변경되었습니다."
+                                message = "schedule_info_saved_vacation"
                             }
                             self.event.send(.showMessage(message))
                         }
@@ -129,6 +130,8 @@ final class ScheduleViewModel: ObservableObject {
 
     private func loadSchedule(showLoading: Bool = true) {
         tasks[.load]?.cancel()
+        let currentPeriod = uiState.schedulePeriod
+        let currentSelectedDayId = uiState.selectedDayId
         uiState.isLoading = showLoading
         uiState.isSaving = false
         uiState.errorMessage = nil
@@ -146,38 +149,40 @@ final class ScheduleViewModel: ObservableObject {
                     let conceptRole: String
                     switch data.detail.cast.conceptRole.lowercased() {
                     case "maid":
-                        conceptRole = "메이드"
+                        conceptRole = "schedule_concept_maid"
                     case "butler":
-                        conceptRole = "버틀러"
+                        conceptRole = "schedule_concept_butler"
                     case "idol":
-                        conceptRole = "아이돌"
+                        conceptRole = "schedule_concept_idol"
                     default:
                         conceptRole = data.detail.cast.conceptRole.prefix(1).uppercased() + data.detail.cast.conceptRole.dropFirst()
                     }
                     uiState = ScheduleUiState(
                         managedCastId: data.detail.cast.id,
+                        managedCafeId: data.detail.cafe.id,
+                        managedCafeName: data.detail.cafe.name,
                         isLoading: false,
                         isSaving: false,
                         errorMessage: nil,
                         castSummary: .init(
                             title: data.detail.cast.name,
                             subtitle: "\(conceptRole) / \(data.detail.cafe.name)",
-                            badge: "Cast Member",
-                            initials: String(data.detail.cast.name.prefix(2)).uppercased()
+                            badge: "schedule_badge_cast_member",
+                            initials: String(data.detail.cast.name.prefix(2)).uppercased(),
+                            profileImageUrl: data.detail.cast.profileImage
                         ),
-                        weekRangeLabel: data.weekRangeLabel,
-                        weekDays: data.weekDays,
-                        schedules: data.daySchedules,
-                        selectedDayId: data.selectedDayId,
+                        allWeekDays: data.weekDays,
+                        allSchedules: data.daySchedules,
+                        selectedDayId: currentSelectedDayId.isEmpty ? data.selectedDayId : currentSelectedDayId,
                         infoMessage: nil
-                    )
+                    ).applyingSchedulePeriod(currentPeriod)
                 } else {
                     unbindCastEvent()
                     tasks.removeValue(forKey: .scheduleEvent)?.cancel()
                     uiState = ScheduleUiState(
                         isLoading: false,
                         isSaving: false,
-                        errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                        errorMessage: "schedule_info_load_failed"
                     )
                 }
             } catch {
@@ -187,7 +192,7 @@ final class ScheduleViewModel: ObservableObject {
                 uiState = ScheduleUiState(
                     isLoading: false,
                     isSaving: false,
-                    errorMessage: "출근표 데이터를 불러오지 못했습니다."
+                    errorMessage: "schedule_info_load_failed"
                 )
             }
         }
@@ -198,9 +203,17 @@ final class ScheduleViewModel: ObservableObject {
         case .clickBack:
             event.send(.navigateBack)
         case .clickMore:
-            uiState.infoMessage = "추가 메뉴는 다음 단계에서 제공합니다."
+            uiState.infoMessage = "schedule_info_more_next_step"
         case .clickCalendar:
-            uiState.infoMessage = "달력 보기 연결은 다음 단계에서 제공합니다."
+            let cafeId = uiState.managedCafeId
+            let cafeName = uiState.managedCafeName
+            if cafeId.isEmpty {
+                uiState.infoMessage = "schedule_info_calendar_next_step"
+            } else {
+                event.send(.navigateToCastManagement(cafeId: cafeId, cafeName: cafeName))
+            }
+        case .selectPeriod(let period):
+            uiState = uiState.applyingSchedulePeriod(period)
         case .selectDay(let id):
             uiState.selectedDayId = id
         case .clickEditDay(let id):
@@ -209,8 +222,8 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editingScheduleId = selected.id
             uiState.editingScheduleTitle = selected.title
             uiState.editStatus = selected.status
-            uiState.editStartTime = selected.timeLabel.components(separatedBy: " - ").first.flatMap { $0.contains(":") ? $0 : nil } ?? "10:00"
-            uiState.editEndTime = selected.timeLabel.components(separatedBy: " - ").last.flatMap { $0.contains(":") ? $0 : nil } ?? "19:00"
+            uiState.editStartTime = selected.timeLabel.components(separatedBy: " - ").first.flatMap { $0.contains(":") ? $0 : nil } ?? ScheduleUiState.defaultStartTime
+            uiState.editEndTime = selected.timeLabel.components(separatedBy: " - ").last?.components(separatedBy: " ").first.flatMap { $0.contains(":") ? $0 : nil } ?? ScheduleUiState.defaultEndTime
             uiState.infoMessage = nil
         case .dismissEditSheet:
             uiState.isEditSheetVisible = false
@@ -223,8 +236,8 @@ final class ScheduleViewModel: ObservableObject {
             uiState.editEndTime = value
         case .submitEditDay:
             guard let editingId = uiState.editingScheduleId else { return }
-            if uiState.editStatus == .work && uiState.editStartTime >= uiState.editEndTime {
-                uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+            if uiState.editStatus == .work && ScheduleUiState.computeDurationMinutes(start: uiState.editStartTime, end: uiState.editEndTime) <= 0 {
+                uiState.errorMessage = "schedule_error_end_after_start"
                 return
             }
             let pendingUpdate = ScheduleUiState.PendingScheduleUpdate(
@@ -236,26 +249,26 @@ final class ScheduleViewModel: ObservableObject {
             uiState.isEditSheetVisible = false
             uiState.editingScheduleId = nil
             uiState.errorMessage = nil
-            uiState.infoMessage = "편집 내용을 화면에 반영했습니다. 하단 버튼으로 실제 저장을 완료하세요."
-            uiState.schedules = uiState.schedules.map { schedule in
+            uiState.infoMessage = "schedule_info_edit_applied"
+            uiState.allSchedules = uiState.allSchedules.map { schedule in
                 guard schedule.id == editingId else { return schedule }
                 let timeLabel: String
                 switch pendingUpdate.status {
                 case .work:
-                    timeLabel = "\(pendingUpdate.startTime ?? "10:00") - \(pendingUpdate.endTime ?? "19:00")"
+                    timeLabel = "\(pendingUpdate.startTime ?? ScheduleUiState.defaultStartTime) - \(pendingUpdate.endTime ?? ScheduleUiState.defaultEndTime)"
                 case .off:
-                    timeLabel = "휴무"
+                    timeLabel = "schedule_status_off"
                 default:
-                    timeLabel = "휴가"
+                    timeLabel = "schedule_status_vacation"
                 }
                 let statusLabel: String
                 switch pendingUpdate.status {
                 case .work:
-                    statusLabel = "근무"
+                    statusLabel = "schedule_status_work"
                 case .off:
-                    statusLabel = "휴무"
+                    statusLabel = "schedule_status_off"
                 default:
-                    statusLabel = "휴가"
+                    statusLabel = "schedule_status_vacation"
                 }
                 return ScheduleManagementDaySchedule(
                     id: pendingUpdate.date,
@@ -266,7 +279,7 @@ final class ScheduleViewModel: ObservableObject {
                     status: pendingUpdate.status
                 )
             }
-            uiState.weekDays = uiState.weekDays.map { day in
+            uiState.allWeekDays = uiState.allWeekDays.map { day in
                 guard day.id == editingId else { return day }
                 return ScheduleManagementWeekDay(
                     id: day.id,
@@ -277,10 +290,11 @@ final class ScheduleViewModel: ObservableObject {
             }
             uiState.pendingUpdates.removeAll { $0.date == editingId }
             uiState.pendingUpdates.append(pendingUpdate)
+            uiState = uiState.applyingSchedulePeriod(uiState.schedulePeriod)
         case .clickSave:
             guard !uiState.managedCastId.isEmpty else { return }
             if uiState.pendingUpdates.isEmpty {
-                uiState.infoMessage = "저장할 변경사항이 없습니다."
+                uiState.infoMessage = "schedule_info_no_changes"
                 uiState.errorMessage = nil
                 return
             }
@@ -290,6 +304,7 @@ final class ScheduleViewModel: ObservableObject {
 
             let managedCastId = uiState.managedCastId
             let pendingUpdates = uiState.pendingUpdates
+            let requestBatchId = "\(managedCastId)_\(Int(Date().timeIntervalSince1970 * 1000))"
             tasks[.submit]?.cancel()
             tasks[.submit] = Task { [weak self] in
                 guard let self else { return }
@@ -301,7 +316,8 @@ final class ScheduleViewModel: ObservableObject {
                                 date: pendingUpdate.date,
                                 status: pendingUpdate.status,
                                 startTime: pendingUpdate.startTime,
-                                endTime: pendingUpdate.endTime
+                                endTime: pendingUpdate.endTime,
+                                requestBatchId: requestBatchId
                             )
                         )
                         if Task.isCancelled { return }
@@ -309,27 +325,30 @@ final class ScheduleViewModel: ObservableObject {
                             if let validation = failure.error as? AppErrorValidationFailed {
                                 switch validation.reason {
                                 case "start time is required":
-                                    uiState.errorMessage = "시작 시간을 선택해주세요."
+                                    uiState.errorMessage = "schedule_error_start_required"
                                 case "end time is required":
-                                    uiState.errorMessage = "종료 시간을 선택해주세요."
+                                    uiState.errorMessage = "schedule_error_end_required"
                                 case "end time must be after start time":
-                                    uiState.errorMessage = "종료 시간은 시작 시간보다 늦어야 합니다."
+                                    uiState.errorMessage = "schedule_error_end_after_start"
                                 default:
-                                    uiState.errorMessage = "근무 시간 저장에 실패했습니다."
+                                    uiState.errorMessage = "schedule_error_save_failed"
                                 }
                             } else {
-                                uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
+                                uiState.errorMessage = "schedule_error_week_save_failed"
                             }
                             uiState.isSaving = false
                             return
                         }
                     }
-                    self.loadSchedule(showLoading: false)
-                    self.event.send(.showMessage("주간 시간표를 저장했습니다."))
+                    uiState.isSaving = false
+                    uiState.errorMessage = nil
+                    uiState.infoMessage = nil
+                    uiState.pendingUpdates = []
+                    self.event.send(.showMessage("schedule_event_week_saved"))
                 } catch {
                     if Task.isCancelled { return }
                     uiState.isSaving = false
-                    uiState.errorMessage = "주간 시간표 저장에 실패했습니다."
+                    uiState.errorMessage = "schedule_error_week_save_failed"
                 }
             }
         case .dismissInfoMessage:
@@ -369,3 +388,4 @@ final class ScheduleViewModel: ObservableObject {
         case submit
     }
 }
+

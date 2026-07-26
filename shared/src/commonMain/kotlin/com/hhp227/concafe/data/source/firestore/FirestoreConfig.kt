@@ -8,5 +8,9 @@ data class FirestoreConfig(
     fun documentBasePath(): String {
         return "$baseUrl/projects/$projectId/databases/$databaseId/documents"
     }
+
+    fun functionsBaseUrl(region: String = "us-central1"): String {
+        return "https://$region-$projectId.cloudfunctions.net"
+    }
 }
 

@@ -1,0 +1,20 @@
+package com.hhp227.concafe.domain.usecase
+
+import com.hhp227.concafe.domain.common.AppError
+import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.repository.AuthRepository
+
+class RequestPasswordResetUseCase(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(email: String): AppResult<Unit> {
+        return try {
+            authRepository.requestPasswordReset(email)
+            AppResult.Success(Unit)
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "request password reset failed"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
+        }
+    }
+}

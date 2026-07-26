@@ -1,21 +1,20 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.PagingDataSource
-import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.CafeRemoteDataSource
+import com.hhp227.concafe.data.source.VisitRemoteDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeInfoUpdate
+import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.repository.CafeRepository
 
 class CafeRepositoryImpl(
-    private val cafeDataSource: CafeDataSource,
-    private val socialDataSource: SocialDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val cafeRemoteDataSource: CafeRemoteDataSource,
+    private val visitRemoteDataSource: VisitRemoteDataSource
 ) : CafeRepository {
     override suspend fun searchCafes(
         query: String?,
@@ -25,76 +24,125 @@ class CafeRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cafe> {
-        var filtered = cafeDataSource.cafes.filter { it.approved }
-
-        if (!query.isNullOrBlank()) {
-            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
-        }
-
-        if (!country.isNullOrBlank()) {
-            filtered = filtered.filter { it.region.country.equals(country, ignoreCase = true) }
-        }
-
-        if (!city.isNullOrBlank()) {
-            filtered = filtered.filter { it.region.city.equals(city, ignoreCase = true) }
-        }
-
-        filtered = when (sort) {
-            CafeSort.POPULAR -> filtered.sortedByDescending { it.reviewCount }
-            CafeSort.LATEST -> filtered.sortedByDescending { it.id }
-            CafeSort.RATING -> filtered.sortedByDescending { it.ratingAvg }
-        }
-
-        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+        return cafeRemoteDataSource.searchCafesRemote(
+            query = query,
+            country = country,
+            city = city,
+            sort = sort,
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     override suspend fun getCafeDetail(cafeId: String): CafeDetail {
-        return cafeDataSource.cafeDetail(cafeId)
-            ?: throw NoSuchElementException("cafe detail not found")
+        return cafeRemoteDataSource.fetchCafeDetail(cafeId)
+    }
+
+    override suspend fun getCafeMenuGoods(cafeId: String): CafeMenuGoodsSection {
+        return cafeRemoteDataSource.fetchCafeMenuGoods(cafeId)
     }
 
     override suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail {
-        return cafeDataSource.updateCafeInfo(update)
+        return cafeRemoteDataSource.updateCafeInfoRemote(update)
     }
 
     override suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail {
-        return cafeDataSource.upsertCafeMenuGoods(update)
+        return cafeRemoteDataSource.upsertCafeMenuGoodsRemote(update)
     }
 
     override suspend fun deleteCafeMenuGoods(cafeId: String, itemId: String): CafeDetail {
-        return cafeDataSource.deleteCafeMenuGoods(cafeId, itemId)
+        return cafeRemoteDataSource.deleteCafeMenuGoodsRemote(cafeId, itemId)
     }
 
     override suspend fun isFavorite(userId: String, cafeId: String): Boolean {
-        val set = socialDataSource.favoriteCafeIdsByUser[userId]
-        return set?.contains(cafeId) ?: false
+        val favoriteCafeIds = cafeRemoteDataSource.fetchFavoriteCafeIds(userId)
+        return favoriteCafeIds.contains(cafeId)
+    }
+
+    override suspend fun getFavoriteCafeIds(userId: String, limit: Int?): List<String> {
+        return cafeRemoteDataSource.fetchFavoriteCafeIds(userId, limit)
+    }
+
+    override suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe> {
+        if (!cafeIds.isEmpty()) {
+            val distinctCafeIds = cafeIds.distinct()
+            val cafesById = distinctCafeIds.associateWith { cafeId ->
+                runCatching {
+                    cafeRemoteDataSource.fetchCafeById(cafeId)
+                }.getOrNull()
+            }
+            return distinctCafeIds
+                .mapNotNull { cafeId -> cafesById[cafeId] }
+                .filter { cafe -> cafe.approved }
+        }
+        return emptyList()
     }
 
     override suspend fun toggleFavorite(userId: String, cafeId: String): Boolean {
-        val set = socialDataSource.favoriteCafeIdsByUser.getOrPut(userId) { mutableSetOf() }
-        return if (set.contains(cafeId)) {
-            set.remove(cafeId)
-            false
+        val favoriteCafeIds = cafeRemoteDataSource.fetchFavoriteCafeIds(userId)
+        val isFavorite = favoriteCafeIds.contains(cafeId)
+
+        if (isFavorite) {
+            cafeRemoteDataSource.unfavoriteCafeRemote(
+                userId = userId,
+                cafeId = cafeId
+            )
+            return false
         } else {
-            set.add(cafeId)
-            true
+            cafeRemoteDataSource.favoriteCafeRemote(
+                userId = userId,
+                cafeId = cafeId
+            )
+            return true
         }
     }
 
+    override suspend fun updateCafeSocialMedia(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    ) {
+        cafeRemoteDataSource.updateCafeSocialMediaRemote(
+            cafeId = cafeId,
+            instagramId = instagramId,
+            twitterId = twitterId,
+            tiktokId = tiktokId,
+            youtubeId = youtubeId
+        )
+    }
+
+    override suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?) {
+        cafeRemoteDataSource.updateCafeReservationUrlRemote(cafeId, reservationUrl)
+    }
+
+    override suspend fun updateCafeTableCounts(cafeId: String, current: Int, total: Int) {
+        cafeRemoteDataSource.updateCafeTableCountsRemote(cafeId, current, total)
+    }
+
     override suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary> {
-        return cafeDataSource.cafes
-            .filter { it.approved }
-            .sortedByDescending { cafeDataSource.cafeCheckInCountById[it.id] ?: 0 }
-            .take(limit)
-            .map { cafe ->
-                CheckInCafeSummary(
-                    id = cafe.id,
-                    name = cafe.name,
-                    locationLabel = cafe.region.city,
-                    geoPoint = cafe.region.location,
-                    rating = cafe.ratingAvg,
-                    checkInCount = cafeDataSource.cafeCheckInCountById[cafe.id] ?: 0
-                )
-            }
+        val safeLimit = if (limit > 0) limit else 1
+        val sourceCafes = cafeRemoteDataSource.searchCafesRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CafeSort.POPULAR,
+            cursor = null,
+            pageSize = safeLimit
+        ).items
+        return sourceCafes.map { cafe ->
+            val resolvedVisitCount = visitRemoteDataSource.fetchVisitCountByCafe(cafe.id)
+
+            CheckInCafeSummary(
+                id = cafe.id,
+                name = cafe.name,
+                locationLabel = cafe.region.city,
+                geoPoint = cafe.region.location,
+                rating = cafe.ratingAvg,
+                checkInCount = resolvedVisitCount,
+                thumbnailImage = cafe.thumbnailImage
+            )
+        }
     }
 }

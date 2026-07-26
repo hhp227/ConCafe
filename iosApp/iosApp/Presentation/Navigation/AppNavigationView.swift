@@ -10,6 +10,10 @@ import SwiftUI
 struct AppNavigationView: View {
     @StateObject private var viewModel = NavigationViewModel()
 
+    let hasUnreadNotifications: Bool
+
+    let onRefreshUnreadNotificationCount: () -> Void
+
     @State var path: [Route] = []
 
     @State var currentRoute: Route = .entry
@@ -17,6 +21,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationStackCompat(path: $path) {
             rootContent
+                .compatNavigationBarStyle(.opaque)
                 .compatNavigationBarTransition(hideOnDisappear: shouldHideMainNavigationBar)
                 .onAppear {
                     if case .entry = currentRoute {
@@ -29,6 +34,13 @@ struct AppNavigationView: View {
                 CastView(castId: param, onNavigationAction: viewModel.onAction)
             case .cafe(let param):
                 CafeView(cafeId: param, onNavigationAction: viewModel.onAction)
+            case .cafeEvent(let cafeId, let eventId, let showCafeButton):
+                CafeEventView(
+                    cafeId: cafeId,
+                    eventId: eventId,
+                    showCafeButton: showCafeButton,
+                    onNavigationAction: viewModel.onAction
+                )
             case .cafeDashboard(let param):
                 CafeDashboardView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .banner(let cafeId):
@@ -53,16 +65,26 @@ struct AppNavigationView: View {
                 CastEditView(cafeId: cafeId, castId: castId, onNavigationAction: viewModel.onAction)
             case .schedule(let castId):
                 ScheduleView(castId: castId, onNavigationAction: viewModel.onAction)
+            case .castManagement(let cafeId, let cafeName):
+                CastManagementView(cafeId: cafeId, cafeName: cafeName, onNavigationAction: viewModel.onAction)
+            case .castList(let cafeId):
+                CastListView(cafeId: cafeId, onNavigationAction: viewModel.onAction)
             case .menuGoods(let param):
                 MenuGoodsView(cafeId: param, onNavigationAction: viewModel.onAction)
             case .menuGoodsEdit(let cafeId, let itemId):
                 MenuGoodsEditView(cafeId: cafeId, itemId: itemId, onNavigationAction: viewModel.onAction)
-            case .reviewEdit(let cafeId):
-                ReviewEditView(cafeId: cafeId, onNavigationAction: viewModel.onAction)
+            case .reviewEdit(let cafeId, let reviewId):
+                ReviewEditView(cafeId: cafeId, reviewId: reviewId, onNavigationAction: viewModel.onAction)
+            case .picture(let imageUrl):
+                PictureView(imageUrl: imageUrl, onNavigationAction: viewModel.onAction)
+            case .checkInMap(let initialRegionKey):
+                MapView(initialRegionKey: initialRegionKey, onNavigationAction: viewModel.onAction)
             case .signIn:
                 SignInView(onNavigationAction: viewModel.onAction)
             case .signUp:
                 SignUpView(onNavigationAction: viewModel.onAction)
+            case .resetPassword:
+                ResetPasswordView(onNavigationAction: viewModel.onAction)
             case .notification:
                 NotificationView(onNavigationAction: viewModel.onAction)
             case .settings:
@@ -73,10 +95,22 @@ struct AppNavigationView: View {
                 AccountSettingsView(onNavigationAction: viewModel.onAction)
             case .inquiry:
                 InquiryView(onNavigationAction: viewModel.onAction)
+            case .userManagement:
+                UserManagementView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
-            case .main:
-                MainView(onNavigationAction: viewModel.onAction)
+            case .community:
+                CommunityView(onNavigationAction: viewModel.onAction)
+            case .postEdit(let postId):
+                PostEditView(editPostId: postId, onNavigationAction: viewModel.onAction)
+            case .postDetail(let postId):
+                PostDetailView(postId: postId, onNavigationAction: viewModel.onAction)
+            case .main(let initialTab):
+                MainView(
+                    initialTab: initialTab,
+                    hasUnreadNotifications: hasUnreadNotifications,
+                    onNavigationAction: viewModel.onAction
+                )
             case .entry:
                 EmptyView()
             }
@@ -84,6 +118,7 @@ struct AppNavigationView: View {
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateTo(let route):
+                NavigationBarAppearanceHostingController.prepareTransition(to: navigationBarStyle(for: route))
                 switch route {
                 case .main(let initialTab):
                     currentRoute = .main(initialTab: initialTab)
@@ -95,8 +130,23 @@ struct AppNavigationView: View {
                 }
             case .navigateBack:
                 if !path.isEmpty {
+                    let nextStyle: CompatNavigationBarStyle
+                    if path.count > 1, let previousRoute = path.dropLast().last {
+                        nextStyle = navigationBarStyle(for: previousRoute)
+                    } else {
+                        nextStyle = .opaque
+                    }
+                    NavigationBarAppearanceHostingController.prepareTransition(to: nextStyle)
                     path.removeLast()
                 }
+            case .replaceCurrent(let route):
+                NavigationBarAppearanceHostingController.prepareTransition(to: navigationBarStyle(for: route))
+                if !path.isEmpty {
+                    path.removeLast()
+                }
+                path.append(route)
+            case .refreshUnreadNotificationCount:
+                onRefreshUnreadNotificationCount()
             }
         }
     }
@@ -104,12 +154,20 @@ struct AppNavigationView: View {
     @ViewBuilder
     private var rootContent: some View {
         switch currentRoute {
-        case .main:
-            MainView(onNavigationAction: viewModel.onAction)
+        case .main(let initialTab):
+            MainView(
+                initialTab: initialTab,
+                hasUnreadNotifications: hasUnreadNotifications,
+                onNavigationAction: viewModel.onAction
+            )
         case .entry:
             ProgressView()
         default:
-            MainView(onNavigationAction: viewModel.onAction)
+            MainView(
+                initialTab: "home",
+                hasUnreadNotifications: hasUnreadNotifications,
+                onNavigationAction: viewModel.onAction
+            )
         }
     }
 
@@ -117,16 +175,25 @@ struct AppNavigationView: View {
         guard let lastRoute = path.last else { return false }
 
         switch lastRoute {
-        case .cafe, .cast, .signIn, .signUp:
+        case .picture, .signIn, .signUp, .resetPassword:
             return true
         default:
             return false
+        }
+    }
+
+    private func navigationBarStyle(for route: Route) -> CompatNavigationBarStyle {
+        switch route {
+        case .cafe, .cast, .cafeEvent:
+            return .transparentScrollEdge
+        default:
+            return .opaque
         }
     }
 }
 
 struct AppNavigationView_Previews: PreviewProvider {
     static var previews: some View {
-        AppNavigationView()
+        AppNavigationView(hasUnreadNotifications: false, onRefreshUnreadNotificationCount: {})
     }
 }

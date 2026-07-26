@@ -17,12 +17,14 @@ import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -41,8 +43,9 @@ class NoticeEventViewModel(
     private val updateCafeEventUseCase: UpdateCafeEventUseCase,
     private val deleteCafeNoticeUseCase: DeleteCafeNoticeUseCase,
     private val deleteCafeEventUseCase: DeleteCafeEventUseCase,
-    private val noticeManagementEventPublisher: NoticeManagementEventPublisher,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val noticeManagementEventPublisher: NoticeManagementEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NoticeEventUiState())
     val uiState = _uiState.asStateFlow()
@@ -67,6 +70,8 @@ class NoticeEventViewModel(
                 formImageUrl = "",
                 formPinned = false,
                 formReservedAt = "",
+                formParticipantCastIds = emptyList(),
+                formHasLivePerformance = false,
                 infoMessage = null
             )
         }
@@ -74,7 +79,7 @@ class NoticeEventViewModel(
 
     private fun openEditNoticeForm(id: String) {
         val target = _uiState.value.notices.firstOrNull { it.id == id } ?: run {
-            setInfoMessage("수정할 공지사항을 찾지 못했습니다.")
+            setInfoMessage(MSG_NOTICE_EDIT_TARGET_NOT_FOUND)
             return
         }
         _uiState.update {
@@ -88,6 +93,8 @@ class NoticeEventViewModel(
                 formImageUrl = "",
                 formPinned = target.isPinned,
                 formReservedAt = if (target.statusAccent == NoticeStatusAccent.DRAFT) target.displayDate else "",
+                formParticipantCastIds = emptyList(),
+                formHasLivePerformance = false,
                 infoMessage = null
             )
         }
@@ -95,7 +102,7 @@ class NoticeEventViewModel(
 
     private fun openEditEventForm(id: String) {
         val target = _uiState.value.events.firstOrNull { it.id == id } ?: run {
-            setInfoMessage("수정할 이벤트를 찾지 못했습니다.")
+            setInfoMessage(MSG_EVENT_EDIT_TARGET_NOT_FOUND)
             return
         }
         _uiState.update {
@@ -109,8 +116,25 @@ class NoticeEventViewModel(
                 formImageUrl = target.imageUrl,
                 formPinned = false,
                 formReservedAt = target.periodText,
+                formParticipantCastIds = target.participantCastIds,
+                formHasLivePerformance = target.hasLivePerformance,
                 infoMessage = null
             )
+        }
+    }
+
+    private fun loadCafeCasts() {
+        jobs[JobKey.CAST_PAGE]?.cancel()
+        jobs[JobKey.CAST_PAGE] = viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingCafeCasts = true) }
+            when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor = null, pageSize = CAST_PICKER_PAGE_SIZE)) {
+                is AppResult.Success -> _uiState.update {
+                    it.copy(cafeCasts = result.data.items, isLoadingCafeCasts = false)
+                }
+                is AppResult.Failure -> _uiState.update {
+                    it.copy(cafeCasts = emptyList(), isLoadingCafeCasts = false)
+                }
+            }
         }
     }
 
@@ -124,7 +148,7 @@ class NoticeEventViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeNoticePageUseCase.invoke(cafeId = cafeId, query = _uiState.value.query, cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -142,7 +166,7 @@ class NoticeEventViewModel(
                         it.copy(
                             isLoadingNotices = false,
                             isLoadingMoreNotices = false,
-                            infoMessage = "공지사항을 불러오지 못했습니다."
+                            infoMessage = MSG_NOTICE_LOAD_FAILED
                         )
                     }
                 }
@@ -160,7 +184,7 @@ class NoticeEventViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeEventPageUseCase.invoke(cafeId = cafeId, query = _uiState.value.query, cursor = cursor)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -178,7 +202,7 @@ class NoticeEventViewModel(
                         it.copy(
                             isLoadingEvents = false,
                             isLoadingMoreEvents = false,
-                            infoMessage = "이벤트를 불러오지 못했습니다."
+                            infoMessage = MSG_EVENT_LOAD_FAILED
                         )
                     }
                 }
@@ -246,7 +270,9 @@ class NoticeEventViewModel(
                             title = state.formTitle,
                             content = state.formContent,
                             imageUrl = uploadedImageUrl,
-                            periodText = state.formReservedAt.ifBlank { null }
+                            periodText = state.formReservedAt.ifBlank { null },
+                            participantCastIds = state.formParticipantCastIds,
+                            hasLivePerformance = state.formHasLivePerformance
                         )
                     )
                 } else {
@@ -257,7 +283,9 @@ class NoticeEventViewModel(
                             title = state.formTitle,
                             content = state.formContent,
                             imageUrl = uploadedImageUrl,
-                            periodText = state.formReservedAt.ifBlank { null }
+                            periodText = state.formReservedAt.ifBlank { null },
+                            participantCastIds = state.formParticipantCastIds,
+                            hasLivePerformance = state.formHasLivePerformance
                         )
                     )
                 }
@@ -275,24 +303,35 @@ class NoticeEventViewModel(
                             formImageUrl = "",
                             formPinned = false,
                             formReservedAt = "",
+                            formParticipantCastIds = emptyList(),
+                            formHasLivePerformance = false,
                             infoMessage = if (state.selectedTab == NoticeEventTab.NOTICE) {
-                                if (state.formEditingId == null) "공지사항이 등록되었습니다." else "공지사항이 수정되었습니다."
+                                if (state.formEditingId == null) MSG_NOTICE_CREATED else MSG_NOTICE_UPDATED
                             } else {
-                                if (state.formEditingId == null) "이벤트가 등록되었습니다." else "이벤트가 수정되었습니다."
+                                if (state.formEditingId == null) MSG_EVENT_CREATED else MSG_EVENT_UPDATED
                             }
                         )
                     }
+                    refreshCurrentTab()
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             isSubmittingForm = false,
                             infoMessage = when (val error = result.error) {
-                                is AppError.ValidationFailed -> error.reason.toNoticeEventValidationMessage()
+                                is AppError.ValidationFailed -> when (error.reason) {
+                                    "cafeId is required" -> "noticeevent_validation_cafe_required"
+                                    "noticeId is required" -> "noticeevent_validation_notice_required"
+                                    "eventId is required" -> "noticeevent_validation_event_required"
+                                    "notice title is required", "event title is required" -> "noticeevent_validation_title_required"
+                                    "notice content is required", "event content is required" -> "noticeevent_validation_content_required"
+                                    "event image is required" -> "noticeevent_validation_event_image_required"
+                                    else -> error.reason
+                                }
                                 else -> if (state.selectedTab == NoticeEventTab.NOTICE) {
-                                    if (state.formEditingId == null) "공지사항 등록에 실패했습니다." else "공지사항 수정에 실패했습니다."
+                                    if (state.formEditingId == null) MSG_NOTICE_CREATE_FAILED else MSG_NOTICE_UPDATE_FAILED
                                 } else {
-                                    if (state.formEditingId == null) "이벤트 등록에 실패했습니다." else "이벤트 수정에 실패했습니다."
+                                    if (state.formEditingId == null) MSG_EVENT_CREATE_FAILED else MSG_EVENT_UPDATE_FAILED
                                 }
                             }
                         )
@@ -306,8 +345,8 @@ class NoticeEventViewModel(
         jobs[JobKey.DELETE]?.cancel()
         jobs[JobKey.DELETE] = viewModelScope.launch {
             when (deleteCafeNoticeUseCase.invoke(cafeId = cafeId, noticeId = id)) {
-                is AppResult.Success -> setInfoMessage("공지사항이 삭제되었습니다.")
-                is AppResult.Failure -> setInfoMessage("공지사항 삭제에 실패했습니다.")
+                is AppResult.Success -> setInfoMessage(MSG_NOTICE_DELETE_SUCCESS)
+                is AppResult.Failure -> setInfoMessage(MSG_NOTICE_DELETE_FAILED)
             }
         }
     }
@@ -316,8 +355,8 @@ class NoticeEventViewModel(
         jobs[JobKey.DELETE]?.cancel()
         jobs[JobKey.DELETE] = viewModelScope.launch {
             when (deleteCafeEventUseCase.invoke(cafeId = cafeId, eventId = id)) {
-                is AppResult.Success -> setInfoMessage("이벤트가 삭제되었습니다.")
-                is AppResult.Failure -> setInfoMessage("이벤트 삭제에 실패했습니다.")
+                is AppResult.Success -> setInfoMessage(MSG_EVENT_DELETE_SUCCESS)
+                is AppResult.Failure -> setInfoMessage(MSG_EVENT_DELETE_FAILED)
             }
         }
     }
@@ -354,7 +393,7 @@ class NoticeEventViewModel(
                 _uiState.update {
                     it.copy(
                         isSubmittingForm = false,
-                        infoMessage = "이미지를 업로드하지 못했습니다."
+                        infoMessage = MSG_IMAGE_UPLOAD_FAILED
                     )
                 }
                 null
@@ -397,7 +436,7 @@ class NoticeEventViewModel(
             NoticeEventAction.LoadMoreNotices -> loadMoreNotices()
             NoticeEventAction.LoadMoreEvents -> loadMoreEvents()
             NoticeEventAction.ClickRegister -> openCreateForm()
-            NoticeEventAction.ClickMoreEvents -> setInfoMessage("이벤트 전체 목록 연결은 다음 단계에서 이어집니다.")
+            NoticeEventAction.ClickMoreEvents -> setInfoMessage(MSG_MORE_EVENTS_NEXT_STEP)
             is NoticeEventAction.ClickEditNotice -> openEditNoticeForm(action.id)
             is NoticeEventAction.ClickDeleteNotice -> deleteNotice(action.id)
             is NoticeEventAction.ClickEditEvent -> openEditEventForm(action.id)
@@ -410,14 +449,26 @@ class NoticeEventViewModel(
             }
             NoticeEventAction.ClickFormImage -> _uiState.update {
                 if (it.formImageUrl.isNotBlank()) {
-                    it.copy(infoMessage = "이미지는 한 장만 첨부할 수 있습니다.")
+                    it.copy(infoMessage = MSG_IMAGE_ONE_ONLY)
                 } else {
-                    it.copy(infoMessage = "이미지를 첨부하려면 이미지 선택 기능을 사용해 주세요.")
+                    it.copy(infoMessage = MSG_IMAGE_PICK_REQUIRED)
                 }
             }
             NoticeEventAction.ClickRemoveFormImage -> _uiState.update { it.copy(formImageUrl = "", infoMessage = null) }
             is NoticeEventAction.ChangeFormPinned -> _uiState.update { it.copy(formPinned = action.value) }
-            NoticeEventAction.ClickReserveSchedule -> setInfoMessage("게시 예약 기능은 다음 단계에서 연결됩니다.")
+            is NoticeEventAction.ChangeFormReservedAt -> _uiState.update { it.copy(formReservedAt = action.value, infoMessage = null) }
+            is NoticeEventAction.ToggleFormParticipantCast -> _uiState.update { state ->
+                val nextIds = if (action.castId in state.formParticipantCastIds) {
+                    state.formParticipantCastIds - action.castId
+                } else {
+                    state.formParticipantCastIds + action.castId
+                }
+                state.copy(formParticipantCastIds = nextIds, infoMessage = null)
+            }
+            is NoticeEventAction.ChangeFormHasLivePerformance -> _uiState.update {
+                it.copy(formHasLivePerformance = action.value, infoMessage = null)
+            }
+            NoticeEventAction.ClickReserveSchedule -> setInfoMessage(MSG_RESERVE_SCHEDULE_NEXT_STEP)
             NoticeEventAction.ClickSubmitForm -> submitForm()
             NoticeEventAction.DismissInfoMessage -> _uiState.update { it.copy(infoMessage = null) }
         }
@@ -431,26 +482,42 @@ class NoticeEventViewModel(
 
     init {
         observeNoticeManagementEvent()
+        loadCafeCasts()
         loadNoticePage(cursor = null, append = false)
     }
 
     private enum class JobKey {
         NOTICE_PAGE,
         EVENT_PAGE,
+        CAST_PAGE,
         SUBMIT,
         DELETE,
         OBSERVE_EVENT
     }
-}
 
-private fun String.toNoticeEventValidationMessage(): String {
-    return when (this) {
-        "cafeId is required" -> "카페 정보를 찾을 수 없습니다."
-        "noticeId is required" -> "공지사항 정보를 찾을 수 없습니다."
-        "eventId is required" -> "이벤트 정보를 찾을 수 없습니다."
-        "notice title is required", "event title is required" -> "제목을 입력해 주세요."
-        "notice content is required", "event content is required" -> "내용을 입력해 주세요."
-        "event image is required" -> "이벤트 대표 이미지를 첨부해 주세요."
-        else -> this
+    companion object {
+        private const val MSG_NOTICE_EDIT_TARGET_NOT_FOUND = "noticeevent_info_notice_edit_target_not_found"
+        private const val MSG_EVENT_EDIT_TARGET_NOT_FOUND = "noticeevent_info_event_edit_target_not_found"
+        private const val MSG_NOTICE_LOAD_FAILED = "noticeevent_info_notice_load_failed"
+        private const val MSG_EVENT_LOAD_FAILED = "noticeevent_info_event_load_failed"
+        private const val MSG_NOTICE_CREATED = "noticeevent_info_notice_created"
+        private const val MSG_NOTICE_UPDATED = "noticeevent_info_notice_updated"
+        private const val MSG_EVENT_CREATED = "noticeevent_info_event_created"
+        private const val MSG_EVENT_UPDATED = "noticeevent_info_event_updated"
+        private const val MSG_NOTICE_CREATE_FAILED = "noticeevent_info_notice_create_failed"
+        private const val MSG_NOTICE_UPDATE_FAILED = "noticeevent_info_notice_update_failed"
+        private const val MSG_EVENT_CREATE_FAILED = "noticeevent_info_event_create_failed"
+        private const val MSG_EVENT_UPDATE_FAILED = "noticeevent_info_event_update_failed"
+        private const val MSG_NOTICE_DELETE_SUCCESS = "noticeevent_info_notice_delete_success"
+        private const val MSG_NOTICE_DELETE_FAILED = "noticeevent_info_notice_delete_failed"
+        private const val MSG_EVENT_DELETE_SUCCESS = "noticeevent_info_event_delete_success"
+        private const val MSG_EVENT_DELETE_FAILED = "noticeevent_info_event_delete_failed"
+        private const val MSG_IMAGE_UPLOAD_FAILED = "noticeevent_info_image_upload_failed"
+        private const val MSG_MORE_EVENTS_NEXT_STEP = "noticeevent_info_more_events_next_step"
+        private const val MSG_IMAGE_ONE_ONLY = "noticeevent_info_image_one_only"
+        private const val MSG_IMAGE_PICK_REQUIRED = "noticeevent_info_image_pick_required"
+        private const val MSG_RESERVE_SCHEDULE_NEXT_STEP = "noticeevent_info_reserve_schedule_next_step"
+        private const val CAST_PICKER_PAGE_SIZE = 100
+        private const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 }

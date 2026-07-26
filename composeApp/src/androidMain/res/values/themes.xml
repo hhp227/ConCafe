@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ConCafe" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <style name="Theme.ConCafe.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/concafe_background_color</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_android</item>
+        <item name="postSplashScreenTheme">@style/Theme.ConCafe</item>
+    </style>
+</resources>

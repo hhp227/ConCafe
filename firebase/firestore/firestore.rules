@@ -1,0 +1,1161 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
+    }
+
+    function hasUserRole(role) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isTempCafeOperator() {
+      return hasUserRole("TEMP_CAFE_OPERATOR");
+    }
+
+    function isCafeOwner(cafeId) {
+      return isSignedIn()
+        && (
+          (
+            exists(/databases/$(database)/documents/cafes/$(cafeId))
+            && get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds is list
+            && request.auth.uid in get(/databases/$(database)/documents/cafes/$(cafeId)).data.ownerIds
+          )
+          || (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedCafeIds is list
+            && cafeId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ownedCafeIds
+          )
+        );
+    }
+
+    function isCafeOwnerEditableUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "name",
+        "desc",
+        "thumbnailImage",
+        "galleryImages",
+        "businessHours",
+        "phoneNumber",
+        "region",
+        "socialMedia",
+        "reservationUrl",
+        "tableCounts"
+      ]);
+    }
+
+    function isCafeSocialMediaUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "socialMedia"
+      ]);
+    }
+
+    function isCafeTableCountsUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "tableCounts"
+      ]);
+    }
+
+    function canManageCafe(cafeId) {
+      return isAdmin() || isCafeOwner(cafeId);
+    }
+
+    function isLinkedCastUser(cafeId, castId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId))
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId is string
+        && get(/databases/$(database)/documents/cafes/$(cafeId)/casts/$(castId)).data.linkedUserId == request.auth.uid;
+    }
+
+    function isLinkedCastEditableUpdate(cafeId, castId) {
+      return isLinkedCastUser(cafeId, castId)
+        && request.resource.data.linkedUserId == resource.data.linkedUserId
+        && (
+          (
+            !resource.data.keys().hasAny(["followerCount"])
+            && request.resource.data.followerCount is int
+          )
+          || request.resource.data.followerCount == resource.data.followerCount
+        )
+        && (
+          (
+            !resource.data.keys().hasAny(["rating"])
+            && request.resource.data.rating is number
+          )
+          || request.resource.data.rating == resource.data.rating
+        )
+        && (
+          (
+            !resource.data.keys().hasAny(["visitCertificationCount"])
+            && request.resource.data.visitCertificationCount is int
+          )
+          || request.resource.data.visitCertificationCount == resource.data.visitCertificationCount
+        )
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "name",
+          "profileImage",
+          "desc",
+          "birthday",
+          "birthdayKey",
+          "conceptRole",
+          "galleryImages",
+          "followerCount",
+          "rating",
+          "visitCertificationCount"
+        ]);
+    }
+
+    function isValidScheduleStatus(status) {
+      return status == "WORK" || status == "OFF" || status == "VACATION";
+    }
+
+    function isValidCastScheduleWriteData() {
+      return request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.date is string
+        && request.resource.data.status is string
+        && isValidScheduleStatus(request.resource.data.status)
+        && (
+          (
+            request.resource.data.status == "WORK"
+            && request.resource.data.startTime is string
+            && request.resource.data.endTime is string
+          )
+          ||
+          request.resource.data.status != "WORK"
+        );
+    }
+
+    function isValidGuestCastScheduleWriteData() {
+      return request.resource.data.keys().hasOnly([
+          "cafeId",
+          "date",
+          "name",
+          "profileImage",
+          "startTime",
+          "endTime",
+          "memo",
+          "createdBy",
+          "updatedAt"
+        ])
+        && request.resource.data.cafeId is string
+        && request.resource.data.date is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.startTime is string
+        && request.resource.data.endTime is string
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedAt is string
+        && (
+          !("profileImage" in request.resource.data)
+          || request.resource.data.profileImage is string
+          || request.resource.data.profileImage == null
+        )
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        );
+    }
+
+    function isValidTemporaryCastEntryWrite() {
+      return request.resource.data.cafeId is string
+        && request.resource.data.cafeName is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.conceptRole is string
+        && request.resource.data.conceptRole.size() > 0
+        && request.resource.data.conceptRole.size() <= 60
+        && request.resource.data.introduction is string
+        && request.resource.data.introduction.size() <= 500
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && (
+          !("birthday" in request.resource.data)
+          || request.resource.data.birthday is string
+          || request.resource.data.birthday == null
+        )
+        && (
+          !("profileImage" in request.resource.data)
+          || request.resource.data.profileImage is string
+          || request.resource.data.profileImage == null
+        );
+    }
+
+    function isValidTemporaryScheduleWrite() {
+      return request.resource.data.castEntryId is string
+        && request.resource.data.castName is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.cafeName is string
+        && request.resource.data.date is string
+        && request.resource.data.status is string
+        && isValidScheduleStatus(request.resource.data.status)
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        )
+        && (
+          (
+            request.resource.data.status == "WORK"
+            && request.resource.data.startTime is string
+            && request.resource.data.endTime is string
+          )
+          ||
+          (
+            request.resource.data.status != "WORK"
+            && (
+              !("startTime" in request.resource.data)
+              || request.resource.data.startTime == null
+            )
+            && (
+              !("endTime" in request.resource.data)
+              || request.resource.data.endTime == null
+            )
+          )
+        );
+    }
+
+    function isValidTempWebCastCreate() {
+      return request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && request.resource.data.conceptRole is string
+        && request.resource.data.conceptRole.size() > 0
+        && request.resource.data.conceptRole.size() <= 60
+        && request.resource.data.desc is string
+        && request.resource.data.desc.size() <= 500
+        && request.resource.data.followerCount is int
+        && request.resource.data.followerCount == 0
+        && request.resource.data.rating is number
+        && request.resource.data.rating == 0
+        && request.resource.data.visitCertificationCount is int
+        && request.resource.data.visitCertificationCount == 0
+        && request.resource.data.galleryImages is list
+        && request.resource.data.createdVia is string
+        && request.resource.data.createdVia == "TEMP_WEB"
+        && request.resource.data.source is string
+        && request.resource.data.source == "TEMP_WEB"
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && (
+          !("linkedUserId" in request.resource.data)
+          || request.resource.data.linkedUserId == null
+        )
+        && (
+          !("profileImage" in request.resource.data)
+          || request.resource.data.profileImage is string
+          || request.resource.data.profileImage == null
+        )
+        && (
+          !("birthday" in request.resource.data)
+          || request.resource.data.birthday is string
+          || request.resource.data.birthday == null
+        )
+        && (
+          !("birthdayKey" in request.resource.data)
+          || request.resource.data.birthdayKey is string
+          || request.resource.data.birthdayKey == null
+        );
+    }
+
+    function isValidTempWebScheduleWrite() {
+      return request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.date is string
+        && request.resource.data.status is string
+        && isValidScheduleStatus(request.resource.data.status)
+        && request.resource.data.createdVia is string
+        && request.resource.data.createdVia == "TEMP_WEB"
+        && request.resource.data.source is string
+        && request.resource.data.source == "TEMP_WEB"
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt is string
+        && request.resource.data.updatedAt is string
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        )
+        && (
+          (
+            request.resource.data.status == "WORK"
+            && request.resource.data.startTime is string
+            && request.resource.data.endTime is string
+          )
+          ||
+          (
+            request.resource.data.status != "WORK"
+            && (
+              !("startTime" in request.resource.data)
+              || request.resource.data.startTime == null
+            )
+            && (
+              !("endTime" in request.resource.data)
+              || request.resource.data.endTime == null
+            )
+          )
+        );
+    }
+
+    function isTempWebScheduleUpdateAllowed() {
+      return isTempCafeOperator()
+        && resource.data.createdVia is string
+        && resource.data.createdVia == "TEMP_WEB"
+        && resource.data.source is string
+        && resource.data.source == "TEMP_WEB"
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdVia == resource.data.createdVia
+        && request.resource.data.source == resource.data.source
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.castId == resource.data.castId
+        && isValidTempWebScheduleWrite();
+    }
+
+    function isReviewOwnerEditableUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.visitId == resource.data.visitId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount == resource.data.likeCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "rating",
+          "content",
+          "imageUrls",
+          "taggedCastIds",
+          "updatedAt"
+        ]);
+    }
+
+    function isReviewLikeOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.visitId == resource.data.visitId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.rating == resource.data.rating
+        && request.resource.data.content == resource.data.content
+        && request.resource.data.imageUrls == resource.data.imageUrls
+        && request.resource.data.taggedCastIds == resource.data.taggedCastIds
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= resource.data.likeCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "likeCount"
+        ]);
+    }
+
+    function isValidReviewCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.userNickname is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitId is string
+        && request.resource.data.rating is number
+        && request.resource.data.content is string
+        && request.resource.data.imageUrls is list
+        && request.resource.data.taggedCastIds is list
+        && request.resource.data.likeCount is int
+        && request.resource.data.createdAt is string;
+    }
+
+    function isValidVisitWriteData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitedAt is string
+        && (
+          !("memo" in request.resource.data)
+          || request.resource.data.memo is string
+          || request.resource.data.memo == null
+        )
+        && request.resource.data.verified is bool
+        && request.resource.data.verified == false
+        && (
+          // QR 체크인: location 불필요, checkInMethod == "QR" 명시
+          (
+            request.resource.data.checkInMethod is string
+            && request.resource.data.checkInMethod == "QR"
+            && !("location" in request.resource.data)
+          )
+          ||
+          // 위치 기반 체크인: location latlng 필수
+          (
+            (
+              !("checkInMethod" in request.resource.data)
+              || request.resource.data.checkInMethod == "LOCATION"
+            )
+            && request.resource.data.location is latlng
+          )
+        );
+    }
+
+    function isValidCafeEventWriteData() {
+      return request.resource.data.keys().hasOnly([
+          "title",
+          "content",
+          "imageUrl",
+          "startDate",
+          "endDate",
+          "statusLabel",
+          "isDimmed",
+          "participantCastIds",
+          "hasLivePerformance",
+          "likeCount"
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.imageUrl is string
+        && request.resource.data.startDate is string
+        && request.resource.data.endDate is string
+        && request.resource.data.statusLabel is string
+        && request.resource.data.isDimmed is bool
+        && (
+          !("participantCastIds" in request.resource.data)
+          || request.resource.data.participantCastIds is list
+        )
+        && (
+          !("hasLivePerformance" in request.resource.data)
+          || request.resource.data.hasLivePerformance is bool
+        )
+        && (
+          !("likeCount" in request.resource.data)
+          || (
+            request.resource.data.likeCount is int
+            && request.resource.data.likeCount >= 0
+          )
+        );
+    }
+
+    function isCafeEventLikeOnlyUpdate() {
+      return request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "likeCount"
+        ]);
+    }
+
+    function isValidInquiryCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.userNickname is string
+        && request.resource.data.inquiryType is string
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string;
+    }
+
+    function isValidReportCreateData() {
+      return request.resource.data.keys().hasOnly([
+          "targetType",
+          "targetId",
+          "reporterUserId",
+          "reporterNickname",
+          "reportType",
+          "status",
+          "createdAt",
+          "createdAtLabel"
+        ])
+        && request.resource.data.targetType is string
+        && (request.resource.data.targetType == "COMMUNITY_POST" || request.resource.data.targetType == "COMMUNITY_COMMENT")
+        && request.resource.data.targetId is string
+        && request.resource.data.targetId.size() > 0
+        && request.resource.data.reporterUserId is string
+        && request.resource.data.reporterUserId == request.auth.uid
+        && request.resource.data.reporterNickname is string
+        && request.resource.data.reportType is string
+        && request.resource.data.reportType.size() > 0
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string;
+    }
+
+    function isValidUserBlockCreateData(blockId) {
+      return request.resource.data.keys().hasOnly([
+          "blockerUserId",
+          "blockerNickname",
+          "blockedUserId",
+          "blockedNickname",
+          "createdAt"
+        ])
+        && request.resource.data.blockerUserId is string
+        && request.resource.data.blockerUserId == request.auth.uid
+        && request.resource.data.blockerNickname is string
+        && request.resource.data.blockedUserId is string
+        && request.resource.data.blockedUserId.size() > 0
+        && request.resource.data.blockedUserId != request.auth.uid
+        && request.resource.data.blockedNickname is string
+        && request.resource.data.createdAt is string
+        && blockId == request.auth.uid + "_" + request.resource.data.blockedUserId;
+    }
+
+    function isValidStampCreateData(stampId) {
+      return request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.cafeId is string
+        && request.resource.data.visitId is string
+        && request.resource.data.visitId == stampId
+        && request.resource.data.earnedAt is string
+        && (
+          !("updatedAt" in request.resource.data)
+          || request.resource.data.updatedAt is string
+        )
+        && exists(/databases/$(database)/documents/visits/$(stampId))
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.cafeId == request.resource.data.cafeId
+        && get(/databases/$(database)/documents/visits/$(stampId)).data.verified == true;
+    }
+
+    function isValidCastClaimStatus(status) {
+      return status == "PENDING" || status == "APPROVED" || status == "REJECTED";
+    }
+
+    function isValidCastClaimCreateData() {
+      return request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.castName is string
+        && request.resource.data.status is string
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is string
+        && request.resource.data.createdAtLabel is string
+        && request.resource.data.evidenceImageUrls is list
+        && (
+          !("message" in request.resource.data)
+          || request.resource.data.message is string
+          || request.resource.data.message == null
+        );
+    }
+
+    function isCastClaimReviewUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.castId == resource.data.castId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status is string
+        && isValidCastClaimStatus(request.resource.data.status)
+        && request.resource.data.reviewedBy is string
+        && request.resource.data.reviewedAt is string
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "status",
+          "reviewedBy",
+          "reviewedAt"
+        ]);
+    }
+
+    function isValidCastClaimSyncMetaWrite(cafeId) {
+      return request.resource.data.cafeId == cafeId
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    function isValidGlobalClaimSyncMetaWrite() {
+      return request.resource.data.updatedAt is string
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    function isVisitOwnerEditableUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.cafeId == resource.data.cafeId
+        && request.resource.data.verified == resource.data.verified
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "visitedAt",
+          "memo",
+          "updatedAt"
+        ]);
+    }
+
+    function isValidCommunityPostCreate() {
+      return request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userNickname is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.imageUrls is list
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount == 0
+        && request.resource.data.commentCount is int
+        && request.resource.data.commentCount == 0
+        && request.resource.data.createdAt is string;
+    }
+
+    function isCommunityPostOwnerUpdate() {
+      return request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount == resource.data.likeCount
+        && request.resource.data.commentCount == resource.data.commentCount
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "title",
+          "content",
+          "imageUrls",
+          "updatedAt"
+        ]);
+    }
+
+    function isCommunityPostLikeOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.content == resource.data.content
+        && request.resource.data.imageUrls == resource.data.imageUrls
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount is int
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "likeCount"
+        ]);
+    }
+
+    function isCommunityPostCommentCountOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.content == resource.data.content
+        && request.resource.data.imageUrls == resource.data.imageUrls
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.likeCount == resource.data.likeCount
+        && request.resource.data.commentCount is int
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "commentCount"
+        ]);
+    }
+
+    function isValidCommunityCommentCreate() {
+      return request.resource.data.postId is string
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userNickname is string
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 500
+        && request.resource.data.createdAt is string;
+    }
+
+    function isNotificationReadOnlyUpdate() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.body == resource.data.body
+        && request.resource.data.targetId == resource.data.targetId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.isRead is bool
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "isRead",
+          "readAt",
+          "relativeTime"
+        ]);
+    }
+
+    match /homeBanners/{bannerId} {
+      allow read: if true;
+      allow create: if isAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.relatedCafeId is string
+          && isCafeOwner(request.resource.data.relatedCafeId)
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && (
+            (
+              request.resource.data.relatedCafeId is string
+              && isCafeOwner(request.resource.data.relatedCafeId)
+            )
+            || (
+              resource.data.relatedCafeId is string
+              && isCafeOwner(resource.data.relatedCafeId)
+            )
+          )
+        );
+      allow delete: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.relatedCafeId is string
+          && isCafeOwner(resource.data.relatedCafeId)
+        );
+    }
+
+    match /cafes/{cafeId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isCafeOwner(cafeId) && (isCafeOwnerEditableUpdate() || isCafeSocialMediaUpdate() || isCafeTableCountsUpdate()));
+
+      match /casts/{castId} {
+        allow read: if true;
+        allow create: if canManageCafe(cafeId)
+          || (
+            isTempCafeOperator()
+            && isValidTempWebCastCreate()
+          );
+        allow delete: if canManageCafe(cafeId);
+        allow update: if canManageCafe(cafeId)
+          || isLinkedCastEditableUpdate(cafeId, castId);
+      }
+
+      match /notices/{noticeId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /events/{eventId} {
+        allow read: if true;
+        allow create: if canManageCafe(cafeId)
+          && isValidCafeEventWriteData();
+        allow update: if (
+          canManageCafe(cafeId)
+          && isValidCafeEventWriteData()
+        ) || (
+          isSignedIn()
+          && isCafeEventLikeOnlyUpdate()
+        );
+        allow delete: if canManageCafe(cafeId);
+
+        match /likes/{userId} {
+          allow read: if isSignedIn();
+          allow create: if isSignedIn() && request.auth.uid == userId;
+          allow delete: if isSignedIn() && request.auth.uid == userId;
+        }
+      }
+
+      match /castClaims/{metaId} {
+        allow create, update: if isSignedIn()
+          && metaId == "sync"
+          && isValidCastClaimSyncMetaWrite(cafeId);
+        allow read: if isSignedIn()
+          && (
+            isAdmin()
+            || canManageCafe(cafeId)
+          );
+        allow delete: if false;
+      }
+
+      match /menus/{menuId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+
+      match /goods/{goodsId} {
+        allow read: if true;
+        allow write: if canManageCafe(cafeId);
+      }
+    }
+
+    match /temporaryWebCastEntries/{entryId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidTemporaryCastEntryWrite();
+      allow update: if isSignedIn()
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy
+        && isValidTemporaryCastEntryWrite();
+      allow delete: if isSignedIn()
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid;
+    }
+
+    match /temporaryWebCastSchedules/{scheduleId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidTemporaryScheduleWrite();
+      allow update: if isSignedIn()
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy
+        && isValidTemporaryScheduleWrite();
+      allow delete: if isSignedIn()
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Collection group query support for nested cafe subcollections.
+    // Required for runQuery(allDescendants=true) against "casts"/"notices"/"events".
+    match /{documentPath=**}/casts/{castId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{documentPath=**}/notices/{noticeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{documentPath=**}/events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Legacy top-level collections support (read-only)
+    match /casts/{castId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /visits/{visitId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.userId
+        && isValidVisitWriteData();
+      allow update: if isSignedIn()
+        && (isAdmin() || isVisitOwnerEditableUpdate());
+      allow delete: if isSignedIn()
+        && (isAdmin() || request.auth.uid == resource.data.userId);
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isSelf(userId) || isAdmin());
+      allow create: if isSelf(userId);
+      allow update: if isSelf(userId) || isAdmin();
+      allow delete: if isSelf(userId);
+
+      match /notificationSettings/{settingId} {
+        allow read: if isSelf(userId)
+          && settingId == "default";
+        allow create, update: if isSelf(userId)
+          && settingId == "default"
+          && request.resource.data.userId is string
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if false;
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isSelf(userId);
+        allow update: if isSelf(userId)
+          && isNotificationReadOnlyUpdate();
+        allow create, delete: if false;
+      }
+
+      match /deviceTokens/{tokenId} {
+        allow read: if isSelf(userId);
+        allow create, update: if isSelf(userId)
+          && request.resource.data.userId is string
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if isSelf(userId);
+      }
+    }
+
+    match /cafeRegistrationClaims/{claimId} {
+      allow create: if isSignedIn()
+        && (
+          (
+            claimId == "sync"
+            && isValidGlobalClaimSyncMetaWrite()
+          )
+          || request.resource.data.userId == request.auth.uid
+        );
+      allow read: if isSignedIn()
+        && (
+          claimId == "sync"
+          || resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && claimId == "sync"
+          && isValidGlobalClaimSyncMetaWrite()
+        );
+      allow delete: if false;
+    }
+
+    match /cafeOwnerClaims/{claimId} {
+      allow create: if isSignedIn()
+        && (
+          (
+            claimId == "sync"
+            && isValidGlobalClaimSyncMetaWrite()
+          )
+          || request.resource.data.userId == request.auth.uid
+        );
+      allow read: if isSignedIn()
+        && (
+          claimId == "sync"
+          || resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && claimId == "sync"
+          && isValidGlobalClaimSyncMetaWrite()
+        );
+      allow delete: if false;
+    }
+
+    match /castClaims/{claimId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidCastClaimCreateData();
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || (
+            resource.data.cafeId is string
+            && canManageCafe(resource.data.cafeId)
+          )
+        )
+        && isCastClaimReviewUpdate();
+      allow delete: if false;
+    }
+
+    match /castSchedules/{scheduleId} {
+      allow read: if true;
+      allow create: if (
+          isSignedIn()
+          && isValidCastScheduleWriteData()
+          && (
+            canManageCafe(request.resource.data.cafeId)
+            || (
+              request.resource.data.cafeId is string
+              && request.resource.data.castId is string
+              && isLinkedCastUser(request.resource.data.cafeId, request.resource.data.castId)
+            )
+          )
+          && exists(
+            /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+          )
+        )
+        || (
+          isTempCafeOperator()
+          && isValidTempWebScheduleWrite()
+          && exists(
+            /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+          )
+        );
+      allow update: if (
+          isSignedIn()
+          && isValidCastScheduleWriteData()
+          && (
+            canManageCafe(request.resource.data.cafeId)
+            || (
+              request.resource.data.cafeId is string
+              && request.resource.data.castId is string
+              && isLinkedCastUser(request.resource.data.cafeId, request.resource.data.castId)
+            )
+          )
+          && exists(
+            /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+          )
+        )
+        || (
+          isTempWebScheduleUpdateAllowed()
+          && exists(
+            /databases/$(database)/documents/cafes/$(request.resource.data.cafeId)/casts/$(request.resource.data.castId)
+          )
+        );
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && resource.data.castId is string
+        && (
+          canManageCafe(resource.data.cafeId)
+          || isLinkedCastUser(resource.data.cafeId, resource.data.castId)
+        )
+        && exists(
+          /databases/$(database)/documents/cafes/$(resource.data.cafeId)/casts/$(resource.data.castId)
+        );
+    }
+
+    match /guestCastSchedules/{scheduleId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+        && isValidGuestCastScheduleWriteData()
+        && canManageCafe(request.resource.data.cafeId);
+      allow delete: if isSignedIn()
+        && resource.data.cafeId is string
+        && canManageCafe(resource.data.cafeId);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidReviewCreateData();
+      allow update: if isSignedIn()
+        && (isReviewOwnerEditableUpdate() || isReviewLikeOnlyUpdate());
+      allow delete: if isSignedIn()
+        && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+
+    match /castFollows/{followId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.castId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId is string
+        && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /cafeFavorites/{favoriteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.cafeId is string
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId is string
+        && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /stamps/{stampId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow create: if false;
+      allow delete: if false;
+      allow update: if false;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && isValidInquiryCreateData();
+      allow read: if isSignedIn()
+        && (
+          resource.data.userId == request.auth.uid
+          || isAdmin()
+        );
+      allow update, delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow create: if isSignedIn()
+        && isValidReportCreateData();
+      allow read: if isSignedIn()
+        && (resource.data.reporterUserId == request.auth.uid || isAdmin());
+      allow update, delete: if false;
+    }
+
+    match /userBlocks/{blockId} {
+      allow create, update: if isSignedIn()
+        && isValidUserBlockCreateData(blockId);
+      allow read: if isSignedIn()
+        && (resource.data.blockerUserId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn()
+        && resource.data.blockerUserId == request.auth.uid;
+    }
+
+    match /fanAnnouncementRequests/{requestId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.cafeId is string
+        && request.resource.data.castId is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 50
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 300
+        && request.resource.data.createdAt is string;
+      allow read, update, delete: if false;
+    }
+
+    match /rankings/{rankingId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /castDirectory/{castId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /communityPosts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidCommunityPostCreate();
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || isCommunityPostOwnerUpdate()
+          || isCommunityPostLikeOnlyUpdate()
+          || isCommunityPostCommentCountOnlyUpdate()
+        );
+      allow delete: if isSignedIn()
+        && (isAdmin() || request.auth.uid == resource.data.userId);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && isValidCommunityCommentCreate();
+        allow delete: if isSignedIn()
+          && (isAdmin() || request.auth.uid == resource.data.userId);
+        allow update: if isSignedIn()
+          && request.auth.uid == resource.data.userId
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.postId == resource.data.postId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(["content", "updatedAt"]);
+      }
+
+      match /likes/{userId} {
+        allow read: if true;
+        allow create, update: if isSignedIn()
+          && request.auth.uid == userId;
+        allow delete: if isSignedIn()
+          && request.auth.uid == userId;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -11,6 +11,8 @@ enum NavigationAction {
     case navigateToMain(initialTab: String? = nil)
     case navigateToCast(id: String)
     case navigateToCafe(id: String)
+    case navigateToCafeEvent(cafeId: String, eventId: String, showCafeButton: Bool = false)
+    case replaceWithCafe(id: String)
     case navigateToCafeDashboard(id: String)
     case navigateToBanner(cafeId: String? = nil)
     case navigateToBannerEdit(cafeId: String? = nil, bannerId: String? = nil)
@@ -19,16 +21,26 @@ enum NavigationAction {
     case navigateToNoticeEvent(id: String)
     case navigateToCastEdit(cafeId: String?, castId: String?)
     case navigateToSchedule(castId: String? = nil)
+    case navigateToCastManagement(cafeId: String, cafeName: String)
+    case navigateToCastList(cafeId: String)
     case navigateToMenuGoods(id: String)
     case navigateToMenuGoodsEdit(cafeId: String, itemId: String? = nil)
-    case navigateToReviewEdit(cafeId: String)
+    case navigateToReviewEdit(cafeId: String, reviewId: String? = nil)
+    case navigateToPicture(imageUrl: String)
+    case navigateToCheckInMap(initialRegionKey: String? = nil)
     case navigateToSignIn
     case navigateToSignUp
+    case navigateToResetPassword
     case navigateToNotification
     case navigateToSettings
     case navigateToNotificationSettings
     case navigateToAccountSettings
     case navigateToInquiry
+    case navigateToUserManagement
     case navigateToChangePassword
+    case navigateToCommunity
+    case navigateToPostEdit(postId: String? = nil)
+    case navigateToPostDetail(postId: String)
     case navigateBack
+    case refreshUnreadNotificationCount
 }

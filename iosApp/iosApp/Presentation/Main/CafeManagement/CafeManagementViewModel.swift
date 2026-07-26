@@ -20,6 +20,8 @@ final class CafeManagementViewModel: ObservableObject {
 
     private let cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher
 
+    private let cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     @Published private(set) var uiState = CafeManagementUiState()
@@ -27,9 +29,38 @@ final class CafeManagementViewModel: ObservableObject {
     let event = PassthroughSubject<CafeManagementEvent, Never>()
 
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
-    private var currentUserId: String?
 
     private func loadCafeManagement() {
+        tasks[.loadCafeManagement]?.cancel()
+        tasks[.loadCafeManagement] = Task {
+            uiState.isLoading = true
+            do {
+                let result = try await getCafeManagementUseCase.invoke()
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let data = success.data as? CafeManagementData {
+                    uiState.ownedCafes = data.ownedCafes
+                    uiState.searchableCafes = data.searchableCafes
+                    uiState.pendingClaims = data.pendingClaims
+                    uiState.isLoading = false
+                } else if let failure = result as? AppResultFailure {
+                    uiState.ownedCafes = []
+                    uiState.searchableCafes = []
+                    uiState.pendingClaims = []
+                    uiState.isLoading = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.ownedCafes = []
+                uiState.searchableCafes = []
+                uiState.pendingClaims = []
+                uiState.isLoading = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func refreshPendingClaims(resetMessage: Bool = true) {
         Task {
             do {
                 let result = try await getCafeManagementUseCase.invoke()
@@ -39,17 +70,18 @@ final class CafeManagementViewModel: ObservableObject {
                     uiState.ownedCafes = data.ownedCafes
                     uiState.searchableCafes = data.searchableCafes
                     uiState.pendingClaims = data.pendingClaims
+                    if resetMessage {
+                        uiState.infoMessage = nil
+                    }
                 } else if let failure = result as? AppResultFailure {
-                    uiState.ownedCafes = []
-                    uiState.searchableCafes = []
-                    uiState.pendingClaims = []
-                    uiState.infoMessage = "\(failure.error)"
+                    if resetMessage {
+                        uiState.infoMessage = "\(failure.error)"
+                    }
                 }
             } catch {
-                uiState.ownedCafes = []
-                uiState.searchableCafes = []
-                uiState.pendingClaims = []
-                uiState.infoMessage = error.localizedDescription
+                if resetMessage {
+                    uiState.infoMessage = error.localizedDescription
+                }
             }
         }
     }
@@ -68,14 +100,13 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private func clickClaimCafe(_ cafeId: String) {
-        let cafeName = uiState.searchableCafes.first(where: { $0.id == cafeId })?.name ?? "선택한 카페"
         Task {
             do {
                 let result = try await createCafeOwnerClaimUseCase.invoke(cafeId: cafeId)
 
                 if result is AppResultSuccess<AnyObject> {
-                    loadCafeManagement()
-                    uiState.infoMessage = "\(cafeName) 운영자 신청을 등록했습니다."
+                    refreshPendingClaims(resetMessage: false)
+                    uiState.infoMessage = MessageKey.ownerClaimRegistered
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
                 }
@@ -101,8 +132,7 @@ final class CafeManagementViewModel: ObservableObject {
         tasks[.session]?.cancel()
         tasks[.session] = Task {
             do {
-                for try await user in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    self.currentUserId = user?.id
+                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
                     self.loadCafeManagement()
                 }
             } catch {
@@ -131,24 +161,81 @@ final class CafeManagementViewModel: ObservableObject {
         tasks[.cafeRegistrationClaimEvent] = Task {
             do {
                 for try await event in asyncSequence(for: cafeRegistrationClaimEventPublisher.events) {
-                    guard let currentUserId = self.currentUserId else { return }
                     let shouldRefresh: Bool
                     switch event {
                     case let created as CafeRegistrationClaimEvent.Created:
-                        shouldRefresh = created.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == created.claimId
+                        })
                     case let approved as CafeRegistrationClaimEvent.Approved:
-                        shouldRefresh = approved.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == approved.claimId
+                        })
                     case let rejected as CafeRegistrationClaimEvent.Rejected:
-                        shouldRefresh = rejected.requesterUserId == currentUserId
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == rejected.claimId
+                        })
                     default:
                         shouldRefresh = false
                     }
                     if shouldRefresh {
-                        self.loadCafeManagement()
+                        self.refreshPendingClaims(resetMessage: false)
                     }
                 }
             } catch {
                 print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeCafeOwnerClaimEvent() {
+        tasks[.cafeOwnerClaimEvent]?.cancel()
+        tasks[.cafeOwnerClaimEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: cafeOwnerClaimEventPublisher.events) {
+                    let shouldRefresh: Bool
+                    switch event {
+                    case let created as CafeOwnerClaimEvent.Created:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == created.claimId
+                        })
+                    case let approved as CafeOwnerClaimEvent.Approved:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == approved.claimId
+                        })
+                    case let rejected as CafeOwnerClaimEvent.Rejected:
+                        shouldRefresh = self.uiState.pendingClaims.contains(where: { pendingClaim in
+                            pendingClaim.claimId == rejected.claimId
+                        })
+                    default:
+                        shouldRefresh = false
+                    }
+                    if shouldRefresh {
+                        self.refreshPendingClaims(resetMessage: false)
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func startClaimPolling() {
+        let pollingIntervalNanoseconds = cafeManagementClaimPollingIntervalNanoseconds
+        tasks[.claimPolling]?.cancel()
+        tasks[.claimPolling] = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: pollingIntervalNanoseconds)
+                } catch {
+                    break
+                }
+
+                if Task.isCancelled {
+                    break
+                } else {
+                    self?.refreshPendingClaims(resetMessage: false)
+                }
             }
         }
     }
@@ -167,7 +254,8 @@ final class CafeManagementViewModel: ObservableObject {
                 rating: cafe.ratingAvg,
                 castCount: item.castCount,
                 noticeCount: item.noticeCount,
-                externalLinkCount: item.externalLinkCount
+                externalLinkCount: item.externalLinkCount,
+                thumbnailImage: cafe.thumbnailImage
             )
         }
         uiState.searchableCafes = uiState.searchableCafes.map { item in
@@ -204,18 +292,21 @@ final class CafeManagementViewModel: ObservableObject {
         getCafeManagementUseCase: GetCafeManagementUseCase = KoinInitializerKt.resolveGetCafeManagementUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
         cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
+        cafeOwnerClaimEventPublisher: CafeOwnerClaimEventPublisher = KoinInitializerKt.resolveCafeOwnerClaimEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.getCafeManagementUseCase = getCafeManagementUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
+        self.cafeOwnerClaimEventPublisher = cafeOwnerClaimEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
         observeSession()
         observeCafeDetailEvent()
         observeCafeRegistrationClaimEvent()
-        loadCafeManagement()
+        observeCafeOwnerClaimEvent()
+        startClaimPolling()
     }
 
     deinit {
@@ -224,8 +315,17 @@ final class CafeManagementViewModel: ObservableObject {
     }
 
     private enum TaskKey {
+        case loadCafeManagement
         case session
         case cafeDetailEvent
         case cafeRegistrationClaimEvent
+        case cafeOwnerClaimEvent
+        case claimPolling
+    }
+
+    private enum MessageKey {
+        static let ownerClaimRegistered = "cafemgmt_info_owner_claim_registered"
     }
 }
+
+private let cafeManagementClaimPollingIntervalNanoseconds: UInt64 = 60_000_000_000

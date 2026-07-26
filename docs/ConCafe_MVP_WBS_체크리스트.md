@@ -11,11 +11,34 @@
 - [Maid_Cafe_Platform_Full_Project_Plan.md](./Maid_Cafe_Platform_Full_Project_Plan.md)
 
 ## 최근 정합성 반영 (2026-03-20)
-- [x] Firestore 컬렉션 다이어그램 기준으로 `castScheduleStatuses`, `stamps`, `cafeOwnerClaims`, `cafeRegistrationClaims`, `castClaims` 책임을 MVP 범위 문서에 반영
+- [x] Firestore 컬렉션 다이어그램 기준으로 `castSchedules`(상태 포함), `stamps`, `cafeOwnerClaims`, `cafeRegistrationClaims`, `castClaims` 책임을 MVP 범위 문서에 반영
 - [x] 홈 배너 정책(`ACTIVE` 최대 5개, `SCHEDULED` 자동 승격, 링크 타입별 라우팅) 문서 기준 통일
 - [x] Claim 흐름(캐스트: 팬관리 신청 -> 운영자 승인, 운영자/신규 카페: Admin 승인) 기획서 기준 통일
 - [x] `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 정책을 운영/권한 항목에 반영
 - [x] Repository + DataSource 패턴에서 사용자 목록은 데이터소스 구현 내부 상태로 관리하고, Repository는 인터페이스 메서드 기반 조회/갱신을 사용하도록 정리
+
+## 최근 정합성 반영 (2026-03-22)
+- [x] 앱 런타임 데이터소스가 Firestore 경로를 사용하고, `MockConCafeDataSource`는 테스트 코드로만 분리됨
+- [x] Firebase Auth 기반 세션 복원이 Android/iOS/Desktop 공통 흐름(`restoreSession` + `observeCurrentUser`)으로 정렬됨
+- [x] Admin 운영관리 승인 대기 목록 조회가 Firestore pending claim 조회 경로로 연결됨
+- [x] Firestore Rules 초안에 Admin의 claim 조회(read) 허용 규칙이 반영됨
+- [x] 운영관리 승인 대기 카드 이미지 노출이 Compose/iOS에 공통 반영됨
+- [x] 캐스트 상세 조회 시 캐시 우선 + Firestore 동기화(카페 상세/스케줄/visits 재동기화 후 재조회) 경로가 공통 shared 로직으로 반영됨
+- [x] 캐스트 상세 `방문 인증` 수치가 임시 계산식(팔로워/스케줄)에서 `visits` 기반 집계로 변경됨
+
+## 최근 정합성 반영 (2026-03-23)
+- [x] 캐스트 팔로우/언팔로우가 Firestore 실데이터 경로(`castFollows`)로 연결됨
+- [x] 팔로우 변경 시 캐스트 `followerCount`가 캐시/화면 이벤트 경로로 즉시 반영되도록 보강됨
+- [x] 카페 리뷰 CRUD가 Firestore 경로 기준으로 동작하도록 정리됨
+- [x] 리뷰 변경 시 카페 집계(`reviewCount`, `ratingAvg`)를 Cloud Functions 트리거로 동기화하도록 반영됨
+- [x] MyInfo 팔로우 캐스트 섹션에 이미지 노출이 반영되고, iOS는 이미지가 플레이스홀더 영역을 벗어나지 않도록 clip 처리됨
+
+## 최근 정합성 반영 (2026-03-26)
+- [x] 카페 상세 집계에서 캐스트별 상세 반복 조회(N+1) 제거
+- [x] 카페 상세/리뷰 리스트의 방문인증 상태를 리뷰 문서 필드(`visitVerified`) 기반으로 사용하도록 정리
+- [x] 리뷰/공지 탭 재진입 시 전체 원격 재동기화를 줄이고 최초 미캐시 진입 중심으로 최적화
+- [x] Cloud Functions에 리뷰 방문인증 동기화 트리거 추가(`onReviewWrittenSyncReviewVisitVerified`, `onVisitWrittenSyncReviewVisitVerified`)
+- [x] Functions 소스 로딩 타임아웃 개선을 위한 lazy Firestore 초기화 반영
 
 ## 0. 목표/범위
 - [ ] MVP 목표 확정: 메이드 중심 팬 플랫폼 + 위치 인증 기반 신뢰 리뷰
@@ -214,6 +237,7 @@
 - [x] 별점/내용/이미지 등록
 - [x] 카페 리뷰 작성 시 같은 카페 소속 캐스트 태그 선택 가능
 - [x] 최신순 목록/좋아요 수 표시
+- [x] 리뷰 CRUD가 Firestore 실데이터 경로로 반영
 - [ ] 캐스트 상세에는 `함께 언급된 후기`로 태그된 카페 리뷰만 노출
 - [ ] 리뷰 작성/삭제/좋아요는 로그인 필요(비로그인 시 로그인 라우팅)
 - [x] 방문 인증 사용자는 리뷰 작성 화면/리뷰 아이템에 방문 인증 마크 표시
@@ -224,6 +248,8 @@
 - [x] 방문 기록
 - [x] 즐겨찾기 카페
 - [x] 팔로우 메이드/배지 섹션 자리 확보
+- [x] 팔로우한 캐스트 섹션 이미지 노출(Compose/iOS)
+- [x] 캐스트 상세에서 팔로우 상태 변경 시 MyInfo 목록/카운트 즉시 동기화
 - [x] 설정 진입 버튼 추가
 - [x] `Settings` 스크린 추가
 - [x] 설정 화면에서 `SignOut` 진입점 제공
@@ -241,7 +267,7 @@
 - [ ] 카페관리/팬관리/배너/출근표의 `다음 단계` placeholder 액션 정리
 
 ## 6. Phase 2 WBS (팬 기능)
-- [ ] 메이드 팔로우/언팔로우
+- [x] 메이드 팔로우/언팔로우
 - [ ] 출근/생일/이벤트 알림
 - [ ] 주간 출근 캘린더
 - [x] 메이드/카페 랭킹(주간/월간, 지역 필터)

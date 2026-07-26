@@ -9,7 +9,7 @@ import com.hhp227.concafe.domain.model.ProfileBadge
 import com.hhp227.concafe.domain.model.User
 
 data class MyInfoUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val isLoggedIn: Boolean = false,
     val user: User? = null,

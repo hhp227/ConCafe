@@ -13,13 +13,47 @@ struct CafeView: View {
 
     @StateObject private var viewModel: CafeViewModel
 
+    @State private var alertMessage: String?
+
+    @State private var countBeforeLoad = (casts: 0, notices: 0, reviews: 0)
+
+    @State private var castPagingAnchorId: String?
+
     private let topAnchorId = "CAFE_TOP"
 
     var body: some View {
         ScrollViewReader { proxy in
             CafeContentView(
                 uiState: viewModel.uiState,
-                onAction: viewModel.onAction,
+                onAction: { action in
+                    switch action {
+                    case .loadMoreCasts:
+                        let count = viewModel.uiState.casts.count
+                        countBeforeLoad.casts = count
+                        castPagingAnchorId = viewModel.uiState.casts.last?.cast.id
+                    case .loadMoreNotices:
+                        let count = viewModel.uiState.notices.count
+                        countBeforeLoad.notices = count
+                    case .loadMoreReviews:
+                        let count = viewModel.uiState.reviews.count
+                        countBeforeLoad.reviews = count
+                    case .pagingTriggerDisappeared(let tab):
+                        switch tab {
+                        case .casts:
+                            countBeforeLoad.casts = -1
+                            castPagingAnchorId = nil
+                        case .notices:
+                            countBeforeLoad.notices = -1
+                        case .reviews:
+                            countBeforeLoad.reviews = -1
+                        default:
+                            break
+                        }
+                    default:
+                        break
+                    }
+                    viewModel.onAction(action)
+                },
                 topAnchorId: topAnchorId
             )
             .navigationBarTitleDisplayMode(.inline)
@@ -30,11 +64,27 @@ struct CafeView: View {
                     onNavigationAction(.navigateBack)
                 case .navigateToCast(let id):
                     onNavigationAction(.navigateToCast(id: id))
-                case .navigateToReviewEdit(let cafeId):
-                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId))
+                case .navigateToCafeEvent(let cafeId, let eventId):
+                    onNavigationAction(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
+                case .navigateToReviewEdit(let cafeId, let reviewId):
+                    onNavigationAction(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
+                case .navigateToPicture(let imageUrl):
+                    onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
                 case .navigateToSignIn:
                     onNavigationAction(.navigateToSignIn)
+                case .showReviewDeleteFailedMessage:
+                    alertMessage = String(localized: String.LocalizationValue("cafe_message_review_delete_failed"), table: "Localizable")
+                case .showReviewReportedMessage:
+                    alertMessage = String(localized: String.LocalizationValue("cafe_message_report_received"), table: "Localizable")
                 }
+            }
+            .alert(String(localized: String.LocalizationValue("cafe_alert_title"), table: "Localizable"), isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) { alertMessage = nil }
+            } message: {
+                Text(alertMessage ?? "")
             }
             .onChange(of: viewModel.uiState.shouldScrollToTopOnReturn) { shouldScroll in
                 guard shouldScroll else { return }
@@ -43,6 +93,49 @@ struct CafeView: View {
                     withAnimation {
                         proxy.scrollTo(topAnchorId, anchor: .top)
                     }
+                }
+            }
+            .onChange(of: viewModel.uiState.casts.count) { newCount in
+                guard countBeforeLoad.casts != 0, countBeforeLoad.casts != -1 else { return }
+                let preCount = countBeforeLoad.casts
+                let targetId = castPagingAnchorId
+                countBeforeLoad.casts = -1
+                castPagingAnchorId = nil
+                guard newCount > preCount, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .casts else { return }
+                guard let targetId else { return }
+                DispatchQueue.main.async {
+                    DispatchQueue.main.async {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            proxy.scrollTo(targetId, anchor: cafeCastPagingRestoreAnchor)
+                        }
+                    }
+                }
+            }
+            .onChange(of: viewModel.uiState.notices.count) { newCount in
+                guard countBeforeLoad.notices != 0, countBeforeLoad.notices != -1 else { return }
+                let preCount = abs(countBeforeLoad.notices)
+                let wasSubsequent = countBeforeLoad.notices > 0
+                countBeforeLoad.notices = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .notices else { return }
+                let targetId = viewModel.uiState.notices[preCount - 1].id
+                DispatchQueue.main.async {
+                    proxy.scrollTo(targetId, anchor: .bottom)
+                }
+            }
+            .onChange(of: viewModel.uiState.reviews.count) { newCount in
+                guard countBeforeLoad.reviews != 0, countBeforeLoad.reviews != -1 else { return }
+                let preCount = abs(countBeforeLoad.reviews)
+                let wasSubsequent = countBeforeLoad.reviews > 0
+                countBeforeLoad.reviews = -1
+                guard newCount > preCount, wasSubsequent, preCount > 0 else { return }
+                guard viewModel.uiState.selectedTab == .reviews else { return }
+                let targetId = viewModel.uiState.reviews[preCount - 1].id
+                DispatchQueue.main.async {
+                    proxy.scrollTo(targetId, anchor: .bottom)
                 }
             }
         }
@@ -57,6 +150,10 @@ struct CafeView: View {
     }
 }
 
+private let cafeCastPagingRestoreAnchor = UnitPoint(x: 0.5, y: 0.88)
+private let cafeTabPinnedResetScrollOffset: CGFloat = -8
+private let cafeCastPagingLayoutLockDelay: TimeInterval = 0.45
+
 private struct CafeContentView: View {
     let uiState: CafeUiState
 
@@ -66,6 +163,12 @@ private struct CafeContentView: View {
 
     @State private var scrollOffset: CGFloat = 0
 
+    @State private var isTabPinned = false
+
+    @State private var isCastPagingLayoutLocked = false
+
+    @State private var castPagingLayoutLockGeneration = 0
+
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .bottomTrailing) {
@@ -74,14 +177,32 @@ private struct CafeContentView: View {
                     content(topSafeArea: proxy.safeAreaInsets.top)
                 }
                 .coordinateSpace(name: "cafeScroll")
-                .background(Color(hex: "FFF9FC"))
+                .ignoresSafeArea(edges: .top)
+                .compatScrollContentInsetAdjustmentNever()
+                .background(ConCafeColors.background)
                 .onPreferenceChange(CafeScrollOffsetPreferenceKey.self) { value in
                     scrollOffset = value
+                }
+                .onPreferenceChange(CafeTabHeaderOffsetPreferenceKey.self) { value in
+                    guard value != .greatestFiniteMagnitude, value.isFinite else { return }
+                    let shouldPin = value <= proxy.safeAreaInsets.top
+                    if shouldPin {
+                        isTabPinned = true
+                    } else if !isCastPagingLayoutLocked, scrollOffset >= cafeTabPinnedResetScrollOffset {
+                        isTabPinned = false
+                    }
+                }
+                if uiState.detail != nil, isTabPinned {
+                    pinnedTabHeader()
+                        .padding(.top, pinnedTabTopPadding(in: proxy))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .zIndex(2)
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
                     writeReviewButton
                     .padding(.trailing, 20)
                     .padding(.bottom, 24)
+                    .zIndex(3)
                 }
             }
             .toolbar {
@@ -90,11 +211,55 @@ private struct CafeContentView: View {
                         onAction(.favoriteTapped)
                     } label: {
                         Image(systemName: uiState.isFavorite ? "heart.fill" : "heart")
-                        .font(.headline)
-                        .frame(width: 36, height: 36)
+                            .font(.headline)
+                            .frame(width: 36, height: 36)
                     }
                 }
             }
+            .safeAreaInset(edge: .top) {
+                if uiState.shouldShowFavoriteTooltip {
+                    HStack {
+                        Spacer()
+                        DetailTooltipBox(
+                            visible: uiState.shouldShowFavoriteTooltip,
+                            text: String(localized: String.LocalizationValue("cafe_favorite_tooltip"), table: "Localizable"),
+                            onShown: {
+                                onAction(.favoriteTooltipShown)
+                            },
+                            onDismiss: {
+                                onAction(.dismissFavoriteTooltip)
+                            }
+                        ) {
+                            Color.clear
+                                .frame(width: 0, height: 0)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .zIndex(4)
+                        .padding(.trailing, 8)
+                    }
+                }
+            }
+            .onChange(of: uiState.isLoadingMoreCasts) { isLoading in
+                guard uiState.selectedTab == .casts else { return }
+                if isLoading {
+                    castPagingLayoutLockGeneration += 1
+                    isCastPagingLayoutLocked = true
+                } else {
+                    unlockCastPagingLayoutAfterDelay()
+                }
+            }
+            .onChange(of: uiState.casts.count) { _ in
+                guard uiState.selectedTab == .casts, isCastPagingLayoutLocked else { return }
+                unlockCastPagingLayoutAfterDelay()
+            }
+        }
+    }
+
+    private func unlockCastPagingLayoutAfterDelay() {
+        let generation = castPagingLayoutLockGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + cafeCastPagingLayoutLockDelay) {
+            guard generation == castPagingLayoutLockGeneration else { return }
+            isCastPagingLayoutLocked = false
         }
     }
 
@@ -104,15 +269,15 @@ private struct CafeContentView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
-                Text("리뷰 작성")
+                Text(String(localized: String.LocalizationValue("cafe_action_write_review"), table: "Localizable"))
                 .font(.subheadline.weight(.bold))
             }
-            .foregroundStyle(Color(hex: "2B2330"))
+            .foregroundStyle(ConCafeColors.textPrimary)
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
-            .background(Color(hex: "FFD1DC"))
+            .background(ConCafeColors.primaryContainer)
             .clipShape(Capsule())
-            .shadow(color: Color(hex: "FFD1DC").opacity(0.45), radius: 12, x: 0, y: 6)
+            .shadow(color: ConCafeColors.primaryContainer.opacity(0.45), radius: 12, x: 0, y: 6)
         }
         .buttonStyle(.plain)
     }
@@ -132,31 +297,36 @@ private struct CafeContentView: View {
     @ViewBuilder
     private func content(topSafeArea: CGFloat) -> some View {
         if let detail = uiState.detail {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: 0) {
                 heroSection(detail: detail, topSafeArea: topSafeArea)
-                .padding(.top, -topSafeArea)
                 summarySection(detail: detail)
-                Section {
-                    tabContent(detail: detail)
+                tabHeader()
+                    .overlay {
+                        GeometryReader { proxy in
+                            Color.clear.preference(
+                                key: CafeTabHeaderOffsetPreferenceKey.self,
+                                value: proxy.frame(in: .named("cafeScroll")).minY
+                            )
+                        }
+                        .allowsHitTesting(false)
+                }
+                tabContent(detail: detail)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 20)
-                } header: {
-                    tabHeader
                 }
-            }
         } else if uiState.isLoading {
             ProgressView()
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
         } else {
             VStack(spacing: 12) {
-                Text(uiState.errorMessage ?? "카페 상세 데이터를 불러오지 못했습니다.")
+                Text(String(localized: String.LocalizationValue("cafe_error_detail_load_failed"), table: "Localizable"))
                 .foregroundStyle(.red)
-                Button("새로고침") {
+                Button(String(localized: String.LocalizationValue("cafe_action_refresh"), table: "Localizable")) {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
@@ -164,44 +334,52 @@ private struct CafeContentView: View {
     }
 
     private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {
-        let upwardScroll = min(scrollOffset, 0)
-        let parallaxOffset = upwardScroll < 0 ? (-upwardScroll * 0.35) : 0
-        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroHeight = 230 + topSafeArea
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
+        let dynamicHeroHeight = heroHeight + pullDownOffset
+        let heroImages: [String] = {
+            let normalized = detail.images
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            if !normalized.isEmpty {
+                return normalized
+            }
+            let fallback = detail.cafe.thumbnailImage?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return fallback.isEmpty ? [""] : [fallback]
+        }()
         return TabView {
-            ForEach(Array(detail.images.enumerated()), id: \.offset) { _, image in
+            ForEach(Array(heroImages.enumerated()), id: \.offset) { _, image in
                 ZStack {
-                    if let url = URL(string: image), !image.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                heroPlaceholder
-                            case .success(let loadedImage):
-                                loadedImage
-                                .resizable()
-                                .scaledToFill()
-                            case .failure:
-                                heroPlaceholder
-                            @unknown default:
-                                heroPlaceholder
-                            }
+                    let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    if let url = ImageUrlUtils.normalizedRemoteUrl(from: trimmed), !trimmed.isEmpty {
+                        GeometryReader { geometry in
+                            CachedAsyncImage(
+                                url: url,
+                                placeholder: heroPlaceholder,
+                                displaySize: .medium
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
                         }
                     } else {
                         heroPlaceholder
                     }
                 }
-                .frame(height: 280 + topSafeArea)
-                .offset(y: parallaxOffset)
-                .scaleEffect(stretchScale, anchor: .center)
+                .frame(height: dynamicHeroHeight)
                 .clipped()
             }
         }
-        .frame(height: 280 + topSafeArea)
+        .frame(height: dynamicHeroHeight)
+        .offset(y: pullDownOffset > 0 ? -pullDownOffset : 0)
+        .frame(height: dynamicHeroHeight, alignment: .top)
+        .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .always))
     }
 
     private var heroPlaceholder: some View {
         LinearGradient(
-            colors: [Color(hex: "FFD2E4"), Color(hex: "F7A6C5")],
+            colors: [ConCafeColors.primaryContainer, ConCafeColors.secondaryContainer],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -213,14 +391,30 @@ private struct CafeContentView: View {
     }
 
     private func summarySection(detail: CafeDetail) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(detail.cafe.name)
-            .font(.title2.bold())
+        let conceptLabel = localizedCafeConceptType(detail.cafe.conceptType)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text(detail.cafe.name)
+                    .font(.title2.bold())
+                if !detail.cafe.ownerIds.isEmpty {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(ConCafeColors.info)
+                        .font(.title2)
+                }
+            }
+            if !conceptLabel.isEmpty {
+                Text(conceptLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ConCafeColors.primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(ConCafeColors.surfaceTint, in: Capsule())
+            }
             HStack(spacing: 14) {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
                     .foregroundStyle(Color.yellow)
-                    Text(String(format: "%.1f", detail.cafe.ratingAvg))
+                    Text(RatingUtils.formatOneDecimal(detail.cafe.ratingAvg))
                     .fontWeight(.semibold)
                     Text("(\(detail.cafe.reviewCount))")
                     .foregroundStyle(.secondary)
@@ -236,21 +430,77 @@ private struct CafeContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 18)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
-    private var tabHeader: some View {
+    private func localizedCafeConceptType(_ rawConceptType: String) -> String {
+        let normalized = rawConceptType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
+            return ""
+        }
+        switch normalized.uppercased() {
+        case "MAID":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_maid"), table: "Localizable")
+        case "BUTLER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_butler"), table: "Localizable")
+        case "IDOL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_idol"), table: "Localizable")
+        case "DEVIL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_devil"), table: "Localizable")
+        case "DOLL":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_doll"), table: "Localizable")
+        case "COSPLAY":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cosplay"), table: "Localizable")
+        case "NAMJANG":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_namjang"), table: "Localizable")
+        case "YOKAI":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_yokai"), table: "Localizable")
+        case "CAT":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_cat"), table: "Localizable")
+        case "OTHER":
+            return String(localized: String.LocalizationValue("home_nearby_cafe_type_other"), table: "Localizable")
+        default:
+            return normalized
+        }
+    }
+
+    private func tabHeader() -> some View {
         ScrollableConCafeTabBar(
-            labels: CafeUiState.TabType.allCases.map { $0.rawValue },
+            labels: CafeUiState.TabType.allCases.map { tab in
+                if tab == .info {
+                    return String(localized: String.LocalizationValue("cafe_tab_info"), table: "Localizable")
+                } else if tab == .casts {
+                    return String(localized: String.LocalizationValue("cafe_tab_casts"), table: "Localizable")
+                } else if tab == .menu {
+                    return String(localized: String.LocalizationValue("cafe_tab_menu"), table: "Localizable")
+                } else if tab == .reviews {
+                    return String(localized: String.LocalizationValue("cafe_tab_reviews"), table: "Localizable")
+                } else {
+                    let noticeLabel = String(localized: String.LocalizationValue("cafe_tab_notices"), table: "Localizable")
+                    let eventLabel = String(localized: String.LocalizationValue("noticeevent_tab_event"), table: "Localizable")
+                    return "\(noticeLabel)/\(eventLabel)"
+                }
+            },
             selectedIndex: CafeUiState.TabType.allCases.firstIndex(of: uiState.selectedTab) ?? 0,
-            backgroundColor: .white,
+            backgroundColor: Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
             onSelect: { index in
                 onAction(.changeTab(CafeUiState.TabType.allCases[index]))
             }
         )
         .frame(maxWidth: .infinity)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .zIndex(1)
+    }
+
+    private func pinnedTabHeader() -> some View {
+        VStack(spacing: 0) {
+            tabHeader()
+        }
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+    }
+
+    private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
+        max(0, proxy.safeAreaInsets.top - proxy.frame(in: .global).minY)
     }
 
     @ViewBuilder
@@ -258,36 +508,62 @@ private struct CafeContentView: View {
         switch uiState.selectedTab {
         case .info:
             CafeInfoView(cafeDetail: detail)
-        case .maids:
+        case .casts:
             CafeCastView(
                 maids: uiState.casts,
                 canLoadMore: uiState.canLoadMoreCasts,
                 isLoadingMore: uiState.isLoadingMoreCasts,
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.casts))
+                },
                 onAction: onAction
             )
         case .menu:
-            CafeMenuView(menus: detail.menus)
+            CafeMenuView(
+                menus: detail.menus,
+                goods: detail.goods,
+                isLoading: uiState.isLoadingMenuGoods
+            )
         case .reviews:
             CafeReviewView(
                 detail: detail,
                 reviews: uiState.reviews,
                 canLoadMore: uiState.canLoadMoreReviews,
                 isLoadingMore: uiState.isLoadingMoreReviews,
-                onLoadMore: { onAction(.loadMoreReviews) }
+                currentUserId: uiState.currentUserId,
+                onLoadMore: { onAction(.loadMoreReviews) },
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.reviews))
+                },
+                onAction: onAction
             )
         case .notices:
             CafeNoticeView(
+                events: uiState.events,
                 notices: uiState.notices,
                 canLoadMore: uiState.canLoadMoreNotices,
                 isLoadingMore: uiState.isLoadingMoreNotices,
-                onLoadMore: { onAction(.loadMoreNotices) }
+                onLoadMore: { onAction(.loadMoreNotices) },
+                onPagingTriggerDisappear: {
+                    onAction(.pagingTriggerDisappeared(.notices))
+                },
+                onEventTap: { onAction(.eventTapped(eventId: $0)) }
             )
         }
     }
+
 }
 
 private struct CafeScrollOffsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CafeTabHeaderOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()

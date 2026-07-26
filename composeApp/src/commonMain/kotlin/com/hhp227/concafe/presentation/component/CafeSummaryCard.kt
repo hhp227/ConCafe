@@ -1,5 +1,6 @@
 package com.hhp227.concafe.presentation.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,15 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,8 +32,11 @@ import androidx.compose.ui.unit.dp
 fun CafeSummaryCard(
     name: String,
     rating: String,
+    conceptType: String? = null,
     location: String,
+    thumbnailImage: String? = null,
     modifier: Modifier = Modifier,
+    showLocationIcon: Boolean = true,
     trailingLabel: String? = null,
     onClick: () -> Unit
 ) {
@@ -39,18 +45,35 @@ fun CafeSummaryCard(
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, ConCafeColors.outline)
         ) {
+            val resolvedThumbnailImage = thumbnailImage?.trim().orEmpty()
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
+                            colors = listOf(ConCafeColors.warningContainer, com.hhp227.concafe.presentation.component.ConCafeColors.warningContainer)
                         )
                     )
-            )
+            ) {
+                if (resolvedThumbnailImage.isNotBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = resolvedThumbnailImage,
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        applyRoundedClip = false
+                    )
+                }
+                RatingBox(
+                    rating = rating,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                )
+            }
         }
         Column(
             modifier = Modifier.padding(8.dp),
@@ -59,13 +82,19 @@ fun CafeSummaryCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("⭐", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(rating, style = MaterialTheme.typography.bodySmall)
+            if (!conceptType.isNullOrBlank()) {
+                Text(
+                    text = conceptType,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ConCafeColors.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -73,12 +102,18 @@ fun CafeSummaryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📍", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.width(4.dp))
+                    if (showLocationIcon) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
                     Text(
                         text = location,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF777777),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -87,7 +122,7 @@ fun CafeSummaryCard(
                     Text(
                         text = trailingLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFEF6797),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }

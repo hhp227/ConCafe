@@ -4,10 +4,45 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-    <key>UIAppFonts</key>
-    <array>
-        <string>goyangdeogyang_bold.ttf</string>
-        <string>goyangdeogyang_extrabold.ttf</string>
-    </array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.387905493709-7ri7oqu3nppb96s7541qa6m1tfpujhug</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kakaoaf25c4820b65d3fe2a9145156351ccaf</string>
+			</array>
+		</dict>
+	</array>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-6216021268300256~7779228372</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>kakaokompassauth</string>
+		<string>kakaolink</string>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>goyangdeogyang_bold.ttf</string>
+		<string>goyangdeogyang_extrabold.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>fetch</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<false/>
 </dict>
 </plist>

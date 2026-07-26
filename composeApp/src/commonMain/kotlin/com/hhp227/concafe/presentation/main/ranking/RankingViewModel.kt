@@ -9,8 +9,11 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
+import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.presentation.main.ranking.RankingEvent.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,6 +21,8 @@ import kotlinx.coroutines.launch
 class RankingViewModel(
     private val getRankingFeedUseCase: GetRankingFeedUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val loadNativeAdUseCase: LoadNativeAdUseCase,
+    private val clearNativeAdUseCase: ClearNativeAdUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher
 ) : ViewModel() {
@@ -36,7 +41,6 @@ class RankingViewModel(
         val period = currentState.selectedPeriod
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
         viewModelScope.launch {
             when (val result = getRankingFeedUseCase.invoke(period, country, city)) {
                 is AppResult.Success -> {
@@ -136,6 +140,29 @@ class RankingViewModel(
         }
     }
 
+    private fun loadNativeAd() {
+        if (_uiState.value.nativeAdSlot1 != null && _uiState.value.nativeAdSlot2 != null) return
+        if (jobs[TaskKey.LOAD_NATIVE_AD]?.isActive == true) return
+        jobs[TaskKey.LOAD_NATIVE_AD] = viewModelScope.launch {
+            val slot1Ad = loadNativeAdUseCase.invoke(slot = 1)
+            val slot2Ad = loadNativeAdUseCase.invoke(slot = 2)
+
+            _uiState.update {
+                it.copy(
+                    nativeAdSlot1 = slot1Ad,
+                    nativeAdSlot2 = slot2Ad
+                )
+            }
+        }
+    }
+
+    private fun clearAd() {
+        clearNativeAdUseCase.invoke()
+        _uiState.update {
+            it.copy(nativeAdSlot1 = null, nativeAdSlot2 = null)
+        }
+    }
+
     fun onAction(action: RankingAction) {
         when (action) {
             is RankingAction.ChangePeriod -> {
@@ -152,16 +179,26 @@ class RankingViewModel(
                 it.copy(selectedAdIndex = action.index.coerceIn(0, lastIndex))
             }
             is RankingAction.ClickMaid -> viewModelScope.launch {
-                requireSignedIn { _event.emit(RankingEvent.NavigateToCast(action.id)) }
+                requireSignedIn { _event.emit(NavigateToCast(action.id)) }
             }
             is RankingAction.ClickCafe -> viewModelScope.launch {
-                requireSignedIn { _event.emit(RankingEvent.NavigateToCafe(action.id)) }
+                requireSignedIn { _event.emit(NavigateToCafe(action.id)) }
             }
             RankingAction.ClickLoginPromptSignIn -> viewModelScope.launch {
                 _uiState.update { it.copy(isLoginPromptVisible = false) }
-                _event.emit(RankingEvent.NavigateToSignIn)
+                _event.emit(NavigateToSignIn)
             }
             RankingAction.DismissLoginPrompt -> _uiState.update { it.copy(isLoginPromptVisible = false) }
+            is RankingAction.UpdateBannerHeight -> {
+                _uiState.update { state ->
+                    if (action.heightPx > state.bannerHeightPx) {
+                        state.copy(bannerHeightPx = action.heightPx)
+                    } else {
+                        state
+                    }
+                }
+            }
+            RankingAction.LoadNativeAdIfNeeded -> loadNativeAd()
         }
     }
 
@@ -176,6 +213,7 @@ class RankingViewModel(
     override fun onCleared() {
         jobs.values.forEach(Job::cancel)
         jobs.clear()
+        clearAd()
         super.onCleared()
     }
 
@@ -184,11 +222,13 @@ class RankingViewModel(
         observeCafeDetailEvent()
         observeCastEvent()
         loadRankingFeed()
+        loadNativeAd()
     }
 
     private enum class TaskKey {
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
-        OBSERVE_SESSION
+        OBSERVE_SESSION,
+        LOAD_NATIVE_AD
     }
 }

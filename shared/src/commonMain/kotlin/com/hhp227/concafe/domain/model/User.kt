@@ -5,7 +5,10 @@ data class User(
     val email: String,
     val nickname: String,
     val profileImage: String?,
+    val authProvider: AuthProvider = AuthProvider.UNKNOWN,
     val role: UserRole,
     val banned: Boolean,
-    val createdAt: String
+    val createdAt: String,
+    val phoneNumber: String? = null,
+    val signupCompleted: Boolean = true
 )

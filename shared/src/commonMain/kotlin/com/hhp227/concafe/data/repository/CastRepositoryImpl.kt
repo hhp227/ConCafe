@@ -1,13 +1,12 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.CafeDataSource
-import com.hhp227.concafe.data.source.CastDataSource
-import com.hhp227.concafe.data.source.PagingDataSource
-import com.hhp227.concafe.data.source.SocialDataSource
+import com.hhp227.concafe.data.source.CafeRemoteDataSource
+import com.hhp227.concafe.data.source.CastRemoteDataSource
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastFollowerSnapshot
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
@@ -15,13 +14,16 @@ import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class CastRepositoryImpl(
-    private val castDataSource: CastDataSource,
-    private val cafeDataSource: CafeDataSource,
-    private val socialDataSource: SocialDataSource,
-    private val pagingDataSource: PagingDataSource
+    private val cafeRemoteDataSource: CafeRemoteDataSource,
+    private val castRemoteDataSource: CastRemoteDataSource
 ) : CastRepository {
     override suspend fun searchCasts(
         query: String?,
@@ -31,86 +33,107 @@ class CastRepositoryImpl(
         cursor: String?,
         pageSize: Int
     ): PagedResult<Cast> {
-        var filtered = castDataSource.casts
-
-        if (!query.isNullOrBlank()) {
-            filtered = filtered.filter { it.name.contains(query, ignoreCase = true) }
-        }
-
-        if (!country.isNullOrBlank() || !city.isNullOrBlank()) {
-            val validCafeIds = cafeDataSource.cafes.filter { cafe ->
-                val countryMatched = country.isNullOrBlank() || cafe.region.country.equals(country, ignoreCase = true)
-                val cityMatched = city.isNullOrBlank() || cafe.region.city.equals(city, ignoreCase = true)
-                countryMatched && cityMatched
-            }.map { it.id }.toSet()
-            filtered = filtered.filter { validCafeIds.contains(it.cafeId) }
-        }
-
-        filtered = when (sort) {
-            CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
-            CastSort.LATEST -> filtered.sortedByDescending { it.id }
-            CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
-        }
-
-        return pagingDataSource.toPaged(filtered, cursor, pageSize)
+        return castRemoteDataSource.searchCastsRemote(
+            query = query,
+            country = country,
+            city = city,
+            sort = sort,
+            cursor = cursor,
+            pageSize = pageSize
+        )
     }
 
     override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
-        val sorted = castDataSource.casts
-            .sortedByDescending { it.followerCount }
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return castRemoteDataSource.getHomePopularCastPageRemote(
+            cursor = cursor,
+            pageSize = pageSize
+        )
+    }
+
+    override suspend fun getBirthdayCasts(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast> {
+        val safeLimit = if (limit > 0) limit else 1
+        return castRemoteDataSource.fetchBirthdayCastsRemote(
+            month = month,
+            dayOfMonth = dayOfMonth,
+            limit = safeLimit
+        ).take(safeLimit)
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
-        return castDataSource.castDetail(castId)
-            ?: throw NoSuchElementException("cast detail not found")
+        return castRemoteDataSource.fetchCastDetail(castId)
     }
 
     override suspend fun getCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeCastPreview> {
-        val sorted = castDataSource.casts
-            .filter { it.cafeId == cafeId }
+        val workingCastIds = resolveWorkingCastIds(cafeId)
+        val page = castRemoteDataSource.getCafeCastPageRemote(
+            cafeId = cafeId,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+        val source = page.items
+        val sorted = source
             .sortedWith(
-                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                compareByDescending<Cast> { workingCastIds.contains(it.id) }
                     .thenBy { it.name }
             )
             .map { cast ->
                 CafeCastPreview(
                     id = cast.id,
                     name = cast.name,
-                    isOnShift = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isOnShift = workingCastIds.contains(cast.id),
+                    profileImage = cast.profileImage
                 )
             }
-
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return PagedResult(
+            items = sorted,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext
+        )
     }
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
-        val sorted = castDataSource.casts
-            .filter { it.cafeId == cafeId }
+        val todayDate = todayDate()
+        val page = castRemoteDataSource.getCafeCastPageRemote(
+            cafeId = cafeId,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+        val source = page.items
+        val todayScheduleByCastId = castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId, todayDate)
+        val sorted = source
             .sortedWith(
-                compareByDescending<Cast> { cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(it.id) }
+                compareByDescending<Cast> { todayScheduleByCastId.containsKey(it.id) }
                     .thenBy { it.name }
             )
             .map { cast ->
+                val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
                     cast = cast,
-                    isWorking = cafeDataSource.onShiftCastIdsByCafeId[cafeId].orEmpty().contains(cast.id)
+                    isWorking = todaySchedule?.isOnShift() == true,
+                    todaySchedule = todaySchedule
                 )
             }
-
-        return pagingDataSource.toPaged(sorted, cursor, pageSize)
+        return PagedResult(
+            items = sorted,
+            nextCursor = page.nextCursor,
+            hasNext = page.hasNext
+        )
     }
 
     override suspend fun upsertCast(update: CastUpsert): CastDetail {
-        return castDataSource.upsertCast(update)
+        return castRemoteDataSource.upsertCastRemote(update)
     }
 
     override suspend fun deleteCast(castId: String): Cast {
-        return castDataSource.deleteCast(castId)
+        return castRemoteDataSource.deleteCastRemote(castId)
     }
 
     override suspend fun getCastSchedules(castId: String, fromDate: String, toDate: String): List<CastSchedule> {
-        return castDataSource.castSchedules(castId, fromDate, toDate)
+        return castRemoteDataSource.fetchCastSchedules(castId, fromDate, toDate)
     }
 
     override suspend fun getCastScheduleStatuses(
@@ -118,49 +141,137 @@ class CastRepositoryImpl(
         fromDate: String,
         toDate: String
     ): Map<String, CastScheduleStatus> {
-        return castDataSource.castScheduleStatuses(castId, fromDate, toDate)
+        return castRemoteDataSource.fetchCastScheduleStatuses(castId, fromDate, toDate)
+    }
+
+    override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = date)
+    }
+
+    override suspend fun getWorkingCastSchedulesByCafeAndDate(
+        cafeId: String,
+        date: String
+    ): Map<String, CastSchedule> {
+        return castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId = cafeId, date = date)
     }
 
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
-        return castDataSource.updateCastSchedule(update)
+        return castRemoteDataSource.updateCastScheduleRemote(update)
+    }
+
+    override suspend fun getGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> {
+        return castRemoteDataSource.fetchGuestCastSchedules(cafeId, fromDate, toDate)
+    }
+
+    override suspend fun upsertGuestCastSchedule(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        return castRemoteDataSource.upsertGuestCastScheduleRemote(input)
+    }
+
+    override suspend fun deleteGuestCastSchedule(scheduleId: String) {
+        castRemoteDataSource.deleteGuestCastScheduleRemote(scheduleId)
+    }
+
+    private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate())
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
-        return socialDataSource.followedCastIdsByUser[userId]?.contains(castId) == true
+        val followedCastIds = castRemoteDataSource.fetchFollowedCastIds(userId)
+        return followedCastIds.contains(castId)
+    }
+
+    override suspend fun getFollowedCastIds(userId: String): List<String> {
+        return castRemoteDataSource.fetchFollowedCastIds(userId)
+    }
+
+    override suspend fun getFollowedCasts(userId: String): List<Cast> {
+        return castRemoteDataSource.getFollowedCastsRemote(userId)
+    }
+
+    override suspend fun getCastsByIds(castIds: List<String>): List<Cast> {
+        return castRemoteDataSource.fetchCastsByIds(castIds)
+    }
+
+    override suspend fun getCastByLinkedUserId(userId: String): Cast? {
+        return castRemoteDataSource.refreshCastByLinkedUserId(userId)
     }
 
     override suspend fun followCast(userId: String, castId: String) {
-        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
-        set.add(castId)
+        castRemoteDataSource.followCastRemote(
+            userId = userId,
+            castId = castId
+        )
     }
 
     override suspend fun unfollowCast(userId: String, castId: String) {
-        val set = socialDataSource.followedCastIdsByUser.getOrPut(userId) { mutableSetOf() }
-        set.remove(castId)
+        castRemoteDataSource.unfollowCastRemote(
+            userId = userId,
+            castId = castId
+        )
     }
 
     override suspend fun getFollowerUserIds(castId: String): List<String> {
-        return socialDataSource.followedCastIdsByUser
-            .filterValues { followedIds -> followedIds.contains(castId) }
-            .keys
-            .sorted()
+        return castRemoteDataSource.fetchFollowerUserIds(castId)
+    }
+
+    override suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
+        return castRemoteDataSource.getCastFollowerSnapshots(castId)
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {
-        return castDataSource.casts
-            .sortedByDescending { castDataSource.castTodayVisitCountById[it.id] ?: 0 }
-            .take(limit)
-            .map { cast ->
-                val cafeName = cafeDataSource.cafes.firstOrNull { it.id == cast.cafeId }?.name ?: cast.cafeId
-
-                CheckInCastSummary(
-                    id = cast.id,
-                    cafeId = cast.cafeId,
-                    cafeName = cafeName,
-                    name = cast.name,
-                    profileImage = cast.profileImage,
-                    todayVisit = castDataSource.castTodayVisitCountById[cast.id] ?: 0
-                )
+        val safeLimit = if (limit > 0) limit else 1
+        val sourceCasts = castRemoteDataSource.searchCastsRemote(
+            query = null,
+            country = null,
+            city = null,
+            sort = CastSort.POPULAR,
+            cursor = null,
+            pageSize = safeLimit
+        ).items
+        val cafeNameById = sourceCasts
+            .map { cast -> cast.cafeId }
+            .distinct()
+            .associateWith { cafeId ->
+                runCatching {
+                    cafeRemoteDataSource.fetchCafeDetail(cafeId).cafe.name
+                }.getOrNull()
             }
+        return sourceCasts.map { cast ->
+            val cafeName = cafeNameById[cast.cafeId] ?: cast.cafeId
+
+            CheckInCastSummary(
+                id = cast.id,
+                cafeId = cast.cafeId,
+                cafeName = cafeName,
+                name = cast.name,
+                profileImage = cast.profileImage,
+                todayVisit = 0
+            )
+        }
     }
+
+    override suspend fun getCafeCasts(cafeId: String): List<Cast> {
+        return castRemoteDataSource.fetchCafeCasts(cafeId)
+    }
+}
+
+private fun todayDate(): String {
+    return Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .date
+        .toString()
+}
+
+private fun CastSchedule.isOnShift(): Boolean {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val currentMinutes = now.hour * 60 + now.minute
+    val startMinutes = startTime.toMinutes()
+    val endMinutes = endTime.toMinutes()
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes
+}
+
+private fun String.toMinutes(): Int {
+    val hour = substringBefore(':').toIntOrNull() ?: 0
+    val minute = substringAfter(':').toIntOrNull() ?: 0
+    return hour * 60 + minute
 }

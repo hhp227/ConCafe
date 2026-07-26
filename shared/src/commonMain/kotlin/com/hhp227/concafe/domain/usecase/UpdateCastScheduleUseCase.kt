@@ -10,6 +10,7 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.util.isScheduleEndAfterStart
 
 class UpdateCastScheduleUseCase(
     private val authRepository: AuthRepository,
@@ -30,24 +31,26 @@ class UpdateCastScheduleUseCase(
             if (!isAllowed) {
                 return AppResult.Failure(AppError.PermissionDenied)
             }
-
             if (input.status == CastScheduleStatus.WORK) {
                 val startTime = input.startTime?.takeIf { it.isNotBlank() }
                     ?: return AppResult.Failure(AppError.ValidationFailed("start time is required"))
                 val endTime = input.endTime?.takeIf { it.isNotBlank() }
                     ?: return AppResult.Failure(AppError.ValidationFailed("end time is required"))
-                if (startTime >= endTime) {
+                if (!isScheduleEndAfterStart(startTime, endTime)) {
                     return AppResult.Failure(AppError.ValidationFailed("end time must be after start time"))
                 }
             }
+            val updated = castRepository.updateCastSchedule(input)
             scheduleManagementEventPublisher.publish(
                 ScheduleManagementEvent.Updated(
                     castId = input.castId,
                     date = input.date,
-                    status = input.status
+                    status = input.status,
+                    startTime = input.startTime,
+                    endTime = input.endTime
                 )
             )
-            AppResult.Success(castRepository.updateCastSchedule(input))
+            AppResult.Success(updated)
         } catch (e: NoSuchElementException) {
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {

@@ -5,6 +5,8 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CheckInGuestFeed
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class GetCheckInGuestFeedUseCase(
     private val cafeRepository: CafeRepository,
@@ -12,8 +14,18 @@ class GetCheckInGuestFeedUseCase(
 ) {
     suspend operator fun invoke(): AppResult<CheckInGuestFeed> {
         return try {
-            val popularCafes = cafeRepository.getPopularCheckInCafes(limit = GUEST_FEED_LIMIT)
-            val popularCasts = castRepository.getPopularTodayCasts(limit = GUEST_FEED_LIMIT)
+            val loaded = coroutineScope {
+                val popularCafesDeferred = async {
+                    cafeRepository.getPopularCheckInCafes(limit = GUEST_FEED_LIMIT)
+                }
+                val popularCastsDeferred = async {
+                    castRepository.getPopularTodayCasts(limit = GUEST_FEED_LIMIT)
+                }
+
+                popularCafesDeferred.await() to popularCastsDeferred.await()
+            }
+            val popularCafes = loaded.first
+            val popularCasts = loaded.second
 
             AppResult.Success(
                 CheckInGuestFeed(
@@ -33,7 +45,7 @@ class GetCheckInGuestFeedUseCase(
     }
 
     private companion object {
-        private const val GUEST_FEED_LIMIT = 10
+        private const val GUEST_FEED_LIMIT = 30
         private const val DEFAULT_LOCATION_LABEL = "서울 주요 메이드카페"
     }
 }

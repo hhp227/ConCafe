@@ -7,50 +7,70 @@ import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class GetCheckInUserFeedUseCase(
     private val authRepository: AuthRepository,
     private val visitRepository: VisitRepository,
     private val cafeRepository: CafeRepository
 ) {
-    suspend operator fun invoke(): AppResult<CheckInUserFeed> {
+    suspend operator fun invoke(
+        cursor: String?,
+        pageSize: Int = RECENT_VISIT_PAGE_SIZE
+    ): AppResult<CheckInUserFeed> {
         return try {
             val currentUser = authRepository.getCurrentUser()
 
             if (currentUser == null) {
                 AppResult.Failure(AppError.Unauthorized)
             } else {
-                val visits = visitRepository.getVisits(
+                val visitsPage = visitRepository.getVisits(
                     userId = currentUser.id,
-                    cursor = null,
-                    pageSize = VISIT_PAGE_SIZE
-                ).items
-                val visitEntries = visits.map { visit ->
-                    val cafe = cafeRepository.getCafeDetail(visit.cafeId).cafe
+                    cursor = cursor,
+                    pageSize = pageSize
+                )
+                val cafeIds = visitsPage.items.map { visit -> visit.cafeId }.distinct()
+                val cafesById = cafeRepository.getCafesByIds(cafeIds)
+                    .associateBy { cafe -> cafe.id }
+                val visitEntries = visitsPage.items.map { visit ->
+                    val cafe = cafesById[visit.cafeId]
+                        ?: cafeRepository.getCafeDetail(visit.cafeId).cafe
 
                     CheckInVisitEntry(
                         id = visit.id,
                         cafeId = visit.cafeId,
                         cafeName = cafe.name,
+                        cafeImage = cafe.thumbnailImage.orEmpty(),
                         visitedAt = visit.visitedAt,
                         visitedLabel = formatVisitedLabel(visit.visitedAt),
                         memo = visit.memo,
-                        verified = visit.verified
+                        verified = visit.verified,
+                        checkInMethod = visit.checkInMethod
                     )
                 }
 
                 AppResult.Success(
                     CheckInUserFeed(
-                        todayVisits = visitEntries.filter { it.visitedAt.startsWith(TODAY_DATE) }.take(TODAY_VISIT_LIMIT),
-                        recentVisits = visitEntries.take(RECENT_VISIT_LIMIT)
+                        todayVisits = visitEntries
+                            .filter { visit -> isTodayVisit(visit.visitedAt) }
+                            .take(TODAY_VISIT_LIMIT),
+                        recentVisits = visitEntries,
+                        recentVisitsNextCursor = visitsPage.nextCursor,
+                        canLoadMoreRecentVisits = visitsPage.hasNext
                     )
                 )
             }
         } catch (e: NoSuchElementException) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.NotFound)
         } catch (e: IllegalArgumentException) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid request"))
         } catch (e: Exception) {
+            println("--ConCafe--, Error: ${e.message}")
             AppResult.Failure(AppError.Unknown(e.message))
         }
     }
@@ -65,10 +85,30 @@ class GetCheckInUserFeedUseCase(
         }
     }
 
+    private fun todayDateText(): String {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val month = today.monthNumber.toString().padStart(2, '0')
+        val day = today.dayOfMonth.toString().padStart(2, '0')
+        return "${today.year}-$month-$day"
+    }
+
+    private fun isTodayVisit(visitedAt: String): Boolean {
+        val today = todayDateText()
+        val normalizedDate = runCatching {
+            Instant.parse(visitedAt)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+        }.getOrNull()
+        return if (normalizedDate == null) {
+            visitedAt.startsWith(today)
+        } else {
+            normalizedDate == today
+        }
+    }
+
     private companion object {
-        private const val TODAY_DATE = "2026-03-09"
         private const val TODAY_VISIT_LIMIT = 4
-        private const val RECENT_VISIT_LIMIT = 5
-        private const val VISIT_PAGE_SIZE = 12
+        private const val RECENT_VISIT_PAGE_SIZE = 12
     }
 }

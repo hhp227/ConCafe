@@ -16,8 +16,10 @@ enum CafeDashboardAction {
     case changeExternalLinkUrl(String)
     case submitExternalLink
     case clickExternalLinkItem(String)
+    case clickEditExternalLink(String)
     case clickDeleteExternalLink(String)
     case clickCastSchedule(String)
+    case clickCastListDetail
     case clickDeleteCast
     case confirmDeleteCast
     case dismissDeleteCastDialog
@@ -25,4 +27,28 @@ enum CafeDashboardAction {
     case clickRejectCastClaim(String)
     case clickLoadMoreCasts
     case dismissInfoMessage
+    case changeSocialMediaInstagram(String)
+    case changeSocialMediaTwitter(String)
+    case changeSocialMediaTiktok(String)
+    case changeSocialMediaYoutube(String)
+    case submitSocialMedia
+    case dismissSocialMediaSheet
+    case dismissReservationSheet
+    case changeReservationUrl(String)
+    case submitReservation
+    case clickTableCountMetric
+    case dismissTableCountSheet
+    case changeCurrentTableCount(String)
+    case changeTotalTableCount(String)
+    case submitTableCounts
+    case clickAddGuest
+    case dismissGuestSheet
+    case changeGuestName(String)
+    case changeGuestProfileImage(String)
+    case changeGuestDate(String)
+    case changeGuestStartTime(String)
+    case changeGuestEndTime(String)
+    case changeGuestMemo(String)
+    case submitGuest
+    case deleteGuest(String)
 }

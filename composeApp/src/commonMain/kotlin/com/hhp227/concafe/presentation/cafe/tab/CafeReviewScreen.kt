@@ -2,29 +2,47 @@ package com.hhp227.concafe.presentation.cafe.tab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.presentation.cafe.CafeAction
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.colorFromHex
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.cafe_accessibility_more
+import concafe.composeapp.generated.resources.cafe_review_action_delete
+import concafe.composeapp.generated.resources.cafe_review_action_edit
+import concafe.composeapp.generated.resources.cafe_review_action_report
+import concafe.composeapp.generated.resources.cafe_review_count
+import concafe.composeapp.generated.resources.cafe_review_empty
+import concafe.composeapp.generated.resources.cafe_review_load_more_hint
+import concafe.composeapp.generated.resources.cafe_review_verified
+import org.jetbrains.compose.resources.stringResource
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeReviewScreen(
     detail: CafeDetail,
     reviews: List<CafeDetailReview>,
     canLoadMore: Boolean,
-    isLoadingMore: Boolean
+    isLoadingMore: Boolean,
+    currentUserId: String? = null,
+    onAction: (CafeAction) -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -33,7 +51,7 @@ fun CafeReviewScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
@@ -43,30 +61,30 @@ fun CafeReviewScreen(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFC107),
+                    tint = ConCafeColors.gold,
                     modifier = Modifier.size(28.dp)
                 )
                 Column {
                     Text(
-                        text = formatRating(detail.cafe.ratingAvg),
+                        text = RatingUtils.formatOneDecimalTruncated(detail.cafe.ratingAvg),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${detail.cafe.reviewCount}개 리뷰",
-                        color = Color(0xFF777777)
+                        text = stringResource(Res.string.cafe_review_count, detail.cafe.reviewCount),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
         if (reviews.isEmpty()) {
-            EmptyContent(text = "아직 등록된 리뷰가 없습니다.")
+            EmptyContent(text = stringResource(Res.string.cafe_review_empty))
         } else {
             reviews.forEach { review ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
                         modifier = Modifier
@@ -74,6 +92,8 @@ fun CafeReviewScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -91,7 +111,7 @@ fun CafeReviewScreen(
                                     Row(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(colorFromHex("EF6797"))
+                                            .background(ConCafeColors.primary)
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                         verticalAlignment = Alignment.CenterVertically
@@ -103,25 +123,72 @@ fun CafeReviewScreen(
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Text(
-                                            text = "방문인증",
+                                            text = stringResource(Res.string.cafe_review_verified),
                                             color = Color.White,
                                             style = MaterialTheme.typography.labelSmall
                                         )
                                     }
                                 }
                             }
-                            Text(
-                                text = review.createdDate,
-                                color = Color(0xFF999999),
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = review.createdDate,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Box {
+                                    IconButton(
+                                        onClick = { menuExpanded = true },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = stringResource(Res.string.cafe_accessibility_more),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false }
+                                    ) {
+                                        if (currentUserId != null && review.userId == currentUserId) {
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(Res.string.cafe_review_action_edit)) },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.EditReview(review.id))
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(Res.string.cafe_review_action_delete)) },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.DeleteReview(review.id))
+                                                }
+                                            )
+                                        } else {
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(Res.string.cafe_review_action_report)) },
+                                                onClick = {
+                                                    menuExpanded = false
+                                                    onAction(CafeAction.ReportReview(review.id))
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             repeat(5) { index ->
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
-                                    tint = if (index < review.rating.toInt()) Color(0xFFFFC107) else Color(0xFFE1E1E1),
+                                    tint = if (index < review.rating.toInt()) ConCafeColors.gold else ConCafeColors.outline,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -133,15 +200,38 @@ fun CafeReviewScreen(
                                         text = castName,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
-                                            .background(Color(0x1AFFD1DC))
+                                            .background(ConCafeColors.primaryContainer.copy(alpha = 0.1f))
                                             .padding(horizontal = 10.dp, vertical = 5.dp),
-                                        color = colorFromHex("C9527E"),
+                                        color = ConCafeColors.primary,
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
                             }
                         }
-                        Text(text = review.content)
+                        val reviewImageUrl = review.imageUrls.firstOrNull { imageUrl -> imageUrl.isNotBlank() }
+
+                        if (reviewImageUrl != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    text = review.content,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                CompatImageDisplay(
+                                    imageUrl = reviewImageUrl,
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onAction(CafeAction.ClickReviewImage(reviewImageUrl)) },
+                                    applyRoundedClip = false
+                                )
+                            }
+                        } else {
+                            Text(text = review.content)
+                        }
                     }
                 }
             }
@@ -165,8 +255,8 @@ fun CafeReviewScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "스크롤하면 더 불러옵니다.",
-                        color = Color(0xFF999999),
+                        text = stringResource(Res.string.cafe_review_load_more_hint),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -181,23 +271,18 @@ private fun EmptyContent(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFF0E4EA), shape = RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = ConCafeColors.primaryContainer, shape = RoundedCornerShape(24.dp))
             .padding(vertical = 28.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = Color(0xFF777777)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
 
 
-private fun formatRating(rating: Double): String {
-    val scaled = (rating * 10).toInt()
-    val whole = scaled / 10
-    val decimal = scaled % 10
-    return "$whole.$decimal"
-}
+

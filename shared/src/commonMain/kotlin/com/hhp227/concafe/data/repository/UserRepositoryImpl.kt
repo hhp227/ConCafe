@@ -1,30 +1,50 @@
 package com.hhp227.concafe.data.repository
 
-import com.hhp227.concafe.data.source.AuthDataSource
-import com.hhp227.concafe.data.source.MyInfoDataSource
+import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
+import com.hhp227.concafe.domain.common.PagedResult
+import com.hhp227.concafe.domain.model.AdminUserFilter
 import com.hhp227.concafe.domain.model.MyPageSummary
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.repository.UserRepository
 
 class UserRepositoryImpl(
-    private val authDataSource: AuthDataSource,
-    private val myInfoDataSource: MyInfoDataSource
+    private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : UserRepository {
     override suspend fun getUser(userId: String): User {
-        return authDataSource.findUserById(userId)
+        return firestoreSyncDataSource.fetchUser(userId)
             ?: throw NoSuchElementException("user not found")
     }
 
+    override suspend fun getAdminUserPage(
+        filter: AdminUserFilter,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<User> {
+        return firestoreSyncDataSource.fetchAdminUserPage(
+            filter = filter,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+    }
+
     override suspend fun updateProfile(userId: String, nickname: String, profileImage: String?) {
-        val current = authDataSource.findUserById(userId)
-        if (current == null) {
+        val existingUser = firestoreSyncDataSource.fetchUser(userId)
+        if (existingUser == null) {
             throw NoSuchElementException("user not found")
         }
 
-        authDataSource.replaceUser(current.copy(nickname = nickname, profileImage = profileImage))
+        val normalizedNickname = nickname.trim()
+        val normalizedProfileImage = profileImage?.trim()?.ifBlank { null }
+
+        firestoreSyncDataSource.updateUserProfile(
+            userId = userId,
+            nickname = normalizedNickname,
+            profileImage = normalizedProfileImage
+        )
     }
 
     override suspend fun getMyPageSummary(userId: String): MyPageSummary {
-        return myInfoDataSource.defaultMyPageSummary(userId)
+        return firestoreSyncDataSource.fetchMyPageSummary(userId)
+            ?: throw NoSuchElementException("my page summary not found")
     }
 }

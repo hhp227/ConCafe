@@ -10,6 +10,9 @@ import Foundation
 enum CastAction {
     case backTapped
     case followTapped
+    case followTooltipShown
+    case dismissFollowTooltip
     case cafeTapped
     case refresh
+    case imageTapped(imageUrl: String)
 }

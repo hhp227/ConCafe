@@ -12,6 +12,7 @@ enum Route: Hashable {
     case main(initialTab: String?)
     case cast(param: String)
     case cafe(param: String)
+    case cafeEvent(cafeId: String, eventId: String, showCafeButton: Bool)
     case cafeDashboard(param: String)
     case banner(cafeId: String?)
     case bannerEdit(cafeId: String?, bannerId: String?)
@@ -20,15 +21,24 @@ enum Route: Hashable {
     case noticeEvent(param: String)
     case castEdit(cafeId: String?, castId: String?)
     case schedule(castId: String?)
+    case castManagement(cafeId: String, cafeName: String)
+    case castList(cafeId: String)
     case menuGoods(param: String)
     case menuGoodsEdit(cafeId: String, itemId: String?)
-    case reviewEdit(cafeId: String)
+    case reviewEdit(cafeId: String, reviewId: String?)
+    case picture(imageUrl: String)
+    case checkInMap(initialRegionKey: String?)
     case signIn
     case signUp
+    case resetPassword
     case notification
     case settings
     case notificationSettings
     case accountSettings
     case inquiry
+    case userManagement
     case changePassword
+    case community
+    case postEdit(postId: String?)
+    case postDetail(postId: String)
 }

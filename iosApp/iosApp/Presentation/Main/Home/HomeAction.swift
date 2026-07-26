@@ -12,9 +12,13 @@ enum HomeAction {
     case bannerTapped(HomeBanner)
     case maidTapped(id: String)
     case cafeTapped(id: String)
+    case cafeEventTapped(cafeId: String, eventId: String)
     case birthdayMaidTapped(id: String)
     case loginPromptSignInTapped
     case dismissLoginPrompt
+    case loadMoreCafeEvents
     case loadMorePopularCasts
     case loadMoreNearbyCafes
+    case communityTapped
+    case communityPostTapped(postId: String)
 }

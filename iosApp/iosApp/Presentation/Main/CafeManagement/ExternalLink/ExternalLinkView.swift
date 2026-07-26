@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import WebKit
 
 struct ExternalLinkView: View {
@@ -17,7 +18,7 @@ struct ExternalLinkView: View {
         ExternalLinkContentView(
             uiState: viewModel.uiState
         )
-        .navigationTitle(viewModel.uiState.displayTitle)
+        .navigationTitle(viewModel.uiState.displayTitle.isEmpty ? String(localized: String.LocalizationValue("externallink_title"), table: "Localizable") : viewModel.uiState.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(viewModel.event) { event in
             switch event {
@@ -47,7 +48,7 @@ private struct ExternalLinkContentView: View {
 
     var body: some View {
         ExternalWebView(urlString: uiState.url)
-            .background(Color.white)
+            .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color.white)
     }
 }
 

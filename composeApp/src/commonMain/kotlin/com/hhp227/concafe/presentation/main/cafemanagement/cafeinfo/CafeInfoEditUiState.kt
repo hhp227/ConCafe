@@ -10,10 +10,12 @@ data class CafeInfoEditUiState(
     val isSaving: Boolean = false,
     val cafeName: String = "",
     val cafeDescription: String = "",
-    val representativeImageTitle: String = "대표 이미지",
+    val conceptType: String = "MAID",
     val representativeImageUrl: String? = null,
     val galleryImages: List<String> = emptyList(),
     val address: String = "",
+    val mapLatitude: Double = 37.5665,
+    val mapLongitude: Double = 126.9780,
     val contactNumber: String = "",
     val weekdayOpen: String = "",
     val weekdayClose: String = "",
@@ -22,12 +24,6 @@ data class CafeInfoEditUiState(
     val isImageRequiredAlertVisible: Boolean = false,
     val infoMessage: String? = null
 ) {
-    val galleryLimitText: String
-        get() = "${galleryImages.size} / $galleryMaxCount"
-
-    val screenTitle: String
-        get() = if (isRegistrationMode) "새 카페 등록" else "카페 정보 관리"
-
-    val submitButtonText: String
-        get() = if (isRegistrationMode) "등록 신청하기" else "변경사항 저장"
+    val galleryLimitCount: Int
+        get() = galleryImages.size
 }

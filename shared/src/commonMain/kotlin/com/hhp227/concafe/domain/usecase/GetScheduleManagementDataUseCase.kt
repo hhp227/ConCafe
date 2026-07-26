@@ -3,17 +3,20 @@ package com.hhp227.concafe.domain.usecase
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.CastScheduleStatus
-import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.ScheduleManagementData
 import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.repository.AuthRepository
 import com.hhp227.concafe.domain.repository.CastRepository
+import com.hhp227.concafe.domain.util.computeScheduleDurationMinutes
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
@@ -32,39 +35,50 @@ class GetScheduleManagementDataUseCase(
                 if (currentUser.role != UserRole.CAST) {
                     return AppResult.Failure(AppError.PermissionDenied)
                 }
-                castRepository.searchCasts(
-                    query = null,
-                    country = null,
-                    city = null,
-                    sort = CastSort.FOLLOWERS,
-                    cursor = null,
-                    pageSize = 100
-                ).items.firstOrNull { cast ->
-                    cast.linkedUserId == currentUser.id
-                }?.id ?: return AppResult.Failure(AppError.NotFound)
+                castRepository.getCastByLinkedUserId(currentUser.id)
+                    ?.id
+                    ?: return AppResult.Failure(AppError.NotFound)
             }
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val nowDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val today = nowDateTime.date
             val weekStart = today.toWeekStart()
+            val scheduleEnd = today.plus(DatePeriod(months = 1)).toMonthEnd()
+            val loaded = coroutineScope {
+                val detailDeferred = async {
+                    castRepository.getCastDetail(resolvedCastId)
+                }
+                val schedulesDeferred = async {
+                    castRepository.getCastSchedules(
+                        castId = resolvedCastId,
+                        fromDate = weekStart.toString(),
+                        toDate = scheduleEnd.toString()
+                    )
+                }
+                val scheduleStatusesDeferred = async {
+                    castRepository.getCastScheduleStatuses(
+                        castId = resolvedCastId,
+                        fromDate = weekStart.toString(),
+                        toDate = scheduleEnd.toString()
+                    )
+                }
+                ScheduleLoadResult(
+                    detail = detailDeferred.await(),
+                    scheduleByDate = schedulesDeferred.await().associateBy { schedule -> schedule.date },
+                    scheduleStatusByDate = scheduleStatusesDeferred.await()
+                )
+            }
+            val detail = loaded.detail
+            val scheduleByDate = loaded.scheduleByDate
+            val scheduleStatusByDate = loaded.scheduleStatusByDate
+            val scheduleDates = weekStart.datesUntil(scheduleEnd)
             val weekEnd = weekStart.plus(DatePeriod(days = 6))
-            val detail = castRepository.getCastDetail(resolvedCastId)
-            val scheduleByDate = castRepository.getCastSchedules(
-                castId = resolvedCastId,
-                fromDate = weekStart.toString(),
-                toDate = weekEnd.toString()
-            ).associateBy { it.date }
-            val scheduleStatusByDate = castRepository.getCastScheduleStatuses(
-                castId = resolvedCastId,
-                fromDate = weekStart.toString(),
-                toDate = weekEnd.toString()
-            )
-            val weekDates = (0..6).map { weekStart.plus(DatePeriod(days = it)) }
 
             AppResult.Success(
                 ScheduleManagementData(
                     detail = detail,
                     weekRangeLabel = "${weekStart.year}년 ${weekStart.monthNumber}월 ${weekStart.dayOfMonth}일 - ${weekEnd.monthNumber}월 ${weekEnd.dayOfMonth}일",
                     selectedDayId = today.toString(),
-                    weekDays = weekDates.map { date ->
+                    weekDays = scheduleDates.map { date ->
                         val status = scheduleStatusByDate[date.toString()]
                             ?: if (scheduleByDate.containsKey(date.toString())) CastScheduleStatus.WORK else CastScheduleStatus.OFF
                         ScheduleManagementWeekDay(
@@ -74,7 +88,7 @@ class GetScheduleManagementDataUseCase(
                             isWorking = status == CastScheduleStatus.WORK
                         )
                     },
-                    daySchedules = weekDates.map { date ->
+                    daySchedules = scheduleDates.map { date ->
                         val schedule = scheduleByDate[date.toString()]
                         val status = scheduleStatusByDate[date.toString()]
                             ?: if (schedule != null) CastScheduleStatus.WORK else CastScheduleStatus.OFF
@@ -86,11 +100,14 @@ class GetScheduleManagementDataUseCase(
                             } else {
                                 "일정이 없습니다"
                             },
-                            statusLabel = when (status) {
-                                CastScheduleStatus.WORK -> "근무 중"
-                                CastScheduleStatus.OFF -> "휴무"
-                                CastScheduleStatus.VACATION -> "휴가"
-                            },
+                            statusLabel = resolveStatusLabel(
+                                date = date,
+                                today = today,
+                                status = status,
+                                startTime = schedule?.startTime,
+                                endTime = schedule?.endTime,
+                                nowDateTime = nowDateTime
+                            ),
                             isWorking = status == CastScheduleStatus.WORK,
                             status = status
                         )
@@ -107,9 +124,60 @@ class GetScheduleManagementDataUseCase(
     }
 }
 
+private data class ScheduleLoadResult(
+    val detail: com.hhp227.concafe.domain.model.CastDetail,
+    val scheduleByDate: Map<String, com.hhp227.concafe.domain.model.CastSchedule>,
+    val scheduleStatusByDate: Map<String, CastScheduleStatus>
+)
+
+private fun resolveStatusLabel(
+    date: LocalDate,
+    today: LocalDate,
+    status: CastScheduleStatus,
+    startTime: String?,
+    endTime: String?,
+    nowDateTime: LocalDateTime
+): String {
+    if (status != CastScheduleStatus.WORK) {
+        return when (status) {
+            CastScheduleStatus.OFF -> "휴무"
+            CastScheduleStatus.VACATION -> "휴가"
+            else -> "휴무"
+        }
+    }
+    if (date != today || startTime == null || endTime == null) {
+        return "근무"
+    }
+    val currentTotal = nowDateTime.hour * 60 + nowDateTime.minute
+    val startTotal = (startTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (startTime.substringAfter(':').toIntOrNull() ?: 0)
+    val endTotal = (endTime.substringBefore(':').toIntOrNull() ?: 0) * 60 +
+        (endTime.substringAfter(':').toIntOrNull() ?: 0)
+    return when {
+        currentTotal < startTotal -> "출근 예정"
+        currentTotal < endTotal -> "출근 중"
+        else -> "근무 완료"
+    }
+}
+
 private fun LocalDate.toWeekStart(): LocalDate {
     val daysFromSunday = dayOfWeek.isoDayNumber % 7
     return minus(DatePeriod(days = daysFromSunday))
+}
+
+private fun LocalDate.toMonthEnd(): LocalDate {
+    val nextMonthStart = LocalDate(year, monthNumber, 1).plus(DatePeriod(months = 1))
+    return nextMonthStart.minus(DatePeriod(days = 1))
+}
+
+private fun LocalDate.datesUntil(endInclusive: LocalDate): List<LocalDate> {
+    val dates = mutableListOf<LocalDate>()
+    var current = this
+    while (current <= endInclusive) {
+        dates += current
+        current = current.plus(DatePeriod(days = 1))
+    }
+    return dates
 }
 
 private fun LocalDate.toKoreanDayLabel(): String {
@@ -126,7 +194,5 @@ private fun LocalDate.toKoreanDayLabel(): String {
 }
 
 private fun calculateHourLabel(startTime: String, endTime: String): String {
-    val startHour = startTime.substringBefore(':').toIntOrNull() ?: return "0시간"
-    val endHour = endTime.substringBefore(':').toIntOrNull() ?: return "0시간"
-    return "${(endHour - startHour).coerceAtLeast(0)}시간"
+    return "${computeScheduleDurationMinutes(startTime, endTime) / 60}시간"
 }

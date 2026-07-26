@@ -10,8 +10,12 @@ import org.jetbrains.compose.resources.Font
 
 @Composable
 fun goyangFont(): FontFamily {
-    return FontFamily(
-        Font(Res.font.goyangdeogyang_bold),
-        Font(Res.font.goyangdeogyang_extrabold, weight = FontWeight.Bold)
-    )
+    return runCatching {
+        FontFamily(
+            Font(Res.font.goyangdeogyang_bold),
+            Font(Res.font.goyangdeogyang_extrabold, weight = FontWeight.Bold)
+        )
+    }.getOrElse {
+        FontFamily.Default
+    }
 }

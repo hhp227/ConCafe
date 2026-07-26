@@ -20,9 +20,23 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private let getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase
 
+    private let getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase
+
     private let approveCastClaimUseCase: ApproveCastClaimUseCase
 
     private let rejectCastClaimUseCase: RejectCastClaimUseCase
+
+    private let cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase
+
+    private let updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase
+
+    private let updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase
+
+    private let updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase
+
+    private let upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase
+
+    private let deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase
 
     private let deleteCastUseCase: DeleteCastUseCase
 
@@ -33,6 +47,8 @@ final class CafeDashboardViewModel: ObservableObject {
     private let castClaimEventPublisher: CastClaimEventPublisher
 
     private let castEventPublisher: CastEventPublisher
+
+    private let visitEventPublisher: VisitEventPublisher
 
     @Published private(set) var uiState = CafeDashboardUiState()
 
@@ -51,13 +67,23 @@ final class CafeDashboardViewModel: ObservableObject {
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let data = success.data as? CafeDashboardData {
                     uiState.cafe = data
+                    let socialMedia = (data.socialMedia as? [String: String]) ?? [:]
+                    uiState.instagramId = socialMedia["instagram"] ?? ""
+                    uiState.twitterId = socialMedia["twitter"] ?? ""
+                    uiState.tiktokId = socialMedia["tiktok"] ?? ""
+                    uiState.youtubeId = socialMedia["youtube"] ?? ""
+                    uiState.reservationUrl = data.reservationUrl ?? ""
+                    uiState.currentTableCountInput = String(data.tableCounts.current)
+                    uiState.totalTableCountInput = String(data.tableCounts.total)
                     uiState.isLoading = false
                     refreshCastPreviews(resetMessage: false)
                     refreshClaimData(resetMessage: false)
+                    refreshGuestSchedules(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
                     uiState.cafe = nil
                     uiState.castPreviews = []
                     uiState.pendingCastClaims = []
+                    uiState.guestSchedules = []
                     uiState.nextCastCursor = nil
                     uiState.hasMoreCasts = false
                     uiState.isLoading = false
@@ -67,6 +93,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 uiState.cafe = nil
                 uiState.castPreviews = []
                 uiState.pendingCastClaims = []
+                uiState.guestSchedules = []
                 uiState.nextCastCursor = nil
                 uiState.hasMoreCasts = false
                 uiState.isLoading = false
@@ -80,6 +107,10 @@ final class CafeDashboardViewModel: ObservableObject {
             uiState.isLoadingMoreCasts = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await self.getCafeCastPageUseCase.invoke(
                     cafeId: cafeId,
                     cursor: cursor,
@@ -100,11 +131,11 @@ final class CafeDashboardViewModel: ObservableObject {
                     uiState.isLoadingMoreCasts = false
                 } else {
                     uiState.isLoadingMoreCasts = false
-                    uiState.infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_list_load_failed"
                 }
             } catch {
                 uiState.isLoadingMoreCasts = false
-                uiState.infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                uiState.infoMessage = "dashboard_info_cast_list_load_failed"
             }
         }
     }
@@ -145,7 +176,7 @@ final class CafeDashboardViewModel: ObservableObject {
             event.send(.navigateToMenuGoods(cafeId: cafeId))
         case .castSchedule:
             guard let selectedCastId = uiState.selectedCastId else {
-                uiState.infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요."
+                uiState.infoMessage = "dashboard_info_select_cast_for_schedule"
                 return
             }
             event.send(.navigateToSchedule(castId: selectedCastId))
@@ -154,15 +185,37 @@ final class CafeDashboardViewModel: ObservableObject {
         case .externalLinks:
             uiState.isExternalLinkSheetVisible = true
             uiState.infoMessage = nil
+        case .socialMedia:
+            uiState.isSocialMediaSheetVisible = true
+            uiState.infoMessage = nil
+        case .reservation:
+            uiState.isReservationSheetVisible = true
+            uiState.infoMessage = nil
         }
+    }
+
+    private func clickCastListDetail() {
+        event.send(.navigateToCastList(cafeId: cafeId))
     }
 
     private func clickCreateBanner() {
         event.send(.navigateToBannerEdit)
     }
 
+    private func loadExternalLinks() {
+        let links = cafeExternalLinkLocalUseCase.load(cafeId: cafeId).map { persisted in
+            CafeDashboardExternalLink(
+                id: persisted.id,
+                title: persisted.title,
+                url: persisted.url
+            )
+        }
+        uiState.externalLinks = links
+    }
+
     private func dismissExternalLinkSheet() {
         uiState.isExternalLinkSheetVisible = false
+        uiState.editingExternalLinkId = nil
         uiState.externalLinkTitle = ""
         uiState.externalLinkUrl = ""
     }
@@ -177,24 +230,32 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private func submitExternalLink() {
         guard uiState.isExternalLinkSubmitEnabled else {
-            uiState.infoMessage = "제목과 링크 URL을 모두 입력해 주세요."
+            uiState.infoMessage = "dashboard_info_external_link_input_required"
             return
         }
 
-        let title = uiState.externalLinkTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        let url = uiState.externalLinkUrl.trimmingCharacters(in: .whitespacesAndNewlines)
-        uiState.isExternalLinkSheetVisible = false
-        uiState.externalLinks.insert(
-            CafeDashboardExternalLink(
-                id: "external-link-\(UUID().uuidString)",
-                title: title,
-                url: url
-            ),
-            at: 0
+        let isEdit = uiState.editingExternalLinkId != nil
+        let title = uiState.externalLinkTitle
+        let url = uiState.externalLinkUrl
+        let persisted = cafeExternalLinkLocalUseCase.upsert(
+            cafeId: cafeId,
+            linkId: uiState.editingExternalLinkId,
+            title: title,
+            url: url
         )
+
+        uiState.externalLinks = persisted.map { item in
+            CafeDashboardExternalLink(
+                id: item.id,
+                title: item.title,
+                url: item.url
+            )
+        }
+        uiState.isExternalLinkSheetVisible = false
+        uiState.editingExternalLinkId = nil
         uiState.externalLinkTitle = ""
         uiState.externalLinkUrl = ""
-        uiState.infoMessage = "외부 링크를 추가했습니다."
+        uiState.infoMessage = isEdit ? "dashboard_info_external_link_updated" : "dashboard_info_external_link_added"
     }
 
     private func clickExternalLinkItem(_ linkId: String) {
@@ -202,9 +263,289 @@ final class CafeDashboardViewModel: ObservableObject {
         event.send(.navigateToExternalLink(title: link.title, url: link.url))
     }
 
+    private func clickEditExternalLink(_ linkId: String) {
+        guard let link = uiState.externalLinks.first(where: { $0.id == linkId }) else { return }
+        uiState.isExternalLinkSheetVisible = true
+        uiState.editingExternalLinkId = link.id
+        uiState.externalLinkTitle = link.title
+        uiState.externalLinkUrl = link.url
+        uiState.infoMessage = nil
+    }
+
     private func clickDeleteExternalLink(_ linkId: String) {
-        uiState.externalLinks.removeAll { $0.id == linkId }
-        uiState.infoMessage = "외부 링크를 삭제했습니다."
+        let persisted = cafeExternalLinkLocalUseCase.delete(cafeId: cafeId, linkId: linkId)
+        uiState.externalLinks = persisted.map { item in
+            CafeDashboardExternalLink(
+                id: item.id,
+                title: item.title,
+                url: item.url
+            )
+        }
+        uiState.infoMessage = "dashboard_info_external_link_deleted"
+    }
+
+    private func changeSocialMediaInstagram(_ value: String) {
+        uiState.instagramId = value
+    }
+
+    private func changeSocialMediaTwitter(_ value: String) {
+        uiState.twitterId = value
+    }
+
+    private func changeSocialMediaTiktok(_ value: String) {
+        uiState.tiktokId = value
+    }
+
+    private func changeSocialMediaYoutube(_ value: String) {
+        uiState.youtubeId = value
+    }
+
+    private func submitSocialMedia() {
+        let instagramId = uiState.instagramId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let twitterId = uiState.twitterId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tiktokId = uiState.tiktokId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let youtubeId = uiState.youtubeId.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isSavingSocialMedia = true
+        Task {
+            do {
+                let result = try await updateCafeSocialMediaUseCase.invoke(
+                    cafeId: cafeId,
+                    instagramId: instagramId.isEmpty ? nil : instagramId,
+                    twitterId: twitterId.isEmpty ? nil : twitterId,
+                    tiktokId: tiktokId.isEmpty ? nil : tiktokId,
+                    youtubeId: youtubeId.isEmpty ? nil : youtubeId
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingSocialMedia = false
+                    uiState.isSocialMediaSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_social_media_saved"
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingSocialMedia = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingSocialMedia = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func dismissSocialMediaSheet() {
+        uiState.isSocialMediaSheetVisible = false
+    }
+
+    private func dismissReservationSheet() {
+        uiState.isReservationSheetVisible = false
+        uiState.reservationUrl = uiState.cafe?.reservationUrl ?? ""
+    }
+
+    private func clickTableCountMetric() {
+        uiState.isTableCountSheetVisible = true
+        uiState.infoMessage = nil
+    }
+
+    private func refreshGuestSchedules(resetMessage: Bool = true) {
+        if resetMessage {
+            uiState.infoMessage = nil
+        }
+        let dateOptions = TimeUtils.isoDateOptionsFromToday(days: Self.guestScheduleDisplayDays)
+        uiState.guestDateOptions = dateOptions
+        if uiState.guestDate.isEmpty {
+            uiState.guestDate = dateOptions.first ?? ""
+        }
+        guard let endDate = dateOptions.last, let startDate = dateOptions.first else { return }
+        Task {
+            do {
+                let result = try await getGuestCastSchedulesUseCase.invoke(
+                    cafeId: cafeId,
+                    fromDate: startDate,
+                    toDate: endDate
+                )
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let schedules = success.data as? [GuestCastSchedule] {
+                    uiState.guestSchedules = schedules.sortedByGuestSchedule()
+                } else if let failure = result as? AppResultFailure {
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func clickAddGuest() {
+        if uiState.guestDateOptions.isEmpty {
+            uiState.guestDateOptions = TimeUtils.isoDateOptionsFromToday(days: Self.guestScheduleDisplayDays)
+        }
+        uiState.isGuestSheetVisible = true
+        uiState.guestName = ""
+        uiState.guestProfileImage = ""
+        uiState.guestDate = uiState.guestDateOptions.first ?? ""
+        uiState.guestStartTime = CafeDashboardUiState.defaultGuestStartTime
+        uiState.guestEndTime = CafeDashboardUiState.defaultGuestEndTime
+        uiState.guestMemo = ""
+        uiState.infoMessage = nil
+    }
+
+    private func dismissGuestSheet() {
+        uiState.isGuestSheetVisible = false
+    }
+
+    private func submitGuest() {
+        guard uiState.isGuestSubmitEnabled else {
+            uiState.infoMessage = "게스트 이름과 출연 시간을 확인해 주세요"
+            return
+        }
+        let input = GuestCastScheduleUpsert(
+            id: nil,
+            cafeId: cafeId,
+            date: uiState.guestDate,
+            name: uiState.guestName,
+            profileImage: uiState.guestProfileImage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : uiState.guestProfileImage,
+            startTime: uiState.guestStartTime,
+            endTime: uiState.guestEndTime,
+            memo: uiState.guestMemo.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : uiState.guestMemo
+        )
+        uiState.isGuestSaving = true
+        Task {
+            do {
+                let result = try await upsertGuestCastScheduleUseCase.invoke(input: input)
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let guest = success.data as? GuestCastSchedule {
+                    uiState.isGuestSaving = false
+                    uiState.isGuestSheetVisible = false
+                    uiState.guestSchedules.removeAll { $0.id == guest.id }
+                    uiState.guestSchedules.append(guest)
+                    uiState.guestSchedules = uiState.guestSchedules.sortedByGuestSchedule()
+                    uiState.infoMessage = "게스트 출연을 추가했습니다"
+                } else {
+                    uiState.isGuestSaving = false
+                    uiState.infoMessage = "게스트 출연 저장에 실패했습니다"
+                }
+            } catch {
+                uiState.isGuestSaving = false
+                uiState.infoMessage = "게스트 출연 저장에 실패했습니다"
+            }
+        }
+    }
+
+    private func deleteGuest(_ id: String) {
+        Task {
+            do {
+                let result = try await deleteGuestCastScheduleUseCase.invoke(scheduleId: id)
+                if result is AppResultSuccess<KotlinUnit> || result is AppResultSuccess<AnyObject> {
+                    uiState.guestSchedules.removeAll { $0.id == id }
+                    uiState.infoMessage = "게스트 출연을 삭제했습니다"
+                } else {
+                    uiState.infoMessage = "게스트 출연 삭제에 실패했습니다"
+                }
+            } catch {
+                uiState.infoMessage = "게스트 출연 삭제에 실패했습니다"
+            }
+        }
+    }
+
+    private func dismissTableCountSheet() {
+        uiState.isTableCountSheetVisible = false
+        let tableCounts = uiState.cafe?.tableCounts
+        uiState.currentTableCountInput = String(tableCounts?.current ?? 0)
+        uiState.totalTableCountInput = String(tableCounts?.total ?? 0)
+    }
+
+    private func changeCurrentTableCount(_ value: String) {
+        uiState.currentTableCountInput = value
+    }
+
+    private func changeTotalTableCount(_ value: String) {
+        uiState.totalTableCountInput = value
+        if let newTotal = Int32(value), let current = Int32(uiState.currentTableCountInput), current > newTotal {
+            uiState.currentTableCountInput = value
+        }
+    }
+
+    private func submitTableCounts() {
+        guard uiState.isTableCountSubmitEnabled else { return }
+        guard let current = Int32(uiState.currentTableCountInput),
+              let total = Int32(uiState.totalTableCountInput) else { return }
+        uiState.isSavingTableCounts = true
+        Task {
+            do {
+                let result = try await updateCafeTableCountsUseCase.invoke(
+                    cafeId: cafeId,
+                    current: current,
+                    total: total
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingTableCounts = false
+                    uiState.isTableCountSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_table_counts_saved"
+                    if let cafeCurrent = uiState.cafe {
+                        uiState.cafe = CafeDashboardData(
+                            id: cafeCurrent.id,
+                            name: cafeCurrent.name,
+                            city: cafeCurrent.city,
+                            todayCheckIns: cafeCurrent.todayCheckIns,
+                            followerCount: cafeCurrent.followerCount,
+                            rating: cafeCurrent.rating,
+                            castPreviews: cafeCurrent.castPreviews,
+                            homeBannerPreview: cafeCurrent.homeBannerPreview,
+                            socialMedia: cafeCurrent.socialMedia,
+                            reservationUrl: cafeCurrent.reservationUrl,
+                            tableCounts: TableCounts(current: current, total: total)
+                        )
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingTableCounts = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingTableCounts = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func changeReservationUrl(_ value: String) {
+        uiState.reservationUrl = value
+    }
+
+    private func submitReservation() {
+        let url = uiState.reservationUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        uiState.isSavingReservation = true
+        Task {
+            do {
+                let result = try await updateCafeReservationUrlUseCase.invoke(
+                    cafeId: cafeId,
+                    reservationUrl: url.isEmpty ? nil : url
+                )
+                if result is AppResultSuccess<AnyObject> {
+                    uiState.isSavingReservation = false
+                    uiState.isReservationSheetVisible = false
+                    uiState.infoMessage = "dashboard_info_reservation_saved"
+                    if let current = uiState.cafe {
+                        uiState.cafe = CafeDashboardData(
+                            id: current.id,
+                            name: current.name,
+                            city: current.city,
+                            todayCheckIns: current.todayCheckIns,
+                            followerCount: current.followerCount,
+                            rating: current.rating,
+                            castPreviews: current.castPreviews,
+                            homeBannerPreview: current.homeBannerPreview,
+                            socialMedia: current.socialMedia,
+                            reservationUrl: url.isEmpty ? nil : url,
+                            tableCounts: current.tableCounts
+                        )
+                    }
+                } else if let failure = result as? AppResultFailure {
+                    uiState.isSavingReservation = false
+                    uiState.infoMessage = "\(failure.error)"
+                }
+            } catch {
+                uiState.isSavingReservation = false
+                uiState.infoMessage = error.localizedDescription
+            }
+        }
     }
 
     private func dismissInfoMessage() {
@@ -218,7 +559,7 @@ final class CafeDashboardViewModel: ObservableObject {
 
     private func clickDeleteCast() {
         guard uiState.selectedCastId != nil else {
-            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            uiState.infoMessage = "dashboard_info_select_cast_for_delete"
             return
         }
         uiState.isDeleteCastDialogVisible = true
@@ -232,7 +573,7 @@ final class CafeDashboardViewModel: ObservableObject {
     private func confirmDeleteCast() {
         guard let selectedCastId = uiState.selectedCastId else {
             uiState.isDeleteCastDialogVisible = false
-            uiState.infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+            uiState.infoMessage = "dashboard_info_select_cast_for_delete"
             return
         }
 
@@ -241,7 +582,7 @@ final class CafeDashboardViewModel: ObservableObject {
                 let result = try await deleteCastUseCase.invoke(castId: selectedCastId)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isDeleteCastDialogVisible = false
-                    uiState.infoMessage = "캐스트 프로필을 삭제했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_deleted"
                 } else if let failure = result as? AppResultFailure {
                     uiState.isDeleteCastDialogVisible = false
                     uiState.infoMessage = "\(failure.error)"
@@ -258,7 +599,7 @@ final class CafeDashboardViewModel: ObservableObject {
             do {
                 let result = try await approveCastClaimUseCase.invoke(claimId: claimId)
                 if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "캐스트 프로필 연결 요청을 승인했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_claim_approved"
                     refreshClaimData(resetMessage: false)
                     refreshCastPreviews(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
@@ -275,7 +616,7 @@ final class CafeDashboardViewModel: ObservableObject {
             do {
                 let result = try await rejectCastClaimUseCase.invoke(claimId: claimId)
                 if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "캐스트 프로필 연결 요청을 반려했습니다."
+                    uiState.infoMessage = "dashboard_info_cast_claim_rejected"
                     refreshClaimData(resetMessage: false)
                 } else if let failure = result as? AppResultFailure {
                     uiState.infoMessage = "\(failure.error)"
@@ -319,6 +660,10 @@ final class CafeDashboardViewModel: ObservableObject {
                         if updated.cafeId == self.cafeId {
                             self.patchCafeInfo(updated.cafe)
                         }
+                    case let favorite as CafeDetailEvent.FavoriteToggled:
+                        if favorite.cafeId == self.cafeId {
+                            self.patchFollowerCount(isFavorite: favorite.isFavorite)
+                        }
                     case is CafeDetailEvent.MenuCreated,
                          is CafeDetailEvent.MenuUpdated,
                          is CafeDetailEvent.MenuDeleted,
@@ -346,7 +691,7 @@ final class CafeDashboardViewModel: ObservableObject {
                     } else if let updated = event as? Shared.BannerEvent.Updated, updated.banner.cafeId == self.cafeId {
                         self.patchUpdatedBannerPreview(updated.banner)
                     } else if let deleted = event as? Shared.BannerEvent.Deleted, deleted.banner.cafeId == self.cafeId {
-                        self.patchDeletedBannerPreview(deleted.banner.title)
+                        self.loadCafeDashboard()
                     }
                 }
             } catch {
@@ -355,55 +700,37 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
-    private func patchDeletedBannerPreview(_ deletedBannerTitle: String) {
-        guard let current = uiState.cafe else { return }
-        let currentPreview = current.homeBannerPreview
-        guard currentPreview.title == deletedBannerTitle else { return }
-
-        uiState.cafe = CafeDashboardData(
-            id: current.id,
-            name: current.name,
-            city: current.city,
-            todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
-            rating: current.rating,
-            castPreviews: current.castPreviews,
-            homeBannerPreview: CafeDashboardData.HomeBannerPreview(
-                title: "등록된 배너 없음",
-                period: "-",
-                statusLabel: "미노출"
-            )
-        )
-    }
-
     private func patchUpdatedBannerPreview(_ updatedBanner: HomeBanner) {
-        guard let current = uiState.cafe else { return }
-        let currentPreview = current.homeBannerPreview
-        guard currentPreview.title == updatedBanner.title else { return }
-        let statusLabel: String
-        switch updatedBanner.statusLabel.uppercased() {
-        case "ACTIVE":
-            statusLabel = "노출 중"
-        case "SCHEDULED":
-            statusLabel = "예약 중"
-        default:
-            statusLabel = "미노출"
-        }
-
-        uiState.cafe = CafeDashboardData(
-            id: current.id,
-            name: current.name,
-            city: current.city,
-            todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
-            rating: current.rating,
-            castPreviews: current.castPreviews,
-            homeBannerPreview: CafeDashboardData.HomeBannerPreview(
-                title: updatedBanner.title,
-                period: "노출 \(updatedBanner.displayDays)일",
-                statusLabel: statusLabel
+        if let current = uiState.cafe {
+            let currentPreview = current.homeBannerPreview
+            let statusLabel: String
+            switch updatedBanner.statusLabel.uppercased() {
+            case "ACTIVE":
+                statusLabel = "dashboard_banner_status_active"
+            case "SCHEDULED":
+                statusLabel = "dashboard_banner_status_scheduled"
+            default:
+                statusLabel = "dashboard_banner_status_hidden"
+            }
+            uiState.cafe = CafeDashboardData(
+                id: current.id,
+                name: current.name,
+                city: current.city,
+                todayCheckIns: current.todayCheckIns,
+                followerCount: current.followerCount,
+                rating: current.rating,
+                castPreviews: current.castPreviews,
+                homeBannerPreview: CafeDashboardData.HomeBannerPreview(
+                    title: updatedBanner.title,
+                    period: "dashboard_banner_period_days:\(updatedBanner.displayDays)",
+                    statusLabel: statusLabel,
+                    imageUrl: updatedBanner.imageUrl
+                ),
+                socialMedia: current.socialMedia,
+                reservationUrl: current.reservationUrl,
+                tableCounts: current.tableCounts
             )
-        )
+        }
     }
 
     private func patchCafeInfo(_ cafe: Cafe) {
@@ -413,10 +740,33 @@ final class CafeDashboardViewModel: ObservableObject {
             name: cafe.name,
             city: cafe.region.city,
             todayCheckIns: current.todayCheckIns,
-            todayReviews: current.todayReviews,
+            followerCount: current.followerCount,
             rating: cafe.ratingAvg,
             castPreviews: current.castPreviews,
-            homeBannerPreview: current.homeBannerPreview
+            homeBannerPreview: current.homeBannerPreview,
+            socialMedia: current.socialMedia,
+            reservationUrl: current.reservationUrl,
+            tableCounts: current.tableCounts
+        )
+    }
+
+    private func patchFollowerCount(isFavorite: Bool) {
+        guard let current = uiState.cafe else { return }
+        let nextCount = isFavorite
+            ? Int(current.followerCount) + 1
+            : max(Int(current.followerCount) - 1, 0)
+        uiState.cafe = CafeDashboardData(
+            id: current.id,
+            name: current.name,
+            city: current.city,
+            todayCheckIns: current.todayCheckIns,
+            followerCount: Int32(nextCount),
+            rating: current.rating,
+            castPreviews: current.castPreviews,
+            homeBannerPreview: current.homeBannerPreview,
+            socialMedia: current.socialMedia,
+            reservationUrl: current.reservationUrl,
+            tableCounts: current.tableCounts
         )
     }
 
@@ -437,7 +787,8 @@ final class CafeDashboardViewModel: ObservableObject {
                                 return CafeCastPreview(
                                     id: preview.id,
                                     name: event.cast.name,
-                                    isOnShift: preview.isOnShift
+                                    isOnShift: preview.isOnShift,
+                                    profileImage: event.cast.profileImage
                                 )
                             }
                         }
@@ -452,6 +803,35 @@ final class CafeDashboardViewModel: ObservableObject {
                         }
                     default:
                         break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+    }
+
+    private func observeVisitEvent() {
+        tasks[.visitEvent]?.cancel()
+        tasks[.visitEvent] = Task {
+            do {
+                for try await event in asyncSequence(for: visitEventPublisher.events) {
+                    if let created = event as? Shared.VisitEvent.Created, created.cafeId == self.cafeId {
+                        if let current = self.uiState.cafe {
+                            self.uiState.cafe = CafeDashboardData(
+                                id: current.id,
+                                name: current.name,
+                                city: current.city,
+                                todayCheckIns: current.todayCheckIns + 1,
+                                followerCount: current.followerCount,
+                                rating: current.rating,
+                                castPreviews: current.castPreviews,
+                                homeBannerPreview: current.homeBannerPreview,
+                                socialMedia: current.socialMedia,
+                                reservationUrl: current.reservationUrl,
+                                tableCounts: current.tableCounts
+                            )
+                        }
                     }
                 }
             } catch {
@@ -484,6 +864,26 @@ final class CafeDashboardViewModel: ObservableObject {
         }
     }
 
+    private func startCastClaimPolling() {
+        let pollingIntervalNanoseconds = castClaimPollingIntervalNanoseconds
+        tasks[.castClaimPolling]?.cancel()
+        tasks[.castClaimPolling] = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: pollingIntervalNanoseconds)
+                } catch {
+                    break
+                }
+
+                if Task.isCancelled {
+                    break
+                } else if let self {
+                    await self.refreshClaimData(resetMessage: false)
+                }
+            }
+        }
+    }
+
     func onAction(_ action: CafeDashboardAction) {
         switch action {
         case .clickBack:
@@ -502,10 +902,14 @@ final class CafeDashboardViewModel: ObservableObject {
             submitExternalLink()
         case .clickExternalLinkItem(let linkId):
             clickExternalLinkItem(linkId)
+        case .clickEditExternalLink(let linkId):
+            clickEditExternalLink(linkId)
         case .clickDeleteExternalLink(let linkId):
             clickDeleteExternalLink(linkId)
         case .clickCastSchedule(let castId):
             clickCastSchedule(castId)
+        case .clickCastListDetail:
+            clickCastListDetail()
         case .clickDeleteCast:
             clickDeleteCast()
         case .confirmDeleteCast:
@@ -520,6 +924,54 @@ final class CafeDashboardViewModel: ObservableObject {
             clickLoadMoreCasts()
         case .dismissInfoMessage:
             dismissInfoMessage()
+        case .changeSocialMediaInstagram(let value):
+            changeSocialMediaInstagram(value)
+        case .changeSocialMediaTwitter(let value):
+            changeSocialMediaTwitter(value)
+        case .changeSocialMediaTiktok(let value):
+            changeSocialMediaTiktok(value)
+        case .changeSocialMediaYoutube(let value):
+            changeSocialMediaYoutube(value)
+        case .submitSocialMedia:
+            submitSocialMedia()
+        case .dismissSocialMediaSheet:
+            dismissSocialMediaSheet()
+        case .dismissReservationSheet:
+            dismissReservationSheet()
+        case .changeReservationUrl(let value):
+            changeReservationUrl(value)
+        case .submitReservation:
+            submitReservation()
+        case .clickTableCountMetric:
+            clickTableCountMetric()
+        case .clickAddGuest:
+            clickAddGuest()
+        case .dismissGuestSheet:
+            dismissGuestSheet()
+        case .changeGuestName(let value):
+            uiState.guestName = value
+        case .changeGuestProfileImage(let value):
+            uiState.guestProfileImage = value
+        case .changeGuestDate(let value):
+            uiState.guestDate = value
+        case .changeGuestStartTime(let value):
+            uiState.guestStartTime = value
+        case .changeGuestEndTime(let value):
+            uiState.guestEndTime = value
+        case .changeGuestMemo(let value):
+            uiState.guestMemo = value
+        case .submitGuest:
+            submitGuest()
+        case .deleteGuest(let id):
+            deleteGuest(id)
+        case .dismissTableCountSheet:
+            dismissTableCountSheet()
+        case .changeCurrentTableCount(let value):
+            changeCurrentTableCount(value)
+        case .changeTotalTableCount(let value):
+            changeTotalTableCount(value)
+        case .submitTableCounts:
+            submitTableCounts()
         }
     }
 
@@ -528,30 +980,49 @@ final class CafeDashboardViewModel: ObservableObject {
         getCafeCastPageUseCase: GetCafeCastPageUseCase = KoinInitializerKt.resolveGetCafeCastPageUseCase(),
         getCafeDashboardUseCase: GetCafeDashboardUseCase = KoinInitializerKt.resolveGetCafeDashboardUseCase(),
         getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase = KoinInitializerKt.resolveGetPendingCastClaimsForCafeUseCase(),
+        getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase = KoinInitializerKt.resolveGetGuestCastSchedulesUseCase(),
         approveCastClaimUseCase: ApproveCastClaimUseCase = KoinInitializerKt.resolveApproveCastClaimUseCase(),
         rejectCastClaimUseCase: RejectCastClaimUseCase = KoinInitializerKt.resolveRejectCastClaimUseCase(),
+        cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase = KoinInitializerKt.resolveCafeExternalLinkLocalUseCase(),
+        updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase = KoinInitializerKt.resolveUpdateCafeSocialMediaUseCase(),
+        updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase = KoinInitializerKt.resolveUpdateCafeReservationUrlUseCase(),
+        updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase = KoinInitializerKt.resolveUpdateCafeTableCountsUseCase(),
+        upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase = KoinInitializerKt.resolveUpsertGuestCastScheduleUseCase(),
+        deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase = KoinInitializerKt.resolveDeleteGuestCastScheduleUseCase(),
         deleteCastUseCase: DeleteCastUseCase = KoinInitializerKt.resolveDeleteCastUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castClaimEventPublisher: CastClaimEventPublisher = KoinInitializerKt.resolveCastClaimEventPublisher(),
-        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher()
+        castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeCastPageUseCase = getCafeCastPageUseCase
         self.getCafeDashboardUseCase = getCafeDashboardUseCase
         self.getPendingCastClaimsForCafeUseCase = getPendingCastClaimsForCafeUseCase
+        self.getGuestCastSchedulesUseCase = getGuestCastSchedulesUseCase
         self.approveCastClaimUseCase = approveCastClaimUseCase
         self.rejectCastClaimUseCase = rejectCastClaimUseCase
+        self.cafeExternalLinkLocalUseCase = cafeExternalLinkLocalUseCase
+        self.updateCafeSocialMediaUseCase = updateCafeSocialMediaUseCase
+        self.updateCafeReservationUrlUseCase = updateCafeReservationUrlUseCase
+        self.updateCafeTableCountsUseCase = updateCafeTableCountsUseCase
+        self.upsertGuestCastScheduleUseCase = upsertGuestCastScheduleUseCase
+        self.deleteGuestCastScheduleUseCase = deleteGuestCastScheduleUseCase
         self.deleteCastUseCase = deleteCastUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castClaimEventPublisher = castClaimEventPublisher
         self.castEventPublisher = castEventPublisher
+        self.visitEventPublisher = visitEventPublisher
 
         observeBannerEvent()
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        observeVisitEvent()
+        startCastClaimPolling()
+        loadExternalLinks()
         loadCafeDashboard()
     }
 
@@ -565,5 +1036,21 @@ final class CafeDashboardViewModel: ObservableObject {
         case cafeDetailEvent
         case castClaimEvent
         case castEvent
+        case visitEvent
+        case castClaimPolling
+    }
+
+    private let castClaimPollingIntervalNanoseconds: UInt64 = 30_000_000_000
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
+    private static let guestScheduleDisplayDays = 30
+}
+
+private extension Array where Element == GuestCastSchedule {
+    func sortedByGuestSchedule() -> [GuestCastSchedule] {
+        sorted {
+            if $0.date != $1.date { return $0.date < $1.date }
+            if $0.startTime != $1.startTime { return $0.startTime < $1.startTime }
+            return $0.name < $1.name
+        }
     }
 }

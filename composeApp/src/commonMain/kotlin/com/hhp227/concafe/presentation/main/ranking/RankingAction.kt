@@ -11,4 +11,6 @@ sealed interface RankingAction {
     data class ClickCafe(val id: String) : RankingAction
     data object ClickLoginPromptSignIn : RankingAction
     data object DismissLoginPrompt : RankingAction
+    data class UpdateBannerHeight(val heightPx: Int) : RankingAction
+    data object LoadNativeAdIfNeeded : RankingAction
 }

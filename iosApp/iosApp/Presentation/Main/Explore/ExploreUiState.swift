@@ -18,10 +18,12 @@ struct ExploreUiState {
     var selectedRegion: RegionFilter
     var selectedSort: SortFilter
     var cafes: [Cafe]
+    var hasLoadedCafes: Bool
     var cafesNextCursor: String?
     var canLoadMoreCafes: Bool
     var isLoadingMoreCafes: Bool
     var maids: [Cast]
+    var hasLoadedMaids: Bool
     var maidsNextCursor: String?
     var canLoadMoreMaids: Bool
     var isLoadingMoreMaids: Bool
@@ -36,10 +38,12 @@ struct ExploreUiState {
         selectedRegion: .all,
         selectedSort: .popular,
         cafes: [],
+        hasLoadedCafes: false,
         cafesNextCursor: nil,
         canLoadMoreCafes: false,
         isLoadingMoreCafes: false,
         maids: [],
+        hasLoadedMaids: false,
         maidsNextCursor: nil,
         canLoadMoreMaids: false,
         isLoadingMoreMaids: false
@@ -47,21 +51,27 @@ struct ExploreUiState {
 
     enum TabType: String, CaseIterable {
         case cafe = "카페"
-        case maid = "메이드"
+        case maid = "캐스트"
     }
 
     enum RegionFilter: String, CaseIterable {
         case all = "all"
         case seoul = "seoul"
+        case busan = "busan"
+        case daegu = "daegu"
         case tokyo = "tokyo"
         case osaka = "osaka"
+        case etc = "etc"
 
         var label: String {
             switch self {
             case .all: return "전체"
             case .seoul: return "서울"
+            case .busan: return "부산"
+            case .daegu: return "대구"
             case .tokyo: return "도쿄"
             case .osaka: return "오사카"
+            case .etc: return "그 외지역"
             }
         }
     }

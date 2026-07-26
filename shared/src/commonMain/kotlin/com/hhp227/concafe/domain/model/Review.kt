@@ -10,5 +10,7 @@ data class Review(
     val imageUrls: List<String>,
     val taggedCastIds: List<String>,
     val likeCount: Int,
-    val createdAt: String
+    val createdAt: String,
+    val visitVerified: Boolean = false,
+    val userNickname: String = ""
 )

@@ -35,8 +35,10 @@ struct ReviewEditView: View {
             CompatImagePicker(
                 onImageSelected: { image in
                     isPhotoPickerPresented = false
-                    if let imageUrl = saveImageToTemporaryFile(image) {
-                        viewModel.onAction(.selectPhoto(imageUrl))
+                    saveImageToTemporaryFileAsync(image) { imageUrl in
+                        if let imageUrl {
+                            viewModel.onAction(.selectPhoto(imageUrl))
+                        }
                     }
                 },
                 onDismiss: {
@@ -48,11 +50,12 @@ struct ReviewEditView: View {
 
     init(
         cafeId: String? = nil,
+        reviewId: String? = nil,
         onNavigationAction: @escaping (NavigationAction) -> Void = { _ in }
     ) {
         self.cafeId = cafeId
         self.onNavigationAction = onNavigationAction
-        _viewModel = StateObject(wrappedValue: ReviewEditViewModel(cafeId: cafeId))
+        _viewModel = StateObject(wrappedValue: ReviewEditViewModel(cafeId: cafeId, reviewId: reviewId))
     }
 }
 
@@ -63,13 +66,15 @@ private struct ReviewEditContentView: View {
 
     let onPickPhoto: () -> Void
 
+    @State private var keyboardOverlap: CGFloat = 0
+
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
                         ProgressView()
-                            .tint(Color(hex: "EF6797"))
+                            .tint(ConCafeColors.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 32)
                     } else {
@@ -85,17 +90,18 @@ private struct ReviewEditContentView: View {
                     }
                 }
                 .padding(.bottom, 12)
+                .padding(.bottom, 60)
             }
-            bottomBar
+            bottomBar()
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "F8F5F6"), Color(hex: "FFFBFD")],
+                colors: [Color(uiColor: .systemGroupedBackground), Color(uiColor: .secondarySystemGroupedBackground)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 
     private var cafeInfoSection: some View {
@@ -103,7 +109,7 @@ private struct ReviewEditContentView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color(hex: "FFE5EE"), Color(hex: "F4C6D5")],
+                        colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -112,47 +118,47 @@ private struct ReviewEditContentView: View {
                 .overlay {
                     Text("Cafe")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color(hex: "8A5C71"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 2)
+                        .stroke(ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 2)
                 )
             VStack(alignment: .leading, spacing: 4) {
                 if uiState.isVisitVerified {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.caption)
-                        Text("방문 인증됨")
+                        Text(String(localized: String.LocalizationValue("reviewedit_verified_visit"), table: "Localizable"))
                             .font(.caption.weight(.bold))
                     }
-                    .foregroundStyle(Color(hex: "EF6797"))
+                    .foregroundStyle(ConCafeColors.primary)
                 }
                 Text(uiState.cafeName)
                     .font(.title3.weight(.bold))
-                    .foregroundStyle(Color(hex: "24161E"))
+                    .foregroundStyle(.primary)
                 Text(uiState.cafeAddress)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "7A707A"))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 20)
-        .background(Color(hex: "FFD1DC").opacity(0.1))
+        .background(ConCafeColors.primaryContainer.opacity(0.1))
     }
 
     private var ratingSection: some View {
         VStack(spacing: 10) {
-            Text("카페 경험은 어떠셨나요?")
+            Text(String(localized: String.LocalizationValue("reviewedit_rating_question"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             HStack(spacing: 6) {
                 ForEach(1...ReviewEditUiState.maximumRating, id: \.self) { index in
                     let isSelected = index <= uiState.rating
                     Image(systemName: isSelected ? "star.fill" : "star")
                         .font(.system(size: 34))
-                        .foregroundStyle(isSelected ? Color(hex: "FFC94D") : Color(hex: "E9DDE1"))
+                        .foregroundStyle(isSelected ? ConCafeColors.gold : ConCafeColors.primaryContainer)
                         .onTapGesture {
                             onAction(.selectRating(index))
                         }
@@ -160,25 +166,25 @@ private struct ReviewEditContentView: View {
             }
             Text(uiState.ratingMessage)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("사진 등록 (선택)")
+            Text(String(localized: String.LocalizationValue("reviewedit_photo_section_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             GeometryReader { proxy in
                 ZStack(alignment: .bottomTrailing) {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: "FFD8E6"), Color(hex: "FFEFF5")],
+                                colors: [ConCafeColors.primaryContainer, ConCafeColors.surfaceTint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -192,22 +198,22 @@ private struct ReviewEditContentView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "camera.fill")
                                 .font(.system(size: 32, weight: .semibold))
-                                .foregroundStyle(Color(hex: "8B5164"))
-                            Text("리뷰 사진 추가")
+                                .foregroundStyle(ConCafeColors.primary)
+                            Text(String(localized: String.LocalizationValue("reviewedit_photo_add"), table: "Localizable"))
                                 .font(.subheadline.weight(.bold))
-                                .foregroundStyle(Color(hex: "5A4954"))
+                                .foregroundStyle(.secondary)
                         }
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
                     }
                     if uiState.photoImageUrl != nil {
-                        Button("제거") {
+                        Button(String(localized: String.LocalizationValue("reviewedit_photo_remove"), table: "Localizable")) {
                             onAction(.removePhoto)
                         }
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Color(hex: "8B5164"))
+                        .foregroundStyle(ConCafeColors.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color.white)
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(Capsule())
                         .padding(12)
                     }
@@ -222,33 +228,40 @@ private struct ReviewEditContentView: View {
                 onAction(.clickAddPhoto)
                 onPickPhoto()
             }
-            Text("리뷰 사진은 선택사항이며 최대 1장만 등록할 수 있습니다.")
+            Text(String(localized: String.LocalizationValue("reviewedit_photo_helper"), table: "Localizable"))
                 .font(.caption)
-                .foregroundStyle(Color(hex: "8A8088"))
+                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var reviewSection: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("상세 리뷰")
+            Text(String(localized: String.LocalizationValue("reviewedit_review_detail_title"), table: "Localizable"))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color(hex: "2B2330"))
+                .foregroundStyle(.primary)
             ConCafeFormEditor(
                 label: "",
                 text: Binding(
                     get: { uiState.content },
                     set: { onAction(.changeReviewText($0)) }
                 ),
-                placeholder: "카페 분위기, 맛, 서비스 등에 대한 솔직한 경험을 남겨주세요 (최소 10자 이상)"
+                placeholder: String(localized: String.LocalizationValue("reviewedit_review_detail_hint"), table: "Localizable")
             )
-            Text("\(uiState.reviewLength)/\(ReviewEditUiState.minimumReviewLength)자 이상")
+            Text(
+                String(
+                    format: String(localized: String.LocalizationValue("reviewedit_review_length"), table: "Localizable"),
+                    locale: Locale.current,
+                    uiState.reviewLength,
+                    ReviewEditUiState.minimumReviewLength
+                )
+            )
                 .font(.caption)
-                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? Color(hex: "2E9E5B") : Color(hex: "9A8D95"))
+                .foregroundStyle(uiState.reviewLength >= ReviewEditUiState.minimumReviewLength ? ConCafeColors.success : .secondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
             if !uiState.availableCastTags.isEmpty {
                 castTagSection
@@ -257,46 +270,46 @@ private struct ReviewEditContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 24)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private var atmosphereCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Circle()
-                    .fill(Color(hex: "FFD1DC").opacity(0.1))
+                    .fill(ConCafeColors.primaryContainer.opacity(0.1))
                     .frame(width: 34, height: 34)
                     .overlay {
                         Image(systemName: "face.smiling")
-                            .foregroundStyle(Color(hex: "EF6797"))
+                            .foregroundStyle(ConCafeColors.primary)
                     }
-                Text("분위기가 좋았나요?")
+                Text(String(localized: String.LocalizationValue("reviewedit_atmosphere_question"), table: "Localizable"))
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(.primary)
             }
             HStack(spacing: 8) {
                 answerChip(
-                    title: "네",
+                    title: String(localized: String.LocalizationValue("reviewedit_atmosphere_positive"), table: "Localizable"),
                     isSelected: uiState.atmosphereAnswer == true,
                     action: { onAction(.selectAtmosphereAnswer(true)) }
                 )
                 answerChip(
-                    title: "아니요",
+                    title: String(localized: String.LocalizationValue("reviewedit_atmosphere_negative"), table: "Localizable"),
                     isSelected: uiState.atmosphereAnswer == false,
                     action: { onAction(.selectAtmosphereAnswer(false)) }
                 )
             }
         }
         .padding(16)
-        .background(Color(hex: "F8F5F6"))
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     private var castTagSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("함께 언급한 캐스트")
+            Text(String(localized: String.LocalizationValue("reviewedit_cast_tag_title"), table: "Localizable"))
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(.secondary)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(uiState.availableCastTags) { cast in
@@ -307,14 +320,14 @@ private struct ReviewEditContentView: View {
                         } label: {
                             Text(cast.name)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(selected ? Color(hex: "2B2330") : Color(hex: "6E6169"))
+                                .foregroundStyle(selected ? .primary : .secondary)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 9)
-                                .background(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.1))
+                                .background(selected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.1))
                                 .clipShape(Capsule())
                                 .overlay(
                                     Capsule()
-                                        .stroke(selected ? Color(hex: "FFD1DC") : Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                                        .stroke(selected ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer.opacity(0.3), lineWidth: 1)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -324,7 +337,7 @@ private struct ReviewEditContentView: View {
         }
     }
 
-    private var bottomBar: some View {
+    private func bottomBar() -> some View {
         Group {
             if uiState.isLoggedIn {
                 Button {
@@ -333,16 +346,16 @@ private struct ReviewEditContentView: View {
                     HStack {
                         if uiState.isSubmitting {
                             ProgressView()
-                                .tint(Color(hex: "2B2330"))
+                                .tint(.primary)
                         } else {
                             Text(uiState.submitButtonLabel)
                                 .fontWeight(.bold)
                         }
                     }
-                    .foregroundStyle(uiState.isSubmitEnabled ? Color(hex: "2B2330") : Color(hex: "7F7078"))
+                    .foregroundStyle(uiState.isSubmitEnabled ? .primary : .secondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(uiState.isSubmitEnabled ? Color(hex: "FFD1DC") : Color(hex: "F0D9E0"))
+                    .background(uiState.isSubmitEnabled ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -350,7 +363,7 @@ private struct ReviewEditContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
                 .padding(.bottom, 14)
-                .background(Color.white.opacity(0.96))
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }).opacity(0.96))
             }
         }
     }
@@ -363,14 +376,14 @@ private struct ReviewEditContentView: View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.bold))
-                .foregroundStyle(isSelected ? Color(hex: "2B2330") : Color(hex: "8E7F88"))
+                .foregroundStyle(isSelected ? .primary : .secondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(isSelected ? Color(hex: "FFD1DC") : Color.white)
+                .background(isSelected ? ConCafeColors.primaryContainer : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .stroke(isSelected ? Color(hex: "FFD1DC") : Color(hex: "D9CFD5"), lineWidth: 1)
+                        .stroke(isSelected ? ConCafeColors.primaryContainer : ConCafeColors.outline, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -380,24 +393,24 @@ private struct ReviewEditContentView: View {
         HStack(spacing: 12) {
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(Color(hex: "6B5320"))
+                .foregroundStyle(ConCafeColors.goldDeep)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 onAction(.dismissInfoMessage)
             } label: {
-                Text("닫기")
+                Text(String(localized: String.LocalizationValue("common_close"), table: "Localizable"))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color(hex: "6B5320"))
+                    .foregroundStyle(ConCafeColors.goldDeep)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Color(hex: "FFF6D7"))
+        .background(ConCafeColors.goldContainer)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "F1D88D"), lineWidth: 1)
+                .stroke(ConCafeColors.gold, lineWidth: 1)
         )
     }
 }
@@ -417,25 +430,32 @@ private struct ReviewPhotoImageView: View {
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .tint(Color(hex: "9C7A88"))
+                        .tint(ConCafeColors.textMuted)
                 case .success(let image):
                     image
                         .resizable()
                         .scaledToFill()
                 case .failure:
-                    Color(hex: "F4EFF2")
+                    ConCafeColors.surfaceTint
                 @unknown default:
-                    Color(hex: "F4EFF2")
+                    ConCafeColors.surfaceTint
                 }
             }
         } else {
-            Color(hex: "F4EFF2")
+            ConCafeColors.surfaceTint
         }
     }
 }
 
 private func saveImageToTemporaryFile(_ image: UIImage) -> String? {
     saveCompressedImageToTemporaryFile(image)
+}
+
+private func saveImageToTemporaryFileAsync(
+    _ image: UIImage,
+    completion: @escaping (String?) -> Void
+) {
+    saveCompressedImageToTemporaryFileAsync(image, completion: completion)
 }
 
 struct ReviewEditView_Previews: PreviewProvider {

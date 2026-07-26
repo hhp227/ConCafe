@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Shared
 
 struct NotificationView: View {
@@ -24,13 +25,15 @@ struct NotificationView: View {
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToCast(let id):
                 onNavigationAction(.navigateToCast(id: id))
+            case .navigateToPost(let id):
+                onNavigationAction(.navigateToPostDetail(postId: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
             case .navigateBack:
                 onNavigationAction(.navigateBack)
             }
         }
-        .navigationTitle("알림")
+        .navigationTitle(String(localized: String.LocalizationValue("common_notification"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -54,7 +57,7 @@ private struct NotificationContentView: View {
                 )
             }
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
     }
 }
 
@@ -63,18 +66,18 @@ private struct NotificationSignInRequiredView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: "FFFBFD")
+            (UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
                 .ignoresSafeArea()
             VStack(spacing: 12) {
                 Image(systemName: "bell.badge")
                     .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(Color(hex: "EF6797"))
-                Text("알림은 로그인 후 확인할 수 있어요")
+                    .foregroundStyle(ConCafeColors.primary)
+                Text(String(localized: String.LocalizationValue("notification_login_required_title"), table: "Localizable"))
                     .font(.headline)
                     .bold()
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
-                Text("팔로우/출근/공지 알림을 보려면 로그인해 주세요.")
+                Text(String(localized: String.LocalizationValue("notification_login_required_desc"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
@@ -82,18 +85,18 @@ private struct NotificationSignInRequiredView: View {
                 Button {
                     onAction(.signInTapped)
                 } label: {
-                    Text("로그인하기")
+                    Text(String(localized: String.LocalizationValue("signin_submit"), table: "Localizable"))
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 48)
-                        .background(Color(hex: "EF6797"))
+                        .background(ConCafeColors.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
             .padding(24)
             .frame(maxWidth: 420)
-            .background(.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .padding(24)
         }
@@ -117,17 +120,17 @@ private struct NotificationSectionsView: View {
             .padding(16)
             .padding(.bottom, 20)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(UITraitCollection.current.userInterfaceStyle == .dark ? ConCafeColors.background : Color(uiColor: .systemGroupedBackground))
     }
 
     private var summaryCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("새 알림 \(uiState.unreadCount)개")
+                Text(String(format: String(localized: String.LocalizationValue("notification_summary_title"), table: "Localizable"), locale: Locale.current, uiState.unreadCount))
                     .font(.headline)
                     .bold()
                     .foregroundStyle(.white)
-                Text("출근, 생일, 공지를 섹션별로 빠르게 확인하세요.")
+                Text(String(localized: String.LocalizationValue("notification_summary_desc"), table: "Localizable"))
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.92))
             }
@@ -139,7 +142,7 @@ private struct NotificationSectionsView: View {
         .padding(20)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -162,7 +165,7 @@ private struct NotificationSectionsView: View {
 
     private func notificationCard(_ item: NotificationListItem) -> some View {
         let visual = notificationVisual(type: item.type)
-        let containerColor = item.isRead ? Color.white : Color(hex: "FFF3F8")
+        let containerColor = item.isRead ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : ConCafeColors.background
         return HStack(alignment: .top, spacing: 12) {
             Circle()
                 .fill(visual.background)
@@ -172,6 +175,15 @@ private struct NotificationSectionsView: View {
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(visual.foreground)
                 )
+                .overlay(alignment: .topTrailing) {
+                    if !item.isRead {
+                        Circle()
+                            .fill(ConCafeColors.primary)
+                            .frame(width: 10, height: 10)
+                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                            .offset(x: 2, y: -2)
+                    }
+                }
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .top) {
                     Text(item.title)
@@ -184,7 +196,7 @@ private struct NotificationSectionsView: View {
                 }
                 Text(item.message)
                     .font(.subheadline)
-                    .foregroundStyle(Color(hex: "6D6671"))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(14)
@@ -198,15 +210,29 @@ private struct NotificationSectionsView: View {
 
     private func notificationVisual(type: String) -> (symbol: String, background: Color, foreground: Color) {
         if type == "CAST_SHIFT" {
-            return ("figure.walk.motion", Color(hex: "E4F7EC"), Color(hex: "2E9E5B"))
+            return ("figure.walk.motion", ConCafeColors.successContainer, ConCafeColors.success)
+        } else if type == "CAST_SCHEDULE_ASSIGNED" {
+            return ("calendar.badge.plus", ConCafeColors.successContainer, ConCafeColors.success)
         } else if type == "BIRTHDAY" {
-            return ("birthday.cake.fill", Color(hex: "FFE6F1"), Color(hex: "EB5F97"))
+            return ("birthday.cake.fill", ConCafeColors.surfaceTint, ConCafeColors.primary)
         } else if type == "CAFE_NOTICE" {
-            return ("megaphone.fill", Color(hex: "E8F0FF"), Color(hex: "4A79E8"))
+            return ("megaphone.fill", ConCafeColors.infoContainer, ConCafeColors.info)
+        } else if type == "CAFE_EVENT" {
+            return ("party.popper.fill", ConCafeColors.warningContainer, ConCafeColors.warning)
+        } else if type == "CAST_SCHEDULE_CREATED" {
+            return ("calendar.badge.plus", ConCafeColors.infoContainer, ConCafeColors.info)
+        } else if type == "CAFE_TABLE_COUNT_UPDATE" {
+            return ("tablecells.fill", ConCafeColors.successContainer, ConCafeColors.success)
         } else if type == "FOLLOW_UPDATE" {
-            return ("person.badge.plus.fill", Color(hex: "F1E8FF"), Color(hex: "8A52E2"))
+            return ("person.badge.plus.fill", ConCafeColors.primaryContainer, ConCafeColors.primary)
+        } else if type == "COMMUNITY_COMMENT" {
+            return ("text.bubble.fill", ConCafeColors.infoContainer, ConCafeColors.info)
+        } else if type == "COMMUNITY_LIKE" {
+            return ("heart.fill", ConCafeColors.surfaceTint, ConCafeColors.primary)
+        } else if type == "WEEKLY_COMMUNITY_HIGHLIGHT" {
+            return ("flame.fill", ConCafeColors.warningContainer, ConCafeColors.warning)
         } else {
-            return ("bell.fill", Color(hex: "F2F2F2"), Color(hex: "666666"))
+            return ("bell.fill", Color(uiColor: .tertiarySystemFill), .secondary)
         }
     }
 }

@@ -16,13 +16,18 @@ import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
+import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 
 class CastViewModel(
     private val castId: String,
     private val getCastDetailUseCase: GetCastDetailUseCase,
     private val toggleFollowCastUseCase: ToggleFollowCastUseCase,
+    private val shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase,
+    private val markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase,
     private val castEventPublisher: CastEventPublisher,
     private val reviewEventPublisher: ReviewEventPublisher
 ) : ViewModel() {
@@ -41,7 +46,10 @@ class CastViewModel(
                     }
                     is CastDomainEvent.Updated -> if (event.cast.id == castId) {
                         _uiState.update { state ->
-                            state.copy(detail = state.detail?.copy(cast = event.cast))
+                            state.copy(
+                                detail = state.detail?.copy(cast = event.cast),
+                                isFollowing = event.isFollowing ?: state.isFollowing
+                            )
                         }
                     }
                     is CastDomainEvent.Deleted -> if (event.castId == castId) {
@@ -75,7 +83,6 @@ class CastViewModel(
                 errorMessage = null
             )
         }
-
         viewModelScope.launch {
             when (val result = getCastDetailUseCase.invoke(castId)) {
                 is AppResult.Success -> {
@@ -85,14 +92,19 @@ class CastViewModel(
                         detail = result.data.detail,
                         recentReviews = result.data.recentReviews,
                         isFollowing = result.data.isFollowing,
-                        isLoggedIn = result.data.isLoggedIn
+                        isLoggedIn = result.data.isLoggedIn,
+                        todayAttendanceStatus = result.data.todayAttendanceStatus,
+                        isSelfCast = result.data.isSelfCast,
+                        shouldShowFollowTooltip = (_uiState.value.shouldShowFollowTooltip ||
+                                shouldShowDetailTooltipUseCase.invoke(DetailTooltipType.CAST_FOLLOW)) &&
+                                !result.data.isSelfCast
                     )
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "캐스트 상세 데이터를 불러오지 못했습니다."
+                            errorMessage = null
                         )
                     }
                 }
@@ -125,11 +137,18 @@ class CastViewModel(
             when (action) {
                 CastAction.ClickBack -> _event.emit(CastEvent.NavigateBack)
                 CastAction.ClickFollow -> toggleFollow()
+                CastAction.MarkFollowTooltipShown -> {
+                    markDetailTooltipShownUseCase.invoke(DetailTooltipType.CAST_FOLLOW)
+                }
+                CastAction.DismissFollowTooltip -> {
+                    _uiState.update { it.copy(shouldShowFollowTooltip = false) }
+                }
                 CastAction.Refresh -> loadCastDetail()
                 CastAction.ClickCafe -> {
                     val cafeId = _uiState.value.detail?.cafe?.id ?: return@launch
                     _event.emit(CastEvent.NavigateToCafe(cafeId))
                 }
+                is CastAction.ClickImage -> _event.emit(CastEvent.NavigateToPicture(action.imageUrl))
             }
         }
     }

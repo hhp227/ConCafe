@@ -7,9 +7,11 @@ import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeMenu
+import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 class MenuGoodsViewModel(
     private val cafeId: String,
     private val getCafeDetailUseCase: GetCafeDetailUseCase,
+    private val upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase,
     private val deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher
 ) : ViewModel() {
@@ -35,7 +38,7 @@ class MenuGoodsViewModel(
             when (val result = getCafeDetailUseCase.invoke(cafeId)) {
                 is AppResult.Success -> applyDetail(result.data.detail)
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(isLoading = false, infoMessage = "항목 정보를 불러오지 못했습니다.") }
+                    _uiState.update { it.copy(isLoading = false, infoMessage = MSG_LOAD_FAILED) }
                 }
             }
         }
@@ -49,6 +52,7 @@ class MenuGoodsViewModel(
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()
                     }
+                    is CafeDetailEvent.FavoriteToggled -> Unit
                     is CafeDetailEvent.MenuCreated -> if (event.cafeId == cafeId) {
                         loadMenuGoods()
                     }
@@ -187,17 +191,79 @@ class MenuGoodsViewModel(
     }
 
     private fun toggleItemAvailability(itemId: String) {
-        _uiState.update { state ->
-            when (state.selectedCollection) {
-                MenuGoodsUiState.CollectionTab.MENU -> {
-                    val target = state.menuItems.firstOrNull { it.id == itemId } ?: return@update state
-                    val nextAvailability = !state.isMenuAvailable(target)
-                    state.copy(menuAvailabilityOverrides = state.menuAvailabilityOverrides + (itemId to nextAvailability))
+        when (_uiState.value.selectedCollection) {
+            MenuGoodsUiState.CollectionTab.MENU -> {
+                val target = _uiState.value.menuItems.firstOrNull { it.id == itemId } ?: return
+                val nextAvailability = !_uiState.value.isMenuAvailable(target)
+                _uiState.update { state ->
+                    state.copy(
+                        menuAvailabilityOverrides = state.menuAvailabilityOverrides + (itemId to nextAvailability),
+                        infoMessage = null
+                    )
                 }
-                MenuGoodsUiState.CollectionTab.GOODS -> {
-                    val target = state.goodsItems.firstOrNull { it.id == itemId } ?: return@update state
-                    val nextAvailability = !state.isGoodsAvailable(target)
-                    state.copy(goodsAvailabilityOverrides = state.goodsAvailabilityOverrides + (itemId to nextAvailability))
+                jobs[JobKey.TOGGLE_AVAILABILITY]?.cancel()
+                jobs[JobKey.TOGGLE_AVAILABILITY] = viewModelScope.launch {
+                    when (
+                        upsertCafeMenuGoodsUseCase.invoke(
+                            CafeMenuGoodsUpsert(
+                                cafeId = cafeId,
+                                itemId = target.id,
+                                name = target.name,
+                                price = target.price,
+                                category = target.category,
+                                description = target.desc,
+                                isInStock = nextAvailability,
+                                imageUrl = target.image
+                            )
+                        )
+                    ) {
+                        is AppResult.Success -> Unit
+                        is AppResult.Failure -> {
+                            _uiState.update { state ->
+                                state.copy(
+                                    menuAvailabilityOverrides = state.menuAvailabilityOverrides - itemId,
+                                    infoMessage = MSG_AVAILABILITY_SAVE_FAILED
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            MenuGoodsUiState.CollectionTab.GOODS -> {
+                val target = _uiState.value.goodsItems.firstOrNull { it.id == itemId } ?: return
+                val nextAvailability = !_uiState.value.isGoodsAvailable(target)
+                _uiState.update { state ->
+                    state.copy(
+                        goodsAvailabilityOverrides = state.goodsAvailabilityOverrides + (itemId to nextAvailability),
+                        infoMessage = null
+                    )
+                }
+                jobs[JobKey.TOGGLE_AVAILABILITY]?.cancel()
+                jobs[JobKey.TOGGLE_AVAILABILITY] = viewModelScope.launch {
+                    when (
+                        upsertCafeMenuGoodsUseCase.invoke(
+                            CafeMenuGoodsUpsert(
+                                cafeId = cafeId,
+                                itemId = target.id,
+                                name = target.name,
+                                price = target.price,
+                                category = "goods",
+                                description = "카페 굿즈 판매 항목",
+                                isInStock = nextAvailability,
+                                imageUrl = target.image
+                            )
+                        )
+                    ) {
+                        is AppResult.Success -> Unit
+                        is AppResult.Failure -> {
+                            _uiState.update { state ->
+                                state.copy(
+                                    goodsAvailabilityOverrides = state.goodsAvailabilityOverrides - itemId,
+                                    infoMessage = MSG_AVAILABILITY_SAVE_FAILED
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -212,10 +278,10 @@ class MenuGoodsViewModel(
             _uiState.update { it.copy(infoMessage = null, pendingDeleteItemId = null) }
             when (deleteCafeMenuGoodsUseCase.invoke(cafeId = cafeId, itemId = itemId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "항목이 삭제되었습니다.") }
+                    _uiState.update { it.copy(infoMessage = MSG_DELETE_SUCCESS) }
                 }
                 is AppResult.Failure -> {
-                    _uiState.update { it.copy(infoMessage = "항목 삭제에 실패했습니다.") }
+                    _uiState.update { it.copy(infoMessage = MSG_DELETE_FAILED) }
                 }
             }
         }
@@ -309,6 +375,14 @@ class MenuGoodsViewModel(
 
     private enum class JobKey {
         LOAD,
-        OBSERVE_EVENT
+        OBSERVE_EVENT,
+        TOGGLE_AVAILABILITY
+    }
+
+    companion object {
+        private const val MSG_LOAD_FAILED = "menugoods_info_load_failed"
+        private const val MSG_AVAILABILITY_SAVE_FAILED = "menugoods_info_availability_save_failed"
+        private const val MSG_DELETE_SUCCESS = "menugoods_info_delete_success"
+        private const val MSG_DELETE_FAILED = "menugoods_info_delete_failed"
     }
 }

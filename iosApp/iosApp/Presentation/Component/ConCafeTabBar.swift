@@ -32,8 +32,8 @@ struct ConCafeTabBar: View {
                                 .font(.subheadline.weight(selectedIndex == index ? .bold : .regular))
                                 .foregroundStyle(
                                     selectedIndex == index
-                                    ? Color(hex: "EF6797")
-                                    : Color(hex: "777777")
+                                    ? ConCafeColors.primary
+                                    : ConCafeColors.textSecondary
                                 )
                         }
                         .frame(
@@ -48,7 +48,7 @@ struct ConCafeTabBar: View {
             }
             .overlay(alignment: .bottomLeading) {
                 Rectangle()
-                    .fill(Color(hex: "EF6797"))
+                    .fill(ConCafeColors.primary)
                     .frame(width: itemWidth, height: 2)
                     .offset(x: CGFloat(selectedIndex) * itemWidth)
                     .animation(.easeInOut(duration: 0.2), value: selectedIndex)

@@ -4,21 +4,35 @@ import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.domain.model.User
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 
 data class CheckInUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val currentUser: User? = null,
     val currentLocationLabel: String = "",
+    val userCityKey: String? = null,
     val mapCafes: List<CheckInCafeSummary> = emptyList(),
     val popularCafes: List<CheckInCafeSummary> = emptyList(),
     val popularCasts: List<CheckInCastSummary> = emptyList(),
     val todayVisits: List<CheckInVisitEntry> = emptyList(),
     val recentVisits: List<CheckInVisitEntry> = emptyList(),
+    val recentVisitsNextCursor: String? = null,
+    val canLoadMoreRecentVisits: Boolean = false,
+    val isLoadingMoreRecentVisits: Boolean = false,
     val isLoginPromptVisible: Boolean = false,
+    val loginPromptType: LoginPromptType = LoginPromptType.CHECK_IN,
     val isNewVisitSheetVisible: Boolean = false,
-    val reviewPrompt: ReviewPrompt? = null
+    val isQrCheckInSheetVisible: Boolean = false,
+    val preselectCafeId: String? = null,
+    val reviewPrompt: ReviewPrompt? = null,
+    val selectedMapRegion: ExploreUiState.RegionFilter = ExploreUiState.RegionFilter.ALL
 ) {
+    enum class LoginPromptType {
+        DETAIL,
+        CHECK_IN
+    }
+
     data class ReviewPrompt(
         val visitId: String,
         val cafeId: String,

@@ -5,5 +5,7 @@ data class CafeEventCreate(
     val title: String,
     val content: String,
     val imageUrl: String,
-    val periodText: String?
+    val periodText: String?,
+    val participantCastIds: List<String> = emptyList(),
+    val hasLivePerformance: Boolean = false
 )

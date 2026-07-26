@@ -2,7 +2,6 @@ package com.hhp227.concafe.domain.repository
 
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.*
-import kotlinx.coroutines.flow.Flow
 
 interface CafeRepository {
     suspend fun searchCafes(
@@ -16,6 +15,8 @@ interface CafeRepository {
 
     suspend fun getCafeDetail(cafeId: String): CafeDetail
 
+    suspend fun getCafeMenuGoods(cafeId: String): CafeMenuGoodsSection
+
     suspend fun updateCafeInfo(update: CafeInfoUpdate): CafeDetail
 
     suspend fun upsertCafeMenuGoods(update: CafeMenuGoodsUpsert): CafeDetail
@@ -24,7 +25,23 @@ interface CafeRepository {
 
     suspend fun isFavorite(userId: String, cafeId: String): Boolean
 
+    suspend fun getFavoriteCafeIds(userId: String, limit: Int? = null): List<String>
+
+    suspend fun getCafesByIds(cafeIds: List<String>): List<Cafe>
+
     suspend fun toggleFavorite(userId: String, cafeId: String): Boolean
 
     suspend fun getPopularCheckInCafes(limit: Int): List<CheckInCafeSummary>
+
+    suspend fun updateCafeSocialMedia(
+        cafeId: String,
+        instagramId: String?,
+        twitterId: String?,
+        tiktokId: String?,
+        youtubeId: String?
+    )
+
+    suspend fun updateCafeReservationUrl(cafeId: String, reservationUrl: String?)
+
+    suspend fun updateCafeTableCounts(cafeId: String, current: Int, total: Int)
 }

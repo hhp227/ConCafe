@@ -1,36 +1,48 @@
 package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDashboardData
+import com.hhp227.concafe.domain.model.GuestCastSchedule
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
+import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.*
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +58,12 @@ fun CafeDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val externalLinkSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val socialMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val reservationSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val tableCountSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val guestSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val qrSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isQrSheetVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -69,6 +87,9 @@ fun CafeDashboardScreen(
                 is CafeDashboardEvent.NavigateToCastEdit -> {
                     onNavigationAction(NavigationAction.NavigateToCastEdit(event.cafeId, event.castId))
                 }
+                is CafeDashboardEvent.NavigateToCastList -> {
+                    onNavigationAction(NavigationAction.NavigateToCastList(event.cafeId))
+                }
                 is CafeDashboardEvent.NavigateToSchedule -> {
                     onNavigationAction(NavigationAction.NavigateToSchedule(event.castId))
                 }
@@ -86,16 +107,16 @@ fun CafeDashboardScreen(
     if (uiState.isDeleteCastDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) },
-            title = { Text("캐스트 프로필 삭제") },
-            text = { Text("캐스트 프로필을 삭제하시겠습니까?") },
+            title = { Text(stringResource(Res.string.dashboard_delete_cast_title)) },
+            text = { Text(stringResource(Res.string.dashboard_delete_cast_message)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(CafeDashboardAction.ConfirmDeleteCast) }) {
-                    Text("확인")
+                    Text(stringResource(Res.string.common_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(CafeDashboardAction.DismissDeleteCastDialog) }) {
-                    Text("취소")
+                    Text(stringResource(Res.string.common_cancel))
                 }
             }
         )
@@ -103,7 +124,7 @@ fun CafeDashboardScreen(
     if (uiState.isExternalLinkSheetVisible) {
         ModalBottomSheet(
             onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissExternalLinkSheet) },
-            containerColor = Color(0xFFFFFBFD),
+            containerColor = MaterialTheme.colorScheme.background,
             sheetState = externalLinkSheetState
         ) {
             ExternalLinkSheetContent(
@@ -113,9 +134,69 @@ fun CafeDashboardScreen(
             )
         }
     }
+    if (uiState.isSocialMediaSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissSocialMediaSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = socialMediaSheetState
+        ) {
+            SocialMediaSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (uiState.isReservationSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissReservationSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = reservationSheetState
+        ) {
+            ReservationSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (uiState.isTableCountSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissTableCountSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = tableCountSheetState
+        ) {
+            TableCountSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (uiState.isGuestSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.onAction(CafeDashboardAction.DismissGuestSheet) },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = guestSheetState
+        ) {
+            GuestScheduleSheetContent(
+                uiState = uiState,
+                onAction = viewModel::onAction
+            )
+        }
+    }
+    if (isQrSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { isQrSheetVisible = false },
+            containerColor = MaterialTheme.colorScheme.background,
+            sheetState = qrSheetState
+        ) {
+            DashboardQrSheetContent(
+                payload = buildCafeCheckInQrPayload(uiState.cafe?.id ?: cafeId)
+            )
+        }
+    }
     CafeDashboardContentScreen(
         uiState = uiState,
-        onAction = viewModel::onAction
+        onAction = viewModel::onAction,
+        onQrMetricClick = { isQrSheetVisible = true }
     )
 }
 
@@ -123,7 +204,8 @@ fun CafeDashboardScreen(
 @Composable
 private fun CafeDashboardContentScreen(
     uiState: CafeDashboardUiState,
-    onAction: (CafeDashboardAction) -> Unit
+    onAction: (CafeDashboardAction) -> Unit,
+    onQrMetricClick: () -> Unit
 ) {
     val cafe = uiState.cafe
 
@@ -132,11 +214,11 @@ private fun CafeDashboardContentScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(cafe?.name ?: "카페 관리")
+                    Text(cafe?.name ?: stringResource(Res.string.dashboard_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(CafeDashboardAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.cafe_accessibility_back))
                     }
                 }
             )
@@ -145,113 +227,141 @@ private fun CafeDashboardContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFFFF7FB), Color(0xFFFFEEF6), Color(0xFFFFFBFD))
-                    )
-                )
+                .background(ConCafeColors.background)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                cafe?.let {
-                    item {
-                        DashboardHeroCard(cafe = it)
-                    }
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                uiState.infoMessage?.let { message ->
-                    item {
-                        InfoBanner(
-                            message = message,
-                            onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
-                        )
-                    }
-                }
-                if (uiState.isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 48.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    cafe?.let {
+                        item {
+                            DashboardHeroCard(cafe = it)
                         }
                     }
-                } else if (cafe != null) {
-                    item {
-                        DashboardMetricGrid(cafe = cafe)
-                    }
-                    if (uiState.pendingCastClaims.isNotEmpty()) {
+                    uiState.infoMessage?.let { message ->
                         item {
-                            PendingCastClaimSection(
-                                claims = uiState.pendingCastClaims,
-                                onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
-                                onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                            InfoBanner(
+                                message = when (message) {
+                                    "dashboard_info_cast_list_load_failed" -> stringResource(Res.string.dashboard_info_cast_list_load_failed)
+                                    "dashboard_info_select_cast_for_schedule" -> stringResource(Res.string.dashboard_info_select_cast_for_schedule)
+                                    "dashboard_info_external_link_input_required" -> stringResource(Res.string.dashboard_info_external_link_input_required)
+                                    "dashboard_info_external_link_updated" -> stringResource(Res.string.dashboard_info_external_link_updated)
+                                    "dashboard_info_external_link_added" -> stringResource(Res.string.dashboard_info_external_link_added)
+                                    "dashboard_info_external_link_deleted" -> stringResource(Res.string.dashboard_info_external_link_deleted)
+                                    "dashboard_info_select_cast_for_delete" -> stringResource(Res.string.dashboard_info_select_cast_for_delete)
+                                    "dashboard_info_cast_deleted" -> stringResource(Res.string.dashboard_info_cast_deleted)
+                                    "dashboard_info_cast_claim_approved" -> stringResource(Res.string.dashboard_info_cast_claim_approved)
+                                    "dashboard_info_cast_claim_rejected" -> stringResource(Res.string.dashboard_info_cast_claim_rejected)
+                                    "dashboard_info_social_media_saved" -> stringResource(Res.string.dashboard_info_social_media_saved)
+                                    "dashboard_info_reservation_saved" -> stringResource(Res.string.dashboard_info_reservation_saved)
+                                    "dashboard_info_table_counts_saved" -> stringResource(Res.string.dashboard_info_table_counts_saved)
+                                    else -> message
+                                },
+                                onDismiss = { onAction(CafeDashboardAction.DismissInfoMessage) }
                             )
                         }
                     }
-                    item {
-                        ShortcutGrid(
-                            onShortcutClick = { shortcut ->
-                                onAction(CafeDashboardAction.ClickShortcut(shortcut))
-                            }
-                        )
-                    }
-                    item {
-                        CastManagementSection(
-                            casts = uiState.castPreviews,
-                            hasMoreCasts = uiState.hasMoreCasts,
-                            isLoadingMoreCasts = uiState.isLoadingMoreCasts,
-                            onCastManagementClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
-                            },
-                            onDeleteClick = {
-                                onAction(CafeDashboardAction.ClickDeleteCast)
-                            },
-                            canDelete = uiState.selectedCastId != null,
-                            onScheduleClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
-                            },
-                            selectedCastId = uiState.selectedCastId,
-                            onCastScheduleSelect = { castId ->
-                                onAction(CafeDashboardAction.ClickCastSchedule(castId))
-                            },
-                            onLoadMoreClick = {
-                                onAction(CafeDashboardAction.ClickLoadMoreCasts)
-                            }
-                        )
-                    }
-                    if (uiState.externalLinks.isNotEmpty()) {
+                    if (cafe != null) {
                         item {
-                            ExternalLinkSection(
-                                links = uiState.externalLinks,
-                                onAddClick = {
-                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
-                                },
-                                onItemClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
-                                },
-                                onDeleteClick = { linkId ->
-                                    onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                            DashboardMetricGrid(
+                                cafe = cafe,
+                                onTableCountClick = { onAction(CafeDashboardAction.ClickTableCountMetric) }
+                            )
+                        }
+                        if (uiState.pendingCastClaims.isNotEmpty()) {
+                            item {
+                                PendingCastClaimSection(
+                                    claims = uiState.pendingCastClaims,
+                                    onApprove = { onAction(CafeDashboardAction.ClickApproveCastClaim(it)) },
+                                    onReject = { onAction(CafeDashboardAction.ClickRejectCastClaim(it)) }
+                                )
+                            }
+                        }
+                        item {
+                            ShortcutGrid(
+                                onQrMetricClick = onQrMetricClick,
+                                onShortcutClick = { shortcut ->
+                                    onAction(CafeDashboardAction.ClickShortcut(shortcut))
                                 }
                             )
                         }
-                    }
-                    item {
-                        HomeBannerSection(
-                            banner = cafe.homeBannerPreview,
-                            onBannerClick = {
-                                onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
-                            },
-                            onCreateBannerClick = {
-                                onAction(CafeDashboardAction.ClickCreateBanner)
+                        item {
+                            CastManagementSection(
+                                casts = uiState.castPreviews,
+                                hasMoreCasts = uiState.hasMoreCasts,
+                                isLoadingMoreCasts = uiState.isLoadingMoreCasts,
+                                onCastManagementClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_MANAGEMENT))
+                                },
+                                onDeleteClick = {
+                                    onAction(CafeDashboardAction.ClickDeleteCast)
+                                },
+                                canDelete = uiState.selectedCastId != null,
+                                onScheduleClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.CAST_SCHEDULE))
+                                },
+                                selectedCastId = uiState.selectedCastId,
+                                onCastScheduleSelect = { castId ->
+                                    onAction(CafeDashboardAction.ClickCastSchedule(castId))
+                                },
+                                onLoadMoreClick = {
+                                    onAction(CafeDashboardAction.ClickLoadMoreCasts)
+                                },
+                                onCastListDetailClick = {
+                                    onAction(CafeDashboardAction.ClickCastListDetail)
+                                }
+                            )
+                        }
+                        item {
+                            GuestManagementSection(
+                                guestSchedules = uiState.guestSchedules,
+                                onAddClick = { onAction(CafeDashboardAction.ClickAddGuest) },
+                                onDeleteClick = { onAction(CafeDashboardAction.DeleteGuest(it)) }
+                            )
+                        }
+                        if (uiState.externalLinks.isNotEmpty()) {
+                            item {
+                                ExternalLinkSection(
+                                    links = uiState.externalLinks,
+                                    onAddClick = {
+                                        onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.EXTERNAL_LINKS))
+                                    },
+                                    onItemClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickExternalLinkItem(linkId))
+                                    },
+                                    onEditClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickEditExternalLink(linkId))
+                                    },
+                                    onDeleteClick = { linkId ->
+                                        onAction(CafeDashboardAction.ClickDeleteExternalLink(linkId))
+                                    }
+                                )
                             }
-                        )
+                        }
+                        item {
+                            HomeBannerSection(
+                                banner = cafe.homeBannerPreview,
+                                onBannerClick = {
+                                    onAction(CafeDashboardAction.ClickShortcut(CafeDashboardShortcut.HOME_BANNER))
+                                },
+                                onCreateBannerClick = {
+                                    onAction(CafeDashboardAction.ClickCreateBanner)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -268,29 +378,24 @@ private fun ExternalLinkSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .navigationBarsPadding()
-            .imePadding(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "외부 링크 추가",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "홈이나 카페 화면에서 연결할 외부 링크를 간단히 등록합니다.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF7A707A)
+            text = stringResource(Res.string.dashboard_external_link_guide),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         ConCafeFormField(
-            label = "제목",
+            label = stringResource(Res.string.dashboard_external_link_label_title),
             value = uiState.externalLinkTitle,
             onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkTitle(it)) },
-            placeholder = "예: 공식 X 계정"
+            placeholder = stringResource(Res.string.dashboard_external_link_placeholder_title)
         )
         ConCafeFormField(
-            label = "링크 URL",
+            label = stringResource(Res.string.dashboard_external_link_label_url),
             value = uiState.externalLinkUrl,
             onValueChange = { onAction(CafeDashboardAction.ChangeExternalLinkUrl(it)) },
             placeholder = "https://"
@@ -301,19 +406,350 @@ private fun ExternalLinkSheetContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330),
-                disabledContainerColor = Color(0xFFF4D7DF),
-                disabledContentColor = Color(0xFF7F7078)
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = ConCafeColors.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
-            Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(if (uiState.editingExternalLinkId == null) {
+                    Res.string.dashboard_external_link_add
+                } else {
+                    Res.string.dashboard_external_link_save
+                }),
+                fontWeight = FontWeight.Bold
+            )
         }
         TextButton(
             onClick = { onAction(CafeDashboardAction.DismissExternalLinkSheet) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("닫기")
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun SocialMediaSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_social_media_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_social_media_section_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        ConCafeFormField(
+            label = "Instagram",
+            value = uiState.instagramId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaInstagram(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "X (Twitter)",
+            value = uiState.twitterId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaTwitter(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "TikTok",
+            value = uiState.tiktokId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaTiktok(it)) },
+            placeholder = "@account_id"
+        )
+        ConCafeFormField(
+            label = "YouTube",
+            value = uiState.youtubeId,
+            onValueChange = { onAction(CafeDashboardAction.ChangeSocialMediaYoutube(it)) },
+            placeholder = "@channel_id"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitSocialMedia) },
+            enabled = !uiState.isSavingSocialMedia,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = ConCafeColors.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isSavingSocialMedia) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_social_media_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissSocialMediaSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun ReservationSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_reservation_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_reservation_guide),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_reservation_label_url),
+            value = uiState.reservationUrl,
+            onValueChange = { onAction(CafeDashboardAction.ChangeReservationUrl(it)) },
+            placeholder = "https://"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitReservation) },
+            enabled = !uiState.isSavingReservation,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = ConCafeColors.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isSavingReservation) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_reservation_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissReservationSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun TableCountSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_table_count_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_table_count_guide),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_table_count_label_total),
+            value = uiState.totalTableCountInput,
+            onValueChange = { onAction(CafeDashboardAction.ChangeTotalTableCount(it)) },
+            placeholder = "0",
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+        )
+        ConCafeFormField(
+            label = stringResource(Res.string.dashboard_table_count_label_current),
+            value = uiState.currentTableCountInput,
+            onValueChange = { onAction(CafeDashboardAction.ChangeCurrentTableCount(it)) },
+            placeholder = "0",
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitTableCounts) },
+            enabled = uiState.isTableCountSubmitEnabled && !uiState.isSavingTableCounts,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = ConCafeColors.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isSavingTableCounts) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(stringResource(Res.string.dashboard_table_count_save), fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissTableCountSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@Composable
+private fun GuestScheduleSheetContent(
+    uiState: CafeDashboardUiState,
+    onAction: (CafeDashboardAction) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("게스트 출연 추가", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("소속 캐스트가 아닌 출연자를 카페 스케줄에 표시합니다.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ConCafeFormField(
+            label = "게스트 이름",
+            value = uiState.guestName,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestName(it)) },
+            placeholder = "이름"
+        )
+        ConCafeFormField(
+            label = "프로필 이미지 URL",
+            value = uiState.guestProfileImage,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestProfileImage(it)) },
+            placeholder = "https://"
+        )
+        DashboardDropdownField(
+            label = "출연일",
+            value = uiState.guestDate,
+            options = uiState.guestDateOptions,
+            onSelect = { onAction(CafeDashboardAction.ChangeGuestDate(it)) }
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DashboardDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "시작",
+                value = uiState.guestStartTime,
+                options = uiState.guestTimeOptions,
+                onSelect = { onAction(CafeDashboardAction.ChangeGuestStartTime(it)) }
+            )
+            DashboardDropdownField(
+                modifier = Modifier.weight(1f),
+                label = "종료",
+                value = uiState.guestEndTime,
+                options = uiState.guestTimeOptions,
+                onSelect = { onAction(CafeDashboardAction.ChangeGuestEndTime(it)) }
+            )
+        }
+        ConCafeFormField(
+            label = "메모",
+            value = uiState.guestMemo,
+            onValueChange = { onAction(CafeDashboardAction.ChangeGuestMemo(it)) },
+            placeholder = "이벤트명, 참고사항"
+        )
+        Button(
+            onClick = { onAction(CafeDashboardAction.SubmitGuest) },
+            enabled = uiState.isGuestSubmitEnabled && !uiState.isGuestSaving,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = ConCafeColors.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            if (uiState.isGuestSaving) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Text("게스트 출연 추가", fontWeight = FontWeight.Bold)
+            }
+        }
+        TextButton(
+            onClick = { onAction(CafeDashboardAction.DismissGuestSheet) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(Res.string.common_close))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardDropdownField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                shape = RoundedCornerShape(16.dp)
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -324,12 +760,13 @@ private fun ExternalLinkSection(
     links: List<CafeDashboardExternalLink>,
     onAddClick: () -> Unit,
     onItemClick: (String) -> Unit,
+    onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -342,25 +779,25 @@ private fun ExternalLinkSection(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "외부 링크",
+                        text = stringResource(Res.string.dashboard_shortcut_external_links),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF8C7A83)
+                        color = ConCafeColors.textMuted
                     )
                     Text(
-                        text = "앱 외부로 연결할 링크를 관리합니다.",
+                        text = stringResource(Res.string.dashboard_external_link_section_subtitle),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7E7480)
+                        color = ConCafeColors.textSecondary
                     )
                 }
                 TextButton(onClick = onAddClick) {
-                    Text("추가", color = Color(0xFFEF6797))
+                    Text(stringResource(Res.string.dashboard_action_add), color = ConCafeColors.primary)
                 }
             }
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFFFFBFD),
-                border = BorderStroke(1.dp, Color(0xFFF0E6EC))
+                color = MaterialTheme.colorScheme.background,
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -375,8 +812,8 @@ private fun ExternalLinkSection(
                             Card(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBFD)),
-                                border = BorderStroke(1.dp, Color(0xFFF0E6EC)),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                                border = BorderStroke(1.dp, ConCafeColors.primaryContainer),
                                 onClick = { onItemClick(link.id) }
                             ) {
                                 Row(
@@ -391,7 +828,7 @@ private fun ExternalLinkSection(
                                             .size(52.dp)
                                             .background(
                                                 Brush.linearGradient(
-                                                    colors = listOf(Color(0xFFFFD1DC), Color(0xFFFFE4EC))
+                                                    colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                                                 ),
                                                 RoundedCornerShape(16.dp)
                                             ),
@@ -408,15 +845,22 @@ private fun ExternalLinkSection(
                                         modifier = Modifier.weight(1f),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF2B2330)
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
+                            }
+                            IconButton(onClick = { onEditClick(link.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_edit),
+                                    tint = ConCafeColors.textMuted
+                                )
                             }
                             IconButton(onClick = { onDeleteClick(link.id) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = "외부 링크 삭제",
-                                    tint = Color(0xFF8F848F)
+                                    contentDescription = stringResource(Res.string.dashboard_accessibility_external_link_delete),
+                                    tint = ConCafeColors.textMuted
                                 )
                             }
                         }
@@ -426,11 +870,11 @@ private fun ExternalLinkSection(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         )
                     ) {
-                        Text("외부 링크 추가", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.dashboard_external_link_add), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -446,11 +890,11 @@ private fun PendingCastClaimSection(
     onReject: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("프로필 연결 요청", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(Res.string.dashboard_pending_claim_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         claims.take(3).forEach { claim ->
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
@@ -466,10 +910,10 @@ private fun PendingCastClaimSection(
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = Color(0xFF8A808A))
+                        Text(claim.requestedAtLabel, style = MaterialTheme.typography.labelSmall, color = ConCafeColors.textMuted)
                     }
                     claim.message?.let { message ->
-                        Text(message, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF5C5760))
+                        Text(message, style = MaterialTheme.typography.bodyMedium, color = ConCafeColors.textSecondary)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
@@ -477,18 +921,18 @@ private fun PendingCastClaimSection(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFD1DC),
-                                contentColor = Color(0xFF2B2330)
+                                containerColor = ConCafeColors.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         ) {
-                            Text("승인", fontWeight = FontWeight.Bold)
+                            Text(stringResource(Res.string.dashboard_action_approve), fontWeight = FontWeight.Bold)
                         }
                         OutlinedButton(
                             onClick = { onReject(claim.claimId) },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("반려", fontWeight = FontWeight.Bold)
+                            Text(stringResource(Res.string.dashboard_action_reject), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -510,7 +954,7 @@ private fun DashboardHeroCard(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF2F1B3A), Color(0xFF7C3F67), Color(0xFFF06A9D))
+                        colors = listOf(ConCafeColors.textPrimary, ConCafeColors.primary, ConCafeColors.primary)
                     )
                 )
                 .padding(22.dp)
@@ -546,7 +990,7 @@ private fun DashboardHeroCard(
                     }
                 }
                 Text(
-                    text = "선택한 카페의 운영 수치와 관리 진입점을 한 화면에서 확인합니다.",
+                    text = stringResource(Res.string.dashboard_hero_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f)
                 )
@@ -562,8 +1006,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -576,10 +1020,10 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
             IconButton(onClick = onDismiss) {
-                Icon(Icons.Default.Close, contentDescription = "안내 닫기", tint = Color(0xFF6B5320))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.common_close), tint = ConCafeColors.goldDeep)
             }
         }
     }
@@ -587,12 +1031,13 @@ private fun InfoBanner(
 
 @Composable
 private fun DashboardMetricGrid(
-    cafe: CafeDashboardData
+    cafe: CafeDashboardData,
+    onTableCountClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader(
-            title = "운영 대시보드",
-            subtitle = "오늘 기준 핵심 수치"
+            title = stringResource(Res.string.dashboard_section_metrics_title),
+            subtitle = stringResource(Res.string.dashboard_section_metrics_subtitle)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -600,21 +1045,22 @@ private fun DashboardMetricGrid(
         ) {
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "오늘 체크인",
+                title = stringResource(Res.string.dashboard_metric_today_checkin),
                 value = cafe.todayCheckIns.toString(),
-                accent = Color(0xFFEF6797)
+                accent = ConCafeColors.primary
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "오늘 리뷰",
-                value = cafe.todayReviews.toString(),
-                accent = Color(0xFF47A88B)
+                title = stringResource(Res.string.dashboard_metric_follower),
+                value = cafe.followerCount.toString(),
+                accent = ConCafeColors.success
             )
             DashboardMetricCard(
                 modifier = Modifier.weight(1f),
-                title = "평점",
-                value = formatRating(cafe.rating),
-                accent = Color(0xFFF59E0B)
+                title = stringResource(Res.string.dashboard_metric_table_count),
+                value = "${cafe.tableCounts.current}/${cafe.tableCounts.total}",
+                accent = ConCafeColors.primary,
+                onClick = onTableCountClick
             )
         }
     }
@@ -625,13 +1071,16 @@ private fun DashboardMetricCard(
     modifier: Modifier = Modifier,
     title: String,
     value: String,
-    accent: Color
+    accent: Color,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -642,12 +1091,12 @@ private fun DashboardMetricCard(
                     .size(10.dp)
                     .background(accent, CircleShape)
             )
-            Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7A707A))
+            Text(text = title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -656,49 +1105,203 @@ private fun DashboardMetricCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ShortcutGrid(
+    onQrMetricClick: () -> Unit,
     onShortcutClick: (CafeDashboardShortcut) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionHeader(
-            title = "관리 메뉴",
-            subtitle = "선택한 카페 컨텍스트로 이동"
+            title = stringResource(Res.string.dashboard_section_menu_title),
+            subtitle = stringResource(Res.string.dashboard_section_menu_subtitle)
         )
+        DashboardQrMetricCard(
+            onClick = onQrMetricClick
+        )
+        ShortcutCardGrid(
+            shortcuts = listOf(
+                CafeDashboardShortcut.EVENT_MANAGEMENT,
+                CafeDashboardShortcut.CAFE_SETTINGS,
+                CafeDashboardShortcut.MENU_GOODS,
+                CafeDashboardShortcut.EXTERNAL_LINKS,
+                CafeDashboardShortcut.SOCIAL_MEDIA,
+                CafeDashboardShortcut.RESERVATION
+            ),
+            onShortcutClick = onShortcutClick
+        )
+    }
+}
+
+@Composable
+private fun ShortcutCardGrid(
+    shortcuts: List<CafeDashboardShortcut>,
+    onShortcutClick: (CafeDashboardShortcut) -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columnCount = dashboardMenuColumnCount(maxWidth)
+
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.EVENT_MANAGEMENT,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.EVENT_MANAGEMENT) }
-                )
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.CAFE_SETTINGS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.CAFE_SETTINGS) }
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.MENU_GOODS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.MENU_GOODS) }
-                )
-                ShortcutCard(
-                    modifier = Modifier.weight(1f),
-                    shortcut = CafeDashboardShortcut.EXTERNAL_LINKS,
-                    onClick = { onShortcutClick(CafeDashboardShortcut.EXTERNAL_LINKS) }
-                )
+            shortcuts.chunked(columnCount).forEach { rowShortcuts ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowShortcuts.forEach { shortcut ->
+                        ShortcutCard(
+                            modifier = Modifier.weight(1f),
+                            shortcut = shortcut,
+                            onClick = { onShortcutClick(shortcut) }
+                        )
+                    }
+                    repeat(columnCount - rowShortcuts.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
+}
+
+private fun dashboardMenuColumnCount(width: androidx.compose.ui.unit.Dp): Int = when {
+    width >= 1300.dp -> 5
+    width >= 1000.dp -> 4
+    width >= 700.dp -> 3
+    else -> 2
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardQrMetricCard(
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = ConCafeColors.surfaceTint
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCode2,
+                        contentDescription = null,
+                        tint = ConCafeColors.primary,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(Res.string.dashboard_metric_checkin_qr),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(Res.string.dashboard_metric_checkin_qr_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                tint = ConCafeColors.outlineStrong,
+                modifier = Modifier
+                    .size(20.dp)
+                    .graphicsLayer { rotationZ = 180f }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardQrSheetContent(
+    payload: String
+) {
+    val saveQrToGallery = rememberCafeManagementQrCodeSaver()
+    val coroutineScope = rememberCoroutineScope()
+    var saveMessage by remember { mutableStateOf<String?>(null) }
+    val saveSuccessText = stringResource(Res.string.dashboard_qr_sheet_save_success)
+    val saveFailedText = stringResource(Res.string.dashboard_qr_sheet_save_failed)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(Res.string.dashboard_qr_sheet_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = stringResource(Res.string.dashboard_qr_sheet_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.1f))
+        ) {
+            CafeManagementQrCode(
+                payload = payload,
+                modifier = Modifier
+                    .size(240.dp)
+                    .padding(14.dp)
+            )
+        }
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    val isSaved = saveQrToGallery(payload)
+                    saveMessage = if (isSaved) saveSuccessText else saveFailedText
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        ) {
+            Icon(Icons.Default.Download, contentDescription = null)
+            Text(
+                text = stringResource(Res.string.dashboard_qr_sheet_save_button),
+                modifier = Modifier.padding(start = 8.dp),
+                fontWeight = FontWeight.Bold
+            )
+        }
+        saveMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+private fun buildCafeCheckInQrPayload(cafeId: String): String {
+    return "concafe://checkin?cafeId=$cafeId"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -716,13 +1319,15 @@ private fun ShortcutCard(
         CafeDashboardShortcut.MENU_GOODS -> Icons.Default.RestaurantMenu
         CafeDashboardShortcut.HOME_BANNER -> Icons.Default.Campaign
         CafeDashboardShortcut.EXTERNAL_LINKS -> Icons.Default.Link
+        CafeDashboardShortcut.SOCIAL_MEDIA -> Icons.Default.Share
+        CafeDashboardShortcut.RESERVATION -> Icons.Default.BookmarkAdd
     }
 
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline),
         onClick = onClick
     ) {
         Column(
@@ -731,20 +1336,30 @@ private fun ShortcutCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = Color(0xFFFCE6EF)
+                color = ConCafeColors.surfaceTint
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFFEF6797),
+                    tint = ConCafeColors.primary,
                     modifier = Modifier.padding(10.dp)
                 )
             }
             Text(
-                text = shortcut.title,
+                text = stringResource(when (shortcut) {
+                    CafeDashboardShortcut.CAST_MANAGEMENT -> Res.string.dashboard_shortcut_cast_management
+                    CafeDashboardShortcut.CAST_SCHEDULE -> Res.string.dashboard_shortcut_cast_schedule
+                    CafeDashboardShortcut.EVENT_MANAGEMENT -> Res.string.dashboard_shortcut_event_management
+                    CafeDashboardShortcut.CAFE_SETTINGS -> Res.string.dashboard_shortcut_cafe_settings
+                    CafeDashboardShortcut.MENU_GOODS -> Res.string.dashboard_shortcut_menu_goods
+                    CafeDashboardShortcut.HOME_BANNER -> Res.string.dashboard_shortcut_home_banner
+                    CafeDashboardShortcut.EXTERNAL_LINKS -> Res.string.dashboard_shortcut_external_links
+                    CafeDashboardShortcut.SOCIAL_MEDIA -> Res.string.dashboard_shortcut_social_media
+                    CafeDashboardShortcut.RESERVATION -> Res.string.dashboard_shortcut_reservation
+                }),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2B2330)
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -761,12 +1376,13 @@ private fun CastManagementSection(
     onScheduleClick: () -> Unit,
     selectedCastId: String?,
     onCastScheduleSelect: (String) -> Unit,
-    onLoadMoreClick: () -> Unit
+    onLoadMoreClick: () -> Unit,
+    onCastListDetailClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -778,30 +1394,30 @@ private fun CastManagementSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "소속 캐스트 관리",
+                    text = stringResource(Res.string.dashboard_section_cast_management),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF8C7A83)
+                    color = ConCafeColors.textMuted
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = onDeleteClick,
                         enabled = canDelete,
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color(0xFFFCE6EF),
-                            contentColor = Color(0xFFEF6797),
-                            disabledContainerColor = Color(0xFFF6EEF2),
-                            disabledContentColor = Color(0xFFC8B7C0)
+                            containerColor = ConCafeColors.surfaceTint,
+                            contentColor = ConCafeColors.primary,
+                            disabledContainerColor = ConCafeColors.surfaceTint,
+                            disabledContentColor = ConCafeColors.outlineStrong
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "캐스트 삭제"
+                            contentDescription = stringResource(Res.string.dashboard_accessibility_cast_delete)
                         )
                     }
                     Surface(
                         shape = RoundedCornerShape(999.dp),
-                        color = Color(0xFFFCE6EF),
+                        color = ConCafeColors.surfaceTint,
                         onClick = onScheduleClick
                     ) {
                         Row(
@@ -812,13 +1428,13 @@ private fun CastManagementSection(
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = Color(0xFFEF6797),
+                                tint = ConCafeColors.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "출근표 관리",
+                                text = stringResource(Res.string.dashboard_action_schedule_management),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = Color(0xFFEF6797),
+                                color = ConCafeColors.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -848,6 +1464,38 @@ private fun CastManagementSection(
                     }
                 }
             }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = ConCafeColors.surfaceTint,
+                onClick = onCastListDetailClick
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.People,
+                        contentDescription = null,
+                        tint = ConCafeColors.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(Res.string.dashboard_action_cast_list_detail),
+                        modifier = Modifier.padding(start = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ConCafeColors.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = ConCafeColors.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -873,7 +1521,7 @@ private fun CastPreviewItem(
                 color = Color.Transparent,
                 border = BorderStroke(
                     if (isSelected) 2.dp else 0.dp,
-                    if (isSelected) Color(0xFFEF6797) else Color.Transparent
+                    if (isSelected) ConCafeColors.primary else Color.Transparent
                 )
             ) {
                 Box(
@@ -883,27 +1531,40 @@ private fun CastPreviewItem(
                 )
             }
             Box(
-                    modifier = Modifier
-                        .matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(72.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFFFFD7E3), Color(0xFFFFF0F5))
-                            ),
-                            shape = CircleShape
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.background)
+                                ),
+                                shape = CircleShape
+                            )
+                    )
+                    if (!cast.profileImage.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = cast.profileImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
                         )
-                )
+                    }
+                }
                 if (isSelected) {
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(top = 4.dp, end = 4.dp),
                         shape = CircleShape,
-                        color = Color(0xFFEF6797)
+                        color = ConCafeColors.primary
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -921,7 +1582,7 @@ private fun CastPreviewItem(
                         .offset(x = (-2).dp, y = (-2).dp)
                         .size(16.dp)
                         .background(
-                            if (cast.isOnShift) Color(0xFF35C26B) else Color(0xFFC7CBD3),
+                            if (cast.isOnShift) ConCafeColors.success else ConCafeColors.outlineStrong,
                             CircleShape
                         )
                 )
@@ -931,7 +1592,7 @@ private fun CastPreviewItem(
             text = cast.name,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = if (isSelected) Color(0xFFEF6797) else Color(0xFF2B2330)
+            color = if (isSelected) ConCafeColors.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -949,8 +1610,8 @@ private fun LoadMoreCastItem(
         Surface(
             modifier = Modifier.size(72.dp),
             shape = CircleShape,
-            color = Color(0xFFF7F2F6),
-            border = BorderStroke(1.dp, Color(0xFFE3DCE3)),
+            color = ConCafeColors.surfaceTint,
+            border = BorderStroke(1.dp, ConCafeColors.outline),
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -958,23 +1619,128 @@ private fun LoadMoreCastItem(
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
-                        color = Color(0xFFB8AEB7)
+                        color = ConCafeColors.outlineStrong
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "캐스트 더 보기",
-                        tint = Color(0xFF8F848F)
+                        contentDescription = stringResource(Res.string.dashboard_accessibility_cast_load_more),
+                        tint = ConCafeColors.textMuted
                     )
                 }
             }
         }
         Text(
-            text = if (isLoading) "불러오는 중" else "더 보기",
+            text = if (isLoading) stringResource(Res.string.dashboard_action_loading) else stringResource(Res.string.dashboard_action_load_more),
             style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF8F848F),
+            color = ConCafeColors.textMuted,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+@Composable
+private fun GuestManagementSection(
+    guestSchedules: List<GuestCastSchedule>,
+    onAddClick: () -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
+    ) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("게스트 캐스트 관리", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = ConCafeColors.textMuted)
+                    Text("소속 캐스트가 아닌 출연자를 관리합니다", style = MaterialTheme.typography.bodySmall, color = ConCafeColors.textSecondary)
+                }
+                Surface(shape = RoundedCornerShape(999.dp), color = ConCafeColors.surfaceTint, onClick = onAddClick) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = ConCafeColors.primary, modifier = Modifier.size(16.dp))
+                        Text("추가", style = MaterialTheme.typography.labelMedium, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (guestSchedules.isEmpty()) {
+                Text(
+                    "등록된 게스트 캐스트가 없습니다",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(ConCafeColors.surfaceTint)
+                        .padding(14.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    guestSchedules.forEach { guest ->
+                        GuestManagementRow(guest = guest, onDeleteClick = { onDeleteClick(guest.id) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuestManagementRow(
+    guest: GuestCastSchedule,
+    onDeleteClick: () -> Unit
+) {
+    val profileImage = guest.profileImage
+    val memo = guest.memo
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = ConCafeColors.background,
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.size(46.dp).clip(CircleShape).background(ConCafeColors.surfaceTint),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!profileImage.isNullOrBlank()) {
+                    CompatImageDisplay(
+                        imageUrl = profileImage,
+                        modifier = Modifier.matchParentSize(),
+                        applyRoundedClip = false,
+                        displaySize = ImageDisplaySize.THUMBNAIL
+                    )
+                } else {
+                    Text(guest.name.take(2), fontWeight = FontWeight.Bold, color = ConCafeColors.primary)
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(guest.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Surface(shape = RoundedCornerShape(999.dp), color = ConCafeColors.surfaceTint) {
+                        Text("게스트", modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = ConCafeColors.primary, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text("${guest.date} · ${guest.startTime} - ${guest.endTime}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (!memo.isNullOrBlank()) {
+                    Text(memo, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(Icons.Default.Delete, contentDescription = null, tint = ConCafeColors.primary)
+            }
+        }
     }
 }
 
@@ -991,22 +1757,22 @@ private fun AddCastItem(
             modifier = Modifier.size(72.dp),
             shape = CircleShape,
             color = Color.Transparent,
-            border = BorderStroke(2.dp, Color(0xFFE3DCE3)),
+            border = BorderStroke(2.dp, ConCafeColors.outline),
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "캐스트 추가",
-                    tint = Color(0xFFB8AEB7)
+                    contentDescription = stringResource(Res.string.dashboard_accessibility_cast_add),
+                    tint = ConCafeColors.outlineStrong
                 )
             }
         }
         Text(
-            text = "추가",
+            text = stringResource(Res.string.dashboard_action_add),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF8F848F)
+            color = ConCafeColors.textMuted
         )
     }
 }
@@ -1019,8 +1785,8 @@ private fun HomeBannerSection(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8DFE7))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, ConCafeColors.outline)
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -1032,19 +1798,19 @@ private fun HomeBannerSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "홈 배너 관리",
+                    text = stringResource(Res.string.dashboard_section_home_banner),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF8C7A83)
+                    color = ConCafeColors.textMuted
                 )
                 TextButton(onClick = onBannerClick) {
-                    Text("전체 보기")
+                    Text(stringResource(Res.string.dashboard_action_view_all))
                 }
             }
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBFD)),
-                border = BorderStroke(1.dp, Color(0xFFF0E6EC))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                border = BorderStroke(1.dp, ConCafeColors.primaryContainer)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -1054,22 +1820,32 @@ private fun HomeBannerSection(
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val imageUrl = banner.imageUrl?.trim().takeUnless { it.isNullOrEmpty() }
+
                         Box(
                             modifier = Modifier
                                 .size(width = 96.dp, height = 64.dp)
+                                .clip(RoundedCornerShape(14.dp))
                                 .background(
                                     Brush.linearGradient(
-                                        colors = listOf(Color(0xFFFFD1DC), Color(0xFFFFE4EC))
-                                    ),
-                                    RoundedCornerShape(14.dp)
+                                        colors = listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
+                                    )
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Image,
-                                contentDescription = null,
-                                tint = Color.White
-                            )
+                            if (imageUrl != null) {
+                                CompatImageDisplay(
+                                    imageUrl = imageUrl,
+                                    modifier = Modifier.fillMaxSize(),
+                                    applyRoundedClip = false
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
                         }
                         Column(
                             modifier = Modifier.weight(1f),
@@ -1079,22 +1855,32 @@ private fun HomeBannerSection(
                                 text = banner.title,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2B2330)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = banner.period,
+                                text = if (banner.period.startsWith("dashboard_banner_period_days:")) {
+                                    val days = banner.period.substringAfter(':').toIntOrNull() ?: 0
+                                    stringResource(Res.string.dashboard_banner_period_days, days)
+                                } else {
+                                    banner.period
+                                },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF7E7480)
+                                color = ConCafeColors.textSecondary
                             )
                             Surface(
                                 shape = RoundedCornerShape(999.dp),
-                                color = Color(0xFFE8F7EE)
+                                color = ConCafeColors.successContainer
                             ) {
                                 Text(
-                                    text = banner.statusLabel,
+                                    text = when (banner.statusLabel) {
+                                        "dashboard_banner_status_active" -> stringResource(Res.string.dashboard_banner_status_active)
+                                        "dashboard_banner_status_scheduled" -> stringResource(Res.string.dashboard_banner_status_scheduled)
+                                        "dashboard_banner_status_hidden" -> stringResource(Res.string.dashboard_banner_status_hidden)
+                                        else -> banner.statusLabel
+                                    },
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF2F8B57),
+                                    color = ConCafeColors.success,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -1104,8 +1890,8 @@ private fun HomeBannerSection(
                         onClick = onCreateBannerClick,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                         shape = RoundedCornerShape(16.dp)
                     ) {
@@ -1114,7 +1900,7 @@ private fun HomeBannerSection(
                             contentDescription = null
                         )
                         Text(
-                            text = "새 배너 등록하기",
+                            text = stringResource(Res.string.dashboard_action_create_banner),
                             modifier = Modifier.padding(start = 6.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -1133,14 +1919,14 @@ private fun SectionHeader(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2330)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF786E7A)
+            color = ConCafeColors.textSecondary
         )
     }
 }
@@ -1149,7 +1935,7 @@ private fun formatRating(rating: Double): String {
     return if (rating <= 0) {
         "-"
     } else {
-        val normalized = (rating * 10).toInt() / 10.0
-        normalized.toString()
+        RatingUtils.formatOneDecimalTruncated(rating)
     }
 }
+

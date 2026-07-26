@@ -5,14 +5,20 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -25,14 +31,79 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
 import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
+import com.hhp227.concafe.domain.model.GeoPoint
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
+import com.hhp227.concafe.presentation.component.CheckInCafeMap
+import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
+import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.localizedRegionCity
+import com.hhp227.concafe.presentation.component.keyboardBottomInsets
+import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.auth_login_required_message
+import concafe.composeapp.generated.resources.auth_login_required_title
+import concafe.composeapp.generated.resources.checkin_button
+import concafe.composeapp.generated.resources.checkin_count_label
+import concafe.composeapp.generated.resources.checkin_load_more_visits
+import concafe.composeapp.generated.resources.checkin_location_permission_desc
+import concafe.composeapp.generated.resources.checkin_location_permission_open_settings
+import concafe.composeapp.generated.resources.checkin_location_permission_title
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_badge
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_fan_level
+import concafe.composeapp.generated.resources.checkin_login_promo_feature_visit
+import concafe.composeapp.generated.resources.checkin_login_promo_title
+import concafe.composeapp.generated.resources.checkin_login_required_desc
+import concafe.composeapp.generated.resources.checkin_login_required_title
+import concafe.composeapp.generated.resources.checkin_main_cafe_label
+import concafe.composeapp.generated.resources.checkin_map_title
+import concafe.composeapp.generated.resources.checkin_more_visit_label
+import concafe.composeapp.generated.resources.checkin_nearby_label
+import concafe.composeapp.generated.resources.checkin_new_visit_cafe_label
+import concafe.composeapp.generated.resources.checkin_new_visit_cafe_unavailable_placeholder
+import concafe.composeapp.generated.resources.checkin_new_visit_cta
+import concafe.composeapp.generated.resources.checkin_new_visit_desc
+import concafe.composeapp.generated.resources.checkin_new_visit_memo_label
+import concafe.composeapp.generated.resources.checkin_new_visit_memo_placeholder
+import concafe.composeapp.generated.resources.checkin_new_visit_no_cafe
+import concafe.composeapp.generated.resources.checkin_new_visit_submit
+import concafe.composeapp.generated.resources.checkin_new_visit_title
+import concafe.composeapp.generated.resources.checkin_partial_load_error
+import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_desc
+import concafe.composeapp.generated.resources.checkin_popular_cafe_empty_title
+import concafe.composeapp.generated.resources.checkin_popular_cast_empty_desc
+import concafe.composeapp.generated.resources.checkin_popular_cast_empty_title
+import concafe.composeapp.generated.resources.checkin_qr_sheet_desc
+import concafe.composeapp.generated.resources.checkin_qr_sheet_title
+import concafe.composeapp.generated.resources.checkin_review_prompt_desc
+import concafe.composeapp.generated.resources.checkin_review_prompt_later
+import concafe.composeapp.generated.resources.checkin_review_prompt_primary
+import concafe.composeapp.generated.resources.checkin_review_prompt_title
+import concafe.composeapp.generated.resources.checkin_section_popular_cafe_title
+import concafe.composeapp.generated.resources.checkin_section_popular_cast_title
+import concafe.composeapp.generated.resources.checkin_section_timeline_title
+import concafe.composeapp.generated.resources.checkin_section_today_visit_title
+import concafe.composeapp.generated.resources.checkin_timeline_empty_desc
+import concafe.composeapp.generated.resources.checkin_timeline_empty_title
+import concafe.composeapp.generated.resources.checkin_today_visit_count
+import concafe.composeapp.generated.resources.checkin_today_visit_empty_desc
+import concafe.composeapp.generated.resources.checkin_today_visit_empty_title
+import concafe.composeapp.generated.resources.checkin_visit_memo_empty
+import concafe.composeapp.generated.resources.checkin_visit_qr_label
+import concafe.composeapp.generated.resources.common_cancel
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.signin_submit
+import kotlinx.datetime.Clock
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +116,9 @@ fun CheckInScreen(
     onNavigate: (NavigationAction) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val openLocationSettings = rememberCheckInLocationSettingsOpener()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isLocationSettingsAlertVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.event.collect { event ->
@@ -52,29 +126,64 @@ fun CheckInScreen(
                 is CheckInEvent.NavigateToCafe -> onNavigate(NavigationAction.NavigateToCafe(event.id))
                 is CheckInEvent.NavigateToCast -> onNavigate(NavigationAction.NavigateToCast(event.id))
                 is CheckInEvent.NavigateToReviewEdit -> onNavigate(NavigationAction.NavigateToReviewEdit(event.cafeId))
+                CheckInEvent.NavigateToMap -> {
+                    onNavigate(
+                        NavigationAction.NavigateToCheckInMap(
+                            initialRegionKey = uiState.selectedMapRegion.name
+                        )
+                    )
+                }
                 CheckInEvent.NavigateToSignIn -> onNavigate(NavigationAction.NavigateToSignIn)
+                CheckInEvent.OpenLocationSettings -> {
+                    isLocationSettingsAlertVisible = true
+                }
+                is CheckInEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         CheckInContentScreen(
             uiState = uiState,
             onAction = viewModel::onAction
         )
-        if (uiState.isLoginPromptVisible) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+        if (uiState.isLoginPromptVisible && uiState.loginPromptType == CheckInUiState.LoginPromptType.CHECK_IN) {
             ModalBottomSheet(
                 onDismissRequest = { viewModel.onAction(CheckInAction.DismissLoginPrompt) },
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 LoginRequiredBottomSheet(
-                    onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) },
-                    onSignUp = { viewModel.onAction(CheckInAction.ClickSignUp) }
+                    onSignIn = { viewModel.onAction(CheckInAction.ClickSignIn) }
                 )
             }
+        }
+        if (uiState.isLoginPromptVisible && uiState.loginPromptType == CheckInUiState.LoginPromptType.DETAIL) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissLoginPrompt) },
+                title = { Text(stringResource(Res.string.auth_login_required_title)) },
+                text = { Text(stringResource(Res.string.auth_login_required_message)) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.onAction(CheckInAction.ClickSignIn) }) {
+                        Text(stringResource(Res.string.signin_submit))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.onAction(CheckInAction.DismissLoginPrompt) }) {
+                        Text(stringResource(Res.string.common_cancel))
+                    }
+                }
+            )
         }
         if (uiState.isNewVisitSheetVisible) {
             CheckInNewVisitDialog(
@@ -82,6 +191,8 @@ fun CheckInScreen(
             ) {
                 NewVisitCheckInBottomSheet(
                     cafes = uiState.mapCafes,
+                    initialCafeId = uiState.preselectCafeId,
+                    errorMessage = uiState.errorMessage,
                     onSubmit = { cafeId, visitedAt, memo ->
                         viewModel.onAction(
                             CheckInAction.SubmitNewVisit(
@@ -91,14 +202,31 @@ fun CheckInScreen(
                             )
                         )
                     },
+                    onQrCheckIn = { viewModel.onAction(CheckInAction.ClickQrCheckIn) },
                     onDismiss = { viewModel.onAction(CheckInAction.DismissNewVisitSheet) }
+                )
+            }
+        }
+        if (uiState.isQrCheckInSheetVisible) {
+            CheckInNewVisitDialog(
+                onDismissRequest = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) }
+            ) {
+                QrCheckInBottomSheet(
+                    errorMessage = uiState.errorMessage,
+                    onDismiss = { viewModel.onAction(CheckInAction.DismissQrCheckInSheet) },
+                    onScanSuccess = { rawValue ->
+                        viewModel.onAction(CheckInAction.SubmitQrCheckIn(rawValue))
+                    },
+                    onScanFailed = { message ->
+                        viewModel.onAction(CheckInAction.QrScanFailed(message))
+                    }
                 )
             }
         }
         uiState.reviewPrompt?.let { prompt ->
             ModalBottomSheet(
                 onDismissRequest = { viewModel.onAction(CheckInAction.DismissReviewPrompt) },
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 ReviewPromptBottomSheet(
                     cafeName = prompt.cafeName,
@@ -106,6 +234,30 @@ fun CheckInScreen(
                     onDismiss = { viewModel.onAction(CheckInAction.DismissReviewPrompt) }
                 )
             }
+        }
+        if (isLocationSettingsAlertVisible) {
+            AlertDialog(
+                onDismissRequest = { isLocationSettingsAlertVisible = false },
+                title = { Text(stringResource(Res.string.checkin_location_permission_title)) },
+                text = { Text(stringResource(Res.string.checkin_location_permission_desc)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            isLocationSettingsAlertVisible = false
+                            openLocationSettings()
+                        }
+                    ) {
+                        Text(stringResource(Res.string.checkin_location_permission_open_settings))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { isLocationSettingsAlertVisible = false }
+                    ) {
+                        Text(stringResource(Res.string.common_cancel))
+                    }
+                }
+            )
         }
     }
 }
@@ -139,11 +291,10 @@ private fun CheckInNewVisitDialog(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .width(520.dp)
-                    .imePadding()
-                    .navigationBarsPadding(),
+                    .keyboardBottomInsets(),
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                color = Color.White,
-                tonalElevation = 0.dp,
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 2.dp,
                 shadowElevation = 12.dp
             ) {
                 Box(
@@ -169,13 +320,13 @@ private fun ReviewPromptBottomSheet(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "리뷰를 작성하면 어떠세요?",
+            text = stringResource(Res.string.checkin_review_prompt_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "$cafeName 방문 인증이 완료됐어요. 지금 경험을 남기고 함께 방문한 캐스트도 태그할 수 있어요.",
-            color = Color(0xFF6F6670),
+            text = stringResource(Res.string.checkin_review_prompt_desc, cafeName),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
         Button(
@@ -183,17 +334,17 @@ private fun ReviewPromptBottomSheet(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330)
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             )
         ) {
-            Text("지금 작성", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.checkin_review_prompt_primary), fontWeight = FontWeight.Bold)
         }
         TextButton(
             onClick = onDismiss,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("나중에")
+            Text(stringResource(Res.string.checkin_review_prompt_later))
         }
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -236,7 +387,7 @@ private fun CheckInGuestScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -248,8 +399,13 @@ private fun CheckInGuestScreen(
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
+                userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
                 onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
-                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
+                onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
             )
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 LoginPromotionSection(
@@ -258,26 +414,44 @@ private fun CheckInGuestScreen(
                 )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                CheckInGuestSectionTitle("🔥 인기 컨셉 카페")
-            }
-            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                PopularCafeSection(
-                    cafes = uiState.popularCafes,
-                    onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
+                CheckInGuestSectionTitle(
+                    title = stringResource(Res.string.checkin_section_popular_cafe_title)
                 )
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                CheckInGuestSectionTitle("☕ 오늘 인기 캐스트")
+                if (uiState.popularCafes.isNotEmpty()) {
+                    PopularCafeSection(
+                        cafes = uiState.popularCafes,
+                        onCafeClick = { onAction(CheckInAction.ClickCafe(it)) }
+                    )
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title = stringResource(Res.string.checkin_popular_cafe_empty_title),
+                        description = stringResource(Res.string.checkin_popular_cafe_empty_desc)
+                    )
+                }
             }
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                PopularCastSection(
-                    casts = uiState.popularCasts,
-                    onCastClick = { onAction(CheckInAction.ClickCast(it)) }
+                CheckInGuestSectionTitle(
+                    title = stringResource(Res.string.checkin_section_popular_cast_title)
                 )
+            }
+            Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                if (uiState.popularCasts.isNotEmpty()) {
+                    PopularCastSection(
+                        casts = uiState.popularCasts,
+                        onCastClick = { onAction(CheckInAction.ClickCast(it)) }
+                    )
+                } else {
+                    CheckInSectionPlaceholderCard(
+                        title = stringResource(Res.string.checkin_popular_cast_empty_title),
+                        description = stringResource(Res.string.checkin_popular_cast_empty_desc)
+                    )
+                }
             }
             if (uiState.errorMessage != null) {
                 Text(
-                    text = "체크인 탭 데이터를 일부 불러오지 못했습니다.",
+                    text = stringResource(Res.string.checkin_partial_load_error),
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
@@ -292,57 +466,159 @@ private fun CheckInUserScreen(
     uiState: CheckInUiState,
     onAction: (CheckInAction) -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD))
-            .verticalScroll(rememberScrollState()),
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        CafeMapSection(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-            currentLocationLabel = uiState.currentLocationLabel,
-            mapCafes = uiState.mapCafes,
-            onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
-            onCheckInClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInButton(
-            onClick = { onAction(CheckInAction.ClickCheckIn) }
-        )
-        CheckInSectionTitle("오늘의 방문", "3월 9일")
-        TodayVisitsRow(
-            visits = uiState.todayVisits
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        CheckInSectionTitle("최근 타임라인", "🕘")
-        TimelineList(
-            visits = uiState.recentVisits
-        )
+        item {
+            CafeMapSection(
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                currentLocationLabel = uiState.currentLocationLabel,
+                mapCafes = uiState.mapCafes,
+                userCityKey = uiState.userCityKey,
+                selectedRegion = uiState.selectedMapRegion,
+                onCafeClick = { onAction(CheckInAction.ClickCafe(it)) },
+                onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
+                onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
+                onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
+            )
+        }
+        item {
+            CheckInButton(
+                onClick = { onAction(CheckInAction.ClickCheckIn) }
+            )
+        }
+        item {
+            CheckInSectionTitle(
+                title = stringResource(Res.string.checkin_section_today_visit_title),
+                trailing = TimeUtils.currentMonthDayLabelKorean()
+            )
+        }
+        item {
+            TodayVisitsRow(
+                visits = uiState.todayVisits
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        item {
+            CheckInSectionTitle(
+                title = stringResource(Res.string.checkin_section_timeline_title),
+                trailing = null
+            )
+        }
+        if (uiState.recentVisits.isEmpty()) {
+            item {
+                EmptyVisitState(
+                    title = stringResource(Res.string.checkin_timeline_empty_title),
+                    description = stringResource(Res.string.checkin_timeline_empty_desc)
+                )
+            }
+        } else {
+            itemsIndexed(
+                items = uiState.recentVisits,
+                key = { _, visit -> visit.id }
+            ) { _, visit ->
+                TimelineItem(
+                    visit = visit,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            item {
+                if (uiState.isLoadingMoreRecentVisits) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else if (uiState.canLoadMoreRecentVisits) {
+                    TextButton(
+                        onClick = { onAction(CheckInAction.LoadMoreRecentVisits) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text(stringResource(Res.string.checkin_load_more_visits))
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun CafeMapSection(
+@OptIn(ExperimentalMaterial3Api::class)
+fun CafeMapSection(
     modifier: Modifier = Modifier,
     currentLocationLabel: String,
     mapCafes: List<CheckInCafeSummary>,
+    userCityKey: String?,
+    selectedRegion: ExploreUiState.RegionFilter,
     onCafeClick: (String) -> Unit,
-    onCheckInClick: () -> Unit
+    onCafeCheckIn: (String) -> Unit,
+    onCheckInClick: () -> Unit,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit,
+    onExpandClick: () -> Unit = {},
+    showExpandButton: Boolean = true,
+    showCheckInButton: Boolean = true,
+    mapModifier: Modifier = Modifier
+        .fillMaxWidth()
+        .height(240.dp)
 ) {
+    var isRegionDropdownExpanded by remember { mutableStateOf(false) }
+    val usesInlineRegionFilter = useInlineCheckInMapRegionFilter()
+    val selectedRegionLabel = stringResource(
+        Res.string.checkin_main_cafe_label,
+        if (selectedRegion == ExploreUiState.RegionFilter.ALL) {
+            stringResource(Res.string.checkin_nearby_label)
+        } else {
+            selectedRegion.label
+        }
+    )
+    val mapCameraTarget = resolveCheckInMapCameraTarget(selectedRegion)
+    val filteredMapCafes = when {
+        selectedRegion != ExploreUiState.RegionFilter.ALL -> {
+            mapCafes.filter { cafe ->
+                cafe.matchesRegion(selectedRegion)
+            }
+        }
+        else -> {
+            mapCafes.filter { cafe ->
+                cafe.matchesNearbyCity(userCityKey)
+            }
+        }
+    }
+
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xFFFFF0F6), Color(0xFFFFFAFC), Color(0xFFFFF3F8))
+                        if (isSystemInDarkTheme()) {
+                            listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
+                        } else {
+                            listOf(ConCafeColors.background, ConCafeColors.background, ConCafeColors.background)
+                        }
                     )
                 )
-                .padding(18.dp),
+                .padding(12.dp)
+                .padding(vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
@@ -350,83 +626,243 @@ private fun CafeMapSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "주변 컨셉카페 지도",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color(0xFFEF6797),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = currentLocationLabel,
-                            color = Color(0xFF7B7480),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-                OutlinedButton(
-                    onClick = onCheckInClick,
-                    shape = RoundedCornerShape(999.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Text("체크인")
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(Color(0xFFFFDDEB), Color(0xFFFFF5F9), Color(0xFFFFE8F1))
-                        ),
-                        RoundedCornerShape(24.dp)
-                    )
-            ) {
-                mapCafes.take(6).forEachIndexed { index, cafe ->
-                    val markerModifier = when (index) {
-                        0 -> Modifier.align(Alignment.TopStart).padding(start = 28.dp, top = 36.dp)
-                        1 -> Modifier.align(Alignment.TopEnd).padding(end = 34.dp, top = 58.dp)
-                        2 -> Modifier.align(Alignment.CenterStart).padding(start = 54.dp)
-                        3 -> Modifier.align(Alignment.Center).padding(bottom = 10.dp)
-                        4 -> Modifier.align(Alignment.CenterEnd).padding(end = 40.dp, top = 24.dp)
-                        else -> Modifier.align(Alignment.BottomStart).padding(start = 110.dp, bottom = 28.dp)
-                    }
-
-                    Surface(
-                        modifier = markerModifier.clickable { onCafeClick(cafe.id) },
-                        shape = RoundedCornerShape(18.dp),
-                        color = Color.White.copy(alpha = 0.95f),
-                        shadowElevation = 6.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .background(Color(0xFFEF6797), CircleShape)
-                            )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(Res.string.checkin_map_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (usesInlineRegionFilter) {
                             Text(
-                                text = cafe.name,
-                                style = MaterialTheme.typography.labelMedium,
+                                text = selectedRegionLabel,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
+                        } else {
+                            CheckInRegionDropdown(
+                                selectedRegionLabel = selectedRegionLabel,
+                                isExpanded = isRegionDropdownExpanded,
+                                onExpandedChange = { isRegionDropdownExpanded = it },
+                                onRegionSelected = { region ->
+                                    onRegionSelected(region)
+                                    isRegionDropdownExpanded = false
+                                }
+                            )
                         }
+                    }
+                    if (usesInlineRegionFilter) {
+                        CheckInRegionChips(
+                            selectedRegion = selectedRegion,
+                            onRegionSelected = onRegionSelected,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                if (showCheckInButton) {
+                    OutlinedButton(
+                        onClick = onCheckInClick,
+                        shape = RoundedCornerShape(999.dp)
+                    ) {
+                        Text(stringResource(Res.string.checkin_button))
+                    }
+                }
+                if (showExpandButton && usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
+                    }
+                }
+            }
+            Box(modifier = mapModifier) {
+                CheckInCafeMap(
+                    cafes = filteredMapCafes,
+                    onCafeClick = onCafeClick,
+                    onCafeCheckIn = onCafeCheckIn,
+                    showCheckInButton = showCheckInButton,
+                    cameraTarget = mapCameraTarget,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(24.dp))
+                )
+                if (showExpandButton && !usesInlineRegionFilter) {
+                    FilledTonalIconButton(
+                        onClick = onExpandClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.OpenInFull,
+                            contentDescription = null
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CheckInRegionDropdown(
+    selectedRegionLabel: String,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit
+) {
+    Box {
+        Row(
+            modifier = Modifier.clickable { onExpandedChange(true) },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = ConCafeColors.primary,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = selectedRegionLabel,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            ExploreUiState.RegionFilter.entries.forEach { region ->
+                DropdownMenuItem(
+                    text = { Text(region.checkInMapFilterLabel()) },
+                    onClick = { onRegionSelected(region) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CheckInRegionChips(
+    selectedRegion: ExploreUiState.RegionFilter,
+    onRegionSelected: (ExploreUiState.RegionFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp),
+        modifier = modifier
+    ) {
+        items(ExploreUiState.RegionFilter.entries) { region ->
+            FilterChip(
+                selected = selectedRegion == region,
+                onClick = { onRegionSelected(region) },
+                label = { Text(region.checkInMapFilterLabel()) },
+                leadingIcon = if (selectedRegion == region) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                } else {
+                    null
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExploreUiState.RegionFilter.checkInMapFilterLabel(): String {
+    return if (this == ExploreUiState.RegionFilter.ALL) {
+        stringResource(Res.string.checkin_nearby_label)
+    } else {
+        label
+    }
+}
+
+private fun resolveCheckInMapCameraTarget(region: ExploreUiState.RegionFilter): CheckInMapCameraTarget? {
+    return when (region) {
+        ExploreUiState.RegionFilter.ALL -> null
+        ExploreUiState.RegionFilter.SEOUL -> CheckInMapCameraTarget(
+            latitude = 37.5665,
+            longitude = 126.9780,
+            zoom = 12.5f
+        )
+        ExploreUiState.RegionFilter.BUSAN -> CheckInMapCameraTarget(
+            latitude = 35.1796,
+            longitude = 129.0756,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.DAEGU -> CheckInMapCameraTarget(
+            latitude = 35.8714,
+            longitude = 128.6014,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.TOKYO -> CheckInMapCameraTarget(
+            latitude = 35.6762,
+            longitude = 139.6503,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.OSAKA -> CheckInMapCameraTarget(
+            latitude = 34.6937,
+            longitude = 135.5023,
+            zoom = 12.0f
+        )
+        ExploreUiState.RegionFilter.ETC -> CheckInMapCameraTarget(
+            latitude = 35.4437,
+            longitude = 139.6380,
+            zoom = 12.0f
+        )
+    }
+}
+
+private fun CheckInCafeSummary.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    val normalizedLocation = locationLabel.lowercase()
+    return normalizedLocation.contains(region.key) ||
+        normalizedLocation.contains(region.label.lowercase()) ||
+        geoPoint.matchesRegion(region)
+}
+
+private fun CheckInCafeSummary.matchesNearbyCity(cityKey: String?): Boolean {
+    if (cityKey.isNullOrBlank()) return true
+    val nearbyRegion = ExploreUiState.RegionFilter.entries
+        .firstOrNull {
+            val normalizedCityKey = cityKey.trim().lowercase()
+            it.key == normalizedCityKey || (normalizedCityKey == "yokohama" && it == ExploreUiState.RegionFilter.ETC)
+        }
+        ?: return true
+    return matchesRegion(nearbyRegion)
+}
+
+private fun GeoPoint.matchesRegion(region: ExploreUiState.RegionFilter): Boolean {
+    return when (region) {
+        ExploreUiState.RegionFilter.ALL -> true
+        ExploreUiState.RegionFilter.SEOUL -> latitude in 37.4..37.7 && longitude in 126.7..127.2
+        ExploreUiState.RegionFilter.BUSAN -> latitude in 35.0..35.4 && longitude in 128.8..129.3
+        ExploreUiState.RegionFilter.DAEGU -> latitude in 35.7..36.0 && longitude in 128.4..128.8
+        ExploreUiState.RegionFilter.ETC -> latitude in 35.35..35.60 && longitude in 139.50..139.75
+        ExploreUiState.RegionFilter.TOKYO -> latitude in 35.5..35.9 && longitude in 139.3..139.9
+        ExploreUiState.RegionFilter.OSAKA -> latitude in 34.5..34.9 && longitude in 135.3..135.7
     }
 }
 
@@ -477,26 +913,31 @@ private fun PopularCafeCard(
 ) {
     CafeSummaryCard(
         name = cafe.name,
-        rating = "${cafe.rating}",
-        location = cafe.locationLabel,
+        rating = RatingUtils.formatOneDecimal(cafe.rating),
+        location = localizedRegionCity(cafe.locationLabel),
+        thumbnailImage = cafe.thumbnailImage,
+        showLocationIcon = false,
         modifier = Modifier
             .width(220.dp),
-        trailingLabel = "체크인 ${cafe.checkInCount}",
+        trailingLabel = stringResource(Res.string.checkin_count_label, cafe.checkInCount),
         onClick = onClick
     )
 }
 
+
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PopularCastCard(
     cast: CheckInCastSummary,
     onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
-            .width(200.dp)
-            .clickable(onClick = onClick),
+            .width(200.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -511,7 +952,7 @@ private fun PopularCastCard(
                         .size(56.dp)
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFFFFD1E2), Color(0xFFFFEAF2))
+                                listOf(ConCafeColors.primaryContainer, ConCafeColors.surfaceTint)
                             ),
                             CircleShape
                         ),
@@ -519,10 +960,19 @@ private fun PopularCastCard(
                 ) {
                     Text(
                         text = cast.name.take(1),
-                        color = Color(0xFFB74C72),
+                        color = ConCafeColors.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
+                    if (!cast.profileImage.isNullOrBlank()) {
+                        CompatImageDisplay(
+                            imageUrl = cast.profileImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape),
+                            applyRoundedClip = false
+                        )
+                    }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -533,18 +983,22 @@ private fun PopularCastCard(
                     Text(
                         text = cast.cafeName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A7380)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = Color(0xFFFFEEF5)
+                color = if (isSystemInDarkTheme()) {
+                    ConCafeColors.primary.copy(alpha = 0.22f)
+                } else {
+                    ConCafeColors.surfaceTint
+                }
             ) {
                 Text(
-                    text = "오늘 방문 ${cast.todayVisit}",
+                    text = stringResource(Res.string.checkin_today_visit_count, cast.todayVisit),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = Color(0xFFEF6797),
+                    color = if (isSystemInDarkTheme()) ConCafeColors.secondaryContainer else ConCafeColors.primary,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -567,35 +1021,35 @@ private fun LoginPromotionSection(
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFFEF6797), Color(0xFFF7A1C3))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondaryContainer)
                     )
                 )
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = "로그인하고 컨셉카페 방문을 기록해보세요!",
+                text = stringResource(Res.string.checkin_login_promo_title),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("• 방문 기록 저장", color = Color.White)
-                Text("• 카페 팬 레벨 상승", color = Color.White)
-                Text("• 체크인 배지 획득", color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_visit), color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_fan_level), color = Color.White)
+                Text(stringResource(Res.string.checkin_login_promo_feature_badge), color = Color.White)
             }
             Button(
                 onClick = onSignIn,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFFEF6797)
+                    containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                    contentColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.onSurface else ConCafeColors.primary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("로그인", fontWeight = FontWeight.Bold)
+                Text(stringResource(Res.string.signin_submit), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -603,8 +1057,7 @@ private fun LoginPromotionSection(
 
 @Composable
 private fun LoginRequiredBottomSheet(
-    onSignIn: () -> Unit,
-    onSignUp: () -> Unit
+    onSignIn: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -613,25 +1066,25 @@ private fun LoginRequiredBottomSheet(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "체크인하려면 로그인이 필요합니다.",
+            text = stringResource(Res.string.checkin_login_required_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "로그인 후 방문 기록 저장, 팬 레벨, 배지 획득 기능을 사용할 수 있습니다.",
+            text = stringResource(Res.string.checkin_login_required_desc),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF6E6872)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Button(
             onClick = onSignIn,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330)
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("로그인", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.signin_submit), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -640,12 +1093,19 @@ private fun LoginRequiredBottomSheet(
 @Composable
 private fun NewVisitCheckInBottomSheet(
     cafes: List<CheckInCafeSummary>,
+    initialCafeId: String? = null,
+    errorMessage: String?,
     onSubmit: (String, String, String?) -> Unit,
+    onQrCheckIn: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val cafeOptions = cafes.map { it.name to it.id }
     var selectedCafeId by remember {
-        mutableStateOf(cafeOptions.firstOrNull()?.second.orEmpty())
+        mutableStateOf(
+            if (initialCafeId != null && cafes.any { it.id == initialCafeId }) initialCafeId
+            else cafeOptions.firstOrNull()?.second.orEmpty()
+        )
     }
     var isCafeDropdownExpanded by remember { mutableStateOf(false) }
     var cafeDropdownWidth by remember { mutableStateOf(0) }
@@ -655,19 +1115,15 @@ private fun NewVisitCheckInBottomSheet(
         ?: cafeOptions.firstOrNull()?.first.orEmpty()
     val dropdownInteractionSource = remember { MutableInteractionSource() }
     val density = LocalDensity.current
-    val now = remember { System.currentTimeMillis() }
-    var visitDateMillis by remember { mutableLongStateOf(now) }
-    var visitHour by remember {
-        mutableIntStateOf(TimeUtils.extractHourFromEpochMillis(now))
-    }
-    var visitMinute by remember {
-        mutableIntStateOf(TimeUtils.extractMinuteFromEpochMillis(now))
-    }
-    var isTimePickerVisible by remember { mutableStateOf(false) }
     var memo by remember { mutableStateOf("") }
 
     LaunchedEffect(cafes) {
-        val fallbackCafeId = cafes.firstOrNull()?.id.orEmpty()
+        val fallbackCafeId = if (initialCafeId != null && cafes.any { it.id == initialCafeId }) {
+            initialCafeId
+        } else {
+            cafes.firstOrNull()?.id.orEmpty()
+        }
+
         if (selectedCafeId.isBlank()) {
             selectedCafeId = fallbackCafeId
         } else if (cafes.none { it.id == selectedCafeId }) {
@@ -686,7 +1142,7 @@ private fun NewVisitCheckInBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "방문 추가",
+                text = stringResource(Res.string.checkin_new_visit_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -694,30 +1150,33 @@ private fun NewVisitCheckInBottomSheet(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "닫기",
-                    tint = Color(0xFF7C7480)
+                    contentDescription = stringResource(Res.string.common_close),
+                    tint = colorScheme.onSurfaceVariant
                 )
             }
         }
         Text(
-            text = "방문을 기록할 카페를 선택해주세요.",
+            text = stringResource(Res.string.checkin_new_visit_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF7C7480)
+            color = colorScheme.onSurfaceVariant
         )
         if (cafeOptions.isEmpty()) {
-            Text("현재 선택 가능한 카페가 없습니다.")
+            Text(
+                text = stringResource(Res.string.checkin_new_visit_no_cafe),
+                color = colorScheme.onSurfaceVariant
+            )
             ConCafeFormField(
-                label = "카페 선택",
+                label = stringResource(Res.string.checkin_new_visit_cafe_label),
                 value = "",
                 onValueChange = {},
-                placeholder = "선택 가능한 카페가 없습니다.",
+                placeholder = stringResource(Res.string.checkin_new_visit_cafe_unavailable_placeholder),
                 readOnly = true,
                 enabled = false
             )
         } else {
             Box(modifier = Modifier.fillMaxWidth()) {
                 ConCafeFormField(
-                    label = "카페 선택",
+                    label = stringResource(Res.string.checkin_new_visit_cafe_label),
                     value = selectedCafeName,
                     onValueChange = {},
                     readOnly = true,
@@ -725,7 +1184,7 @@ private fun NewVisitCheckInBottomSheet(
                     trailingContent = {
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "카페 선택",
+                            contentDescription = stringResource(Res.string.checkin_new_visit_cafe_label),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -761,77 +1220,49 @@ private fun NewVisitCheckInBottomSheet(
                 }
             }
         }
-        Box(modifier = Modifier.fillMaxWidth()) {
-            ConCafeFormField(
-                label = "방문 시간",
-                value = formatVisitTime(visitHour, visitMinute),
-                onValueChange = {},
-                readOnly = true,
-                trailingContent = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "방문 시간 선택",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { isTimePickerVisible = true }
-            )
-        }
-        if (isTimePickerVisible) {
-            val timePickerState = rememberTimePickerState(
-                initialHour = visitHour,
-                initialMinute = visitMinute,
-                is24Hour = true
-            )
-
-            AlertDialog(
-                onDismissRequest = { isTimePickerVisible = false },
-                title = { Text("방문 시간 선택") },
-                text = { TimePicker(timePickerState) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            visitHour = timePickerState.hour
-                            visitMinute = timePickerState.minute
-                            isTimePickerVisible = false
-                        }
-                    ) {
-                        Text("확인")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { isTimePickerVisible = false }) {
-                        Text("취소")
-                    }
-                }
-            )
-        }
         ConCafeFormField(
-            label = "메모 (선택)",
+            label = stringResource(Res.string.checkin_new_visit_memo_label),
             value = memo,
             onValueChange = { memo = it },
-            placeholder = "방문 후기를 남겨보세요.",
+            placeholder = stringResource(Res.string.checkin_new_visit_memo_placeholder),
             modifier = Modifier.height(120.dp),
             minLines = 4,
             singleLine = false
         )
+        if (!errorMessage.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = colorScheme.errorContainer,
+                border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.35f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        tint = colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
         Button(
             enabled = selectedCafeId.isNotBlank(),
             onClick = {
                 val normalizedCafeId = selectedCafeId.trim()
                 val normalizedMemo = memo.trim().ifEmpty { null }
-                val normalizedVisitedAt = TimeUtils.buildVisitedAtUtcString(
-                    dateMillis = visitDateMillis,
-                    hour = visitHour,
-                    minute = visitMinute
-                )
+                val normalizedVisitedAt = Clock.System.now().toString()
 
                 onSubmit(normalizedCafeId, normalizedVisitedAt, normalizedMemo)
             },
@@ -840,29 +1271,43 @@ private fun NewVisitCheckInBottomSheet(
                 .height(52.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFFD1DC),
-                contentColor = Color(0xFF2B2330)
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
             )
         ) {
-            Text("체크인 완료", fontWeight = FontWeight.Bold)
+            Text(stringResource(Res.string.checkin_new_visit_submit), fontWeight = FontWeight.Bold)
+        }
+        Button(
+            onClick = onQrCheckIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ConCafeColors.primaryContainer,
+                contentColor = ConCafeColors.textPrimary
+            )
+        ) {
+            Text("QR ${stringResource(Res.string.checkin_button)}", fontWeight = FontWeight.Bold)
         }
     }
-}
-
-private fun formatVisitTime(hour: Int, minute: Int): String {
-    return TimeUtils.formatHourMinute(hour, minute)
 }
 
 @Composable
 private fun CheckInGuestSectionTitle(
     title: String
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF2B2630)
-    )
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
 @Composable
@@ -874,7 +1319,7 @@ private fun CheckInSectionTitle(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .height(24.dp),
+            .heightIn(min = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -885,14 +1330,14 @@ private fun CheckInSectionTitle(
                 Text(
                     text = trailing,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7B7480)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -903,18 +1348,10 @@ private fun CheckInSectionTitle(
 private fun TodayVisitsRow(
     visits: List<CheckInVisitEntry>
 ) {
-    val todayVisits = visits.map {
-        CheckInVisitCardUi(
-            id = it.id,
-            name = it.cafeName,
-            time = it.visitedLabel
-        )
-    }
-
-    if (todayVisits.isEmpty()) {
+    if (visits.isEmpty()) {
         EmptyVisitState(
-            title = "오늘 방문 기록이 아직 없어요",
-            description = "지금 체크인하고 첫 방문 기록을 남겨보세요."
+            title = stringResource(Res.string.checkin_today_visit_empty_title),
+            description = stringResource(Res.string.checkin_today_visit_empty_desc)
         )
     } else {
         Row(
@@ -923,23 +1360,24 @@ private fun TodayVisitsRow(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            when (todayVisits.size) {
+            when (visits.size) {
                 1 -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
                 else -> {
-                    VisitCard(
-                        name = todayVisits[0].name,
-                        time = todayVisits[0].time,
+                    CheckInVisitCard(
+                        name = visits[0].cafeName,
+                        time = visits[0].visitedLabel,
+                        image = visits[0].cafeImage,
                         modifier = Modifier.weight(1f)
                     )
                     MoreVisitCard(
-                        remainingCount = todayVisits.size - 1,
+                        remainingCount = visits.size - 1,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -949,33 +1387,116 @@ private fun TodayVisitsRow(
 }
 
 @Composable
-private fun VisitCard(
-    name: String,
-    time: String,
-    modifier: Modifier = Modifier
+private fun QrCheckInBottomSheet(
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onScanSuccess: (String) -> Unit,
+    onScanFailed: (String) -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        modifier = modifier.height(180.dp)
+    val colorScheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 520.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Box {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFFFFE2D2), Color(0xFFFFC9A9))
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(Res.string.checkin_qr_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.common_close),
+                    tint = colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Text(
+            text = stringResource(Res.string.checkin_qr_sheet_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = colorScheme.onSurfaceVariant
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CheckInQrScanner(
+                onScanSuccess = onScanSuccess,
+                onScanCanceled = onDismiss,
+                onScanFailed = onScanFailed
+            )
+        }
+        if (!errorMessage.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = colorScheme.errorContainer,
+                border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.35f))
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CheckInVisitCard(name: String, time: String, image: String, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(24.dp)
+
+    Box(
+        modifier = modifier
+            .height(180.dp)
+            .clip(shape)
+    ) {
+        CompatImageDisplay(
+            imageUrl = image,
+            modifier = Modifier.matchParentSize(),
+            applyRoundedClip = false
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.45f)
                         )
                     )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2
             )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Text(name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(time, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
-            }
+            Text(
+                text = time,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 12.sp,
+                maxLines = 1
+            )
         }
     }
 }
@@ -985,17 +1506,18 @@ private fun MoreVisitCard(
     remainingCount: Int,
     modifier: Modifier = Modifier
 ) {
+
     Card(
         shape = RoundedCornerShape(24.dp),
         modifier = modifier.height(180.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xFFFFF1F6), Color(0xFFFFE1EC))
+                        listOf(ConCafeColors.background, ConCafeColors.surfaceTint)
                     )
                 ),
             contentAlignment = Alignment.Center
@@ -1003,26 +1525,20 @@ private fun MoreVisitCard(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "+$remainingCount",
-                    color = Color(0xFFEF6797),
+                    color = ConCafeColors.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "더 방문했어요",
-                    color = Color(0xFF7C7480),
+                    text = stringResource(Res.string.checkin_more_visit_label),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
         }
     }
 }
-
-private data class CheckInVisitCardUi(
-    val id: String,
-    val name: String,
-    val time: String
-)
 
 @Composable
 private fun CheckInButton(
@@ -1032,9 +1548,9 @@ private fun CheckInButton(
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
     val containerColor = when {
-        isPressed -> Color(0xFFE78CB3)
-        isHovered -> Color(0xFFF2A8C6)
-        else -> Color(0xFFF6BCD1)
+        isPressed -> ConCafeColors.secondaryContainer
+        isHovered -> ConCafeColors.secondaryContainer
+        else -> ConCafeColors.primaryContainer
     }
 
     Button(
@@ -1047,63 +1563,45 @@ private fun CheckInButton(
         interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
-            contentColor = Color(0xFF3A2E36)
+            contentColor = ConCafeColors.textPrimary
         ),
         shape = RoundedCornerShape(20.dp),
         elevation = ButtonDefaults.buttonElevation(0.dp)
     ) {
         Icon(Icons.Default.Add, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
-        Text("새 방문 체크인", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(stringResource(Res.string.checkin_new_visit_cta), fontWeight = FontWeight.Bold, fontSize = 18.sp)
     }
 }
 
 @Composable
-private fun TimelineList(
-    visits: List<CheckInVisitEntry>
+fun TimelineItem(
+    visit: CheckInVisitEntry,
+    modifier: Modifier = Modifier
 ) {
-    if (visits.isEmpty()) {
-        EmptyVisitState(
-            title = "최근 타임라인이 비어 있어요",
-            description = "체크인한 방문 기록이 이 영역에 시간순으로 표시됩니다."
-        )
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            visits.forEach { visit ->
-                TimelineItem(visit)
-            }
-        }
-    }
-}
-
-@Composable
-fun TimelineItem(visit: CheckInVisitEntry) {
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(
+        modifier = modifier.fillMaxWidth()
+    ) {
         // 왼쪽 타임라인 선과 아이콘
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Surface(
                 shape = CircleShape,
-                color = Color.White,
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF6BCD1)),
+                color = MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, ConCafeColors.primaryContainer),
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
                     modifier = Modifier.padding(6.dp),
-                    tint = Color.DarkGray
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
             Box(
                 modifier = Modifier
                     .width(2.dp)
                     .height(100.dp)
-                    .background(Color(0xFFF6BCD1).copy(alpha = 0.3f))
+                    .background(ConCafeColors.primaryContainer.copy(alpha = 0.3f))
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
@@ -1111,23 +1609,36 @@ fun TimelineItem(visit: CheckInVisitEntry) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(visit.cafeName, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-                    Surface(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)) {
+                    Text(
+                        visit.cafeName,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                         Text(
                             text = visit.relativeVisitedLabel(),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(visit.memo ?: "방문 메모 없음", color = Color.Gray, fontSize = 14.sp)
+                Text(
+                    text = visit.memo ?: if (visit.checkInMethod?.uppercase() == "QR") {
+                        stringResource(Res.string.checkin_visit_qr_label)
+                    } else {
+                        stringResource(Res.string.checkin_visit_memo_empty)
+                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 14.sp
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -1138,11 +1649,9 @@ private fun CheckInVisitEntry.relativeVisitedLabel(): String {
     return TimeUtils.relativeVisitedLabel(
         visitedAt = visitedAt,
         visitedLabel = visitedLabel,
-        referenceDate = REFERENCE_DATE
+        referenceDate = TimeUtils.currentIsoDate()
     )
 }
-
-private const val REFERENCE_DATE = "2026-03-09"
 
 @Composable
 private fun EmptyVisitState(
@@ -1154,7 +1663,7 @@ private fun EmptyVisitState(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -1162,12 +1671,42 @@ private fun EmptyVisitState(
         ) {
             Text(
                 text = title,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF7C7480)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun CheckInSectionPlaceholderCard(
+    title: String,
+    description: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

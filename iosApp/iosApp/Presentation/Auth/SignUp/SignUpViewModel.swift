@@ -7,6 +7,13 @@
 
 import Foundation
 import Combine
+import AuthenticationServices
+import CryptoKit
+import Security
+import UIKit
+import KakaoSDKAuth
+import KakaoSDKUser
+import FirebaseAuth
 import Shared
 
 @MainActor
@@ -15,11 +22,23 @@ class SignUpViewModel: ObservableObject {
 
     private let signUpUseCase: SignUpUseCase
 
+    private let completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase
+
+    private let createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase
+
     private let signInUseCase: SignInUseCase
 
-    private let requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase
+    private let signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase
 
-    private let verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase
+    private let signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase
+
+    private let signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase
+
+    private let signOutUseCase: SignOutUseCase
+
+    private let updateUserProfileUseCase: UpdateUserProfileUseCase
+
+    private var phoneVerificationID: String?
 
     private let signInWithSocialProviderUseCase: SignInWithSocialProviderUseCase
 
@@ -29,20 +48,33 @@ class SignUpViewModel: ObservableObject {
 
     private var requestTask: Task<Void, Never>?
 
+    private var webAuthSession: ASWebAuthenticationSession?
+
+    private let webAuthPresentationContextProvider = WebAuthPresentationContextProvider()
+
     private func selectUserType(_ type: SignUpUiState.UserType) {
         uiState.step = .form
         uiState.selectedUserType = type
+        uiState.isCafeOwner = type == .cafeOwner
         uiState.phone = ""
+        uiState.phoneVerificationId = nil
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        uiState.signupCompleted = false
+        uiState.isSocialFlow = false
+        uiState.socialProvider = nil
+        uiState.hasAuthenticatedSocialAccount = false
+        phoneVerificationID = nil
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
         uiState.isCafeSearchVisible = false
+
         clearMessages()
     }
 
     private func handleBack() {
+        cleanupIncompleteAccount()
         if uiState.step == .form {
             backToTypeSelection()
         } else {
@@ -53,10 +85,17 @@ class SignUpViewModel: ObservableObject {
     private func backToTypeSelection() {
         uiState.step = .selectType
         uiState.selectedUserType = nil
+        uiState.isCafeOwner = false
         uiState.phone = ""
+        uiState.phoneVerificationId = nil
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        uiState.signupCompleted = false
+        uiState.isSocialFlow = false
+        uiState.socialProvider = nil
+        uiState.hasAuthenticatedSocialAccount = false
+        phoneVerificationID = nil
         uiState.selectedCafe = nil
         uiState.cafeSearchQuery = ""
         uiState.isCafeSearchVisible = false
@@ -65,9 +104,11 @@ class SignUpViewModel: ObservableObject {
 
     private func changePhone(_ value: String) {
         uiState.phone = value
+        uiState.phoneVerificationId = nil
         uiState.verificationCode = ""
         uiState.hasRequestedVerification = false
         uiState.isPhoneVerified = false
+        uiState.signupCompleted = false
         clearMessages()
     }
 
@@ -99,37 +140,126 @@ class SignUpViewModel: ObservableObject {
 
     private func sendVerification() {
         let trimmedPhone = uiState.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedPhone = normalizeKoreanPhoneToE164(trimmedPhone)
+        let requestedPhone: String
 
-        guard !trimmedPhone.isEmpty else {
-            uiState.errorMessage = "휴대폰 번호를 입력해주세요."
+        if let normalizedPhone {
+            requestedPhone = normalizedPhone
+        } else {
+            uiState.errorMessage = "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
             uiState.infoMessage = nil
             return
         }
 
-        uiState.errorMessage = nil
-        let result = requestPhoneVerificationCodeUseCase.invoke(phone: trimmedPhone)
-        if let success = result as? AppResultSuccess<AnyObject>,
-           let message = success.data as? String {
-            uiState.hasRequestedVerification = true
-            uiState.infoMessage = message
-        } else {
-            uiState.hasRequestedVerification = false
-            uiState.errorMessage = "휴대폰 번호를 다시 확인해주세요."
-            uiState.infoMessage = nil
+        uiState.isLoading = true
+        clearMessages()
+
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let verificationID = try await PhoneAuthProvider.provider().verifyPhoneNumber(requestedPhone, uiDelegate: nil)
+                phoneVerificationID = verificationID
+                uiState.phoneVerificationId = verificationID
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = true
+                uiState.signupCompleted = false
+                uiState.infoMessage = "인증번호가 전송되었습니다."
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = false
+                uiState.phoneVerificationId = nil
+                uiState.errorMessage = resolvePhoneVerificationRequestErrorMessage(error)
+                uiState.infoMessage = nil
+            }
         }
     }
 
     private func verifyCode() {
-        let result = verifyPhoneVerificationCodeUseCase.invoke(code: uiState.verificationCode)
-        if result is AppResultSuccess<AnyObject> {
-            uiState.hasRequestedVerification = true
-            uiState.isPhoneVerified = true
-            uiState.errorMessage = nil
-            uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
-        } else {
-            uiState.isPhoneVerified = false
-            uiState.errorMessage = "인증번호가 일치하지 않습니다."
+        if phoneVerificationID == nil {
+            uiState.errorMessage = "인증번호 요청을 먼저 해주세요."
             uiState.infoMessage = nil
+            return
+        }
+        let verificationID = phoneVerificationID ?? ""
+        let verificationCode = uiState.verificationCode
+            .compactMap { char -> String? in
+                if let value = char.wholeNumberValue {
+                    return String(value)
+                } else {
+                    return nil
+                }
+            }
+            .joined()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if verificationCode.isEmpty {
+            uiState.errorMessage = "인증번호를 입력해주세요."
+            uiState.infoMessage = nil
+            return
+        } else if verificationCode.count != 6 {
+            uiState.errorMessage = "인증번호 6자리를 입력해주세요."
+            uiState.infoMessage = nil
+            return
+        }
+        uiState.isLoading = true
+        clearMessages()
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let credential = PhoneAuthProvider.provider().credential(
+                    withVerificationID: verificationID,
+                    verificationCode: verificationCode
+                )
+                if uiState.isSocialFlow && uiState.selectedUserType == .cafeOwner {
+                    guard let currentUser = Auth.auth().currentUser else {
+                        throw NSError(
+                            domain: AuthErrorDomain,
+                            code: AuthErrorCode.userNotFound.rawValue,
+                            userInfo: [NSLocalizedDescriptionKey: "NO_CURRENT_USER"]
+                        )
+                    }
+                    try await currentUser.link(with: credential)
+                } else {
+                    try await Auth.auth().signIn(with: credential)
+                }
+                uiState.isLoading = false
+                uiState.hasRequestedVerification = true
+                uiState.isPhoneVerified = true
+                uiState.signupCompleted = false
+                uiState.errorMessage = nil
+                uiState.infoMessage = "휴대폰 인증이 완료되었습니다."
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.isPhoneVerified = false
+                if uiState.isSocialFlow && uiState.selectedUserType == .cafeOwner {
+                    uiState.errorMessage = resolvePhoneLinkErrorMessage(error)
+                } else {
+                    uiState.errorMessage = resolvePhoneVerificationCodeErrorMessage(error)
+                }
+                uiState.infoMessage = nil
+            }
+        }
+    }
+
+    private func resolvePhoneVerificationCodeErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        let authErrorCode = AuthErrorCode.Code(rawValue: nsError.code)
+        let detailMessage = nsError.localizedDescription.uppercased()
+
+        if authErrorCode == .invalidVerificationCode || detailMessage.contains("INVALID_VERIFICATION_CODE") {
+            return "인증번호가 일치하지 않습니다."
+        } else if authErrorCode == .sessionExpired
+            || detailMessage.contains("SESSION_EXPIRED")
+            || detailMessage.contains("INVALID_VERIFICATION_ID") {
+            return "인증 세션이 만료되었습니다. 인증번호를 다시 요청해주세요."
+        } else if authErrorCode == .tooManyRequests || detailMessage.contains("TOO_MANY_ATTEMPTS_TRY_LATER") {
+            return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if authErrorCode == .networkError || detailMessage.contains("NETWORK") {
+            return "인증번호 확인에 실패했습니다. 네트워크 상태를 확인 후 다시 시도해주세요."
+        } else {
+            return "인증번호 확인에 실패했습니다. 다시 시도해주세요."
         }
     }
 
@@ -140,27 +270,101 @@ class SignUpViewModel: ObservableObject {
             return
         }
 
+        let currentState = uiState
+        let role = resolveRole(currentState)
+        let selectedCafeId = currentState.selectedCafe?.id
         uiState.isLoading = true
         clearMessages()
 
         requestTask?.cancel()
         requestTask = Task {
             do {
-                let role = resolveRole(uiState)
-                let result = try await signUpUseCase.invoke(
-                    email: uiState.email.trimmingCharacters(in: .whitespacesAndNewlines),
-                    password: uiState.password,
-                    nickname: resolveNickname(uiState),
-                    role: role,
-                    affiliatedCafeId: role == .cast ? uiState.selectedCafe?.id : nil
-                )
+                let normalizedEmail = currentState.email.trimmingCharacters(in: .whitespacesAndNewlines)
+                let nickname = resolveNickname(currentState)
+                let normalizedPhone = normalizeKoreanPhoneToE164(currentState.phone)
 
-                if result is AppResultSuccess<AnyObject> {
-                    uiState.isLoading = false
-                    event.send(.signedUp)
+                if currentState.isSocialFlow {
+                    let completeResult = try await completeSignUpForCurrentUserUseCase.invoke(
+                        email: normalizedEmail,
+                        nickname: nickname,
+                        role: role,
+                        affiliatedCafeId: role == .cast ? selectedCafeId : nil,
+                        phoneNumber: role == .cafeOwner ? normalizedPhone : nil
+                    )
+
+                    if completeResult is AppResultSuccess<AnyObject> {
+                        await createOwnerCafeClaimIfNeeded(role: role, selectedCafeId: selectedCafeId)
+                        uiState.isLoading = false
+                        uiState.signupCompleted = true
+                        event.send(.signedUp)
+                    } else if let failure = completeResult as? AppResultFailure {
+                        uiState.isLoading = false
+                        uiState.errorMessage = resolveSignUpErrorMessage(failure.error)
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                    }
+                } else if role == .cafeOwner {
+                    let linkResult = await linkOwnerEmailCredential(email: normalizedEmail, password: currentState.password)
+
+                    if linkResult == false {
+                        uiState.isLoading = false
+                        return
+                    }
+                    let signInResult = try await signInUseCase.invoke(
+                        email: normalizedEmail,
+                        password: currentState.password
+                    )
+
+                    if signInResult is AppResultSuccess<AnyObject> {
+                        let completeResult = try await completeSignUpForCurrentUserUseCase.invoke(
+                            email: normalizedEmail,
+                            nickname: nickname,
+                            role: role,
+                            affiliatedCafeId: nil,
+                            phoneNumber: normalizedPhone
+                        )
+
+                        if completeResult is AppResultSuccess<AnyObject> {
+                            await createOwnerCafeClaimIfNeeded(role: role, selectedCafeId: selectedCafeId)
+                            uiState.isLoading = false
+                            uiState.signupCompleted = true
+                            event.send(.signedUp)
+                        } else if let failure = completeResult as? AppResultFailure {
+                            uiState.isLoading = false
+                            uiState.errorMessage = resolveSignUpErrorMessage(failure.error)
+                        } else {
+                            uiState.isLoading = false
+                            uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                        }
+                    } else if let failure = signInResult as? AppResultFailure {
+                        uiState.isLoading = false
+                        uiState.errorMessage = resolveSignUpErrorMessage(failure.error)
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                    }
                 } else {
-                    uiState.isLoading = false
-                    uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                    let result = try await signUpUseCase.invoke(
+                        email: normalizedEmail,
+                        password: currentState.password,
+                        nickname: nickname,
+                        role: role,
+                        affiliatedCafeId: role == .cast ? selectedCafeId : nil
+                    )
+
+                    if result is AppResultSuccess<AnyObject> {
+                        await createOwnerCafeClaimIfNeeded(role: role, selectedCafeId: selectedCafeId)
+                        uiState.isLoading = false
+                        uiState.signupCompleted = true
+                        event.send(.signedUp)
+                    } else if let failure = result as? AppResultFailure {
+                        uiState.isLoading = false
+                        uiState.errorMessage = resolveSignUpErrorMessage(failure.error)
+                    } else {
+                        uiState.isLoading = false
+                        uiState.errorMessage = "회원가입에 실패했습니다. 입력값을 확인해주세요."
+                    }
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -170,17 +374,181 @@ class SignUpViewModel: ObservableObject {
         }
     }
 
+    private func linkOwnerEmailCredential(email: String, password: String) async -> Bool {
+        guard let currentUser = Auth.auth().currentUser else {
+            uiState.errorMessage = "휴대폰 인증 세션이 없습니다. 인증을 다시 진행해주세요."
+            uiState.infoMessage = nil
+            return false
+        }
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+
+        do {
+            _ = try await currentUser.link(with: credential)
+            return true
+        } catch {
+            uiState.errorMessage = resolveEmailLinkErrorMessage(error)
+            uiState.infoMessage = nil
+            return false
+        }
+    }
+
+    private func resolveEmailLinkErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        let authErrorCode = AuthErrorCode.Code(rawValue: nsError.code)
+
+        if authErrorCode == .credentialAlreadyInUse || authErrorCode == .emailAlreadyInUse {
+            return "이미 사용 중인 이메일입니다."
+        } else if authErrorCode == .providerAlreadyLinked {
+            return "이미 이메일 로그인이 연결된 계정입니다."
+        } else if authErrorCode == .invalidEmail {
+            return "이메일 형식이 올바르지 않습니다."
+        } else if authErrorCode == .weakPassword {
+            return "비밀번호 보안 강도가 낮습니다. 더 강한 비밀번호를 입력해주세요."
+        } else {
+            return "이메일 연결에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func cleanupIncompleteAccount() {
+        let needsCleanup = !uiState.signupCompleted && (uiState.isPhoneVerified || uiState.hasAuthenticatedSocialAccount)
+
+        if needsCleanup {
+            requestTask?.cancel()
+            requestTask = Task {
+                if uiState.isSocialFlow {
+                    _ = try? await signOutUseCase.invoke()
+                    try? Auth.auth().signOut()
+                    uiState.isPhoneVerified = false
+                    uiState.hasRequestedVerification = false
+                    uiState.phoneVerificationId = nil
+                    uiState.signupCompleted = false
+                    uiState.isSocialFlow = false
+                    uiState.socialProvider = nil
+                    uiState.hasAuthenticatedSocialAccount = false
+                    phoneVerificationID = nil
+                    uiState.errorMessage = nil
+                    uiState.infoMessage = nil
+                } else {
+                    if let currentUser = Auth.auth().currentUser {
+                        do {
+                            try await currentUser.delete()
+                        } catch {
+                            try? Auth.auth().signOut()
+                        }
+                    } else {
+                        try? Auth.auth().signOut()
+                    }
+                    uiState.isPhoneVerified = false
+                    uiState.hasRequestedVerification = false
+                    uiState.phoneVerificationId = nil
+                    uiState.signupCompleted = false
+                    phoneVerificationID = nil
+                    uiState.errorMessage = nil
+                    uiState.infoMessage = nil
+                }
+            }
+        } else {
+        }
+    }
+
+    private func resolvePhoneLinkErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        let authErrorCode = AuthErrorCode.Code(rawValue: nsError.code)
+        let detailMessage = nsError.localizedDescription.uppercased()
+
+        if authErrorCode == .invalidVerificationCode || detailMessage.contains("INVALID_VERIFICATION_CODE") {
+            return "인증번호가 일치하지 않습니다."
+        } else if authErrorCode == .sessionExpired
+            || detailMessage.contains("SESSION_EXPIRED")
+            || detailMessage.contains("INVALID_VERIFICATION_ID") {
+            return "인증 세션이 만료되었습니다. 인증번호를 다시 요청해주세요."
+        } else if authErrorCode == .credentialAlreadyInUse
+            || detailMessage.contains("CREDENTIAL_ALREADY_IN_USE")
+            || detailMessage.contains("PHONE_NUMBER_ALREADY_EXISTS") {
+            return String(localized: String.LocalizationValue("signup_phone_link_already_in_use"), table: "Localizable")
+        } else if authErrorCode == .providerAlreadyLinked || detailMessage.contains("PROVIDER_ALREADY_LINKED") {
+            return String(localized: String.LocalizationValue("signup_phone_link_already_linked"), table: "Localizable")
+        } else if authErrorCode == .userNotFound || detailMessage.contains("NO_CURRENT_USER") {
+            return String(localized: String.LocalizationValue("signup_phone_link_no_social_session"), table: "Localizable")
+        } else {
+            return String(localized: String.LocalizationValue("signup_phone_link_failed"), table: "Localizable")
+        }
+    }
+
+    private func resolvePhoneVerificationRequestErrorMessage(_ error: Error) -> String {
+        let nsError = error as NSError
+        let authErrorCode = AuthErrorCode.Code(rawValue: nsError.code)
+        let detailMessage = nsError.localizedDescription
+
+        if authErrorCode == .invalidPhoneNumber {
+            return "휴대폰 번호 형식을 확인해주세요. 예: 010-1234-5678"
+        } else if authErrorCode == .invalidAppCredential {
+            return "앱 인증 토큰이 유효하지 않습니다. 푸시 인증서/APNs 설정을 확인해주세요."
+        } else if authErrorCode == .quotaExceeded {
+            return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if authErrorCode == .captchaCheckFailed {
+            return "인증 검증에 실패했습니다. 잠시 후 다시 시도해주세요."
+        } else if authErrorCode == .missingAppToken {
+            return "앱 인증 설정이 필요합니다. 앱을 재실행 후 다시 시도해주세요."
+        } else if authErrorCode == .appNotVerified {
+            return "앱 인증 상태를 확인할 수 없습니다. 잠시 후 다시 시도해주세요."
+        } else if authErrorCode == .networkError {
+            return "네트워크 오류로 인증번호 요청에 실패했습니다. 네트워크 상태를 확인해주세요."
+        } else if authErrorCode == .webContextCancelled {
+            return "인증 웹 화면이 취소되었습니다. 다시 시도해주세요."
+        } else if authErrorCode == .webContextAlreadyPresented {
+            return "인증 화면이 이미 열려 있습니다. 잠시 후 다시 시도해주세요."
+        } else {
+            return "인증번호 요청에 실패했습니다. (\(nsError.code)) \(detailMessage)"
+        }
+    }
+
+    private func createOwnerCafeClaimIfNeeded(role: UserRole, selectedCafeId: String?) async {
+        if role == .cafeOwner, let selectedCafeId, !selectedCafeId.isEmpty {
+            _ = try? await createCafeOwnerClaimUseCase.invoke(cafeId: selectedCafeId)
+        }
+    }
+
+    private func applySocialProfile(
+        provider: SignUpProvider,
+        email: String,
+        nickname: String,
+        autoCompleteVisitor: Bool
+    ) {
+        uiState.isLoading = false
+        uiState.errorMessage = nil
+        uiState.infoMessage = autoCompleteVisitor ? nil : "소셜 인증이 완료되었습니다. 필요한 정보만 입력하면 가입이 완료됩니다."
+        uiState.email = email
+        uiState.nickname = nickname
+        uiState.isSocialFlow = true
+        uiState.socialProvider = provider
+        uiState.hasAuthenticatedSocialAccount = true
+
+        if autoCompleteVisitor {
+            submit()
+        }
+    }
+
     private func socialSignUp(_ provider: SignUpProvider) {
         uiState.isLoading = true
         clearMessages()
 
         requestTask?.cancel()
         requestTask = Task {
+            let autoCompleteVisitor = uiState.selectedUserType == .visitor
+            if provider == .google {
+                await handleGoogleSignUp(autoCompleteVisitor: autoCompleteVisitor)
+                return
+            } else if provider == .kakao {
+                await handleKakaoSignUp(autoCompleteVisitor: autoCompleteVisitor)
+                return
+            }
+
             do {
                 let result = try await signInWithSocialProviderUseCase.invoke(provider: provider.rawValue)
                 if result is AppResultSuccess<AnyObject> {
                     uiState.isLoading = false
-                    event.send(.signedUp)
+                    uiState.errorMessage = "애플 회원가입은 전용 버튼으로 다시 시도해주세요."
                 } else {
                     uiState.isLoading = false
                     uiState.errorMessage = "소셜 회원가입에 실패했습니다. 입력값을 확인해주세요."
@@ -191,6 +559,357 @@ class SignUpViewModel: ObservableObject {
                 uiState.errorMessage = error.localizedDescription
             }
         }
+    }
+
+    private func signUpWithAppleIdToken(_ idToken: String) {
+        uiState.isLoading = true
+        clearMessages()
+
+        requestTask?.cancel()
+        requestTask = Task {
+            do {
+                let result = try await signInWithAppleIdTokenUseCase.invoke(idToken: idToken)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let user = success.data as? Shared.User {
+                    try await bindNativeSocialSession(
+                        providerId: "apple.com",
+                        idToken: idToken,
+                        expectedUserId: user.id
+                    )
+                    applySocialProfile(
+                        provider: .apple,
+                        email: user.email,
+                        nickname: user.nickname,
+                        autoCompleteVisitor: uiState.selectedUserType == .visitor
+                    )
+                } else {
+                    uiState.isLoading = false
+                    uiState.errorMessage = "애플 회원가입에 실패했습니다. 다시 시도해주세요."
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoading = false
+                uiState.errorMessage = "애플 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        }
+    }
+
+    private func handleGoogleSignUp(autoCompleteVisitor: Bool) async {
+        do {
+            let idToken = try await requestGoogleIdToken()
+            let result = try await signInWithGoogleIdTokenUseCase.invoke(idToken: idToken)
+
+            if let success = result as? AppResultSuccess<AnyObject>,
+               let user = success.data as? Shared.User {
+                try await bindNativeGoogleSession(
+                    idToken: idToken,
+                    expectedUserId: user.id
+                )
+                applySocialProfile(
+                    provider: .google,
+                    email: user.email,
+                    nickname: user.nickname,
+                    autoCompleteVisitor: autoCompleteVisitor
+                )
+            } else {
+                uiState.isLoading = false
+                uiState.errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        } catch {
+            if Task.isCancelled { return }
+            uiState.isLoading = false
+            uiState.errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func handleKakaoSignUp(autoCompleteVisitor: Bool) async {
+        do {
+            let idToken = try await requestKakaoIdToken()
+            let profile = await requestKakaoProfile()
+            let result = try await signInWithKakaoIdTokenUseCase.invoke(
+                idToken: idToken,
+                email: profile.email,
+                nickname: profile.nickname
+            )
+
+            if let success = result as? AppResultSuccess<AnyObject>,
+               let user = success.data as? Shared.User {
+                try await bindNativeSocialSession(
+                    providerId: "oidc.kakao",
+                    idToken: idToken,
+                    expectedUserId: user.id
+                )
+                let userEmail = String(user.email)
+                let userNickname = String(user.nickname)
+                let resolvedNickname = profile.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
+                await applyKakaoNicknameIfNeeded(resolvedNickname)
+                let trimmedEmail = profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let resolvedEmail: String
+                if let trimmedEmail, !trimmedEmail.isEmpty {
+                    resolvedEmail = trimmedEmail
+                } else {
+                    resolvedEmail = userEmail
+                }
+                let resolvedProfileNickname: String = resolvedNickname?.isEmpty == false
+                    ? resolvedNickname!
+                    : userNickname
+                applySocialProfile(
+                    provider: .kakao,
+                    email: resolvedEmail,
+                    nickname: resolvedProfileNickname,
+                    autoCompleteVisitor: autoCompleteVisitor
+                )
+            } else {
+                uiState.isLoading = false
+                uiState.errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요."
+            }
+        } catch {
+            if Task.isCancelled { return }
+            uiState.isLoading = false
+            uiState.errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요."
+        }
+    }
+
+    private func bindNativeGoogleSession(
+        idToken: String,
+        expectedUserId: String
+    ) async throws {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: "")
+        let authResult = try await Auth.auth().signIn(with: credential)
+        if authResult.user.uid != expectedUserId {
+            try? Auth.auth().signOut()
+            throw SignUpError.socialSessionUserMismatch
+        }
+    }
+
+    private func bindNativeSocialSession(
+        providerId: String,
+        idToken: String,
+        expectedUserId: String
+    ) async throws {
+        let credential = OAuthProvider.credential(withProviderID: providerId, idToken: idToken, rawNonce: nil)
+        let authResult = try await Auth.auth().signIn(with: credential)
+        if authResult.user.uid != expectedUserId {
+            try? Auth.auth().signOut()
+            throw SignUpError.socialSessionUserMismatch
+        }
+    }
+
+    private func requestGoogleIdToken() async throws -> String {
+        let clientId = try requireGoogleServiceValue(key: "CLIENT_ID")
+        let callbackScheme = try requireGoogleServiceValue(key: "REVERSED_CLIENT_ID")
+        let state = UUID().uuidString
+        let redirectUri = "\(callbackScheme):/oauthredirect"
+        let codeVerifier = makeGoogleCodeVerifier()
+        let codeChallenge = makeGoogleCodeChallenge(codeVerifier: codeVerifier)
+        let authUrlString =
+            "https://accounts.google.com/o/oauth2/v2/auth" +
+            "?response_type=code" +
+            "&client_id=\(urlEncoded(clientId))" +
+            "&redirect_uri=\(urlEncoded(redirectUri))" +
+            "&scope=\(urlEncoded("openid email profile"))" +
+            "&state=\(urlEncoded(state))" +
+            "&code_challenge=\(urlEncoded(codeChallenge))" +
+            "&code_challenge_method=S256" +
+            "&prompt=select_account"
+
+        guard let authUrl = URL(string: authUrlString) else {
+            throw SignUpError.invalidAuthUrl
+        }
+        let authCode: String = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            let session = ASWebAuthenticationSession(
+                url: authUrl,
+                callbackURLScheme: callbackScheme
+            ) { [weak self] callbackUrl, error in
+                self?.webAuthSession = nil
+
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let callbackUrl else {
+                    continuation.resume(throwing: SignUpError.emptyCallbackUrl)
+                    return
+                }
+
+                let callbackState = self?.extractQueryValue(url: callbackUrl, key: "state")
+                if callbackState != state {
+                    continuation.resume(throwing: SignUpError.invalidCallbackState)
+                    return
+                }
+
+                guard
+                    let authCode = self?.extractQueryValue(url: callbackUrl, key: "code"),
+                    !authCode.isEmpty
+                else {
+                    continuation.resume(throwing: SignUpError.authCodeNotFound)
+                    return
+                }
+
+                continuation.resume(returning: authCode)
+            }
+
+            session.presentationContextProvider = self.webAuthPresentationContextProvider
+            session.prefersEphemeralWebBrowserSession = false
+            self.webAuthSession = session
+            if !session.start() {
+                self.webAuthSession = nil
+                continuation.resume(throwing: SignUpError.failedToStartWebAuth)
+            }
+        }
+
+        return try await exchangeGoogleAuthCodeForIdToken(
+            clientId: clientId,
+            authCode: authCode,
+            codeVerifier: codeVerifier,
+            redirectUri: redirectUri
+        )
+    }
+
+    private func requestKakaoIdToken() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            let loginCompletion: (OAuthToken?, Error?) -> Void = { token, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                guard let idToken = token?.idToken, !idToken.isEmpty else {
+                    continuation.resume(throwing: SignUpError.idTokenNotFound)
+                    return
+                }
+                continuation.resume(returning: idToken)
+            }
+
+            if UserApi.isKakaoTalkLoginAvailable() {
+                UserApi.shared.loginWithKakaoTalk(completion: loginCompletion)
+            } else {
+                UserApi.shared.loginWithKakaoAccount(completion: loginCompletion)
+            }
+        }
+    }
+
+    private func applyKakaoNicknameIfNeeded(_ nickname: String?) async {
+        if let nickname, !nickname.isEmpty {
+            _ = try? await updateUserProfileUseCase.invoke(
+                nickname: nickname,
+                profileImage: nil
+            )
+        }
+    }
+
+    private func requestKakaoProfile() async -> KakaoProfile {
+        return await withCheckedContinuation { continuation in
+            UserApi.shared.me { user, error in
+                if error != nil {
+                    continuation.resume(returning: KakaoProfile(email: nil, nickname: nil))
+                } else {
+                    let nickname = user?.kakaoAccount?.profile?.nickname?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let email = user?.kakaoAccount?.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    continuation.resume(
+                        returning: KakaoProfile(
+                            email: email?.isEmpty == true ? nil : email,
+                            nickname: nickname?.isEmpty == true ? nil : nickname
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private func requireGoogleServiceValue(key: String) throws -> String {
+        guard
+            let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+            let dictionary = NSDictionary(contentsOfFile: path) as? [String: Any],
+            let value = dictionary[key] as? String,
+            !value.isEmpty
+        else {
+            throw SignUpError.googleServiceConfigMissing
+        }
+
+        return value
+    }
+
+    private func extractFragmentValue(fragment: String, key: String) -> String? {
+        let pairs = fragment.split(separator: "&")
+        for pair in pairs {
+            let components = pair.split(separator: "=", maxSplits: 1)
+            guard components.count == 2 else { continue }
+            if components[0] == Substring(key) {
+                return String(components[1]).removingPercentEncoding
+            }
+        }
+        return nil
+    }
+
+    private func extractQueryValue(url: URL, key: String) -> String? {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        return components?.queryItems?.first(where: { $0.name == key })?.value
+    }
+
+    private func makeGoogleCodeVerifier() -> String {
+        var randomBytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        return base64UrlEncode(Data(randomBytes))
+    }
+
+    private func makeGoogleCodeChallenge(codeVerifier: String) -> String {
+        let verifierData = Data(codeVerifier.utf8)
+        let digest = SHA256.hash(data: verifierData)
+        return base64UrlEncode(Data(digest))
+    }
+
+    private func base64UrlEncode(_ data: Data) -> String {
+        return data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    private func exchangeGoogleAuthCodeForIdToken(
+        clientId: String,
+        authCode: String,
+        codeVerifier: String,
+        redirectUri: String
+    ) async throws -> String {
+        guard let url = URL(string: "https://oauth2.googleapis.com/token") else {
+            throw SignUpError.invalidAuthUrl
+        }
+
+        let body =
+            "code=\(urlEncoded(authCode))" +
+            "&client_id=\(urlEncoded(clientId))" +
+            "&code_verifier=\(urlEncoded(codeVerifier))" +
+            "&redirect_uri=\(urlEncoded(redirectUri))" +
+            "&grant_type=authorization_code"
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body.data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse {
+            if (200..<300).contains(httpResponse.statusCode) {
+                let tokenResponse = try JSONDecoder().decode(GoogleTokenResponse.self, from: data)
+                if let idToken = tokenResponse.idToken, !idToken.isEmpty {
+                    return idToken
+                } else {
+                    throw SignUpError.idTokenNotFound
+                }
+            } else {
+                throw SignUpError.googleTokenExchangeFailed
+            }
+        } else {
+            throw SignUpError.googleTokenExchangeFailed
+        }
+    }
+
+    private func urlEncoded(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-._~"))
+        return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
     }
 
     private func updateState(
@@ -240,10 +959,10 @@ class SignUpViewModel: ObservableObject {
         if userType != .cafeOwner && state.nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return "닉네임을 입력해주세요."
         }
-        if state.password.count < Self.minimumPasswordLength {
+        if !state.isSocialFlow && state.password.count < Self.minimumPasswordLength {
             return "비밀번호는 8자 이상 입력해주세요."
         }
-        if state.password != state.confirmPassword {
+        if !state.isSocialFlow && state.password != state.confirmPassword {
             return "비밀번호가 일치하지 않습니다."
         }
         if userType == .cafeOwner && !state.isPhoneVerified {
@@ -275,6 +994,41 @@ class SignUpViewModel: ObservableObject {
             return .cast
         case .visitor, .none:
             return .visitor
+        }
+    }
+
+    private func resolveSignUpErrorMessage(_ error: AppError) -> String {
+        if let validation = error as? AppErrorValidationFailed {
+            return mapFirebaseSignUpReason(validation.reason)
+        } else if let network = error as? AppErrorNetworkError {
+            return network.message ?? "네트워크 오류로 회원가입에 실패했습니다."
+        } else if let unknown = error as? AppErrorUnknown {
+            return mapFirebaseSignUpReason(unknown.cause ?? "")
+        } else {
+            return "회원가입에 실패했습니다. 입력값을 확인해주세요."
+        }
+    }
+
+    private func mapFirebaseSignUpReason(_ reason: String) -> String {
+        let normalized = reason.uppercased()
+
+        if normalized.contains("EMAIL_EXISTS")
+            || normalized.contains("EMAIL ALREADY EXISTS")
+            || normalized.contains("EMAIL_ALREADY_IN_USE") {
+            return "이미 가입된 이메일입니다."
+        } else if normalized.contains("INVALID_EMAIL") {
+            return "이메일 형식이 올바르지 않습니다."
+        } else if normalized.contains("WEAK_PASSWORD")
+                    || normalized.contains("PASSWORD SHOULD BE AT LEAST") {
+            return "비밀번호 보안 강도가 낮습니다. 더 강한 비밀번호를 입력해주세요."
+        } else if normalized.contains("TOO_MANY_ATTEMPTS_TRY_LATER") {
+            return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+        } else if normalized.contains("NETWORK") {
+            return "네트워크 오류로 회원가입에 실패했습니다."
+        } else if !reason.isEmpty {
+            return reason
+        } else {
+            return "회원가입에 실패했습니다. 입력값을 확인해주세요."
         }
     }
 
@@ -321,29 +1075,81 @@ class SignUpViewModel: ObservableObject {
             submit()
         case .socialSignUpTapped(let provider):
             socialSignUp(provider)
+        case .appleIdTokenReceived(let idToken):
+            signUpWithAppleIdToken(idToken)
         case .signInInsteadTapped:
+            cleanupIncompleteAccount()
             event.send(.navigateBack)
+        case .cleanupIncompleteAccount:
+            cleanupIncompleteAccount()
         }
     }
 
     init(
         getSignUpCafeListUseCase: GetSignUpCafeListUseCase = KoinInitializerKt.resolveGetSignUpCafeListUseCase(),
         signUpUseCase: SignUpUseCase = KoinInitializerKt.resolveSignUpUseCase(),
-        signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase()
+        completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase = KoinInitializerKt.resolveCompleteSignUpForCurrentUserUseCase(),
+        createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase = KoinInitializerKt.resolveCreateCafeOwnerClaimUseCase(),
+        signInUseCase: SignInUseCase = KoinInitializerKt.resolveSignInUseCase(),
+        signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase = KoinInitializerKt.resolveSignInWithGoogleIdTokenUseCase(),
+        signInWithAppleIdTokenUseCase: SignInWithAppleIdTokenUseCase = KoinInitializerKt.resolveSignInWithAppleIdTokenUseCase(),
+        signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase = KoinInitializerKt.resolveSignInWithKakaoIdTokenUseCase(),
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
+        updateUserProfileUseCase: UpdateUserProfileUseCase = KoinInitializerKt.resolveUpdateUserProfileUseCase()
     ) {
         self.getSignUpCafeListUseCase = getSignUpCafeListUseCase
         self.signUpUseCase = signUpUseCase
+        self.completeSignUpForCurrentUserUseCase = completeSignUpForCurrentUserUseCase
+        self.createCafeOwnerClaimUseCase = createCafeOwnerClaimUseCase
         self.signInUseCase = signInUseCase
-        self.requestPhoneVerificationCodeUseCase = RequestPhoneVerificationCodeUseCase()
-        self.verifyPhoneVerificationCodeUseCase = VerifyPhoneVerificationCodeUseCase()
+        self.signInWithGoogleIdTokenUseCase = signInWithGoogleIdTokenUseCase
+        self.signInWithAppleIdTokenUseCase = signInWithAppleIdTokenUseCase
+        self.signInWithKakaoIdTokenUseCase = signInWithKakaoIdTokenUseCase
+        self.signOutUseCase = signOutUseCase
+        self.updateUserProfileUseCase = updateUserProfileUseCase
         self.signInWithSocialProviderUseCase = SignInWithSocialProviderUseCase(signInUseCase: signInUseCase)
         loadCafeOptions()
     }
 
     deinit {
         requestTask?.cancel()
+        webAuthSession?.cancel()
     }
 
     private static let minimumPasswordLength = 8
 
+}
+
+private struct KakaoProfile {
+    let email: String?
+    let nickname: String?
+}
+
+private enum SignUpError: Error {
+    case googleServiceConfigMissing
+    case invalidAuthUrl
+    case failedToStartWebAuth
+    case emptyCallbackUrl
+    case invalidCallbackState
+    case authCodeNotFound
+    case idTokenNotFound
+    case googleTokenExchangeFailed
+    case socialSessionUserMismatch
+}
+
+private struct GoogleTokenResponse: Decodable {
+    let idToken: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case idToken = "id_token"
+    }
+}
+
+private final class WebAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first
+        return scene?.windows.first ?? ASPresentationAnchor()
+    }
 }

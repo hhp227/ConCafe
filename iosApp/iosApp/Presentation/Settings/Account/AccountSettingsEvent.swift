@@ -9,6 +9,7 @@ import Foundation
 
 enum AccountSettingsEvent {
     case navigateBack
+    case navigateToMain
     case navigateToCastEdit(cafeId: String?, castId: String?)
     case navigateToChangePassword
     case showMessage(String)

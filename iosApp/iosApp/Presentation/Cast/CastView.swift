@@ -8,10 +8,7 @@
 import SwiftUI
 import Shared
 
-private let castCurrentDate = "2026-03-08"
-private let castHeroHeight: CGFloat = 340
 private let castSummaryTitleTriggerOffset: CGFloat = 22
-
 struct CastView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
@@ -31,6 +28,8 @@ struct CastView: View {
                 onNavigationAction(.navigateToCafe(id: id))
             case .navigateToSignIn:
                 onNavigationAction(.navigateToSignIn)
+            case .navigateToPicture(let imageUrl):
+                onNavigationAction(.navigateToPicture(imageUrl: imageUrl))
             }
         }
     }
@@ -57,7 +56,7 @@ private struct CastContentView: View {
         GeometryReader { proxy in
             ZStack(alignment: .top) {
                 content(topSafeArea: proxy.safeAreaInsets.top)
-                    .background(Color(hex: "FFF9FC"))
+                    .background(ConCafeColors.background)
             }
             .ignoresSafeArea(edges: .top)
         }
@@ -74,7 +73,16 @@ private struct CastContentView: View {
                 offsetReader
                 LazyVStack(spacing: 18) {
                     CastHeroSection(detail: detail, scrollOffset: scrollOffset, topSafeArea: topSafeArea)
-                    CastSummarySection(detail: detail, isFollowing: uiState.isFollowing, onAction: onAction)
+                        .onHeroImageTap { imageUrl in
+                            onAction(.imageTapped(imageUrl: imageUrl))
+                        }
+                    CastSummarySection(
+                        detail: detail,
+                        isFollowing: uiState.isFollowing,
+                        isSelfCast: uiState.isSelfCast,
+                        shouldShowFollowTooltip: uiState.shouldShowFollowTooltip,
+                        onAction: onAction
+                    )
                         .background(summaryOffsetReader)
                     CastTodaySection(detail: detail)
                     CastScheduleSection(detail: detail)
@@ -85,6 +93,8 @@ private struct CastContentView: View {
                 .padding(.bottom, 28)
             }
             .coordinateSpace(name: "castScroll")
+            .ignoresSafeArea(edges: .top)
+            .compatScrollContentInsetAdjustmentNever()
             .onPreferenceChange(CastSummaryOffsetPreferenceKey.self) { value in
                 summarySectionMinY = value
             }
@@ -93,13 +103,13 @@ private struct CastContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             VStack(spacing: 12) {
-                Text(uiState.errorMessage ?? "캐스트 상세 데이터를 불러오지 못했습니다.")
+                Text(String(localized: String.LocalizationValue("cast_error_detail_load_failed"), table: "Localizable"))
                     .foregroundStyle(.red)
-                Button("새로고침") {
+                Button(String(localized: String.LocalizationValue("cast_action_refresh"), table: "Localizable")) {
                     onAction(.refresh)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "EF6797"))
+                .tint(ConCafeColors.primary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -137,68 +147,87 @@ private struct CastHeroSection: View {
 
     let topSafeArea: CGFloat
 
+    var onImageTap: ((String) -> Void)? = nil
+
     var body: some View {
-        let upwardScroll = min(scrollOffset, 0)
-        let parallaxOffset = -upwardScroll * 0.35
-        let stretchScale = scrollOffset > 0 ? 1 + (scrollOffset / 700) : 1
+        let heroHeight = 230 + topSafeArea
+        let pullDownOffset = scrollOffset > 0 ? scrollOffset : 0
+        let dynamicHeroHeight = heroHeight + pullDownOffset
+        let heroImages = resolveHeroImages(
+            images: detail.images,
+            fallbackProfileImage: detail.cast.profileImage
+        )
 
         TabView {
-            ForEach(Array(detail.images.enumerated()), id: \.offset) { index, image in
+            ForEach(Array(heroImages.enumerated()), id: \.offset) { index, image in
+                let trimmed = image.trimmingCharacters(in: .whitespacesAndNewlines)
+
                 ZStack {
-                    if let url = URL(string: image), !image.isEmpty {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                heroPlaceholder(index: index)
-                            case .success(let loadedImage):
-                                loadedImage
-                                    .resizable()
-                                    .scaledToFill()
-                            case .failure:
-                                heroPlaceholder(index: index)
-                            @unknown default:
-                                heroPlaceholder(index: index)
-                            }
+                    if let url = ImageUrlUtils.normalizedRemoteUrl(from: trimmed), !trimmed.isEmpty {
+                        GeometryReader { geometry in
+                            CachedAsyncImage(
+                                url: url,
+                                placeholder: heroPlaceholder(index: index),
+                                displaySize: .medium
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
                         }
                     } else {
                         heroPlaceholder(index: index)
                     }
                     LinearGradient(
-                        colors: [.clear, Color.black.opacity(0.52)],
+                        colors: [.clear, Color.black.opacity(0.4)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    VStack(spacing: 8) {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 54))
-                            .foregroundStyle(.white)
-                        Text(detail.cast.name)
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(.white)
+                    if trimmed.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 54))
+                                .foregroundStyle(.white)
+                            Text(detail.cast.name)
+                                .font(.headline.weight(.bold))
+                                .foregroundStyle(.white)
+                        }
+                        .padding(24)
+                        .background(Circle().fill(Color.white.opacity(0.16)))
                     }
-                    .padding(24)
-                    .background(Circle().fill(Color.white.opacity(0.16)))
                     Text(detail.cafe.name)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color.white.opacity(0.9))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                         .padding(20)
                 }
-                .scaleEffect(stretchScale, anchor: .center)
-                .offset(y: parallaxOffset)
+                .frame(height: dynamicHeroHeight)
                 .clipped()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if !trimmed.isEmpty {
+                        onImageTap?(trimmed)
+                    }
+                }
             }
         }
-        .frame(height: castHeroHeight + topSafeArea)
+        .frame(height: dynamicHeroHeight)
+        .offset(y: pullDownOffset > 0 ? -pullDownOffset : 0)
+        .frame(height: dynamicHeroHeight, alignment: .top)
+        .clipShape(Rectangle())
         .tabViewStyle(.page(indexDisplayMode: .automatic))
+    }
+
+    func onHeroImageTap(_ action: @escaping (String) -> Void) -> CastHeroSection {
+        var copy = self
+        copy.onImageTap = action
+        return copy
     }
 
     @ViewBuilder
     private func heroPlaceholder(index: Int) -> some View {
         let gradients: [[Color]] = [
-            [Color(hex: "F8A3C5"), Color(hex: "EF6797")],
-            [Color(hex: "FFC6C7"), Color(hex: "FF8E9E")],
-            [Color(hex: "F8D6E9"), Color(hex: "D98AB7")]
+            [ConCafeColors.secondaryContainer, ConCafeColors.primary],
+            [ConCafeColors.errorContainer, ConCafeColors.tertiary],
+            [ConCafeColors.primaryContainer, ConCafeColors.primary]
         ]
         LinearGradient(
             colors: gradients[index % gradients.count],
@@ -208,64 +237,121 @@ private struct CastHeroSection: View {
     }
 }
 
+private func resolveHeroImages(
+    images: [String],
+    fallbackProfileImage: String?
+) -> [String] {
+    let normalized = images
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    if !normalized.isEmpty {
+        return normalized
+    }
+    let fallback = (fallbackProfileImage ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    return fallback.isEmpty ? [""] : [fallback]
+}
+
 private struct CastSummarySection: View {
     let detail: CastDetail
 
     let isFollowing: Bool
 
+    let isSelfCast: Bool
+
+    let shouldShowFollowTooltip: Bool
+
     let onAction: (CastAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(detail.cast.name)
-                        .font(.title2.bold())
-                    Text(detail.cast.conceptRole.capitalized)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(hex: "C9527E"))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Capsule().fill(Color(hex: "FFE7F1")))
-                    Button {
-                        onAction(.cafeTapped)
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "mappin.and.ellipse")
-                            Text("\(detail.cafe.name) · \(detail.cafe.region.city)")
+            ZStack(alignment: .topTrailing) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Text(detail.cast.name)
+                                .font(.title2.bold())
+                            if let linkedUserId = detail.cast.linkedUserId, !linkedUserId.isEmpty {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundStyle(ConCafeColors.primary)
+                                    .font(.title2)
+                            }
                         }
-                        .font(.subheadline)
-                        .foregroundStyle(Color.secondary)
+                        Text(detail.cast.conceptRole.capitalized)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(ConCafeColors.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(ConCafeColors.surfaceTint))
+                        Button {
+                            onAction(.cafeTapped)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "mappin.and.ellipse")
+                                Text("\(detail.cafe.name) · \(detail.cafe.region.city)")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(Color.secondary)
+                        }
                     }
-                }
-                Spacer()
-                Button {
-                    onAction(.followTapped)
-                } label: {
-                    Text(isFollowing ? "팔로잉" : "팔로우")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isFollowing ? Color(hex: "6A4960") : .white)
-                        .padding(.horizontal, 18)
-                        .frame(height: 40)
-                        .background(
-                            Capsule()
-                                .fill(isFollowing ? Color(hex: "F1E3EB") : Color(hex: "EF6797"))
-                        )
+                    Spacer()
+                    DetailTooltipBox(
+                        visible: shouldShowFollowTooltip,
+                        text: String(
+                            localized: String.LocalizationValue("cast_follow_tooltip"),
+                            table: "Localizable"
+                        ),
+                        offset: CGSize(width: 0, height: 48),
+                        onShown: {
+                            onAction(.followTooltipShown)
+                        },
+                        onDismiss: {
+                            onAction(.dismissFollowTooltip)
+                        }
+                    ) {
+                        Button {
+                            onAction(.followTapped)
+                        } label: {
+                            Text(
+                                isFollowing
+                                ? String(localized: String.LocalizationValue("cast_following"), table: "Localizable")
+                                : String(localized: String.LocalizationValue("cast_follow"), table: "Localizable")
+                            )
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(isFollowing ? ConCafeColors.primary : .white)
+                            .padding(.horizontal, 18)
+                            .frame(height: 40)
+                            .background(
+                                Capsule()
+                                    .fill(isFollowing ? ConCafeColors.primaryContainer : ConCafeColors.primary)
+                            )
+                        }
+                        .disabled(isSelfCast)
+                        .opacity(isSelfCast ? 0.5 : 1.0)
+                    }
+                    .zIndex(1)
                 }
             }
             HStack(spacing: 18) {
-                statItem(systemName: "person.2.fill", label: "팔로워", value: "\(detail.cast.followerCount)명")
+                statItem(
+                    systemName: "person.2.fill",
+                    label: String(localized: String.LocalizationValue("cast_follower_label"), table: "Localizable"),
+                    value: String(
+                        format: String(localized: String.LocalizationValue("cast_follower_count"), table: "Localizable"),
+                        locale: Locale.current,
+                        detail.cast.followerCount
+                    )
+                )
             }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 22)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
     }
 
     private func statItem(systemName: String, label: String, value: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: systemName)
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             HStack(spacing: 4) {
                 Text(label)
                     .font(.caption)
@@ -281,15 +367,19 @@ private struct CastTodaySection: View {
     let detail: CastDetail
 
     var body: some View {
-        let todaySchedule = detail.schedule.first(where: { $0.date == castCurrentDate })
+        let todaySchedule = CastScheduleAttendanceUtils.todaySchedule(from: detail.schedule)
+        let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: todaySchedule)
+        let statusText = castAttendanceStatusText(attendanceStatus)
+        let timeText = todaySchedule.map { "\($0.startTime) - \($0.endTime)" }
+            ?? String(localized: String.LocalizationValue("cast_today_check_schedule"), table: "Localizable")
 
         VStack(alignment: .leading, spacing: 6) {
-            Text("오늘의 출근 상태")
+            Text(String(localized: String.LocalizationValue("cast_today_status_title"), table: "Localizable"))
                 .foregroundStyle(Color.white.opacity(0.82))
-            Text(todaySchedule != nil ? "출근 예정" : "오늘은 휴무")
+            Text(statusText)
                 .font(.title3.bold())
                 .foregroundStyle(.white)
-            Text(todaySchedule.map { "\($0.startTime) - \($0.endTime)" } ?? "다음 스케줄을 확인해 주세요.")
+            Text(timeText)
                 .foregroundStyle(Color.white.opacity(0.9))
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -297,7 +387,7 @@ private struct CastTodaySection: View {
         .padding(.vertical, 18)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F8A3C5")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondaryContainer],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -308,6 +398,19 @@ private struct CastTodaySection: View {
     }
 }
 
+private func castAttendanceStatusText(_ status: CastAttendanceStatus) -> String {
+    switch status {
+    case .upcoming:
+        return String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
+    case .onShift:
+        return String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
+    case .completed:
+        return String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
+    default:
+        return String(localized: String.LocalizationValue("cast_today_off"), table: "Localizable")
+    }
+}
+
 private struct CastScheduleSection: View {
     let detail: CastDetail
 
@@ -315,9 +418,9 @@ private struct CastScheduleSection: View {
         let weeklyStatus = weeklySchedule(from: detail.schedule)
 
         VStack(alignment: .leading, spacing: 12) {
-            Label("출근 일정", systemImage: "calendar")
+            Label(String(localized: String.LocalizationValue("cast_schedule_title"), table: "Localizable"), systemImage: "calendar")
                 .font(.headline)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color(uiColor: .label))
             HStack(spacing: 8) {
                 ForEach(weeklyStatus, id: \.dayLabel) { item in
                     CastScheduleCard(
@@ -340,14 +443,18 @@ private struct CastScheduleCard: View {
         VStack(spacing: 4) {
             Text(dayLabel)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isWorking ? Color.white : Color(hex: "4E4750"))
-            Text(isWorking ? "출근" : "휴무")
+                .foregroundStyle(isWorking ? Color.white : .primary)
+            Text(
+                isWorking
+                ? String(localized: String.LocalizationValue("cast_schedule_work"), table: "Localizable")
+                : String(localized: String.LocalizationValue("cast_schedule_off"), table: "Localizable")
+            )
                 .font(.caption)
-                .foregroundStyle(isWorking ? Color.white.opacity(0.92) : Color(hex: "8A8087"))
+                .foregroundStyle(isWorking ? Color.white.opacity(0.92) : .secondary)
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(isWorking ? Color(hex: "EF6797") : Color.white)
+        .background(isWorking ? ConCafeColors.primary : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -357,14 +464,15 @@ private struct CastIntroductionSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("소개")
+            Text(String(localized: String.LocalizationValue("cast_section_intro"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             Text(detail.cast.desc)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(18)
-                .background(Color.white)
+                .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                 .clipShape(RoundedRectangle(cornerRadius: 22))
-                .foregroundStyle(Color(hex: "4E4750"))
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 16)
@@ -376,12 +484,22 @@ private struct CastRecentActivitySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("최근 활동")
+            Text(String(localized: String.LocalizationValue("cast_section_recent_activity"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             HStack(spacing: 10) {
-                CastActivityCard(value: "\(detail.recentVisitCount)", label: "방문 인증")
-                CastActivityCard(value: "\(detail.cast.followerCount)", label: "팔로워")
-                CastActivityCard(value: String(format: "%.1f", detail.cast.rating), label: "평점")
+                CastActivityCard(
+                    value: "\(detail.visitCertificationCount)",
+                    label: String(localized: String.LocalizationValue("cast_activity_visit_cert"), table: "Localizable")
+                )
+                CastActivityCard(
+                    value: "\(detail.cast.followerCount)",
+                    label: String(localized: String.LocalizationValue("cast_activity_follower"), table: "Localizable")
+                )
+                CastActivityCard(
+                    value: RatingUtils.formatOneDecimal(detail.cast.rating),
+                    label: String(localized: String.LocalizationValue("cast_activity_rating"), table: "Localizable")
+                )
             }
         }
         .padding(.horizontal, 16)
@@ -397,7 +515,7 @@ private struct CastActivityCard: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title3.bold())
-                .foregroundStyle(Color(hex: "EF6797"))
+                .foregroundStyle(ConCafeColors.primary)
             Text(label)
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
@@ -405,7 +523,7 @@ private struct CastActivityCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
         .padding(.horizontal, 12)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
@@ -415,8 +533,9 @@ private struct CastRecentReviewSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("함께 언급된 후기")
+            Text(String(localized: String.LocalizationValue("cast_section_tagged_reviews"), table: "Localizable"))
                 .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
             if reviews.isEmpty {
                 CastRecentReviewEmptyView()
             } else {
@@ -426,12 +545,12 @@ private struct CastRecentReviewSection: View {
                             HStack {
                                 Text(review.userNickname)
                                     .font(.subheadline.weight(.semibold))
-                                Text("\(review.rating)")
+                                Text(RatingUtils.formatOneDecimal(review.rating))
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(Color(hex: "EF6797"))
+                                    .foregroundStyle(ConCafeColors.primary)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(Color(hex: "FFD1DC").opacity(0.12))
+                                    .background(ConCafeColors.primaryContainer.opacity(0.12))
                                     .clipShape(Capsule())
                                 Spacer()
                                 Text(review.createdDateLabel)
@@ -444,10 +563,10 @@ private struct CastRecentReviewSection: View {
                                         ForEach(review.taggedCastNames, id: \.self) { castName in
                                             Text(castName)
                                                 .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(Color(hex: "C9527E"))
+                                                .foregroundStyle(ConCafeColors.primary)
                                                 .padding(.horizontal, 10)
                                                 .padding(.vertical, 5)
-                                                .background(Color(hex: "FFD1DC").opacity(0.12))
+                                                .background(ConCafeColors.primaryContainer.opacity(0.12))
                                                 .clipShape(Capsule())
                                         }
                                     }
@@ -455,12 +574,12 @@ private struct CastRecentReviewSection: View {
                             }
                             Text(review.content)
                                 .font(.subheadline)
-                                .foregroundStyle(Color(hex: "4E4750"))
+                                .foregroundStyle(.primary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(Color.white)
+                        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
                 }
@@ -473,17 +592,17 @@ private struct CastRecentReviewSection: View {
 private struct CastRecentReviewEmptyView: View {
     var body: some View {
         VStack(spacing: 6) {
-            Text("아직 함께 언급된 후기가 없어요.")
+            Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_title"), table: "Localizable"))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(hex: "4E4750"))
-            Text("이 캐스트가 태그된 카페 리뷰가 표시됩니다.")
+                .foregroundStyle(.primary)
+            Text(String(localized: String.LocalizationValue("cast_tagged_reviews_empty_desc"), table: "Localizable"))
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .padding(.horizontal, 16)
-        .background(Color.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
@@ -496,12 +615,6 @@ private struct CastScrollOffsetPreferenceKey: PreferenceKey {
     }
 }
 
-private extension CastDetail {
-    var recentVisitCount: Int {
-        max(Int(cast.followerCount) / 8, schedule.count)
-    }
-}
-
 private struct WeeklyScheduleItem {
     let dayLabel: String
     let isWorking: Bool
@@ -509,9 +622,17 @@ private struct WeeklyScheduleItem {
 
 private func weeklySchedule(from schedules: [CastSchedule]) -> [WeeklyScheduleItem] {
     let workingDays = Set(schedules.compactMap { TimeUtils.weekdayLabel(fromIsoDate: $0.date) })
-    let orderedDays = ["월", "화", "수", "목", "금", "토", "일"]
-    return orderedDays.map { dayLabel in
-        WeeklyScheduleItem(dayLabel: dayLabel, isWorking: workingDays.contains(dayLabel))
+    let orderedDays = [
+        ("월", String(localized: String.LocalizationValue("cast_weekday_mon"), table: "Localizable")),
+        ("화", String(localized: String.LocalizationValue("cast_weekday_tue"), table: "Localizable")),
+        ("수", String(localized: String.LocalizationValue("cast_weekday_wed"), table: "Localizable")),
+        ("목", String(localized: String.LocalizationValue("cast_weekday_thu"), table: "Localizable")),
+        ("금", String(localized: String.LocalizationValue("cast_weekday_fri"), table: "Localizable")),
+        ("토", String(localized: String.LocalizationValue("cast_weekday_sat"), table: "Localizable")),
+        ("일", String(localized: String.LocalizationValue("cast_weekday_sun"), table: "Localizable"))
+    ]
+    return orderedDays.map { day in
+        WeeklyScheduleItem(dayLabel: day.1, isWorking: workingDays.contains(day.0))
     }
 }
 

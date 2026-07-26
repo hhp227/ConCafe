@@ -9,10 +9,26 @@ import Foundation
 import Shared
 
 struct AdminOperationsUiState {
-    var metrics: [AdminMetricCard] = buildAdminMetrics(pendingCount: 0)
+    var totalUsersCount: Int = 0
+    var activeCafesCount: Int = 0
+    var reportItemsCount: Int = 0
+    var metrics: [AdminMetricCard] = buildAdminMetrics(
+        totalUsersCount: 0,
+        activeCafesCount: 0,
+        pendingCount: 0,
+        reportItemsCount: 0
+    )
     var selectedPendingFilter: PendingFilter = .cafeRegistration
     var pendingCafeRegistrationClaims: [PendingCafeRegistrationClaimPreview] = []
     var pendingCafeOwnerClaims: [PendingCafeOwnerClaimPreview] = []
+    var inquiries: [Inquiry] = []
+    var reports: [Report] = []
+    var inquiryNextCursor: String? = nil
+    var reportNextCursor: String? = nil
+    var canLoadMoreInquiries: Bool = false
+    var canLoadMoreReports: Bool = false
+    var isLoadingMoreInquiries: Bool = false
+    var isLoadingMoreReports: Bool = false
     var quickMenus: [AdminQuickMenu] = defaultQuickMenus
     var hasUnreadNotifications: Bool = true
     var infoMessage: String? = nil
@@ -80,6 +96,7 @@ enum AdminMetricIcon {
 }
 
 enum QuickMenuIcon {
+    case users
     case banner
     case moderation
     case analytics
@@ -91,16 +108,22 @@ enum QuickMenuAccent {
     case blue
 }
 
-func buildAdminMetrics(pendingCount: Int) -> [AdminMetricCard] {
+func buildAdminMetrics(
+    totalUsersCount: Int,
+    activeCafesCount: Int,
+    pendingCount: Int,
+    reportItemsCount: Int
+) -> [AdminMetricCard] {
     [
-        AdminMetricCard(title: "전체 사용자", value: "12,540", delta: "1.2%", icon: .users, trend: .up),
-        AdminMetricCard(title: "활성 카페", value: "842", delta: "0.5%", icon: .cafe, trend: .up),
+        AdminMetricCard(title: "전체 사용자", value: "\(totalUsersCount)", delta: "실시간", icon: .users, trend: .up),
+        AdminMetricCard(title: "활성 카페", value: "\(activeCafesCount)", delta: "실시간", icon: .cafe, trend: .up),
         AdminMetricCard(title: "승인 대기", value: "\(pendingCount)", delta: "\(pendingCount)건 대기", icon: .pending, trend: .new),
-        AdminMetricCard(title: "신고 항목", value: "32", delta: "8%", icon: .report, trend: .down)
+        AdminMetricCard(title: "신고 항목", value: "\(reportItemsCount)", delta: "실시간", icon: .report, trend: .down)
     ]
 }
 
 private let defaultQuickMenus: [AdminQuickMenu] = [
+    AdminQuickMenu(id: "users", title: "유저 관리", description: "카페 운영자 및 차단 사용자 조회", icon: .users, accent: .blue),
     AdminQuickMenu(id: "banner", title: "홈 배너 관리", description: "이벤트 및 공지 배너 수정", icon: .banner, accent: .primary),
     AdminQuickMenu(id: "moderation", title: "신고 및 제재", description: "부적절한 컨텐츠 및 유저 차단", icon: .moderation, accent: .rose),
     AdminQuickMenu(id: "analytics", title: "시스템 통계", description: "유입 분석 및 매출 리포트", icon: .analytics, accent: .blue)

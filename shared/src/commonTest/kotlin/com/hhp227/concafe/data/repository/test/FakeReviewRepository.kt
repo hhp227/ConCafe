@@ -13,6 +13,23 @@ class FakeReviewRepository(
         return dataSource.toPaged(items, cursor, pageSize)
     }
 
+    override suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+
+        return dataSource.reviews
+            .filter { review ->
+                review.cafeId == cafeId && review.taggedCastIds.contains(castId)
+            }
+            .sortedByDescending { review ->
+                review.createdAt
+            }
+            .take(safeLimit)
+    }
+
     override suspend fun createReview(
         userId: String,
         cafeId: String,
@@ -44,6 +61,33 @@ class FakeReviewRepository(
             taggedCastIds = taggedCastIds
         )
         return review
+    }
+
+    override suspend fun updateReview(
+        reviewId: String,
+        requesterId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review {
+        if (content.isBlank()) {
+            throw IllegalArgumentException("review content is required")
+        }
+        val index = dataSource.reviews.indexOfFirst { it.id == reviewId && it.userId == requesterId }
+        if (index == -1) {
+            throw IllegalStateException("no permission to update review")
+        }
+        val current = dataSource.reviews[index]
+        val updated = current.copy(
+            rating = rating,
+            content = content.trim(),
+            imageUrls = imageUrls,
+            taggedCastIds = taggedCastIds
+        )
+        dataSource.reviews[index] = updated
+        dataSource.refreshReviewProjections(cafeId = updated.cafeId, taggedCastIds = updated.taggedCastIds)
+        return updated
     }
 
     override suspend fun hasReviewForVisit(visitId: String): Boolean {

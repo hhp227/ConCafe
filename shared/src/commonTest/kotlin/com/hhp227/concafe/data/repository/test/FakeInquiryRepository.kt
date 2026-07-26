@@ -1,6 +1,7 @@
 package com.hhp227.concafe.data.repository.test
 
 import com.hhp227.concafe.data.source.ConCafeDataSource
+import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.Inquiry
 import com.hhp227.concafe.domain.model.InquiryCreate
 import com.hhp227.concafe.domain.model.InquiryStatus
@@ -32,5 +33,21 @@ class FakeInquiryRepository(
         )
         dataSource.inquiries.add(0, inquiry)
         return inquiry
+    }
+
+    override suspend fun getInquiryPage(cursor: String?, pageSize: Int): PagedResult<Inquiry> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val sorted = dataSource.inquiries.sortedByDescending { inquiry ->
+            inquiry.createdAt
+        }
+        val startIndex = cursor?.toIntOrNull() ?: 0
+        val endIndex = (startIndex + safePageSize).coerceAtMost(sorted.size)
+        val hasNext = endIndex < sorted.size
+        val nextCursor = if (hasNext) endIndex.toString() else null
+        return PagedResult(
+            items = sorted.subList(startIndex, endIndex),
+            nextCursor = nextCursor,
+            hasNext = hasNext
+        )
     }
 }

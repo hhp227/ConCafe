@@ -14,11 +14,20 @@ struct AccountSettingsUiState {
     var myInfoFeed: Shared.MyInfoFeed?
     var nicknameInput: String
     var isDeleteDialogVisible: Bool
-    var deleteConfirmation: String
+    var deletePassword: String
+    var deletePasswordErrorMessage: String?
     var isDeleteRequested: Bool
 
     var role: UserRole? {
         myInfoFeed?.user?.role
+    }
+
+    var authProvider: AuthProvider {
+        myInfoFeed?.user?.authProvider ?? .unknown
+    }
+
+    var canChangePassword: Bool {
+        authProvider == .email || authProvider == .unknown
     }
 
     static let empty = AccountSettingsUiState(
@@ -27,7 +36,8 @@ struct AccountSettingsUiState {
         myInfoFeed: nil,
         nicknameInput: "",
         isDeleteDialogVisible: false,
-        deleteConfirmation: "",
+        deletePassword: "",
+        deletePasswordErrorMessage: nil,
         isDeleteRequested: false
     )
 }

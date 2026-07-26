@@ -4,6 +4,7 @@ sealed interface CafeInfoEditAction {
     data object ClickBack : CafeInfoEditAction
     data class ChangeCafeName(val value: String) : CafeInfoEditAction
     data class ChangeCafeDescription(val value: String) : CafeInfoEditAction
+    data class ChangeConceptType(val value: String) : CafeInfoEditAction
     data class ChangeAddress(val value: String) : CafeInfoEditAction
     data class ChangeContactNumber(val value: String) : CafeInfoEditAction
     data class ChangeWeekdayOpen(val value: String) : CafeInfoEditAction
@@ -14,7 +15,9 @@ sealed interface CafeInfoEditAction {
     data class SelectRepresentativeImage(val imageUrl: String) : CafeInfoEditAction
     data object ClickAddGalleryImage : CafeInfoEditAction
     data class AddGalleryImage(val imageUrl: String) : CafeInfoEditAction
+    data class RemoveGalleryImage(val index: Int) : CafeInfoEditAction
     data object ClickPinLocation : CafeInfoEditAction
+    data class SetPinnedLocation(val latitude: Double, val longitude: Double) : CafeInfoEditAction
     data object ClickManageExceptionDates : CafeInfoEditAction
     data object DismissImageRequiredAlert : CafeInfoEditAction
     data object ClickSave : CafeInfoEditAction

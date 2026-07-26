@@ -28,6 +28,7 @@ class GetNotificationFeedUseCase(
                 val notifications = notificationRepository
                     .getNotifications(currentUser.id, cursor = null, pageSize = pageSize)
                     .items
+                val unreadCount = notificationRepository.getUnreadNotificationCount(currentUser.id)
                 val sections = SECTION_ORDER.mapNotNull { sectionSpec ->
                     val sectionItems = notifications
                         .filter { it.type in sectionSpec.types }
@@ -57,7 +58,7 @@ class GetNotificationFeedUseCase(
                 AppResult.Success(
                     NotificationFeed(
                         isLoggedIn = true,
-                        unreadCount = notifications.count { !it.isRead },
+                        unreadCount = unreadCount,
                         sections = sections
                     )
                 )
@@ -82,9 +83,23 @@ class GetNotificationFeedUseCase(
 
         private val SECTION_ORDER = listOf(
             SectionSpec(
+                id = "approval_request",
+                title = "승인 요청",
+                types = setOf("CAFE_APPROVAL_REQUEST", "CAFE_OWNER_APPROVAL_REQUEST", "CAST_CLAIM_REQUEST")
+            ),
+            SectionSpec(
+                id = "approval_result",
+                title = "승인 결과",
+                types = setOf(
+                    "CAFE_APPROVED", "CAFE_REJECTED",
+                    "CAFE_OWNER_APPROVED", "CAFE_OWNER_REJECTED",
+                    "CAST_CLAIM_APPROVED", "CAST_CLAIM_REJECTED"
+                )
+            ),
+            SectionSpec(
                 id = "work",
                 title = "출근 알림",
-                types = setOf("CAST_SHIFT")
+                types = setOf("CAST_SHIFT", "CAST_SCHEDULE_ASSIGNED", "CAST_SCHEDULE_CREATED")
             ),
             SectionSpec(
                 id = "birthday",
@@ -94,12 +109,32 @@ class GetNotificationFeedUseCase(
             SectionSpec(
                 id = "notice",
                 title = "카페 공지",
-                types = setOf("CAFE_NOTICE")
+                types = setOf("CAFE_NOTICE", "CAFE_EVENT")
+            ),
+            SectionSpec(
+                id = "check_in",
+                title = "체크인 알림",
+                types = setOf("CAFE_CHECK_IN")
+            ),
+            SectionSpec(
+                id = "table_count",
+                title = "테이블 알림",
+                types = setOf("CAFE_TABLE_COUNT_UPDATE")
             ),
             SectionSpec(
                 id = "follow",
                 title = "팔로우 업데이트",
                 types = setOf("FOLLOW_UPDATE")
+            ),
+            SectionSpec(
+                id = "fan_announcement",
+                title = "팬 공지",
+                types = setOf("FAN_ANNOUNCEMENT")
+            ),
+            SectionSpec(
+                id = "community",
+                title = "커뮤니티",
+                types = setOf("COMMUNITY_COMMENT", "COMMUNITY_LIKE", "WEEKLY_COMMUNITY_HIGHLIGHT")
             )
         )
     }

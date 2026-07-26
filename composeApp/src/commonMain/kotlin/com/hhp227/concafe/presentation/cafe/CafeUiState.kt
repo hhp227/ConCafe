@@ -2,6 +2,7 @@ package com.hhp227.concafe.presentation.cafe
 
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.CafeDetailCast
+import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.domain.model.CafeNoticeManagementItem
 import com.hhp227.concafe.domain.model.CafeDetailReview
 
@@ -14,9 +15,12 @@ data class CafeUiState(
     val casts: List<CafeDetailCast> = emptyList(),
     val castsNextCursor: String? = null,
     val canLoadMoreCasts: Boolean = false,
+    val isLoadingMenuGoods: Boolean = false,
+    val hasLoadedMenuGoods: Boolean = false,
     val isLoadingMoreNotices: Boolean = false,
     val noticesNextCursor: String? = null,
     val canLoadMoreNotices: Boolean = false,
+    val events: List<CafeEventManagementItem> = emptyList(),
     val notices: List<CafeNoticeManagementItem> = emptyList(),
     val isLoadingMoreReviews: Boolean = false,
     val reviewsNextCursor: String? = null,
@@ -25,14 +29,16 @@ data class CafeUiState(
     val isFavorite: Boolean = false,
     val isLoggedIn: Boolean = false,
     val isVisitVerified: Boolean = false,
-    val shouldScrollToTopOnReturn: Boolean = false
+    val shouldScrollToTopOnReturn: Boolean = false,
+    val currentUserId: String? = null,
+    val shouldShowFavoriteTooltip: Boolean = false
 ) {
-    enum class TabType(val label: String) {
-        INFO("정보"),
-        MAIDS("메이드"),
-        MENU("메뉴"),
-        REVIEWS("리뷰"),
-        NOTICES("공지")
+    enum class TabType {
+        INFO,
+        CASTS,
+        MENU,
+        REVIEWS,
+        NOTICES
     }
 
     companion object {

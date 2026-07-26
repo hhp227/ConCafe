@@ -16,6 +16,8 @@ final class MenuGoodsViewModel: ObservableObject {
 
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
+    private let upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase
+
     private let deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
@@ -41,12 +43,12 @@ final class MenuGoodsViewModel: ObservableObject {
                     applyDetail(feed.detail)
                 } else {
                     uiState.isLoading = false
-                    uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
+                    uiState.infoMessage = MessageKey.loadFailed
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.infoMessage = "항목 정보를 불러오지 못했습니다."
+                uiState.infoMessage = MessageKey.loadFailed
             }
         }
     }
@@ -188,10 +190,64 @@ final class MenuGoodsViewModel: ObservableObject {
             guard let item = uiState.menuItems.first(where: { $0.id == itemId }) else { return }
             let nextAvailability = !uiState.isMenuAvailable(item)
             uiState.menuAvailabilityOverrides[itemId] = nextAvailability
+            uiState.infoMessage = nil
+            tasks[.toggleAvailability]?.cancel()
+            tasks[.toggleAvailability] = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let result = try await upsertCafeMenuGoodsUseCase.invoke(
+                        update: CafeMenuGoodsUpsert(
+                            cafeId: cafeId,
+                            itemId: item.id,
+                            name: item.name,
+                            price: item.price,
+                            category: item.category,
+                            description: item.desc,
+                            isInStock: nextAvailability,
+                            imageUrl: item.image
+                        )
+                    )
+                    if result is AppResultFailure {
+                        uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+                        uiState.infoMessage = MessageKey.availabilitySaveFailed
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.menuAvailabilityOverrides.removeValue(forKey: itemId)
+                    uiState.infoMessage = MessageKey.availabilitySaveFailed
+                }
+            }
         case .goods:
             guard let item = uiState.goodsItems.first(where: { $0.id == itemId }) else { return }
             let nextAvailability = !uiState.isGoodsAvailable(item)
             uiState.goodsAvailabilityOverrides[itemId] = nextAvailability
+            uiState.infoMessage = nil
+            tasks[.toggleAvailability]?.cancel()
+            tasks[.toggleAvailability] = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let result = try await upsertCafeMenuGoodsUseCase.invoke(
+                        update: CafeMenuGoodsUpsert(
+                            cafeId: cafeId,
+                            itemId: item.id,
+                            name: item.name,
+                            price: item.price,
+                            category: "goods",
+                            description: "카페 굿즈 판매 항목",
+                            isInStock: nextAvailability,
+                            imageUrl: item.image
+                        )
+                    )
+                    if result is AppResultFailure {
+                        uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+                        uiState.infoMessage = MessageKey.availabilitySaveFailed
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.goodsAvailabilityOverrides.removeValue(forKey: itemId)
+                    uiState.infoMessage = MessageKey.availabilitySaveFailed
+                }
+            }
         }
     }
 
@@ -199,23 +255,29 @@ final class MenuGoodsViewModel: ObservableObject {
         uiState.pendingDeleteItemId = itemId
     }
 
-    private func confirmDeleteItem(_ itemId: String) {
+    private func confirmDeleteItem() {
+        let pendingDeleteItemId = uiState.pendingDeleteItemId
         uiState.infoMessage = nil
         uiState.pendingDeleteItemId = nil
-        Task { [weak self] in
-            guard let self else { return }
 
-            do {
-                let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
-                if result is AppResultSuccess<AnyObject> {
-                    uiState.infoMessage = "항목이 삭제되었습니다."
-                } else {
-                    uiState.infoMessage = "항목 삭제에 실패했습니다."
+        if let itemId = pendingDeleteItemId {
+            Task { [weak self] in
+                guard let self else { return }
+
+                do {
+                    let result = try await deleteCafeMenuGoodsUseCase.invoke(cafeId: cafeId, itemId: itemId)
+                    if result is AppResultSuccess<AnyObject> {
+                        uiState.infoMessage = MessageKey.deleteSuccess
+                    } else {
+                        uiState.infoMessage = MessageKey.deleteFailed
+                    }
+                } catch {
+                    if Task.isCancelled { return }
+                    uiState.infoMessage = MessageKey.deleteFailed
                 }
-            } catch {
-                if Task.isCancelled { return }
-                uiState.infoMessage = "항목 삭제에 실패했습니다."
             }
+        } else {
+            uiState.infoMessage = MessageKey.deleteFailed
         }
     }
 
@@ -277,8 +339,8 @@ final class MenuGoodsViewModel: ObservableObject {
             event.send(.navigateToEdit(cafeId: cafeId, itemId: itemId))
         case .clickDeleteItem(let itemId):
             deleteItem(itemId)
-        case .confirmDeleteItem(let itemId):
-            confirmDeleteItem(itemId)
+        case .confirmDeleteItem:
+            confirmDeleteItem()
         case .cancelDeleteItem:
             cancelDeleteItem()
         case .clickAddNewItem:
@@ -291,11 +353,13 @@ final class MenuGoodsViewModel: ObservableObject {
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        upsertCafeMenuGoodsUseCase: UpsertCafeMenuGoodsUseCase = KoinInitializerKt.resolveUpsertCafeMenuGoodsUseCase(),
         deleteCafeMenuGoodsUseCase: DeleteCafeMenuGoodsUseCase = KoinInitializerKt.resolveDeleteCafeMenuGoodsUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.upsertCafeMenuGoodsUseCase = upsertCafeMenuGoodsUseCase
         self.deleteCafeMenuGoodsUseCase = deleteCafeMenuGoodsUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
 
@@ -311,5 +375,13 @@ final class MenuGoodsViewModel: ObservableObject {
     private enum TaskKey {
         case load
         case detailEvent
+        case toggleAvailability
+    }
+
+    private enum MessageKey {
+        static let loadFailed = "menugoods_info_load_failed"
+        static let availabilitySaveFailed = "menugoods_info_availability_save_failed"
+        static let deleteSuccess = "menugoods_info_delete_success"
+        static let deleteFailed = "menugoods_info_delete_failed"
     }
 }

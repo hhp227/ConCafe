@@ -4,11 +4,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FeaturedPlayList
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -31,9 +34,44 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.common_close
+import concafe.composeapp.generated.resources.menugoods_edit_back_content_description
+import concafe.composeapp.generated.resources.menugoods_edit_category_dessert
+import concafe.composeapp.generated.resources.menugoods_edit_category_drink
+import concafe.composeapp.generated.resources.menugoods_edit_category_food
+import concafe.composeapp.generated.resources.menugoods_edit_category_goods
+import concafe.composeapp.generated.resources.menugoods_edit_desc_placeholder
+import concafe.composeapp.generated.resources.menugoods_edit_info_enter_name
+import concafe.composeapp.generated.resources.menugoods_edit_info_enter_price
+import concafe.composeapp.generated.resources.menugoods_edit_info_image_upload_failed
+import concafe.composeapp.generated.resources.menugoods_edit_info_image_upload_next_step
+import concafe.composeapp.generated.resources.menugoods_edit_info_item_not_found
+import concafe.composeapp.generated.resources.menugoods_edit_info_load_failed
+import concafe.composeapp.generated.resources.menugoods_edit_info_price_number_only
+import concafe.composeapp.generated.resources.menugoods_edit_info_save_failed
+import concafe.composeapp.generated.resources.menugoods_edit_label_category
+import concafe.composeapp.generated.resources.menugoods_edit_label_desc
+import concafe.composeapp.generated.resources.menugoods_edit_label_name
+import concafe.composeapp.generated.resources.menugoods_edit_label_price
+import concafe.composeapp.generated.resources.menugoods_edit_loading
+import concafe.composeapp.generated.resources.menugoods_edit_placeholder_name_example
+import concafe.composeapp.generated.resources.menugoods_edit_save_create
+import concafe.composeapp.generated.resources.menugoods_edit_save_update
+import concafe.composeapp.generated.resources.menugoods_edit_stock_available
+import concafe.composeapp.generated.resources.menugoods_edit_stock_sold_out
+import concafe.composeapp.generated.resources.menugoods_edit_stock_title
+import concafe.composeapp.generated.resources.menugoods_edit_title_add
+import concafe.composeapp.generated.resources.menugoods_edit_title_edit
+import concafe.composeapp.generated.resources.menugoods_edit_upload_desc
+import concafe.composeapp.generated.resources.menugoods_edit_upload_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun MenuGoodsEditScreen(
@@ -75,28 +113,35 @@ private fun MenuGoodsEditContentScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = uiState.screenTitle,
+                        text = stringResource(if (uiState.isEditMode) {
+                            Res.string.menugoods_edit_title_edit
+                        } else {
+                            Res.string.menugoods_edit_title_add
+                        }),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onAction(MenuGoodsEditAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.menugoods_edit_back_content_description)
+                        )
                     }
                 }
             )
         },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = if (isSystemInDarkTheme()) ConCafeColors.background else Color.White.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
                     modifier = Modifier
-                        .navigationBarsPadding()
                         .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
+                        .fixedBottomBarInsets()
+                        .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -106,13 +151,17 @@ private fun MenuGoodsEditContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
                         Icon(Icons.Default.AddCircle, contentDescription = null)
                         Text(
-                            text = uiState.saveButtonLabel,
+                            text = stringResource(if (uiState.isEditMode) {
+                                Res.string.menugoods_edit_save_update
+                            } else {
+                                Res.string.menugoods_edit_save_create
+                            }),
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -124,12 +173,20 @@ private fun MenuGoodsEditContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(ConCafeColors.background)
+                    } else {
+                        Modifier.background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .imePadding()
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -146,10 +203,20 @@ private fun MenuGoodsEditContentScreen(
                         )
                     }
                 }
-                uiState.infoMessage?.let { message ->
+                uiState.infoMessageKey?.let { messageKey ->
                     item {
                         InfoBanner(
-                            message = message,
+                            message = when (messageKey) {
+                                "menugoods_edit_info_item_not_found" -> stringResource(Res.string.menugoods_edit_info_item_not_found)
+                                "menugoods_edit_info_load_failed" -> stringResource(Res.string.menugoods_edit_info_load_failed)
+                                "menugoods_edit_info_enter_name" -> stringResource(Res.string.menugoods_edit_info_enter_name)
+                                "menugoods_edit_info_enter_price" -> stringResource(Res.string.menugoods_edit_info_enter_price)
+                                "menugoods_edit_info_price_number_only" -> stringResource(Res.string.menugoods_edit_info_price_number_only)
+                                "menugoods_edit_info_save_failed" -> stringResource(Res.string.menugoods_edit_info_save_failed)
+                                "menugoods_edit_info_image_upload_failed" -> stringResource(Res.string.menugoods_edit_info_image_upload_failed)
+                                "menugoods_edit_info_image_upload_next_step" -> stringResource(Res.string.menugoods_edit_info_image_upload_next_step)
+                                else -> messageKey
+                            },
                             onDismiss = { onAction(MenuGoodsEditAction.DismissInfoMessage) }
                         )
                     }
@@ -161,22 +228,22 @@ private fun MenuGoodsEditContentScreen(
                 } else {
                     item {
                         RoundedTextField(
-                            label = "항목 이름",
+                            label = stringResource(Res.string.menugoods_edit_label_name),
                             value = uiState.itemName,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangeName(it)) },
-                            placeholder = "예: 딸기 메이드 파르페"
+                            placeholder = stringResource(Res.string.menugoods_edit_placeholder_name_example)
                         )
                     }
                     item {
                         PriceField(
-                            label = "가격",
+                            label = stringResource(Res.string.menugoods_edit_label_price),
                             value = uiState.price,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangePrice(it)) }
                         )
                     }
                     item {
                         FormField(
-                            label = "카테고리"
+                            label = stringResource(Res.string.menugoods_edit_label_category)
                         ) {
                             CategoryGrid(
                                 selectedCategoryId = uiState.selectedCategoryId,
@@ -186,7 +253,7 @@ private fun MenuGoodsEditContentScreen(
                     }
                     item {
                         DescriptionField(
-                            label = "설명",
+                            label = stringResource(Res.string.menugoods_edit_label_desc),
                             value = uiState.description,
                             onValueChange = { onAction(MenuGoodsEditAction.ChangeDescription(it)) }
                         )
@@ -216,13 +283,13 @@ private fun PhotoUploadCard(
             .background(
                 Brush.linearGradient(
                     colors = if (imageUrl.isNullOrBlank()) {
-                        listOf(Color(0x33FFD1DC), Color(0x22FFF1F5))
+                        listOf(ConCafeColors.primaryContainer.copy(alpha = 0.2f), ConCafeColors.background.copy(alpha = 0.13f))
                     } else {
-                        listOf(Color(0x55FFD1DC), Color(0x44F9E3EA))
+                        listOf(ConCafeColors.primaryContainer.copy(alpha = 0.33f), ConCafeColors.surfaceTint.copy(alpha = 0.27f))
                     }
                 )
             )
-            .border(BorderStroke(2.dp, Color(0x66FFD1DC)), RoundedCornerShape(20.dp))
+            .border(BorderStroke(2.dp, ConCafeColors.primaryContainer.copy(alpha = 0.4f)), RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -233,24 +300,24 @@ private fun PhotoUploadCard(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.8f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
                         contentDescription = null,
-                        tint = Color(0xFF6F5968),
+                        tint = ConCafeColors.textSecondary,
                         modifier = Modifier.padding(12.dp)
                     )
                 }
                 Text(
-                    text = "항목 사진 업로드",
+                    text = stringResource(Res.string.menugoods_edit_upload_title),
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF2B2330)
+                    color = ConCafeColors.textPrimary
                 )
                 Text(
-                    text = "JPG, PNG 최대 5MB",
+                    text = stringResource(Res.string.menugoods_edit_upload_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF7A6671)
+                    color = ConCafeColors.textSecondary
                 )
             }
         } else {
@@ -264,13 +331,13 @@ private fun PhotoUploadCard(
                         .align(Alignment.BottomEnd)
                         .padding(12.dp),
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.92f),
+                    color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White.copy(alpha = 0.92f),
                     shadowElevation = 2.dp
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = Color(0xFF2B2330),
+                        tint = ConCafeColors.textPrimary,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
@@ -288,7 +355,7 @@ private fun FormField(
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF4D404A),
+            color = ConCafeColors.textPrimary,
             fontWeight = FontWeight.SemiBold
         )
         content()
@@ -323,8 +390,8 @@ private fun PriceField(
         placeholder = "0",
         leadingContent = {
             Text(
-                text = "¥",
-                color = Color(0xFF6B5A65),
+                text = "₩",
+                color = ConCafeColors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -337,8 +404,10 @@ private fun CategoryGrid(
     onSelect: (String) -> Unit
 ) {
     val categoryIds = listOf("drink", "food", "dessert", "goods")
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         val categories = categoryIds.chunked(2)
+
         categories.forEach { rowCategories ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -346,6 +415,7 @@ private fun CategoryGrid(
             ) {
                 rowCategories.forEach { categoryId ->
                     val isSelected = categoryId == selectedCategoryId
+
                     CategoryButton(
                         modifier = Modifier.weight(1f),
                         categoryId = categoryId,
@@ -354,16 +424,11 @@ private fun CategoryGrid(
                     )
                 }
                 if (rowCategories.size == 1) {
-                    SpacerCell(modifier = Modifier.weight(1f))
+                    Box(modifier = Modifier.weight(1f))
                 }
             }
         }
     }
-}
-
-@Composable
-private fun SpacerCell(modifier: Modifier = Modifier) {
-    Box(modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -377,10 +442,10 @@ private fun CategoryButton(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = if (isSelected) Color(0x33FFD1DC) else Color(0xFFF8F5F6),
+        color = if (isSelected) ConCafeColors.primaryContainer.copy(alpha = 0.2f) else ConCafeColors.surfaceVariant,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) Color(0xFFFFD1DC) else Color(0x55FFD1DC)
+            color = if (isSelected) ConCafeColors.primaryContainer else ConCafeColors.primaryContainer.copy(alpha = 0.33f)
         ),
         onClick = onClick
     ) {
@@ -394,24 +459,25 @@ private fun CategoryButton(
             Icon(
                 imageVector = categoryIcon(categoryId),
                 contentDescription = null,
-                tint = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169)
+                tint = if (isSelected) ConCafeColors.textPrimary else ConCafeColors.textSecondary
             )
             Text(
                 text = categoryLabel(categoryId),
                 modifier = Modifier.padding(start = 8.dp),
-                color = if (isSelected) Color(0xFF2B2330) else Color(0xFF6E6169),
+                color = if (isSelected) ConCafeColors.textPrimary else ConCafeColors.textSecondary,
                 fontWeight = FontWeight.Medium
             )
         }
     }
 }
 
+@Composable
 private fun categoryLabel(categoryId: String): String {
     return when (categoryId) {
-        "food" -> "Food"
-        "dessert" -> "Dessert"
-        "goods" -> "Goods"
-        else -> "Drink"
+        "food" -> stringResource(Res.string.menugoods_edit_category_food)
+        "dessert" -> stringResource(Res.string.menugoods_edit_category_dessert)
+        "goods" -> stringResource(Res.string.menugoods_edit_category_goods)
+        else -> stringResource(Res.string.menugoods_edit_category_drink)
     }
 }
 
@@ -419,7 +485,7 @@ private fun categoryIcon(categoryId: String): ImageVector {
     return when (categoryId) {
         "food" -> Icons.Default.Restaurant
         "dessert" -> Icons.Default.Icecream
-        "goods" -> Icons.Default.FeaturedPlayList
+        "goods" -> Icons.AutoMirrored.Filled.FeaturedPlayList
         else -> Icons.Default.LocalCafe
     }
 }
@@ -434,7 +500,7 @@ private fun DescriptionField(
         label = label,
         value = value,
         onValueChange = onValueChange,
-        placeholder = "재료 또는 특징을 설명해주세요...",
+        placeholder = stringResource(Res.string.menugoods_edit_desc_placeholder),
         minLines = 5,
         singleLine = false
     )
@@ -447,8 +513,8 @@ private fun StockCard(
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5F6)),
-        border = BorderStroke(1.dp, Color(0x33FFD1DC))
+        colors = CardDefaults.cardColors(containerColor = ConCafeColors.surfaceVariant),
+        border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -464,18 +530,22 @@ private fun StockCard(
                 Icon(
                     imageVector = Icons.Default.Inventory2,
                     contentDescription = null,
-                    tint = Color(0xFFFF8AA8)
+                    tint = ConCafeColors.secondaryContainer
                 )
                 Column {
                     Text(
-                        text = "재고 상태",
+                        text = stringResource(Res.string.menugoods_edit_stock_title),
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2B2330)
+                        color = ConCafeColors.textPrimary
                     )
                     Text(
-                        text = if (isInStock) "현재 판매 가능 상태입니다." else "현재 품절 상태입니다.",
+                        text = stringResource(if (isInStock) {
+                            Res.string.menugoods_edit_stock_available
+                        } else {
+                            Res.string.menugoods_edit_stock_sold_out
+                        }),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF7A6671)
+                        color = ConCafeColors.textSecondary
                     )
                 }
             }
@@ -494,8 +564,8 @@ private fun InfoBanner(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFFFF6D7),
-        border = BorderStroke(1.dp, Color(0xFFF1D88D))
+        color = ConCafeColors.goldContainer,
+        border = BorderStroke(1.dp, ConCafeColors.gold)
     ) {
         Row(
             modifier = Modifier
@@ -508,15 +578,15 @@ private fun InfoBanner(
                 text = message,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B5320)
+                color = ConCafeColors.goldDeep
             )
             Text(
-                text = "닫기",
+                text = stringResource(Res.string.common_close),
                 modifier = Modifier
                     .padding(start = 12.dp)
                     .clickable(onClick = onDismiss),
                 style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF6B5320),
+                color = ConCafeColors.goldDeep,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -530,18 +600,18 @@ private fun LoadingCard() {
             .fillMaxWidth()
             .height(220.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White)
-            .border(BorderStroke(1.dp, Color(0x55FFD1DC)), RoundedCornerShape(20.dp)),
+            .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
+            .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.33f)), RoundedCornerShape(20.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CircularProgressIndicator(color = Color(0xFFFF8AA8))
+            CircularProgressIndicator(color = ConCafeColors.secondaryContainer)
             Text(
-                text = "항목 정보를 준비하고 있습니다.",
-                color = Color(0xFF7A6671),
+                text = stringResource(Res.string.menugoods_edit_loading),
+                color = ConCafeColors.textSecondary,
                 textAlign = TextAlign.Center
             )
         }

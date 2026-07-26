@@ -6,6 +6,7 @@ sealed interface ScheduleAction {
     data object ClickBack : ScheduleAction
     data object ClickMore : ScheduleAction
     data object ClickCalendar : ScheduleAction
+    data class SelectPeriod(val period: SchedulePeriod) : ScheduleAction
     data class SelectDay(val dayId: String) : ScheduleAction
     data class ClickEditDay(val dayId: String) : ScheduleAction
     data object DismissEditSheet : ScheduleAction

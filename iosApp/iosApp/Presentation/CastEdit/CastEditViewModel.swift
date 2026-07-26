@@ -25,6 +25,14 @@ final class CastEditViewModel: ObservableObject {
 
     private let uploadImageUseCase: UploadImageUseCase
 
+    private let deleteImageUseCase: DeleteImageUseCase
+
+    private var pendingDeletedGalleryImageUrls: Set<String> = []
+
+    private var pendingDeletedProfileImageUrl: String? = nil
+
+    private var hasPendingLocalEdits = false
+
     private func clickProfilePhoto() {
         uiState.infoMessage = nil
     }
@@ -42,6 +50,8 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func clickSave() {
+        let removedGalleryImageUrls = Array(pendingDeletedGalleryImageUrls)
+        let removedProfileImageUrl = pendingDeletedProfileImageUrl
         guard !uiState.castName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             uiState.infoMessage = "캐스트 이름을 입력해주세요."
             return
@@ -84,14 +94,21 @@ final class CastEditViewModel: ObservableObject {
                 )
 
                 if result is AppResultSuccess<AnyObject> {
+                    await deleteImagesIfNeeded((removedProfileImageUrl.map { [$0] } ?? []) + removedGalleryImageUrls)
+                    self.pendingDeletedGalleryImageUrls.subtract(removedGalleryImageUrls)
+                    if self.pendingDeletedProfileImageUrl == removedProfileImageUrl {
+                        self.pendingDeletedProfileImageUrl = nil
+                    }
                     uiState.isSaving = false
                     event.send(.navigateBack)
                 } else {
+                    print("TEST, CastEditViewModel save failure: \(String(describing: result))")
                     uiState.isSaving = false
                     uiState.infoMessage = "캐스트 정보를 저장하지 못했습니다."
                 }
             } catch {
                 if Task.isCancelled { return }
+                print("TEST, CastEditViewModel save catch: \(error.localizedDescription)")
                 uiState.isSaving = false
                 uiState.infoMessage = "캐스트 정보를 저장하지 못했습니다."
             }
@@ -99,6 +116,7 @@ final class CastEditViewModel: ObservableObject {
     }
 
     private func loadCastDetail(_ castId: String) {
+        hasPendingLocalEdits = false
         uiState.isLoading = true
         uiState.infoMessage = nil
 
@@ -110,15 +128,25 @@ final class CastEditViewModel: ObservableObject {
                    let feed = success.data as? CastDetailFeed {
                     let detail = feed.detail
                     var nextState = uiState
-                    nextState.isLoading = false
-                    nextState.profileImageUrl = detail.cast.profileImage
-                    nextState.castName = detail.cast.name
-                    nextState.conceptRole = detail.cast.conceptRole
-                    nextState.birthday = detail.cast.birthday ?? ""
-                    nextState.introduction = detail.cast.desc
-                    nextState.selectedWorkingDays = workingDays(from: detail.schedule)
-                    nextState.galleryImages = Array(detail.images.filter { !$0.isEmpty }.prefix(nextState.galleryMaxCount))
-                    uiState = nextState
+                    if hasPendingLocalEdits {
+                        uiState.isLoading = false
+                    } else {
+                        pendingDeletedGalleryImageUrls.removeAll()
+                        pendingDeletedProfileImageUrl = nil
+                        nextState.isLoading = false
+                        nextState.profileImageUrl = detail.cast.profileImage
+                        nextState.castName = detail.cast.name
+                        nextState.conceptRole = detail.cast.conceptRole
+                        nextState.birthday = detail.cast.birthday ?? ""
+                        nextState.introduction = detail.cast.desc
+                        nextState.selectedWorkingDays = workingDays(from: detail.schedule)
+                        nextState.galleryImages = Array(
+                            detail.images
+                                .filter { !$0.isEmpty && $0 != detail.cast.profileImage }
+                                .prefix(nextState.galleryMaxCount)
+                        )
+                        uiState = nextState
+                    }
                 } else {
                     uiState.isLoading = false
                     uiState.infoMessage = "캐스트 정보를 불러오지 못했습니다."
@@ -138,10 +166,20 @@ final class CastEditViewModel: ObservableObject {
         case .clickProfilePhoto:
             clickProfilePhoto()
         case .selectProfilePhoto(let imageUrl):
+            hasPendingLocalEdits = true
+            let previousProfileImageUrl = uiState.profileImageUrl
+            if let previousProfileImageUrl,
+               !previousProfileImageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               previousProfileImageUrl != imageUrl,
+               (previousProfileImageUrl.hasPrefix("http://") || previousProfileImageUrl.hasPrefix("https://")),
+               previousProfileImageUrl != pendingDeletedProfileImageUrl {
+                pendingDeletedProfileImageUrl = previousProfileImageUrl
+            }
             uiState.profileImageUrl = imageUrl
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
         case .addGalleryImage(let imageUrl):
+            hasPendingLocalEdits = true
             if uiState.galleryImages.count >= uiState.galleryMaxCount {
                 uiState.infoMessage = "갤러리 사진은 최대 \(uiState.galleryMaxCount)장까지 등록할 수 있습니다."
                 return
@@ -150,15 +188,30 @@ final class CastEditViewModel: ObservableObject {
             uiState.galleryImages.append(imageUrl)
             uiState.infoMessage = nil
             uiState.isImageRequiredAlertVisible = false
+        case .removeGalleryImage(let index):
+            if uiState.galleryImages.indices.contains(index) {
+                hasPendingLocalEdits = true
+                let removedImageUrl = uiState.galleryImages[index]
+                if removedImageUrl.hasPrefix("http://") || removedImageUrl.hasPrefix("https://") {
+                    pendingDeletedGalleryImageUrls.insert(removedImageUrl)
+                }
+                uiState.galleryImages.remove(at: index)
+                uiState.infoMessage = nil
+            }
         case .changeCastName(let value):
+            hasPendingLocalEdits = true
             uiState.castName = value
         case .changeConceptRole(let value):
+            hasPendingLocalEdits = true
             uiState.conceptRole = value
         case .changeBirthday(let value):
+            hasPendingLocalEdits = true
             uiState.birthday = value
         case .changeIntroduction(let value):
+            hasPendingLocalEdits = true
             uiState.introduction = value
         case .toggleWorkingDay(let day):
+            hasPendingLocalEdits = true
             toggleWorkingDay(day)
         case .clickAddGalleryPhoto:
             clickAddGalleryPhoto()
@@ -176,13 +229,15 @@ final class CastEditViewModel: ObservableObject {
         castId: String? = nil,
         getCastDetailUseCase: GetCastDetailUseCase = KoinInitializerKt.resolveGetCastDetailUseCase(),
         upsertCastUseCase: UpsertCastUseCase = KoinInitializerKt.resolveUpsertCastUseCase(),
-        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase()
+        uploadImageUseCase: UploadImageUseCase = KoinInitializerKt.resolveUploadImageUseCase(),
+        deleteImageUseCase: DeleteImageUseCase = KoinInitializerKt.resolveDeleteImageUseCase()
     ) {
         self.cafeId = cafeId
         self.castId = castId
         self.getCastDetailUseCase = getCastDetailUseCase
         self.upsertCastUseCase = upsertCastUseCase
         self.uploadImageUseCase = uploadImageUseCase
+        self.deleteImageUseCase = deleteImageUseCase
 
         if let castId, !castId.isEmpty {
             uiState.screenTitle = "캐스트 프로필 수정"
@@ -203,6 +258,7 @@ private extension CastEditViewModel {
         let result = try await uploadImageUseCase.invoke(localPath: imageUrl, folder: folder)
         guard let success = result as? AppResultSuccess<AnyObject>,
               let uploaded = success.data as? String else {
+            print("TEST, CastEditViewModel upload failure: \(String(describing: result))")
             throw NSError(domain: "CastEditUpload", code: 1)
         }
         return uploaded
@@ -216,6 +272,12 @@ private extension CastEditViewModel {
             }
         }
         return results
+    }
+
+    func deleteImagesIfNeeded(_ imageUrls: [String]) async {
+        for imageUrl in imageUrls where !imageUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            _ = try? await deleteImageUseCase.invoke(imageUrl: imageUrl)
+        }
     }
 }
 

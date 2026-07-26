@@ -8,16 +8,25 @@
 import Foundation
 import Combine
 import Shared
+import KMPNativeCoroutinesAsync
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
     private let signOutUseCase: SignOutUseCase
 
+    private let observeThemeModeUseCase: ObserveThemeModeUseCase
+
+    private let setThemeModeUseCase: SetThemeModeUseCase
+
+    private let observeBrandThemeUseCase: ObserveBrandThemeUseCase
+
+    private let setBrandThemeUseCase: SetBrandThemeUseCase
+
     @Published private(set) var uiState = SettingsUiState.empty
 
     let event = PassthroughSubject<SettingsEvent, Never>()
 
-    private var signOutTask: Task<Void, Never>?
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func clickAccountSettings() {
         event.send(.navigateToAccountSettings)
@@ -44,8 +53,8 @@ final class SettingsViewModel: ObservableObject {
         uiState.isLoading = true
         uiState.errorMessage = nil
 
-        signOutTask?.cancel()
-        signOutTask = Task {
+        tasks[.signOut]?.cancel()
+        tasks[.signOut] = Task {
             do {
                 let result = try await signOutUseCase.invoke()
 
@@ -60,6 +69,42 @@ final class SettingsViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
                 uiState.errorMessage = "로그아웃에 실패했습니다."
+            }
+        }
+    }
+
+    private func selectThemeMode(_ themeMode: AppThemeMode) {
+        setThemeModeUseCase.invoke(themeMode: themeMode.sharedThemeMode)
+        uiState.themeMode = themeMode
+    }
+
+    private func observeThemeMode() {
+        tasks[.observeTheme]?.cancel()
+        tasks[.observeTheme] = Task {
+            do {
+                for try await themeMode in asyncSequence(for: observeThemeModeUseCase.invoke()) {
+                    uiState.themeMode = AppThemeMode(themeMode: themeMode)
+                }
+            } catch {
+                uiState.themeMode = .light
+            }
+        }
+    }
+
+    private func selectBrandTheme(_ brandTheme: AppBrandTheme) {
+        setBrandThemeUseCase.invoke(brandTheme: brandTheme.sharedBrandTheme)
+        uiState.brandTheme = brandTheme
+    }
+
+    private func observeBrandTheme() {
+        tasks[.observeBrandTheme]?.cancel()
+        tasks[.observeBrandTheme] = Task {
+            do {
+                for try await brandTheme in asyncSequence(for: observeBrandThemeUseCase.invoke()) {
+                    uiState.brandTheme = AppBrandTheme(brandTheme: brandTheme)
+                }
+            } catch {
+                uiState.brandTheme = .maidCafe
             }
         }
     }
@@ -80,19 +125,41 @@ final class SettingsViewModel: ObservableObject {
             clickPrivacyPolicy()
         case .signOutTapped:
             signOut()
+        case .themeModeSelected(let themeMode):
+            selectThemeMode(themeMode)
+        case .brandThemeSelected(let brandTheme):
+            selectBrandTheme(brandTheme)
         }
     }
 
     init(
-        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase()
+        signOutUseCase: SignOutUseCase = KoinInitializerKt.resolveSignOutUseCase(),
+        observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase(),
+        setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase(),
+        observeBrandThemeUseCase: ObserveBrandThemeUseCase = KoinInitializerKt.resolveObserveBrandThemeUseCase(),
+        setBrandThemeUseCase: SetBrandThemeUseCase = KoinInitializerKt.resolveSetBrandThemeUseCase()
     ) {
         self.signOutUseCase = signOutUseCase
+        self.observeThemeModeUseCase = observeThemeModeUseCase
+        self.setThemeModeUseCase = setThemeModeUseCase
+        self.observeBrandThemeUseCase = observeBrandThemeUseCase
+        self.setBrandThemeUseCase = setBrandThemeUseCase
+
+        observeThemeMode()
+        observeBrandTheme()
     }
 
     deinit {
-        signOutTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case signOut
+        case observeTheme
+        case observeBrandTheme
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"
-    private static let privacyPolicyUrl = "http://www.concafe.app"
+    private static let privacyPolicyUrl = "https://concafe-5f7fd.firebaseapp.com/privacy"
 }

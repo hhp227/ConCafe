@@ -10,8 +10,12 @@ data class ExploreRegionFilter(
             return when (key.lowercase()) {
                 "all", "전체" -> ExploreRegionFilter(key = "all", country = null, city = null)
                 "seoul", "서울" -> ExploreRegionFilter(key = "seoul", country = "KR", city = "Seoul")
+                "busan", "부산" -> ExploreRegionFilter(key = "busan", country = "KR", city = "Busan")
+                "daegu", "대구" -> ExploreRegionFilter(key = "daegu", country = "KR", city = "Daegu")
                 "tokyo", "도쿄" -> ExploreRegionFilter(key = "tokyo", country = "JP", city = "Tokyo")
                 "osaka", "오사카" -> ExploreRegionFilter(key = "osaka", country = "JP", city = "Osaka")
+                "etc", "그 외지역", "기타", "yokohama", "요코하마" ->
+                    ExploreRegionFilter(key = "etc", country = "JP", city = "Yokohama")
                 else -> throw IllegalArgumentException("unsupported region: $key")
             }
         }

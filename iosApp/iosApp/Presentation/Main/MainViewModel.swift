@@ -13,7 +13,7 @@ import KMPNativeCoroutinesAsync
 @MainActor
 final class MainViewModel: ObservableObject {
     private let getMainNavigationUseCase: GetMainNavigationUseCase
-    
+
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
     private let restoreSessionUseCase: RestoreSessionUseCase
@@ -21,16 +21,21 @@ final class MainViewModel: ObservableObject {
     @Published private(set) var uiState = MainUiState.empty
 
     let event = PassthroughSubject<MainEvent, Never>()
-    
-    private var sessionTask: Task<Void, Never>?
+
+    private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func refreshNavigation(preferredRoute: String?) {
-        Task {
+        tasks[.refreshNavigation]?.cancel()
+        tasks[.refreshNavigation] = Task {
             do {
                 let result = try await getMainNavigationUseCase.invoke(preferredRoute: preferredRoute)
+                guard !Task.isCancelled else { return }
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let state = success.data as? MainNavigationState {
+                    if state.currentUser?.signupCompleted == false {
+                        event.send(.navigateToSignUp)
+                    }
                     uiState = MainUiState(
                         currentUser: state.currentUser,
                         tabs: state.tabs,
@@ -41,21 +46,35 @@ final class MainViewModel: ObservableObject {
                     event.send(.showError(message: "\(failure.error)"))
                 }
             } catch {
+                guard !Task.isCancelled else { return }
                 event.send(.showError(message: error.localizedDescription))
             }
         }
     }
 
     private func selectTab(_ route: String) {
-        guard uiState.tabs.contains(where: { $0.route == route }) else { return }
+        guard uiState.tabs.contains(where: { $0.route == route }) || route == MainNavigationTab.community.route else { return }
         uiState.selectedTab = route
     }
-    
+
     private func observeSession() {
-        sessionTask = Task {
+        tasks[.observeSession]?.cancel()
+        tasks[.observeSession] = Task {
             do {
-                for try await _ in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
-                    self.refreshNavigation(preferredRoute: self.uiState.selectedTab)
+                for try await newUser in asyncSequence(for: observeCurrentUserUseCase.invoke()) {
+                    guard !Task.isCancelled else { return }
+                    let currentUser = self.uiState.currentUser
+                    let roleChanged = newUser?.role != currentUser?.role
+                    let loginStateChanged = (newUser == nil) != (currentUser == nil)
+
+                    if roleChanged || loginStateChanged {
+                        // Only rebuild navigation when login state or role changes to avoid
+                        // spurious selectedTab resets caused by Firestore/auth re-emissions.
+                        self.refreshNavigation(preferredRoute: self.uiState.selectedTab)
+                    } else {
+                        // Same user/role — just sync the user object without touching the tab.
+                        self.uiState.currentUser = newUser
+                    }
                 }
             } catch {
                 print("Error: \(error)")
@@ -97,8 +116,14 @@ final class MainViewModel: ObservableObject {
         observeSession()
         restoreSession()
     }
-    
+
     deinit {
-        sessionTask?.cancel()
+        tasks.values.forEach { $0.cancel() }
+        tasks.removeAll()
+    }
+
+    private enum TaskKey {
+        case observeSession
+        case refreshNavigation
     }
 }

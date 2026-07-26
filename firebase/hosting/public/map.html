@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>콘카 | 컨셉 카페 지도</title>
+  <meta
+          name="description"
+          content="콘카 컨셉 카페 지도로 실제 카페 위치를 전체 화면 지도에서 검색하고 확인하세요."
+  />
+  <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .map-page {
+      height: calc(100dvh - 65px);
+      min-height: 640px;
+      position: relative;
+    }
+
+    .map-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 400px minmax(0, 1fr);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 14% 10%, rgba(255, 228, 239, 0.95) 0%, rgba(255, 248, 251, 0) 44%),
+        linear-gradient(180deg, #fffdfd 0%, var(--bg) 30%, #fff6fa 100%);
+    }
+
+    .map-sidebar {
+      position: relative;
+      z-index: 4;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 0;
+      min-height: 0;
+      background: rgba(255, 251, 252, 0.97);
+      border-right: 1px solid rgba(243, 217, 228, 0.86);
+      box-shadow: 18px 0 36px rgba(74, 54, 69, 0.08);
+    }
+
+    .sidebar-drag-handle {
+      display: none;
+    }
+
+    .map-canvas {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .map-empty {
+      position: absolute;
+      inset: 24px;
+      z-index: 3;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px dashed #f0b7ce;
+      color: #7d5e6d;
+      backdrop-filter: blur(10px);
+    }
+
+    .map-empty.is-visible {
+      display: flex;
+    }
+
+    .map-empty-card {
+      width: min(320px, 100%);
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .map-empty-spinner {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 4px solid rgba(239, 103, 151, 0.16);
+      border-top-color: var(--primary);
+      animation: map-spinner 0.85s linear infinite;
+    }
+
+    .map-empty-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .map-empty-message {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .map-empty-progress {
+      width: 100%;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(239, 103, 151, 0.14);
+    }
+
+    .map-empty-progress-bar {
+      width: 38%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary) 0%, #f8a8c3 100%);
+      animation: map-progress 1.3s ease-in-out infinite;
+      transform: translateX(-120%);
+    }
+
+    .map-empty.is-error .map-empty-spinner,
+    .map-empty.is-error .map-empty-progress {
+      display: none;
+    }
+
+    @keyframes map-spinner {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes map-progress {
+      0% {
+        transform: translateX(-120%);
+      }
+      100% {
+        transform: translateX(320%);
+      }
+    }
+
+    .toolbar-card {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid rgba(243, 217, 228, 0.82);
+      display: grid;
+      gap: 12px;
+    }
+
+    .toolbar-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .toolbar-title strong {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .toolbar-title span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .toolbar-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .search-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .search-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid #f0d6e1;
+      border-radius: 16px;
+      background: #fff8fb;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .search-button,
+    .ghost-button,
+    .map-icon-button,
+    .result-button {
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .search-button,
+    .ghost-button {
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 16px;
+      font-weight: 700;
+    }
+
+    .search-button {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+      color: #fff;
+    }
+
+    .ghost-button {
+      background: #fff;
+      color: var(--primary-strong);
+      border: 1px solid #f0d6e1;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .filter-select {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+      border: 1px solid #f0d6e1;
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .results-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .results-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(243, 217, 228, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .results-head strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .results-head span {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .results-list {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 14px 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .result-button {
+      width: 100%;
+      text-align: left;
+      padding: 14px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid #f2d4df;
+      color: inherit;
+    }
+
+    .result-button.is-active {
+      border-color: #eb8fb1;
+      background: #fff4f8;
+      box-shadow: inset 0 0 0 1px rgba(239, 103, 151, 0.16);
+    }
+
+    .result-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result-button strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .result-button p {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: #fff1f7;
+      color: var(--primary-strong);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .map-actions {
+      position: absolute;
+      right: 18px;
+      bottom: 76px;
+      z-index: 5;
+      display: grid;
+      gap: 10px;
+    }
+
+    .map-style-control {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5;
+      width: 150px;
+    }
+
+    .map-style-select {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+      border: 1px solid rgba(243, 217, 228, 0.9);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--text);
+      font: inherit;
+      box-shadow: 0 18px 34px rgba(74, 54, 69, 0.16);
+      backdrop-filter: blur(10px);
+    }
+
+    .map-icon-button {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--text);
+      font-size: 22px;
+      box-shadow: 0 18px 34px rgba(74, 54, 69, 0.18);
+    }
+
+    .map-credit {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      z-index: 4;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(243, 217, 228, 0.84);
+      box-shadow: 0 18px 34px rgba(74, 54, 69, 0.12);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .map-detail-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 20;
+      width: 360px;
+      background: #fff;
+      border-left: 1px solid rgba(243, 217, 228, 0.86);
+      box-shadow: -18px 0 36px rgba(74, 54, 69, 0.14);
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .map-detail-panel.is-open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .detail-close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid #f0d6e1;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--text);
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      backdrop-filter: blur(6px);
+      touch-action: manipulation;
+    }
+
+    .detail-image-wrap {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #fff1f7 0%, #ffe4ef 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .detail-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-image-placeholder {
+      font-size: 52px;
+      opacity: 0.6;
+    }
+
+    .detail-content {
+      padding: 18px 18px 28px;
+      flex: 1;
+    }
+
+    .detail-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #fff1f7;
+      color: var(--primary-strong);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .detail-name {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.25;
+    }
+
+    .detail-address {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .detail-divider {
+      border: 0;
+      border-top: 1px solid #f2d4df;
+      margin: 0 0 14px;
+    }
+
+    .detail-note {
+      font-size: 13px;
+      color: #5f5262;
+      line-height: 1.75;
+      white-space: pre-line;
+    }
+
+    /* ── Topbar right group ── */
+    .topbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    /* ── Auth widget ── */
+    .auth-widget { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* ── Auth modal ── */
+    .auth-modal {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(35, 22, 28, 0.48); backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .auth-modal.is-open { opacity: 1; pointer-events: auto; }
+    .auth-modal-box {
+      position: relative; background: #fff; border-radius: 20px;
+      padding: 32px 28px; width: calc(100% - 32px); max-width: 360px;
+      box-shadow: 0 8px 40px rgba(74, 54, 69, 0.22);
+      transform: translateY(16px); transition: transform 0.2s;
+    }
+    .auth-modal.is-open .auth-modal-box { transform: translateY(0); }
+    .auth-modal-close {
+      position: absolute; top: 14px; right: 14px;
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; color: #a07a8f; line-height: 1; padding: 4px;
+    }
+    .auth-modal-close:hover { color: #3d2c38; }
+    .auth-modal-title { font-size: 20px; font-weight: 800; color: #23161c; margin: 0 0 20px; }
+    .auth-modal-form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-modal-field { display: flex; flex-direction: column; gap: 5px; }
+    .auth-modal-field label { font-size: 12px; font-weight: 700; color: #6d5d64; }
+    .auth-modal-field input {
+      padding: 10px 14px; border-radius: 12px;
+      border: 1px solid #e7d9df; background: #fff8fb;
+      font: inherit; font-size: 14px; color: #23161c; outline: none;
+    }
+    .auth-modal-field input:focus { border-color: #ef6797; }
+    .auth-modal-error { font-size: 12px; color: #c4415f; margin: 0; }
+    .auth-modal-submit {
+      margin-top: 4px; padding: 12px; border-radius: 14px;
+      background: linear-gradient(135deg, #ef6797, #da4e84);
+      color: #fff; border: none; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .auth-modal-submit:hover { background: linear-gradient(135deg, #da4e84, #c73d73); }
+    .auth-modal-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0; color: #a07a8f; font-size: 12px;
+    }
+    .auth-modal-divider::before, .auth-modal-divider::after {
+      content: ""; flex: 1; height: 1px; background: #e7d9df;
+    }
+    .auth-modal-google {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 11px; border-radius: 14px;
+      border: 1px solid #e7d9df; background: #fff;
+      font: inherit; font-size: 13px; font-weight: 700; color: #3d2c38; cursor: pointer;
+    }
+    .auth-modal-google:hover { background: #fdf8fa; border-color: #cfb8c2; }
+    .auth-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 20px;
+      border: 1px solid rgba(239, 103, 151, 0.5);
+      background: #fff1f7; color: #9d2759;
+      font: inherit; font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .auth-btn:hover { background: #ffe4ef; }
+    .auth-btn.signout {
+      background: transparent; border-color: rgba(207, 184, 194, 0.5);
+      color: #6d5d64; font-weight: 400; font-size: 12px; padding: 6px 12px;
+    }
+    .auth-user-info { display: flex; align-items: center; gap: 6px; }
+    .auth-user-photo {
+      width: 28px; height: 28px; border-radius: 50%;
+      object-fit: cover; border: 1.5px solid rgba(239, 103, 151, 0.4); flex-shrink: 0;
+    }
+    .auth-user-name {
+      font-size: 13px; font-weight: 700; color: #23161c;
+      max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── Reviews ── */
+    .detail-reviews { padding: 0; }
+    .reviews-head { margin-bottom: 10px; }
+    .reviews-head strong { font-size: 14px; color: #3d2c38; }
+    .review-card {
+      padding: 12px; border-radius: 12px;
+      background: #fff9fb; border: 1px solid #f2d4df; margin-bottom: 10px;
+    }
+    .review-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .review-user-photo {
+      width: 26px; height: 26px; border-radius: 50%;
+      object-fit: cover; background: #f2d4df; flex-shrink: 0;
+      border: 1px solid #f0d6e1;
+    }
+    .review-user-name { font-size: 12px; font-weight: 700; color: #3d2c38; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .review-stars { color: #f0a500; font-size: 12px; letter-spacing: 1px; }
+    .review-date { font-size: 11px; color: #a07a8f; flex-shrink: 0; }
+    .review-content { font-size: 13px; color: #5f5262; line-height: 1.6; margin-bottom: 4px; }
+    .review-img { width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px; margin-top: 4px; }
+    .reviews-empty { text-align: center; color: #a07a8f; font-size: 13px; padding: 10px 0; margin: 0; }
+    .review-form-head { font-size: 13px; font-weight: 700; color: #3d2c38; margin-bottom: 10px; display: block; }
+    .star-input { display: flex; gap: 2px; margin-bottom: 10px; }
+    .star-btn { background: none; border: none; font-size: 26px; cursor: pointer; color: #ddd; padding: 0; line-height: 1; transition: color 0.1s; }
+    .star-btn.active { color: #f0a500; }
+    .review-textarea {
+      width: 100%; min-height: 72px; padding: 10px 12px;
+      border: 1px solid #f0d6e1; border-radius: 12px;
+      background: #fff8fb; font: inherit; font-size: 13px; color: #3d2c38;
+      resize: vertical; box-sizing: border-box; margin-bottom: 10px;
+    }
+    .review-textarea:focus { outline: none; border-color: #ef6797; }
+    .image-upload-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 12px;
+      background: #fff1f7; border: 1px dashed #f0b7ce;
+      color: #9d2759; font-size: 12px; font-weight: 700; cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .review-img-preview { width: 100%; max-height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid #f0d6e1; margin-bottom: 10px; display: block; }
+    .submit-review-btn {
+      width: 100%; padding: 11px; border-radius: 14px;
+      background: linear-gradient(135deg, #ef6797, #da4e84);
+      color: #fff; border: none; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .submit-review-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .review-status { margin-top: 8px; padding: 8px 12px; border-radius: 8px; font-size: 12px; }
+    .review-status.success { background: #ebfff6; color: #1f8b5f; border: 1px solid #b8e7d1; }
+    .review-status.error { background: #fff0f3; color: #c4415f; border: 1px solid #f1b7c4; }
+    .review-login-box {
+      padding: 14px; text-align: center;
+      background: #fff9fb; border-radius: 12px; border: 1px dashed #f0b7ce; margin-top: 10px;
+    }
+    .review-login-box p { font-size: 12px; color: #7d5e6d; margin: 0 0 8px; }
+    .review-login-cta {
+      padding: 7px 18px; border-radius: 20px;
+      background: linear-gradient(135deg, #ef6797, #da4e84);
+      color: #fff; border: none; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+
+    @media (max-width: 920px) {
+      .map-page {
+        height: calc(100dvh - 61px);
+        min-height: 0;
+      }
+
+      .map-stage {
+        display: block;
+        height: 100%;
+      }
+
+      .map-sidebar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 6;
+        max-height: min(46dvh, 420px);
+        grid-template-rows: auto auto minmax(0, 1fr);
+        border-right: 0;
+        border-top: 1px solid rgba(243, 217, 228, 0.86);
+        box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.12);
+        border-radius: 24px 24px 0 0;
+        background: rgba(255, 251, 252, 0.96);
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+        transform: translateY(var(--mobile-sheet-offset, 0px));
+        transition: transform 0.24s ease, opacity 0.24s ease, visibility 0.24s ease;
+      }
+
+      .map-canvas {
+        position: absolute;
+        inset: 0;
+      }
+
+      .sidebar-drag-handle {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding-top: 6px;
+        border: 0;
+        background: rgba(255, 251, 252, 0.96);
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .sidebar-drag-handle::before {
+        content: "";
+        width: 52px;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(160, 122, 143, 0.45);
+      }
+
+      .map-sidebar.is-dragging {
+        transition: none;
+      }
+
+      .map-sidebar.is-collapsed {
+        overflow: hidden;
+      }
+
+      .toolbar-head {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-badge {
+        min-width: 0;
+      }
+
+      .search-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .search-actions {
+        grid-template-columns: 1fr;
+      }
+
+      #resetButton {
+        display: none;
+      }
+
+      .filter-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .results-panel {
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .results-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .results-head .ghost-button {
+        width: 100%;
+      }
+
+      .map-credit {
+        display: none;
+      }
+
+      .map-actions {
+        right: 14px;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+      }
+
+      .map-style-control {
+        right: 14px;
+        top: 14px;
+        bottom: auto;
+        width: 132px;
+      }
+
+      .map-empty {
+        inset: 14px;
+      }
+
+      .map-detail-panel {
+        width: 100%;
+        right: 0;
+        left: 0;
+        top: max(env(safe-area-inset-top, 0px) + 8px, 8px);
+        bottom: 0;
+        height: auto;
+        transform: translateY(100%);
+        border-left: 0;
+        border-top: 1px solid rgba(243, 217, 228, 0.86);
+        box-shadow: 0 -18px 36px rgba(74, 54, 69, 0.14);
+        border-radius: 24px 24px 0 0;
+      }
+
+      .map-detail-panel.is-open {
+        transform: translateY(0);
+      }
+
+      .map-stage.is-detail-open .map-sidebar {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(100%);
+      }
+
+      .detail-close-btn {
+        top: calc(env(safe-area-inset-top, 0px) + 12px);
+        right: 14px;
+      }
+
+      .detail-image-wrap {
+        height: 150px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .toolbar-card {
+        padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 22px);
+      }
+
+      .map-sidebar {
+        max-height: min(50dvh, 420px);
+      }
+
+      .results-head {
+        padding: 14px;
+      }
+
+      .results-list {
+        padding: 10px 12px 14px;
+      }
+
+      .map-style-control {
+        left: 14px;
+        right: 78px;
+        width: auto;
+      }
+
+      .map-actions {
+        right: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page-shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+        <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+      </a>
+      <div class="topbar-right">
+        <nav class="nav-links" aria-label="운영 페이지 메뉴">
+          <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+          <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+          <a class="nav-link" href="/map">메이드 카페 지도</a>
+        </nav>
+        <div class="auth-widget" id="authWidget">
+          <div class="auth-user-info" id="authUserInfo" style="display:none;">
+            <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+            <span class="auth-user-name" id="authUserName"></span>
+            <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+          </div>
+          <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="map-page">
+    <section class="map-stage" aria-label="메이드 카페 전체 지도">
+      <aside class="map-sidebar" aria-label="지도 검색 및 결과 패널">
+        <button class="sidebar-drag-handle" id="sidebarDragHandle" type="button" aria-label="검색 시트 접기 또는 펼치기"></button>
+        <section class="toolbar-card" aria-label="지도 검색">
+          <div class="toolbar-head">
+            <div class="toolbar-title">
+              <strong>메이드 카페 지도</strong>
+              <span id="mapHeaderCaption">실제 카페 데이터를 불러오는 중입니다.</span>
+            </div>
+            <div class="toolbar-badge" id="mapCafeCount">0곳</div>
+          </div>
+
+          <div class="search-bar">
+            <input
+                    id="mapSearchInput"
+                    class="search-input"
+                    type="search"
+                    placeholder="카페명, 주소, 지역으로 검색"
+                    aria-label="카페명, 주소, 지역으로 검색"
+            />
+            <div class="search-actions">
+              <button class="search-button" id="searchButton" type="button">검색</button>
+              <button class="ghost-button" id="resetButton" type="button">초기화</button>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <label class="filter-label" for="regionFilter">지역 필터</label>
+            <select class="filter-select" id="regionFilter" aria-label="지역 필터">
+              <option value="전체">전체</option>
+              <option value="서울">서울</option>
+              <option value="부산">부산</option>
+              <option value="대구">대구</option>
+              <option value="도쿄">도쿄</option>
+              <option value="오사카">오사카</option>
+              <option value="요코하마">요코하마</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="results-panel" aria-label="검색 결과">
+          <div class="results-head">
+            <div>
+              <strong id="resultsTitle">검색 결과 0곳</strong>
+              <span id="resultsSubtitle">Firestore에서 카페 데이터를 불러오는 중입니다.</span>
+            </div>
+            <button class="ghost-button" id="fitAllButton" type="button">전체 보기</button>
+          </div>
+          <div class="results-list" id="sheetList"></div>
+        </section>
+      </aside>
+
+      <div class="map-canvas">
+        <div id="map" aria-label="구글 지도"></div>
+
+        <div class="map-style-control">
+          <select class="map-style-select" id="mapTypeFilter" aria-label="지도 스타일">
+            <option value="roadmap">일반</option>
+            <option value="satellite">위성</option>
+            <option value="hybrid">하이브리드</option>
+            <option value="terrain">지형</option>
+          </select>
+        </div>
+
+        <div class="map-actions">
+          <button class="map-icon-button" id="zoomInButton" type="button" aria-label="지도 확대">+</button>
+          <button class="map-icon-button" id="zoomOutButton" type="button" aria-label="지도 축소">-</button>
+          <button class="map-icon-button" id="recenterButton" type="button" aria-label="검색 결과 위치로 이동">⌖</button>
+        </div>
+
+        <div class="map-credit">
+          <strong style="display: block; color: var(--text); margin-bottom: 3px;">전체 지도 화면</strong>
+          <span>검색 버튼을 누르면 결과 카페 범위로 지도가 이동합니다.</span>
+        </div>
+
+        <div class="map-empty is-visible" id="mapEmpty">
+          <div class="map-empty-card">
+            <div class="map-empty-spinner" aria-hidden="true"></div>
+            <strong class="map-empty-title" id="mapEmptyTitle">지도를 불러오는 중입니다</strong>
+            <p class="map-empty-message" id="mapEmptyMessage">잠시만 기다려주세요. 주변 카페 위치를 준비하고 있습니다.</p>
+            <div class="map-empty-progress" aria-hidden="true">
+              <div class="map-empty-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-detail-panel" id="mapDetailPanel" aria-label="카페 상세 정보">
+          <button class="detail-close-btn" id="detailCloseBtn" type="button" aria-label="상세 패널 닫기">✕</button>
+          <div class="detail-image-wrap">
+            <img id="detailImage" src="" alt="카페 이미지" style="display:none;" />
+            <div class="detail-image-placeholder" id="detailImagePlaceholder">🏪</div>
+          </div>
+          <div class="detail-content">
+            <div class="detail-tag" id="detailTag"></div>
+            <strong class="detail-name" id="detailName"></strong>
+            <div class="detail-address" id="detailAddress"></div>
+            <hr class="detail-divider" />
+            <div class="detail-note" id="detailNote"></div>
+
+            <div class="detail-reviews" id="detailReviews" style="display:none;">
+              <hr class="detail-divider" style="margin-top:14px;" />
+              <div class="reviews-head">
+                <strong id="reviewsTitle">리뷰</strong>
+              </div>
+              <div id="reviewsList"></div>
+
+              <div id="reviewFormSection" style="display:none;">
+                <span class="review-form-head">리뷰 작성</span>
+                <div class="star-input" id="starInput">
+                  <button class="star-btn" data-value="1" type="button">★</button>
+                  <button class="star-btn" data-value="2" type="button">★</button>
+                  <button class="star-btn" data-value="3" type="button">★</button>
+                  <button class="star-btn" data-value="4" type="button">★</button>
+                  <button class="star-btn" data-value="5" type="button">★</button>
+                </div>
+                <textarea class="review-textarea" id="reviewContentInput" placeholder="카페 방문 후기를 남겨주세요..." rows="3"></textarea>
+                <div>
+                  <label class="image-upload-label" for="reviewImageFile">📷 이미지 추가</label>
+                  <input type="file" id="reviewImageFile" accept="image/*" style="display:none;" />
+                </div>
+                <div id="reviewImagePreview"></div>
+                <button class="submit-review-btn" id="submitReviewBtn" type="button">리뷰 등록</button>
+                <div class="review-status" id="reviewStatus" style="display:none;"></div>
+              </div>
+
+              <div id="reviewLoginPrompt" style="display:none;">
+                <div class="review-login-box">
+                  <p>로그인하면 리뷰를 작성할 수 있습니다.</p>
+                  <button class="review-login-cta" id="reviewLoginBtn" type="button">로그인하여 리뷰 작성</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Login Modal -->
+<div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="로그인">
+  <div class="auth-modal-box">
+    <button class="auth-modal-close" id="authModalClose" type="button" aria-label="닫기">✕</button>
+    <h2 class="auth-modal-title">로그인</h2>
+    <form class="auth-modal-form" id="emailLoginForm" novalidate>
+      <div class="auth-modal-field">
+        <label for="loginEmail">이메일</label>
+        <input type="email" id="loginEmail" placeholder="이메일 주소" autocomplete="email" />
+      </div>
+      <div class="auth-modal-field">
+        <label for="loginPassword">비밀번호</label>
+        <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" />
+      </div>
+      <p class="auth-modal-error" id="emailLoginError" style="display:none;"></p>
+      <button class="auth-modal-submit" type="submit">로그인</button>
+    </form>
+    <div class="auth-modal-divider"><span>또는</span></div>
+    <button class="auth-modal-google" id="googleSignInModalBtn" type="button">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Google로 로그인
+    </button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+  (function () {
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI",
+      authDomain: "concafe-5f7fd.firebaseapp.com",
+      projectId: "concafe-5f7fd",
+      storageBucket: "concafe-5f7fd.firebasestorage.app",
+      messagingSenderId: "387905493709",
+      appId: "1:387905493709:web:registration-page",
+    };
+
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+    const db = app.firestore();
+    const auth = app.auth();
+    const storage = app.storage();
+
+    const el = {
+      mapStage: document.querySelector(".map-stage"),
+      mapSidebar: document.querySelector(".map-sidebar"),
+      sidebarDragHandle: document.getElementById("sidebarDragHandle"),
+      mapEmpty: document.getElementById("mapEmpty"),
+      mapEmptyTitle: document.getElementById("mapEmptyTitle"),
+      mapEmptyMessage: document.getElementById("mapEmptyMessage"),
+      mapHeaderCaption: document.getElementById("mapHeaderCaption"),
+      mapCafeCount: document.getElementById("mapCafeCount"),
+      resultsTitle: document.getElementById("resultsTitle"),
+      resultsSubtitle: document.getElementById("resultsSubtitle"),
+      searchInput: document.getElementById("mapSearchInput"),
+      searchButton: document.getElementById("searchButton"),
+      resetButton: document.getElementById("resetButton"),
+      fitAllButton: document.getElementById("fitAllButton"),
+      regionFilter: document.getElementById("regionFilter"),
+      mapTypeFilter: document.getElementById("mapTypeFilter"),
+      list: document.getElementById("sheetList"),
+      recenterButton: document.getElementById("recenterButton"),
+      zoomInButton: document.getElementById("zoomInButton"),
+      zoomOutButton: document.getElementById("zoomOutButton"),
+      mapDetailPanel: document.getElementById("mapDetailPanel"),
+      detailCloseBtn: document.getElementById("detailCloseBtn"),
+      detailImage: document.getElementById("detailImage"),
+      detailImagePlaceholder: document.getElementById("detailImagePlaceholder"),
+      detailTag: document.getElementById("detailTag"),
+      detailName: document.getElementById("detailName"),
+      detailAddress: document.getElementById("detailAddress"),
+      detailNote: document.getElementById("detailNote"),
+      detailReviews: document.getElementById("detailReviews"),
+      reviewsTitle: document.getElementById("reviewsTitle"),
+      reviewsList: document.getElementById("reviewsList"),
+      reviewFormSection: document.getElementById("reviewFormSection"),
+      reviewLoginPrompt: document.getElementById("reviewLoginPrompt"),
+      starBtns: Array.from(document.querySelectorAll(".star-btn")),
+      reviewContentInput: document.getElementById("reviewContentInput"),
+      reviewImageFile: document.getElementById("reviewImageFile"),
+      reviewImagePreview: document.getElementById("reviewImagePreview"),
+      submitReviewBtn: document.getElementById("submitReviewBtn"),
+      reviewStatus: document.getElementById("reviewStatus"),
+      reviewLoginBtn: document.getElementById("reviewLoginBtn"),
+      authUserInfo: document.getElementById("authUserInfo"),
+      authUserPhoto: document.getElementById("authUserPhoto"),
+      authUserName: document.getElementById("authUserName"),
+      signInBtn: document.getElementById("signInBtn"),
+      signOutBtn: document.getElementById("signOutBtn"),
+    };
+
+    const state = {
+      cafes: [],
+      activeDistrict: "전체",
+      activeCafeId: "",
+      appliedKeyword: "",
+      userLocation: null,
+      mapTypeId: "roadmap",
+    };
+    const MAP_TYPE_STORAGE_KEY = "concafe.mapTypeId";
+
+    let map = null;
+    let infoWindow = null;
+    const markers = new Map();
+    let currentUser = null;
+    let reviewRating = 0;
+    let reviewImageFile = null;
+    let currentDetailCafeId = "";
+    const mobileSheetMediaQuery = window.matchMedia("(max-width: 920px)");
+    const mobileSheetState = {
+      collapsed: false,
+      dragging: false,
+      dragMoved: false,
+      pointerId: null,
+      startY: 0,
+      startOffset: 0,
+    };
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalizeText(value) {
+      return typeof value === "string" ? value.trim() : "";
+    }
+
+    function normalizeRegionLabel(region) {
+      if (!region || typeof region !== "object") {
+        return "";
+      }
+
+      const parts = [
+        normalizeText(region.prefecture),
+        normalizeText(region.city),
+        normalizeText(region.district),
+      ].filter(Boolean);
+
+      if (parts.length > 0) {
+        return parts.join(" ");
+      }
+
+      return normalizeText(region.label || region.name);
+    }
+
+    function isMobileSheetMode() {
+      return mobileSheetMediaQuery.matches;
+    }
+
+    function getCollapsedSidebarOffset() {
+      if (!el.mapSidebar) {
+        return 0;
+      }
+      return Math.max(el.mapSidebar.offsetHeight - 34, 0);
+    }
+
+    function applySidebarOffset(offset) {
+      if (!el.mapSidebar) {
+        return;
+      }
+      var nextOffset = Math.max(0, Math.min(offset || 0, getCollapsedSidebarOffset()));
+      el.mapSidebar.style.setProperty("--mobile-sheet-offset", nextOffset + "px");
+    }
+
+    function syncMobileSidebarState() {
+      if (!el.mapSidebar) {
+        return;
+      }
+      if (!isMobileSheetMode()) {
+        mobileSheetState.collapsed = false;
+        mobileSheetState.dragging = false;
+        el.mapSidebar.classList.remove("is-collapsed", "is-dragging");
+        el.mapSidebar.style.setProperty("--mobile-sheet-offset", "0px");
+        return;
+      }
+      el.mapSidebar.classList.toggle("is-collapsed", mobileSheetState.collapsed);
+      applySidebarOffset(mobileSheetState.collapsed ? getCollapsedSidebarOffset() : 0);
+    }
+
+    function setMobileSidebarCollapsed(collapsed) {
+      mobileSheetState.collapsed = !!collapsed;
+      mobileSheetState.dragging = false;
+      if (el.mapSidebar) {
+        el.mapSidebar.classList.remove("is-dragging");
+      }
+      syncMobileSidebarState();
+    }
+
+    function bindMobileSidebarDrag() {
+      if (!el.sidebarDragHandle || !el.mapSidebar) {
+        return;
+      }
+
+      el.sidebarDragHandle.addEventListener("click", function () {
+        if (!isMobileSheetMode()) {
+          return;
+        }
+        if (mobileSheetState.dragMoved) {
+          mobileSheetState.dragMoved = false;
+          return;
+        }
+        setMobileSidebarCollapsed(!mobileSheetState.collapsed);
+      });
+
+      el.sidebarDragHandle.addEventListener("pointerdown", function (event) {
+        if (!isMobileSheetMode()) {
+          return;
+        }
+        mobileSheetState.dragging = true;
+        mobileSheetState.dragMoved = false;
+        mobileSheetState.pointerId = event.pointerId;
+        mobileSheetState.startY = event.clientY;
+        mobileSheetState.startOffset = mobileSheetState.collapsed ? getCollapsedSidebarOffset() : 0;
+        el.mapSidebar.classList.add("is-dragging");
+        el.sidebarDragHandle.setPointerCapture(event.pointerId);
+      });
+
+      el.sidebarDragHandle.addEventListener("pointermove", function (event) {
+        if (!mobileSheetState.dragging || mobileSheetState.pointerId !== event.pointerId) {
+          return;
+        }
+        var deltaY = event.clientY - mobileSheetState.startY;
+        if (Math.abs(deltaY) > 6) {
+          mobileSheetState.dragMoved = true;
+        }
+        applySidebarOffset(mobileSheetState.startOffset + deltaY);
+      });
+
+      function endSidebarDrag(event) {
+        if (!mobileSheetState.dragging || mobileSheetState.pointerId !== event.pointerId) {
+          return;
+        }
+        var deltaY = event.clientY - mobileSheetState.startY;
+        var collapsedOffset = getCollapsedSidebarOffset();
+        var nextCollapsed = mobileSheetState.startOffset + deltaY > collapsedOffset * 0.45;
+        if (el.sidebarDragHandle.hasPointerCapture(event.pointerId)) {
+          el.sidebarDragHandle.releasePointerCapture(event.pointerId);
+        }
+        mobileSheetState.pointerId = null;
+        setMobileSidebarCollapsed(nextCollapsed);
+      }
+
+      el.sidebarDragHandle.addEventListener("pointerup", endSidebarDrag);
+      el.sidebarDragHandle.addEventListener("pointercancel", endSidebarDrag);
+      window.addEventListener("resize", syncMobileSidebarState);
+      if (typeof mobileSheetMediaQuery.addEventListener === "function") {
+        mobileSheetMediaQuery.addEventListener("change", syncMobileSidebarState);
+      } else if (typeof mobileSheetMediaQuery.addListener === "function") {
+        mobileSheetMediaQuery.addListener(syncMobileSidebarState);
+      }
+      syncMobileSidebarState();
+    }
+
+    function pickRegionFilter(region) {
+      const parts = [
+        normalizeText(region && region.prefecture),
+        normalizeText(region && region.city),
+        normalizeText(region && region.district),
+        normalizeText(region && region.address),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (parts.indexOf("seoul") !== -1 || parts.indexOf("서울") !== -1 || parts.indexOf("ソウル") !== -1) {
+        return "서울";
+      }
+      if (parts.indexOf("busan") !== -1 || parts.indexOf("부산") !== -1 || parts.indexOf("釜山") !== -1) {
+        return "부산";
+      }
+      if (parts.indexOf("daegu") !== -1 || parts.indexOf("대구") !== -1 || parts.indexOf("大邱") !== -1) {
+        return "대구";
+      }
+      if (parts.indexOf("tokyo") !== -1 || parts.indexOf("도쿄") !== -1 || parts.indexOf("東京") !== -1) {
+        return "도쿄";
+      }
+      if (parts.indexOf("osaka") !== -1 || parts.indexOf("오사카") !== -1 || parts.indexOf("大阪") !== -1) {
+        return "오사카";
+      }
+      if (parts.indexOf("yokohama") !== -1 || parts.indexOf("요코하마") !== -1 || parts.indexOf("横浜") !== -1) {
+        return "요코하마";
+      }
+
+      return "전체";
+    }
+
+    function resolveGeoPoint(region) {
+      if (!region || typeof region !== "object") {
+        return null;
+      }
+
+      const location = region.location;
+      if (location && typeof location === "object") {
+        if (typeof location.latitude === "number" && typeof location.longitude === "number") {
+          return { lat: location.latitude, lng: location.longitude };
+        }
+        if (typeof location._lat === "number" && typeof location._long === "number") {
+          return { lat: location._lat, lng: location._long };
+        }
+      }
+
+      return null;
+    }
+
+    function buildCafeModel(doc) {
+      const data = doc.data() || {};
+      const region = data.region && typeof data.region === "object" ? data.region : {};
+      const point = resolveGeoPoint(region);
+      if (!point || data.approved !== true) {
+        return null;
+      }
+
+      const conceptType = normalizeText(data.conceptType);
+      const desc = normalizeText(data.desc);
+      const businessHours = normalizeText(data.businessHours);
+      const regionLabel = normalizeRegionLabel(region);
+
+      return {
+        id: doc.id,
+        name: normalizeText(data.name) || "이름 없는 카페",
+        district: pickRegionFilter(region),
+        regionLabel: regionLabel,
+        address: normalizeText(region.address) || regionLabel || "주소 정보 없음",
+        theme: conceptType || "메이드 카페",
+        status: "운영중",
+        note: desc || businessHours || "카페 상세 정보는 앱에서 확인할 수 있습니다.",
+        lat: point.lat,
+        lng: point.lng,
+        image: normalizeText(data.thumbnailImage),
+      };
+    }
+
+    function createMarkerIcon(isActive, cafeName) {
+      var color = isActive ? "#c73d73" : "#ef6797";
+      var scale = isActive ? 1 : (28 / 34);
+      var pinW = 34, pinH = 48;
+
+      var maxLen = 7;
+      var label = typeof cafeName === "string" && cafeName.length > 0
+        ? (cafeName.length > maxLen ? cafeName.slice(0, maxLen) + "…" : cafeName)
+        : "";
+
+      // Estimate rendered text width: CJK chars ≈ fontSize wide, ASCII ≈ 0.65×
+      var fontSize = 10;
+      var estimatedTextW = label.split("").reduce(function (acc, ch) {
+        return acc + (ch.charCodeAt(0) > 127 ? fontSize : fontSize * 0.65);
+      }, 0);
+
+      var svgW = Math.max(pinW, Math.ceil(estimatedTextW + 12));
+      var pinOffsetX = (svgW - pinW) / 2;
+      var labelH = label ? 16 : 0;
+      var svgH = pinH + labelH;
+
+      var labelPart = label
+        ? '<text x="' + (svgW / 2) + '" y="' + (pinH + 12) + '"' +
+          ' font-family="sans-serif" font-size="' + fontSize + '" font-weight="800"' +
+          ' text-anchor="middle" paint-order="stroke"' +
+          ' stroke="white" stroke-width="3" fill="#23161c">' +
+          escapeHtml(label) + "</text>"
+        : "";
+
+      var svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '">' +
+        '<g transform="translate(' + pinOffsetX + ',0)">' +
+        '<path d="M17 0C7.611 0 0 7.611 0 17c0 12.426 17 31 17 31S34 29.426 34 17C34 7.611 26.389 0 17 0z"' +
+        ' fill="' + color + '" stroke="white" stroke-width="2.5"/>' +
+        '<circle cx="17" cy="17" r="7" fill="white" fill-opacity="0.92"/>' +
+        "</g>" +
+        labelPart +
+        "</svg>";
+
+      var rendW = Math.round(svgW * scale);
+      var rendH = Math.round(svgH * scale);
+      var anchorX = Math.round((pinOffsetX + 17) * scale);
+      var anchorY = Math.round(pinH * scale);
+
+      return {
+        url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+        scaledSize: new window.google.maps.Size(rendW, rendH),
+        anchor: new window.google.maps.Point(anchorX, anchorY),
+      };
+    }
+
+    function getFilteredCafes() {
+      const keyword = state.appliedKeyword.toLowerCase();
+      return state.cafes.filter(function (cafe) {
+        const matchesDistrict = state.activeDistrict === "전체" || cafe.district === state.activeDistrict;
+        const haystack = [cafe.name, cafe.address, cafe.theme, cafe.district, cafe.regionLabel].join(" ").toLowerCase();
+        const matchesKeyword = keyword.length === 0 || haystack.indexOf(keyword) !== -1;
+        return matchesDistrict && matchesKeyword;
+      });
+    }
+
+    function syncRegionFilter() {
+      if (el.regionFilter) {
+        el.regionFilter.value = state.activeDistrict;
+      }
+    }
+
+    function syncMapTypeFilter() {
+      if (el.mapTypeFilter) {
+        el.mapTypeFilter.value = state.mapTypeId;
+      }
+    }
+
+    function loadSavedMapType() {
+      try {
+        const saved = window.localStorage.getItem(MAP_TYPE_STORAGE_KEY);
+        if (saved === "roadmap" || saved === "satellite" || saved === "hybrid" || saved === "terrain") {
+          state.mapTypeId = saved;
+        }
+      } catch (error) {
+        console.warn("Failed to read saved map type", error);
+      }
+    }
+
+    function persistMapType() {
+      try {
+        window.localStorage.setItem(MAP_TYPE_STORAGE_KEY, state.mapTypeId);
+      } catch (error) {
+        console.warn("Failed to persist map type", error);
+      }
+    }
+
+    function renderList(filteredCafes) {
+      if (!filteredCafes.some(function (cafe) { return cafe.id === state.activeCafeId; })) {
+        state.activeCafeId = filteredCafes[0] ? filteredCafes[0].id : "";
+      }
+
+      if (filteredCafes.length === 0) {
+        el.list.innerHTML =
+          '<article class="result-button" aria-live="polite">' +
+          "<strong>조건에 맞는 카페가 없습니다.</strong>" +
+          "<p>검색어를 바꾸거나 지역 필터를 전체로 돌려보세요.</p>" +
+          "</article>";
+        return;
+      }
+
+      el.list.innerHTML = filteredCafes
+        .map(function (cafe) {
+          const activeClass = cafe.id === state.activeCafeId ? "result-button is-active" : "result-button";
+          return (
+            '<button class="' + activeClass + '" type="button" data-cafe-id="' + escapeHtml(cafe.id) + '">' +
+            '<div class="result-top">' +
+            "<div>" +
+            "<strong>" + escapeHtml(cafe.name) + "</strong>" +
+            "<p>" + escapeHtml(cafe.district) + " · " + escapeHtml(cafe.theme) + "<br />" + escapeHtml(cafe.address) + "</p>" +
+            "</div>" +
+            '<span class="status-pill">' + escapeHtml(cafe.status) + "</span>" +
+            "</div>" +
+            "</button>"
+          );
+        })
+        .join("");
+
+      Array.from(el.list.querySelectorAll("[data-cafe-id]")).forEach(function (button) {
+        button.addEventListener("click", function () {
+          const cafeId = button.getAttribute("data-cafe-id") || "";
+          selectCafe(cafeId, true);
+        });
+      });
+    }
+
+    function updateSummary(filteredCafes) {
+      el.mapCafeCount.textContent = state.cafes.length + "곳";
+      el.resultsTitle.textContent = "검색 결과 " + filteredCafes.length + "곳";
+
+      if (filteredCafes.length === 0) {
+        el.resultsSubtitle.textContent = "현재 조건과 일치하는 카페가 없습니다.";
+        return;
+      }
+
+      if (state.appliedKeyword) {
+        el.resultsSubtitle.textContent = '"' + state.appliedKeyword + '" 검색 결과입니다.';
+        return;
+      }
+
+      el.resultsSubtitle.textContent = state.activeDistrict === "전체"
+        ? "전체 지역 카페를 표시하고 있습니다."
+        : state.activeDistrict + " 지역 카페를 표시하고 있습니다.";
+    }
+
+    function getCafeById(cafeId) {
+      return state.cafes.find(function (cafe) {
+        return cafe.id === cafeId;
+      }) || null;
+    }
+
+    function calculateDistanceMeters(from, to) {
+      const earthRadius = 6371000;
+      const toRadians = function (degrees) {
+        return degrees * (Math.PI / 180);
+      };
+
+      const latDelta = toRadians(to.lat - from.lat);
+      const lngDelta = toRadians(to.lng - from.lng);
+      const fromLat = toRadians(from.lat);
+      const toLat = toRadians(to.lat);
+      const a =
+        Math.sin(latDelta / 2) * Math.sin(latDelta / 2) +
+        Math.cos(fromLat) * Math.cos(toLat) *
+        Math.sin(lngDelta / 2) * Math.sin(lngDelta / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return earthRadius * c;
+    }
+
+    function resolveNearestCafe(location) {
+      if (!location || state.cafes.length === 0) {
+        return null;
+      }
+
+      let nearestCafe = null;
+      let nearestDistance = Infinity;
+      state.cafes.forEach(function (cafe) {
+        const distance = calculateDistanceMeters(location, { lat: cafe.lat, lng: cafe.lng });
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestCafe = cafe;
+        }
+      });
+      return nearestCafe;
+    }
+
+    function requestBrowserLocation() {
+      return new Promise(function (resolve) {
+        if (!navigator.geolocation) {
+          resolve(null);
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            resolve({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          function () {
+            resolve(null);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 6000,
+            maximumAge: 300000,
+          }
+        );
+      });
+    }
+
+    async function applyNearestDistrictFromUserLocation() {
+      const location = await requestBrowserLocation();
+      state.userLocation = location;
+
+      if (!location) {
+        state.activeDistrict = "전체";
+        if (state.cafes.length === 0) {
+          el.mapHeaderCaption.textContent = "표시 가능한 카페 데이터가 없습니다.";
+        }
+        return;
+      }
+
+      const nearestCafe = resolveNearestCafe(location);
+      if (!nearestCafe) {
+        return;
+      }
+
+      state.activeDistrict = nearestCafe.district || "전체";
+      state.activeCafeId = nearestCafe.id;
+      el.mapHeaderCaption.textContent =
+        "현재 위치 기준 가까운 지역은 " + state.activeDistrict + " 입니다.";
+    }
+
+    function fitMapToCafes(cafesToFit) {
+      if (!map || !window.google || !window.google.maps || cafesToFit.length === 0) {
+        return;
+      }
+
+      const bounds = new window.google.maps.LatLngBounds();
+      cafesToFit.forEach(function (cafe) {
+        bounds.extend({ lat: cafe.lat, lng: cafe.lng });
+      });
+      map.fitBounds(bounds, 80);
+    }
+
+    function openInfoWindow(cafe) {
+      if (!map || !infoWindow || !cafe) {
+        return;
+      }
+
+      const marker = markers.get(cafe.id);
+      if (!marker) {
+        return;
+      }
+
+      infoWindow.setContent(
+        '<div style="min-width:210px;padding:4px 2px 2px;">' +
+          '<strong style="display:block;font-size:14px;color:#3d2c38;">' + escapeHtml(cafe.name) + "</strong>" +
+          '<div style="margin-top:4px;font-size:12px;color:#7a6f7c;">' + escapeHtml(cafe.district) + " · " + escapeHtml(cafe.theme) + "</div>" +
+          '<div style="margin-top:5px;font-size:12px;color:#5f5262;">' + escapeHtml(cafe.address) + "</div>" +
+          '<button onclick="window.__concafeShowDetail(\'' + cafe.id + '\')" ' +
+            'style="margin-top:10px;width:100%;padding:8px 0;background:linear-gradient(135deg,#ef6797,#da4e84);' +
+            'color:#fff;border:0;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">' +
+            '자세히 보기 →' +
+          "</button>" +
+        "</div>"
+      );
+      infoWindow.open({ map: map, anchor: marker });
+    }
+
+    function refreshMarkers(filteredCafes) {
+      markers.forEach(function (marker, cafeId) {
+        const visible = filteredCafes.some(function (cafe) {
+          return cafe.id === cafeId;
+        });
+        marker.setVisible(visible);
+        if (window.google && window.google.maps) {
+          var cafeForIcon = getCafeById(cafeId);
+          marker.setIcon(createMarkerIcon(cafeId === state.activeCafeId, cafeForIcon ? cafeForIcon.name : ""));
+        }
+      });
+
+      const activeCafe = getCafeById(state.activeCafeId);
+      if (activeCafe && filteredCafes.some(function (cafe) { return cafe.id === activeCafe.id; })) {
+        openInfoWindow(activeCafe);
+      } else if (infoWindow) {
+        infoWindow.close();
+      }
+    }
+
+    function selectCafe(cafeId, panToMarker) {
+      state.activeCafeId = cafeId;
+      const filteredCafes = getFilteredCafes();
+      renderList(filteredCafes);
+      updateSummary(filteredCafes);
+      refreshMarkers(filteredCafes);
+
+      const cafe = getCafeById(cafeId);
+      if (map && cafe && panToMarker) {
+        map.panTo({ lat: cafe.lat, lng: cafe.lng });
+        map.setZoom(Math.max(map.getZoom() || 15, 15));
+      }
+    }
+
+    function syncUI() {
+      const filteredCafes = getFilteredCafes();
+      renderList(filteredCafes);
+      updateSummary(filteredCafes);
+      if (map) {
+        refreshMarkers(filteredCafes);
+      }
+      return filteredCafes;
+    }
+
+    function applySearch() {
+      state.appliedKeyword = normalizeText(el.searchInput.value);
+      const filteredCafes = syncUI();
+      fitMapToCafes(filteredCafes);
+    }
+
+    function resetSearch() {
+      el.searchInput.value = "";
+      state.appliedKeyword = "";
+      state.activeDistrict = "전체";
+      syncRegionFilter();
+      const filteredCafes = syncUI();
+      fitMapToCafes(filteredCafes);
+    }
+
+    function bindUI() {
+      bindMobileSidebarDrag();
+      el.searchButton.addEventListener("click", applySearch);
+      el.searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          applySearch();
+        }
+      });
+      el.regionFilter.addEventListener("change", function () {
+        state.activeDistrict = el.regionFilter.value || "전체";
+        applySearch();
+      });
+      el.mapTypeFilter.addEventListener("change", function () {
+        state.mapTypeId = el.mapTypeFilter.value || "roadmap";
+        syncMapTypeFilter();
+        persistMapType();
+        if (map) {
+          map.setMapTypeId(state.mapTypeId);
+        }
+      });
+      el.resetButton.addEventListener("click", resetSearch);
+      el.detailCloseBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeDetailPanel();
+      });
+      window.__concafeShowDetail = function (cafeId) {
+        openDetailPanel(getCafeById(cafeId));
+      };
+
+      // Auth
+      var googleProvider = new firebase.auth.GoogleAuthProvider();
+      var authModal = document.getElementById("authModal");
+      var authModalClose = document.getElementById("authModalClose");
+      var emailLoginForm = document.getElementById("emailLoginForm");
+      var emailLoginError = document.getElementById("emailLoginError");
+      var googleSignInModalBtn = document.getElementById("googleSignInModalBtn");
+
+      function openAuthModal() { authModal.classList.add("is-open"); }
+      function closeAuthModal() {
+        authModal.classList.remove("is-open");
+        emailLoginError.style.display = "none";
+        emailLoginForm.reset();
+      }
+
+      auth.onAuthStateChanged(function (user) {
+        updateAuthWidget(user);
+        if (user) closeAuthModal();
+      });
+      el.signInBtn.addEventListener("click", openAuthModal);
+      authModalClose.addEventListener("click", closeAuthModal);
+      authModal.addEventListener("click", function (e) { if (e.target === authModal) closeAuthModal(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAuthModal(); });
+
+      emailLoginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = document.getElementById("loginEmail").value.trim();
+        var password = document.getElementById("loginPassword").value;
+        emailLoginError.style.display = "none";
+        auth.signInWithEmailAndPassword(email, password).catch(function (err) {
+          emailLoginError.textContent = err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
+            ? "이메일 또는 비밀번호가 올바르지 않습니다."
+            : "로그인에 실패했습니다: " + err.message;
+          emailLoginError.style.display = "block";
+        });
+      });
+      googleSignInModalBtn.addEventListener("click", function () {
+        auth.signInWithPopup(googleProvider).catch(function (err) {
+          emailLoginError.textContent = "Google 로그인 실패: " + err.message;
+          emailLoginError.style.display = "block";
+        });
+      });
+
+      el.signOutBtn.addEventListener("click", function () {
+        auth.signOut();
+      });
+
+      // Reviews - star rating
+      el.starBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          reviewRating = parseInt(btn.dataset.value, 10);
+          updateStarDisplay();
+        });
+        btn.addEventListener("mouseover", function () {
+          var val = parseInt(btn.dataset.value, 10);
+          el.starBtns.forEach(function (b, i) { b.classList.toggle("active", i < val); });
+        });
+      });
+      document.getElementById("starInput").addEventListener("mouseleave", function () {
+        updateStarDisplay();
+      });
+
+      // Reviews - image picker
+      el.reviewImageFile.addEventListener("change", function () {
+        reviewImageFile = el.reviewImageFile.files[0] || null;
+        if (reviewImageFile) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            el.reviewImagePreview.innerHTML = '<img class="review-img-preview" src="' + e.target.result + '" alt="미리보기" />';
+          };
+          reader.readAsDataURL(reviewImageFile);
+        } else {
+          el.reviewImagePreview.innerHTML = "";
+        }
+      });
+
+      // Reviews - submit
+      el.submitReviewBtn.addEventListener("click", handleReviewSubmit);
+
+      // Reviews - login CTA in prompt
+      el.reviewLoginBtn.addEventListener("click", openAuthModal);
+      el.fitAllButton.addEventListener("click", function () {
+        fitMapToCafes(getFilteredCafes());
+      });
+      el.recenterButton.addEventListener("click", function () {
+        fitMapToCafes(getFilteredCafes());
+      });
+      el.zoomInButton.addEventListener("click", function () {
+        if (map) {
+          map.setZoom((map.getZoom() || 14) + 1);
+        }
+      });
+      el.zoomOutButton.addEventListener("click", function () {
+        if (map) {
+          map.setZoom((map.getZoom() || 14) - 1);
+        }
+      });
+    }
+
+    function getApiKey() {
+      if (typeof window.CONCAFE_GOOGLE_MAPS_API_KEY === "string") {
+        const runtimeKey = window.CONCAFE_GOOGLE_MAPS_API_KEY.trim();
+        if (runtimeKey) return runtimeKey;
+      }
+      return "AIzaSyDlMDiIO2fNe1c9VDtXC9JigATtpO3BtmM";
+    }
+
+    function setMapOverlay(stateName) {
+      if (stateName === "ready") {
+        el.mapEmpty.classList.remove("is-visible", "is-error");
+        return;
+      }
+
+      el.mapEmpty.classList.add("is-visible");
+      el.mapEmpty.classList.toggle("is-error", stateName === "error");
+
+      if (stateName === "error") {
+        el.mapEmptyTitle.textContent = "지도를 불러오지 못했습니다";
+        el.mapEmptyMessage.textContent = "네트워크 상태를 확인한 뒤 다시 시도해주세요.";
+        return;
+      }
+
+      el.mapEmptyTitle.textContent = "지도를 불러오는 중입니다";
+      el.mapEmptyMessage.textContent = "잠시만 기다려주세요. 주변 카페 위치를 준비하고 있습니다.";
+    }
+
+    async function loadCafes() {
+      el.mapHeaderCaption.textContent = "실제 카페 데이터를 불러오는 중입니다.";
+      const snapshot = await db.collection("cafes").get();
+      state.cafes = snapshot.docs
+        .map(buildCafeModel)
+        .filter(Boolean)
+        .sort(function (a, b) {
+          return a.name.localeCompare(b.name, "ko");
+        });
+      state.activeCafeId = state.cafes[0] ? state.cafes[0].id : "";
+      await applyNearestDistrictFromUserLocation();
+      syncRegionFilter();
+    }
+
+    function loadGoogleMaps(apiKey) {
+      return new Promise(function (resolve, reject) {
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+
+        const callbackName = "__concafeInitGoogleMap";
+        window[callbackName] = function () {
+          resolve();
+          delete window[callbackName];
+        };
+
+        const script = document.createElement("script");
+        script.src =
+          "https://maps.googleapis.com/maps/api/js?key=" +
+          encodeURIComponent(apiKey) +
+          "&language=ko&region=KR&callback=" +
+          callbackName;
+        script.async = true;
+        script.defer = true;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    function initMap() {
+      const initialCenter = state.userLocation || { lat: 37.5665, lng: 126.9780 };
+      map = new window.google.maps.Map(document.getElementById("map"), {
+        center: initialCenter,
+        zoom: state.userLocation ? 13 : 11,
+        disableDefaultUI: true,
+        clickableIcons: false,
+        mapTypeId: state.mapTypeId,
+      });
+
+      infoWindow = new window.google.maps.InfoWindow();
+
+      state.cafes.forEach(function (cafe) {
+        const marker = new window.google.maps.Marker({
+          map: map,
+          position: { lat: cafe.lat, lng: cafe.lng },
+          title: cafe.name,
+          icon: createMarkerIcon(false, cafe.name),
+        });
+
+        marker.addListener("click", function () {
+          selectCafe(cafe.id, false);
+          openInfoWindow(cafe);
+        });
+
+        markers.set(cafe.id, marker);
+      });
+
+      setMapOverlay("ready");
+      syncRegionFilter();
+      syncMapTypeFilter();
+      syncUI();
+      fitMapToCafes(getFilteredCafes());
+    }
+
+    function openDetailPanel(cafe) {
+      if (!cafe) {
+        return;
+      }
+
+      currentDetailCafeId = cafe.id;
+      el.detailTag.textContent = cafe.theme || "메이드 카페";
+      el.detailName.textContent = cafe.name;
+      el.detailAddress.textContent = cafe.district + " · " + cafe.address;
+      el.detailNote.textContent = cafe.note || "카페 상세 정보는 앱에서 확인할 수 있습니다.";
+
+      if (cafe.image) {
+        el.detailImage.src = cafe.image;
+        el.detailImage.style.display = "block";
+        el.detailImagePlaceholder.style.display = "none";
+      } else {
+        el.detailImage.src = "";
+        el.detailImage.style.display = "none";
+        el.detailImagePlaceholder.style.display = "";
+      }
+
+      el.mapDetailPanel.classList.add("is-open");
+      el.mapStage.classList.add("is-detail-open");
+      el.detailReviews.style.display = "";
+      loadCafeReviews(cafe.id);
+      updateReviewFormState();
+    }
+
+    function closeDetailPanel() {
+      el.mapDetailPanel.classList.remove("is-open");
+      el.mapStage.classList.remove("is-detail-open");
+      currentDetailCafeId = "";
+      if (el.reviewStatus) {
+        el.reviewStatus.style.display = "none";
+        el.reviewStatus.textContent = "";
+        el.reviewStatus.className = "review-status";
+      }
+    }
+
+    function updateAuthWidget(user) {
+      currentUser = user;
+      if (user) {
+        el.authUserPhoto.src = user.photoURL || "";
+        el.authUserPhoto.style.display = user.photoURL ? "" : "none";
+        el.authUserName.textContent = user.displayName || user.email || "사용자";
+        el.authUserInfo.style.display = "flex";
+        el.signInBtn.style.display = "none";
+      } else {
+        el.authUserInfo.style.display = "none";
+        el.signInBtn.style.display = "";
+      }
+      updateReviewFormState();
+    }
+
+    function updateReviewFormState() {
+      if (!currentDetailCafeId) {
+        return;
+      }
+      if (currentUser) {
+        el.reviewFormSection.style.display = "";
+        el.reviewLoginPrompt.style.display = "none";
+      } else {
+        el.reviewFormSection.style.display = "none";
+        el.reviewLoginPrompt.style.display = "";
+      }
+    }
+
+    function loadCafeReviews(cafeId) {
+      el.reviewsList.innerHTML = '<p class="reviews-empty">리뷰를 불러오는 중...</p>';
+      el.reviewsTitle.textContent = "리뷰";
+      db.collection("reviews")
+        .where("cafeId", "==", cafeId)
+        .limit(20)
+        .get()
+        .then(function (snapshot) {
+          if (currentDetailCafeId !== cafeId) {
+            return;
+          }
+          var sorted = snapshot.docs.slice().sort(function (a, b) {
+            var aAt = (a.data() || {}).createdAt || "";
+            var bAt = (b.data() || {}).createdAt || "";
+            return bAt < aAt ? -1 : bAt > aAt ? 1 : 0;
+          });
+          renderReviews(sorted);
+        })
+        .catch(function (error) {
+          if (currentDetailCafeId !== cafeId) {
+            return;
+          }
+          el.reviewsList.innerHTML = '<p class="reviews-empty">리뷰를 불러오지 못했습니다.</p>';
+          console.error(error);
+        });
+    }
+
+    function renderReviews(docs) {
+      el.reviewsTitle.textContent = "리뷰 " + docs.length + "개";
+      if (!docs.length) {
+        el.reviewsList.innerHTML = '<p class="reviews-empty">아직 리뷰가 없습니다. 첫 리뷰를 작성해보세요!</p>';
+        return;
+      }
+      el.reviewsList.innerHTML = docs.map(function (doc) {
+        var data = doc.data() || {};
+        var rating = Math.max(0, Math.min(5, data.rating || 0));
+        var stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+        var photo = data.userPhotoUrl
+          ? '<img class="review-user-photo" src="' + escapeHtml(data.userPhotoUrl) + '" alt="" />'
+          : '<div class="review-user-photo"></div>';
+        var firstImageUrl = Array.isArray(data.imageUrls) && data.imageUrls.length > 0 ? data.imageUrls[0] : "";
+        var img = firstImageUrl
+          ? '<img class="review-img" src="' + escapeHtml(firstImageUrl) + '" alt="리뷰 이미지" loading="lazy" />'
+          : "";
+        var dateStr = typeof data.createdAt === "string" ? data.createdAt.slice(0, 10) : "";
+        return (
+          '<div class="review-card">' +
+          '<div class="review-card-head">' + photo +
+          '<span class="review-user-name">' + escapeHtml(data.userNickname || "익명") + "</span>" +
+          '<span class="review-stars">' + stars + "</span>" +
+          '<span class="review-date">' + escapeHtml(dateStr) + "</span>" +
+          "</div>" +
+          (data.content ? '<p class="review-content">' + escapeHtml(data.content) + "</p>" : "") +
+          img +
+          "</div>"
+        );
+      }).join("");
+    }
+
+    function updateStarDisplay() {
+      el.starBtns.forEach(function (btn, index) {
+        btn.classList.toggle("active", index < reviewRating);
+      });
+    }
+
+    function showReviewStatus(type, message) {
+      if (!message) {
+        el.reviewStatus.style.display = "none";
+        return;
+      }
+      el.reviewStatus.textContent = message;
+      el.reviewStatus.className = "review-status" + (type ? " " + type : "");
+      el.reviewStatus.style.display = "";
+    }
+
+    async function handleReviewSubmit() {
+      if (!currentUser || !currentDetailCafeId) {
+        return;
+      }
+      if (reviewRating === 0) {
+        showReviewStatus("error", "별점을 선택해주세요.");
+        return;
+      }
+      var cafeId = currentDetailCafeId;
+      var content = el.reviewContentInput.value.trim();
+      el.submitReviewBtn.disabled = true;
+      showReviewStatus("", "리뷰를 등록하는 중...");
+
+      try {
+        var imageUrl = "";
+        if (reviewImageFile) {
+          try {
+            var ext = reviewImageFile.name.split(".").pop() || "jpg";
+            var path = "reviews/" + cafeId + "/" + currentUser.uid + "_" + Date.now() + "." + ext;
+            var ref = storage.ref(path);
+            await ref.put(reviewImageFile);
+            imageUrl = await ref.getDownloadURL();
+          } catch (uploadError) {
+            console.warn("Image upload failed, submitting without image", uploadError);
+          }
+        }
+
+        await db.collection("reviews").add({
+          cafeId: cafeId,
+          userId: currentUser.uid,
+          userNickname: currentUser.displayName || "익명",
+          userPhotoUrl: currentUser.photoURL || "",
+          visitId: "",
+          rating: reviewRating,
+          content: content,
+          imageUrls: imageUrl ? [imageUrl] : [],
+          visitVerified: false,
+          likeCount: 0,
+          taggedCastIds: [],
+          createdAt: new Date().toISOString(),
+        });
+
+        el.reviewContentInput.value = "";
+        reviewRating = 0;
+        reviewImageFile = null;
+        el.reviewImageFile.value = "";
+        el.reviewImagePreview.innerHTML = "";
+        updateStarDisplay();
+        showReviewStatus("success", "리뷰가 등록되었습니다!");
+        if (currentDetailCafeId === cafeId) {
+          loadCafeReviews(cafeId);
+        }
+      } catch (error) {
+        showReviewStatus("error", "리뷰 등록에 실패했습니다.");
+        console.error(error);
+      } finally {
+        el.submitReviewBtn.disabled = false;
+      }
+    }
+
+    function init() {
+      loadSavedMapType();
+      bindUI();
+      setMapOverlay("loading");
+      loadCafes()
+        .then(function () {
+          syncRegionFilter();
+          syncMapTypeFilter();
+          syncUI();
+
+          const apiKey = getApiKey();
+          if (!apiKey) {
+            setMapOverlay("error");
+            return;
+          }
+
+          loadGoogleMaps(apiKey)
+            .then(initMap)
+            .catch(function (error) {
+              console.error(error);
+              setMapOverlay("error");
+            });
+        })
+        .catch(function (error) {
+          console.error(error);
+          setMapOverlay("error");
+          el.mapHeaderCaption.textContent = "카페 데이터를 불러오지 못했습니다.";
+          el.mapCafeCount.textContent = "0곳";
+          el.resultsTitle.textContent = "검색 결과 0곳";
+          el.resultsSubtitle.textContent = "Firestore 카페 데이터를 불러오지 못했습니다.";
+          syncRegionFilter();
+          syncMapTypeFilter();
+          syncUI();
+        });
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>

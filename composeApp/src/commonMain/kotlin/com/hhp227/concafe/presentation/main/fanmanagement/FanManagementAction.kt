@@ -8,6 +8,10 @@ sealed interface FanManagementAction {
     data object DismissClaimSheet : FanManagementAction
     data object ClickEditProfile : FanManagementAction
     data object ClickPrimaryAnnouncement : FanManagementAction
+    data class ChangeAnnouncementTitle(val value: String) : FanManagementAction
+    data class ChangeAnnouncementBody(val value: String) : FanManagementAction
+    data object SubmitAnnouncement : FanManagementAction
+    data object DismissAnnouncementSheet : FanManagementAction
     data class ClickQuickAction(val quickAction: FanManagementUiState.QuickAction) : FanManagementAction
     data object ClickViewAllFollowers : FanManagementAction
     data class ClickRecentFollower(val followerId: String) : FanManagementAction

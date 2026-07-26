@@ -11,6 +11,7 @@ enum CafeInfoEditAction {
     case clickBack
     case changeCafeName(String)
     case changeCafeDescription(String)
+    case changeConceptType(String)
     case changeAddress(String)
     case changeContactNumber(String)
     case changeWeekdayOpen(String)
@@ -21,7 +22,9 @@ enum CafeInfoEditAction {
     case selectRepresentativeImage(String)
     case clickAddGalleryImage
     case addGalleryImage(String)
+    case removeGalleryImage(Int)
     case clickPinLocation
+    case setPinnedLocation(latitude: Double, longitude: Double)
     case clickManageExceptionDates
     case dismissImageRequiredAlert
     case clickSave

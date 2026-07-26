@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "387905493709",
+    "project_id": "concafe-5f7fd",
+    "storage_bucket": "concafe-5f7fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387905493709:android:2437deebd8ae220075e784",
+        "android_client_info": {
+          "package_name": "com.hhp227.concafe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "387905493709-75k85msbmcs8h2aokq1p5tefmfh3aimd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hhp227.concafe",
+            "certificate_hash": "1683390a51fc38859d86ef2805e81b061dfc2f20"
+          }
+        },
+        {
+          "client_id": "387905493709-vem2q13vhnkrsl4ojceba7b16vqqm2uv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hhp227.concafe",
+            "certificate_hash": "66cbed106251f71f6a6c09e44ae137fa2c4b8759"
+          }
+        },
+        {
+          "client_id": "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387905493709-o041q6su1mgu9vf2719ldnihhpfvncnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "387905493709-7ri7oqu3nppb96s7541qa6m1tfpujhug.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hhp227.ConCafe"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

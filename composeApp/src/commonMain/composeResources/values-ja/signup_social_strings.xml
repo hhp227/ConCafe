@@ -1,0 +1,5 @@
+<resources>
+    <string name="signup_social_kakao">Kakaoで開始</string>
+    <string name="signup_social_google">Googleで開始</string>
+    <string name="signup_social_apple">Appleで開始</string>
+</resources>

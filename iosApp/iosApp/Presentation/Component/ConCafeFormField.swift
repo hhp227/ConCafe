@@ -17,30 +17,49 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
 
     let isEditable: Bool
 
+    let isSecure: Bool
+
+    let keyboardType: UIKeyboardType
+
     @ViewBuilder let leadingContent: () -> Leading
 
     @ViewBuilder let trailingContent: () -> Trailing
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.textSecondary)
             HStack(spacing: 8) {
                 leadingContent()
-                TextField("", text: $text, prompt: placeholderText as? Text)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .allowsHitTesting(isEditable)
+                if isSecure {
+                    SecureField("", text: $text, prompt: placeholderText as? Text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .allowsHitTesting(isEditable)
+                } else {
+                    TextField("", text: $text, prompt: placeholderText as? Text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(keyboardType)
+                        .allowsHitTesting(isEditable)
+                }
                 trailingContent()
             }
             .padding(.horizontal, 16)
             .frame(height: 52)
-            .background(Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark
+                            ? Color.white.opacity(0.08)
+                            : ConCafeColors.primaryContainer.opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }
@@ -51,7 +70,7 @@ struct ConCafeFormField<Leading: View, Trailing: View>: View {
             EmptyView()
         } else {
             Text(placeholder)
-                .foregroundStyle(Color(hex: "AA98A4"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : ConCafeColors.textMuted)
         }
     }
 }
@@ -61,12 +80,16 @@ extension ConCafeFormField where Leading == EmptyView, Trailing == EmptyView {
         label: String,
         text: Binding<String>,
         placeholder: String = "",
-        isEditable: Bool = true
+        isEditable: Bool = true,
+        isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = { EmptyView() }
         self.trailingContent = { EmptyView() }
     }
@@ -78,12 +101,16 @@ extension ConCafeFormField where Trailing == EmptyView {
         text: Binding<String>,
         placeholder: String = "",
         isEditable: Bool = true,
+        isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default,
         @ViewBuilder leadingContent: @escaping () -> Leading
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = leadingContent
         self.trailingContent = { EmptyView() }
     }
@@ -95,12 +122,16 @@ extension ConCafeFormField where Leading == EmptyView {
         text: Binding<String>,
         placeholder: String = "",
         isEditable: Bool = true,
+        isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default,
         @ViewBuilder trailingContent: @escaping () -> Trailing
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.isEditable = isEditable
+        self.isSecure = isSecure
+        self.keyboardType = keyboardType
         self.leadingContent = { EmptyView() }
         self.trailingContent = trailingContent
     }
@@ -113,27 +144,34 @@ struct ConCafeFormEditor: View {
 
     let placeholder: String
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color(hex: "665A63"))
+                .foregroundStyle(colorScheme == .dark ? Color(uiColor: .secondaryLabel) : ConCafeColors.textSecondary)
             ZStack(alignment: .topLeading) {
                 ConCafeMultilineTextView(text: $text)
                     .frame(minHeight: 120)
                     .padding(12)
                 if text.isEmpty, !placeholder.isEmpty {
                     Text(placeholder)
-                        .foregroundStyle(Color(hex: "AA98A4"))
+                        .foregroundStyle(colorScheme == .dark ? Color(uiColor: .tertiaryLabel) : ConCafeColors.textMuted)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 20)
                 }
             }
-            .background(Color(hex: "F8F5F6"))
+            .background(colorScheme == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(hex: "FFD1DC").opacity(0.3), lineWidth: 1)
+                    .stroke(
+                        colorScheme == .dark
+                            ? Color.white.opacity(0.08)
+                            : ConCafeColors.primaryContainer.opacity(0.3),
+                        lineWidth: 1
+                    )
             )
         }
     }

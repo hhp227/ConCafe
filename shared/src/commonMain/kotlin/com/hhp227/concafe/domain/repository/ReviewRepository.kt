@@ -1,17 +1,28 @@
 package com.hhp227.concafe.domain.repository
 
 import com.hhp227.concafe.domain.common.PagedResult
-import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.model.Review
-import kotlinx.coroutines.flow.Flow
 
 interface ReviewRepository {
     suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review>
+
+    suspend fun getReview(reviewId: String): Review
+
+    suspend fun getRecentTaggedReviews(cafeId: String, castId: String, limit: Int): List<Review>
 
     suspend fun createReview(
         userId: String,
         cafeId: String,
         visitId: String,
+        rating: Float,
+        content: String,
+        imageUrls: List<String>,
+        taggedCastIds: List<String>
+    ): Review
+
+    suspend fun updateReview(
+        reviewId: String,
+        requesterId: String,
         rating: Float,
         content: String,
         imageUrls: List<String>,

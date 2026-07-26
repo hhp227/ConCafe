@@ -13,29 +13,50 @@ struct CheckInUiState {
     var errorMessage: String?
     var currentUser: User?
     var currentLocationLabel: String
+    var userCityKey: String?
     var mapCafes: [CheckInCafeSummary]
     var popularCafes: [CheckInCafeSummary]
     var popularCasts: [CheckInCastSummary]
     var todayVisits: [CheckInVisitEntry]
     var recentVisits: [CheckInVisitEntry]
+    var recentVisitsNextCursor: String?
+    var canLoadMoreRecentVisits: Bool
+    var isLoadingMoreRecentVisits: Bool
     var isLoginPromptVisible: Bool
+    var loginPromptType: LoginPromptType
     var isNewVisitSheetVisible: Bool
+    var isQrCheckInSheetVisible: Bool
+    var preselectCafeId: String?
     var reviewPrompt: ReviewPrompt?
+    var selectedMapRegion: ExploreUiState.RegionFilter
 
     static let empty = CheckInUiState(
         isLoading: false,
         errorMessage: nil,
         currentUser: nil,
         currentLocationLabel: "",
+        userCityKey: nil,
         mapCafes: [],
         popularCafes: [],
         popularCasts: [],
         todayVisits: [],
         recentVisits: [],
+        recentVisitsNextCursor: nil,
+        canLoadMoreRecentVisits: false,
+        isLoadingMoreRecentVisits: false,
         isLoginPromptVisible: false,
+        loginPromptType: .checkIn,
         isNewVisitSheetVisible: false,
-        reviewPrompt: nil
+        isQrCheckInSheetVisible: false,
+        preselectCafeId: nil,
+        reviewPrompt: nil,
+        selectedMapRegion: .all
     )
+
+    enum LoginPromptType {
+        case detail
+        case checkIn
+    }
 
     struct ReviewPrompt {
         let visitId: String

@@ -20,7 +20,7 @@
 - 세션 복원(`RestoreSessionUseCase`)을 Main 진입 초기 로직에 연결해 앱 재실행 시 자동 로그인 상태를 복구하도록 반영했다.
 - Compose/iOS MainViewModel 모두 `observeCurrentUser` 스트림 + 초기 `restoreSession()` 호출 조합으로 동일한 세션 복원 흐름을 사용한다.
 - `ConCafeDataSource`를 도메인별 인터페이스 묶음으로 분리(`Auth/Cafe/Cast/Review/Visit/Social/...`)하고, 기존 `ConCafeDataSource`는 조합 인터페이스로 유지했다.
-- Firestore 다이어그램 정합성을 맞추기 위해 shared mock 데이터소스 계약에 `homeBanners` 운영 필드 문서형, `externalLinks`, `stamps`, `castScheduleStatuses` 문서형, `cafeFavorites`/`castFollowers` 역인덱스 필드를 추가했다.
+- Firestore 다이어그램 정합성을 맞추기 위해 shared mock 데이터소스 계약에 `homeBanners` 운영 필드 문서형, `externalLinks`, `stamps`, `castSchedules` 상태 필드, `cafeFavorites`/`castFollowers` 역인덱스 필드를 추가했다.
 
 ## 최근 반영 (2026-03-20)
 - Firestore 컬렉션 다이어그램/통합 기획서 기준으로 Claim 책임을 정리했다:  
@@ -28,6 +28,44 @@
 - 홈 배너 정책을 문서 기준으로 재확인했다: 활성 슬롯 최대 5개, `SCHEDULED` 자동 승격, 링크 타입별 라우팅.
 - `users/{userId}` 중심 역할/소유 카페 연결(`ownedCafeIds`) 기준을 운영 권한 흐름에 반영했다.
 - Repository + DataSource 패턴 정리를 진행했다: 사용자 목록은 데이터소스 구현 내부에서만 보유하고, Repository는 인터페이스 메서드로만 조회/수정하도록 통일했다.
+
+## 최근 반영 (2026-03-22)
+- 런타임 데이터 경로를 Firestore 기준으로 재정렬했다. `MockConCafeDataSource`는 테스트 코드(`shared/src/commonTest`) 전용으로만 남긴다.
+- 인증/세션은 Firebase Auth REST + `PersistedFirebaseAuthTokenProvider` 기반으로 Android/iOS/Desktop 공통 복원 흐름을 사용한다.
+- Admin 운영관리 `승인 대기 요청` 조회를 Firestore pending claim 조회 경로로 연결했다.
+- Firestore Rules에 Admin claim 조회(read) 허용 규칙을 추가해 `cafeOwnerClaims`, `cafeRegistrationClaims` 관리자 조회가 가능하도록 보정했다.
+- Admin 운영관리 UI의 승인 대기 카드 이미지 노출을 Compose/iOS 모두 반영했다.
+- 캐스트 상세 조회 경로를 `캐시 우선 -> Firestore 재동기화 -> 캐시 재조회`로 보강해 초기 진입 시 데이터 불일치(특히 스케줄) 문제를 줄였다.
+- 캐스트 상세 `방문 인증` 카운트 기준을 임시 파생값(팔로워/스케줄)에서 `visits` 기반 집계로 변경했다.
+
+## 최근 반영 (2026-03-23)
+- 캐스트 팔로우/언팔로우를 Firestore 실데이터로 연결했다. (`castFollows` 루트 컬렉션 + 로컬 캐시 동기화)
+- 팔로우 변경 시 캐스트 카드의 `followerCount`를 로컬 캐시에 즉시 반영하고, 화면 이벤트는 원격 재조회 대신 로컬 패치로 동기화한다.
+- MyInfo 화면에서 캐스트 상세에서 언팔로우 후 복귀 시 즉시 목록/카운트가 갱신되도록 이벤트 payload(`isFollowing`) 기반 분기를 반영했다.
+- MyInfo 팔로우 캐스트 아이템에 프로필 이미지를 노출하고, iOS는 `GeometryReader` + clip으로 이미지가 플레이스홀더 영역을 벗어나지 않게 보정했다.
+- 카페 리뷰는 Firestore CRUD 경로로 반영되도록 정리했고, 리뷰 변경 시 카페 집계(`reviewCount`, `ratingAvg`)를 Cloud Functions로 동기화하는 트리거를 추가했다.
+- Firestore Rules에 `castFollows` 컬렉션 접근 규칙(본인 생성/삭제, 로그인 읽기)을 반영했다.
+
+## 최근 반영 (2026-03-26)
+- 카페 상세 집계 경로에서 N+1 조회를 제거했다.
+  - 캐스트별 상세 재조회 반복 대신 `카페+날짜` 근무 캐스트 집합 1회 조회로 변경.
+  - 리뷰 작성자별 방문목록 반복 조회를 제거하고, 리뷰 문서의 `visitVerified` 필드를 우선 사용.
+- `GetCafeReviewPageUseCase`/`GetCafeDetailUseCase`에서 사용자 조회를 리뷰 사용자 단위로 중복 제거했다.
+- `ReviewRepository`/`NoticeRepository`는 최초 미캐시 진입 시에만 원격 refresh를 수행하도록 조정해 재진입 과조회 비용을 줄였다.
+- Cloud Functions에 리뷰 방문인증 상태 동기화 트리거를 추가했다.
+  - `onReviewWrittenSyncReviewVisitVerified`
+  - `onVisitWrittenSyncReviewVisitVerified`
+- 함수 로딩 타임아웃 이슈를 줄이기 위해 Functions의 Firestore 초기화를 lazy 초기화로 변경했다.
+
+## 최근 반영 (2026-03-27)
+- 캐스트 프로필 연결 Claim(`castClaims`)은 `cafes/{cafeId}/castClaims/sync` 메타 문서 기준으로 동기화를 판단하고, 변경 감지 시에만 본문 목록을 재조회하도록 조정했다.
+- Admin Claim(`cafeOwnerClaims`, `cafeRegistrationClaims`)은 각 루트 컬렉션의 `sync` 문서를 메타로 사용해 변경 여부를 확인하고, 변경이 없으면 목록 전체 재조회 없이 캐시를 재사용한다.
+- `팬관리` 화면은 Claim 상태 전용 경량 동기화 경로를 추가했다.
+  - 앱 내부 이벤트 + 주기 동기화(5초) 조합으로 클라이언트 간 상태 반영을 맞췄다.
+  - claim 상태 갱신 시 팬 데이터 전체 재조회 대신 Claim UI 섹션만 갱신한다.
+- `운영관리(Admin)` 및 `카페관리` 화면도 주기 동기화(5초)를 추가해 다른 클라이언트에서 발생한 Claim 생성/승인/반려를 실행 중 화면에서 반영한다.
+- 캐스트 Claim 상태 계산 시 `affiliatedCafeId` 캐시만 보지 않고 사용자 claim 이력(`PENDING` 우선, 최신 claim fallback)을 함께 사용하도록 보강했다.
+- 카페 Claim 생성(`owner`, `registration`) 전에 `refreshCafeManagementData(userId)`를 선행해 stale 캐시로 인한 중복/상태 오판을 줄였다.
 
 ## A. 사전 확정 작업 (P0)
 
@@ -414,7 +452,7 @@
 
 ### C-05. 메이드 상세
 - 우선순위: P1
-- 상태: TODO
+- 상태: DOING
 - 산출물: 메이드 상세(프로필/소개/최근 활동/최근 후기/출근표 영역)
 - 작업:
   1. 메이드 기본 정보/이미지 표시
@@ -428,6 +466,11 @@
   - 필수 정보 누락 시 대체 UI가 표시된다.
   - 비로그인 팔로우 시도 시 로그인 화면으로 라우팅된다.
   - 숨김 처리되지 않은 외부 링크만 노출된다.
+- 진행 메모:
+  - 기본 상세 섹션(프로필/소개/최근 활동/후기/출근표)과 카페 이동, 팔로우 로그인 가드는 반영되었다.
+  - 최근 활동의 `방문 인증` 값은 `visits` 기반 집계로 보정되었다.
+  - 캐스트 상세는 캐시 우선 조회 후 Firestore 재동기화 결과를 재반영하도록 보강되었다.
+  - 공식 SNS 링크 노출은 후속 구현 항목으로 남아 있다.
 
 ### C-06. 체크인 + 방문 인증
 - 우선순위: P0
@@ -1387,3 +1430,230 @@ flowchart TD
 - 네비게이션 전략은 플랫폼별로 확정되었고, 공통 라우트 규격 기준으로 구현한다.
 - 보안/품질 테스트 트랙(E-01~E-05)은 MVP 구현 완료 후 후순위로 진행한다.
 - 남은 선결정 이슈는 `claim 흐름`, `랭킹 점수식`, `집계 필드 갱신 책임`, `이벤트/굿즈 MVP 노출 범위`다.
+
+## P. 소셜 회원가입 UserRole 확장 계획
+
+### P-01. 문제 진단
+- 현 상태에서는 소셜 회원가입(카카오/구글/애플) 성공 직후 `SignedUp` 이벤트를 발생시키며 메인으로 즉시 이동한다.
+- Compose는 `VISITOR` 유형에서만 소셜 가입 버튼을 노출한다.
+  - 대상: `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpScreen.kt`
+- iOS도 `visitor` 유형에서만 소셜 가입 버튼을 노출한다.
+  - 대상: `iosApp/iosApp/Presentation/Auth/SignUp/SignUpView.swift`
+- 소셜 로그인 후 저장소는 원격 사용자 문서가 없으면 fallback 사용자 객체를 `VISITOR` 기준으로 해석한다.
+  - 대상: `shared/src/commonMain/kotlin/com/hhp227/concafe/data/repository/AuthRepositoryImpl.kt`
+- 결과적으로 캐스트/카페 운영자 유형을 선택해도 소셜 회원가입 경로에서는 역할 선택과 추가 입력 단계가 실행되지 않는다.
+
+### P-02. 현재 구조 분석 요약
+- 일반 회원가입은 역할 선택 후 폼 입력을 완료하고 `signUpUseCase` 또는 `completeSignUpForCurrentUserUseCase`를 통해 역할/카페/휴대폰 정보를 저장한다.
+- 반면 소셜 회원가입은 provider 인증 성공만으로 완료 처리되며, 역할/카페/휴대폰 검증과 무관하게 종료된다.
+- 도메인 계층에는 이미 소셜 인증 후 프로필 완성을 위한 계약이 있다.
+  - `AuthRepository.completeSignUpForCurrentUser(email, nickname, role, affiliatedCafeId, phoneNumber)`
+- 메인 진입 시 `signupCompleted == false`이면 가입 화면으로 되돌리는 가드는 이미 존재한다.
+  - 대상: `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/main/MainViewModel.kt`
+  - 대상: `iosApp/iosApp/Presentation/Main/MainViewModel.swift`
+
+### P-03. 구현 방향 결정
+- 소셜 회원가입을 `즉시 가입 완료` 방식에서 `소셜 인증 -> 추가 정보 입력 -> 가입 완료` 2단계 흐름으로 전환한다.
+- 소셜 인증은 계정 식별/세션 확보만 담당하고, 역할 결정과 프로필 완성은 기존 회원가입 화면에서 마무리한다.
+- `VISITOR`, `CAST`, `CAFE_OWNER` 모두 동일하게 소셜로 시작할 수 있게 하되, 유형별 필수 입력 조건은 유지한다.
+- 최종 가입 완료 시점은 `completeSignUpForCurrentUserUseCase` 호출 성공 시점으로 통일한다.
+
+### P-04. 유형별 요구사항
+- `VISITOR`
+  - 소셜 인증 후 닉네임만 확인/수정한 뒤 가입 완료
+- `CAST`
+  - 소셜 인증 후 닉네임 입력
+  - 소속 카페 선택 필수
+  - 최종 완료 시 `role = CAST`, `affiliatedCafeId` 저장
+- `CAFE_OWNER`
+  - 소셜 인증 후 이름 입력
+  - 이메일 확인
+  - 휴대폰 인증 유지
+  - 운영 카페 선택 후 owner claim 생성
+  - 최종 완료 시 `role = CAFE_OWNER`, `phoneNumber` 반영, claim 생성
+
+### P-05. 핵심 설계 원칙
+- 소셜 provider 인증 성공 시 즉시 `SignedUp` 이벤트를 보내지 않는다.
+- 소셜 신규 사용자는 `signupCompleted = false` 상태를 유지하며 가입 화면에 머무르거나, 앱 재진입 시 가입 화면으로 복귀 가능해야 한다.
+- 일반 회원가입과 소셜 회원가입은 화면은 최대한 공유하되, 제출 경로만 분기한다.
+- 역할 계산(`resolveRole`)과 닉네임 계산(`resolveNickname`)은 공통 로직으로 유지한다.
+- owner claim 생성 정책은 기존 이메일 회원가입과 동일하게 유지한다.
+
+### P-06. 단계별 작업 계획
+1. shared 인증 저장소에서 소셜 최초 로그인 사용자를 `미완성 가입 사용자`로 취급하도록 조정한다.
+2. 공통 SignUp 상태에 `소셜 인증 상태`를 표현하는 필드를 추가한다.
+3. Compose/iOS ViewModel에서 소셜 성공 시 `즉시 완료` 대신 `가입 계속 진행` 상태로 전환한다.
+4. Compose/iOS SignUp 화면에서 `CAST`, `CAFE_OWNER`에도 소셜 가입 버튼을 노출한다.
+5. submit 로직을 `일반 회원가입`과 `소셜 프로필 완성`으로 분기한다.
+6. 미완성 소셜 가입 사용자의 앱 재실행/세션 복원 복귀 동선을 검증한다.
+
+### P-07. 대상 파일 목록
+- shared
+  - `shared/src/commonMain/kotlin/com/hhp227/concafe/data/repository/AuthRepositoryImpl.kt`
+  - `shared/src/commonMain/kotlin/com/hhp227/concafe/domain/repository/AuthRepository.kt`
+  - `shared/src/commonMain/kotlin/com/hhp227/concafe/domain/usecase/CompleteSignUpForCurrentUserUseCase.kt`
+  - `shared/src/commonMain/kotlin/com/hhp227/concafe/domain/model/User.kt`
+- Compose
+  - `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpUiState.kt`
+  - `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpViewModel.kt`
+  - `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpScreen.kt`
+  - `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/main/MainViewModel.kt`
+- iOS
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpUiState.swift`
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpViewModel.swift`
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpView.swift`
+  - `iosApp/iosApp/Presentation/Main/MainViewModel.swift`
+
+### P-08. 메서드 단위 상세 설계서
+
+#### P-08-01. `AuthRepositoryImpl`
+- 파일: `shared/src/commonMain/kotlin/com/hhp227/concafe/data/repository/AuthRepositoryImpl.kt`
+- `signInWithGoogleIdToken(idToken: String): User`
+  - 현재: provider 인증 후 `resolveUserFromSession()` 결과를 그대로 반환
+  - 변경 방향:
+    - 기존 사용자 문서가 있으면 그대로 로그인
+    - 사용자 문서가 없으면 fallback 사용자를 `signupCompleted = false` 상태로 반환
+    - fallback role은 여전히 기본값 `VISITOR`로 시작하되, 최종 역할 확정은 signup completion에서 수행
+- `signInWithAppleIdToken(idToken: String): User`
+  - 변경 방향은 Google과 동일
+- `signInWithKakaoIdToken(idToken: String, email: String?, nickname: String?): User`
+  - 변경 방향은 Google과 동일
+  - 카카오 프로필 이메일/닉네임 보강은 유지
+- `resolveUserFromSession(userId: String, email: String, displayName: String?): User`
+  - 현재: 원격 문서가 없으면 `role = VISITOR`, `signupCompleted = true` fallback 사용자 반환
+  - 변경 방향:
+    - 원격 문서가 없으면 `signupCompleted = false` fallback 사용자 반환
+    - 이 값이 메인 가드와 연결되어 가입 화면 복귀를 유도
+- `resolveCurrentUser(): User?`
+  - 현재: 원격 문서가 없고 세션만 있으면 fallback 사용자 반환
+  - 변경 방향:
+    - 세션만 있는 상태에서도 `signupCompleted = false`를 유지
+    - 앱 재실행 후 미완성 가입 복귀를 보장
+- `completeSignUpForCurrentUser(...)`
+  - 현재 계약은 충분함
+  - 변경 방향:
+    - 소셜 가입 완료의 단일 진입점으로 사용
+    - `CAST`면 `affiliatedCafeId` 적용
+    - `CAFE_OWNER`면 `phoneNumber` 적용
+    - `signupCompleted = true`는 이 메서드에서만 확정
+
+#### P-08-02. `SignUpUiState` (Compose)
+- 파일: `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpUiState.kt`
+- 추가 상태 후보:
+  - `isSocialFlow: Boolean`
+  - `socialProvider: SignUpProvider?`
+  - `hasAuthenticatedSocialAccount: Boolean`
+  - `isEmailEditable: Boolean`
+- 목적:
+  - 일반 가입과 소셜 가입을 명시적으로 구분
+  - 소셜 인증 후 같은 화면 내에서 유효성 검사/버튼 라벨/UI 노출을 제어
+
+#### P-08-03. `SignUpViewModel` (Compose)
+- 파일: `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpViewModel.kt`
+- `selectUserType(type)`
+  - 소셜 진행 중 유형 전환 허용 여부를 결정해야 함
+  - 권장: 유형 재선택 시 카페/휴대폰 검증 상태는 초기화, 소셜 인증 상태는 유지 여부를 명확히 정의
+- `submit()`
+  - 현재:
+    - owner는 `completeSignUpForCurrentUserUseCase`
+    - 나머지는 `signUpUseCase`
+  - 변경 방향:
+    - `isSocialFlow == true`면 모든 유형이 `completeSignUpForCurrentUserUseCase`로 통일
+    - 일반 가입은 기존 로직 유지
+    - `CAST` 소셜 완료 시 `affiliatedCafeId = selectedCafeId`
+    - `CAFE_OWNER` 소셜 완료 시 `phoneNumber` 포함 + claim 생성
+- `socialSignUp(provider)`
+  - 현재: provider 인증 성공 즉시 `SignedUp` 이벤트 발생
+  - 변경 방향:
+    - provider 인증 성공 후 이벤트를 보내지 않음
+    - `isSocialFlow = true`, `hasAuthenticatedSocialAccount = true`, `socialProvider = provider` 갱신
+    - provider 프로필(email/nickname)을 폼 초깃값에 반영
+    - 오류 처리 메시지는 유지
+- `validate(state)`
+  - 변경 방향:
+    - 일반 가입과 소셜 가입에서 비밀번호 검증 조건을 분리
+    - 소셜 flow에서는 비밀번호/비밀번호 확인 생략
+    - owner/cast 필수 조건은 동일 유지
+- `resolveNickname(state)`
+  - 유지 가능
+- `resolveRole(state)`
+  - 유지 가능
+- 신규 헬퍼 메서드 후보
+  - `handleSocialAuthSuccess(provider, email, nickname)`
+  - `completeSocialSignUp(state)`
+  - `prefillSocialProfile(email, nickname)`
+
+#### P-08-04. `SignUpScreen` (Compose)
+- 파일: `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/auth/signup/SignUpScreen.kt`
+- `SignUpContentScreen(...)`
+  - 현재: `selectedUserType == VISITOR`일 때만 소셜 버튼 노출
+  - 변경 방향:
+    - 모든 사용자 유형 폼 하단에서 소셜 버튼 노출
+    - 또는 공통 섹션으로 추출해 유형별 조건 없이 렌더링
+- `SignUpFormSection(...)`
+  - 변경 방향:
+    - `uiState.isSocialFlow`면 비밀번호 입력 필드 숨김
+    - owner/cast의 추가 입력 UI는 그대로 유지
+    - CTA 라벨을 `소셜로 시작하고 가입 완료` 또는 기존 제출 라벨과 구분 가능하게 조정
+- 소셜 버튼 UX
+  - 이미 소셜 인증이 완료된 상태라면 버튼을 숨기거나 비활성화
+  - 동일 provider 재시도/다른 provider 교체 허용 여부를 정책으로 고정 필요
+
+#### P-08-05. `SignUpUiState` / `SignUpViewModel` / `SignUpView` (iOS)
+- 파일:
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpUiState.swift`
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpViewModel.swift`
+  - `iosApp/iosApp/Presentation/Auth/SignUp/SignUpView.swift`
+- Compose와 동일한 상태/메서드 책임으로 맞춘다.
+- `socialSignUp(_ provider)`
+  - 현재: 성공 즉시 `event.send(.signedUp)`
+  - 변경 방향:
+    - 소셜 인증 성공 후 UI 상태만 갱신
+    - Apple도 동일하게 `signUpWithAppleIdToken(_:)` 성공 시 즉시 종료하지 않도록 변경
+- `submit()`
+  - Compose와 동일하게 `isSocialFlow` 기준 분기
+- `formSection(_ type:)`
+  - 현재: `type == .visitor`일 때만 `socialButtons` 노출
+  - 변경 방향:
+    - 모든 유형에서 공통 노출
+    - 소셜 flow면 비밀번호 필드 숨김
+
+#### P-08-06. `MainViewModel` (Compose / iOS)
+- 파일:
+  - `composeApp/src/commonMain/kotlin/com/hhp227/concafe/presentation/main/MainViewModel.kt`
+  - `iosApp/iosApp/Presentation/Main/MainViewModel.swift`
+- 현재 `signupCompleted == false` 가드는 이미 존재
+- 변경 방향:
+  - 로직 변경은 최소화
+  - 저장소가 미완성 소셜 사용자를 올바르게 반환하는지 검증 포인트로 활용
+
+### P-09. 화면/상태 전이 시나리오
+1. 사용자가 `CAST` 또는 `CAFE_OWNER` 선택
+2. 같은 폼 화면에서 카카오/구글/애플 중 하나로 인증
+3. 소셜 인증 성공 후 화면은 유지되고 provider 프로필이 폼에 반영
+4. 사용자가 필요한 추가 정보(닉네임/이름/카페/휴대폰 인증)를 입력
+5. `submit()` 시 `completeSignUpForCurrentUserUseCase` 호출
+6. 성공 시 `signupCompleted = true` 반영 후 메인 이동
+
+### P-10. 예외/엣지 케이스
+- 소셜 인증 성공 후 앱 종료
+  - 세션 복원 시 `signupCompleted == false`이면 가입 화면 복귀
+- 이미 가입 완료된 소셜 사용자
+  - 즉시 로그인 처리
+- 캐스트 선택 후 카페 미선택
+  - 완료 차단
+- 운영자 선택 후 휴대폰 미인증
+  - 완료 차단
+- provider가 이메일을 주지 않는 경우
+  - 이메일 입력 필드를 editable 상태로 남겨 수동 보완 허용 필요
+- 동일 소셜 계정으로 visitor 가입 후 추후 cast/owner로 승격하려는 경우
+  - 이번 범위는 `최초 소셜 회원가입 시 역할 선택` 우선
+  - 후속으로 계정 설정/권한 승격 흐름과의 정책 충돌 점검 필요
+
+### P-11. 완료 기준(AC)
+- 캐스트와 카페 운영자도 소셜 인증을 통해 회원가입을 시작할 수 있다.
+- 소셜 인증 성공 직후 역할이 자동으로 `VISITOR`로 확정되지 않는다.
+- 소셜 신규 사용자는 추가 정보 입력 완료 전까지 `signupCompleted == false` 상태로 유지된다.
+- `CAST`는 카페 선택 후 완료되어야 한다.
+- `CAFE_OWNER`는 휴대폰 인증과 카페 선택 후 완료되어야 한다.
+- 앱 재실행 후에도 미완성 소셜 가입은 회원가입 화면으로 복귀된다.

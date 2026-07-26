@@ -2,13 +2,7 @@ package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,22 +21,27 @@ import androidx.compose.ui.unit.dp
 fun ConCafeCastCard(
     name: String,
     subtitle: String,
+    imageUrl: String? = null,
     modifier: Modifier = Modifier,
     imageHeight: Dp = 130.dp,
     subtitleMaxLines: Int = 1,
-    containerColor: Color = Color(0xFFFFF9FC),
+    containerColor: Color? = null,
     containerCornerRadius: Dp = 18.dp,
     imageCornerRadius: Dp = 16.dp,
     contentPadding: Dp = 10.dp,
     metaText: String? = null,
     conceptRole: String? = null,
+    attendanceStatusText: String? = null,
     isWorking: Boolean = false,
     onClick: () -> Unit
 ) {
+    val statusText = attendanceStatusText ?: if (isWorking) "출근중" else null
+    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surface
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(containerCornerRadius))
-            .background(containerColor)
+            .background(resolvedContainerColor)
             .clickable(onClick = onClick)
     ) {
         Box(
@@ -50,13 +49,26 @@ fun ConCafeCastCard(
                 .fillMaxWidth()
                 .height(imageHeight)
                 .clip(RoundedCornerShape(imageCornerRadius))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(colorFromHex("FFDCE8"), colorFromHex("FFC4D8"))
-                    )
-                )
         ) {
-            if (isWorking || !conceptRole.isNullOrBlank()) {
+            if (imageUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
+                            )
+                        )
+                )
+            } else {
+                CompatImageDisplay(
+                    imageUrl = imageUrl,
+                    modifier = Modifier
+                        .matchParentSize(),
+                    applyRoundedClip = false
+                )
+            }
+            if (!statusText.isNullOrBlank() || !conceptRole.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -64,13 +76,13 @@ fun ConCafeCastCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isWorking) {
+                    if (!statusText.isNullOrBlank()) {
                         Text(
-                            text = "출근중",
+                            text = statusText,
                             color = Color.White,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(Color(0xFF35B56A))
+                                .background(ConCafeColors.success)
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold
@@ -94,20 +106,22 @@ fun ConCafeCastCard(
             Text(
                 text = name,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
+                modifier = if (subtitleMaxLines == 2) Modifier.heightIn(min = 32.dp) else Modifier,
                 maxLines = subtitleMaxLines,
                 overflow = TextOverflow.Ellipsis,
-                color = Color(0xFF7E7E7E),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
             if (!metaText.isNullOrBlank()) {
                 Text(
                     text = metaText,
-                    color = Color(0xFFEF6797),
+                    color = ConCafeColors.primary,
                     style = MaterialTheme.typography.bodySmall
                 )
             }

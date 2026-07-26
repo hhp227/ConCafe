@@ -2,48 +2,14 @@ package com.hhp227.concafe.presentation.settings.account
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.ManageAccounts
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.WarningAmber
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -54,10 +20,68 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.account_settings_admin_status_desc
+import concafe.composeapp.generated.resources.account_settings_back_content_description
+import concafe.composeapp.generated.resources.account_settings_cast_desc_empty
+import concafe.composeapp.generated.resources.account_settings_default_user_name
+import concafe.composeapp.generated.resources.account_settings_delete
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_apple
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_google
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_desc_kakao
+import concafe.composeapp.generated.resources.account_settings_delete_dialog_title
+import concafe.composeapp.generated.resources.account_settings_delete_password_label
+import concafe.composeapp.generated.resources.account_settings_delete_password_placeholder
+import concafe.composeapp.generated.resources.account_settings_delete_requested
+import concafe.composeapp.generated.resources.account_settings_label_nickname
+import concafe.composeapp.generated.resources.account_settings_link_cast_edit_supporting
+import concafe.composeapp.generated.resources.account_settings_link_cast_edit_title
+import concafe.composeapp.generated.resources.account_settings_link_cast_profile_default
+import concafe.composeapp.generated.resources.account_settings_link_change_password_desc
+import concafe.composeapp.generated.resources.account_settings_link_change_password_title
+import concafe.composeapp.generated.resources.account_settings_link_default_supporting
+import concafe.composeapp.generated.resources.account_settings_meta_joined_at
+import concafe.composeapp.generated.resources.account_settings_meta_joined_pending
+import concafe.composeapp.generated.resources.account_settings_meta_owned_cafe_count_label
+import concafe.composeapp.generated.resources.account_settings_meta_owned_cafe_count_value
+import concafe.composeapp.generated.resources.account_settings_meta_role
+import concafe.composeapp.generated.resources.account_settings_no_login_info
+import concafe.composeapp.generated.resources.account_settings_owner_hint
+import concafe.composeapp.generated.resources.account_settings_owner_status_desc
+import concafe.composeapp.generated.resources.account_settings_placeholder_nickname
+import concafe.composeapp.generated.resources.account_settings_role_admin
+import concafe.composeapp.generated.resources.account_settings_role_cast
+import concafe.composeapp.generated.resources.account_settings_role_guest
+import concafe.composeapp.generated.resources.account_settings_role_owner
+import concafe.composeapp.generated.resources.account_settings_role_summary_admin
+import concafe.composeapp.generated.resources.account_settings_role_summary_cast
+import concafe.composeapp.generated.resources.account_settings_role_summary_guest
+import concafe.composeapp.generated.resources.account_settings_role_summary_owner
+import concafe.composeapp.generated.resources.account_settings_role_summary_visitor
+import concafe.composeapp.generated.resources.account_settings_role_visitor
+import concafe.composeapp.generated.resources.account_settings_save_user
+import concafe.composeapp.generated.resources.account_settings_section_basic
+import concafe.composeapp.generated.resources.account_settings_section_basic_eyebrow
+import concafe.composeapp.generated.resources.account_settings_section_cast_status
+import concafe.composeapp.generated.resources.account_settings_section_cast_status_eyebrow
+import concafe.composeapp.generated.resources.account_settings_section_owner_status
+import concafe.composeapp.generated.resources.account_settings_section_owner_status_eyebrow
+import concafe.composeapp.generated.resources.account_settings_section_save
+import concafe.composeapp.generated.resources.account_settings_section_save_eyebrow
+import concafe.composeapp.generated.resources.account_settings_section_security
+import concafe.composeapp.generated.resources.account_settings_section_security_eyebrow
+import concafe.composeapp.generated.resources.account_settings_title
+import concafe.composeapp.generated.resources.common_cancel
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +100,7 @@ fun AccountSettingsScreen(
         viewModel.event.collect { event ->
             when (event) {
                 AccountSettingsEvent.NavigateBack -> onNavigationAction(NavigationAction.NavigateBack)
+                AccountSettingsEvent.NavigateToMain -> onNavigationAction(NavigationAction.NavigateToMain())
                 is AccountSettingsEvent.NavigateToCastEdit -> {
                     onNavigationAction(
                         NavigationAction.NavigateToCastEdit(
@@ -94,8 +119,10 @@ fun AccountSettingsScreen(
 
     if (uiState.isDeleteDialogVisible) {
         DeleteAccountDialog(
-            confirmation = uiState.deleteConfirmation,
-            onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeleteConfirmation(it)) },
+            authProvider = uiState.authProvider,
+            password = uiState.deletePassword,
+            errorMessage = uiState.deletePasswordErrorMessage,
+            onValueChange = { viewModel.onAction(AccountSettingsAction.ChangeDeletePassword(it)) },
             onDismiss = { viewModel.onAction(AccountSettingsAction.ClickDismissDeleteDialog) },
             onConfirm = { viewModel.onAction(AccountSettingsAction.ClickDeleteAccount) }
         )
@@ -104,10 +131,13 @@ fun AccountSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("계정 관리") },
+                title = { Text(stringResource(Res.string.account_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.onAction(AccountSettingsAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.account_settings_back_content_description)
+                        )
                     }
                 }
             )
@@ -149,7 +179,7 @@ private fun AccountSettingsContentScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFBFD)),
+            .background(ConCafeColors.background),
         contentPadding = PaddingValues(
             start = 16.dp,
             top = innerPadding.calculateTopPadding() + 20.dp,
@@ -165,44 +195,58 @@ private fun AccountSettingsContentScreen(
             item {
                 Text(
                     text = uiState.errorMessage,
-                    color = Color(0xFFD1436F),
+                    color = ConCafeColors.primary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
         item {
             AccountSectionCard(
-                title = "기본 정보",
+                title = stringResource(Res.string.account_settings_section_basic),
                 icon = Icons.Default.ManageAccounts
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionEyebrow("내 계정에서 바로 수정 가능한 정보")
+                    SectionEyebrow(stringResource(Res.string.account_settings_section_basic_eyebrow))
                     ConCafeFormField(
-                        label = "닉네임",
+                        label = stringResource(Res.string.account_settings_label_nickname),
                         value = uiState.nicknameInput,
                         onValueChange = { onAction(AccountSettingsAction.ChangeNickname(it)) },
-                        placeholder = "닉네임을 입력하세요"
+                        placeholder = stringResource(Res.string.account_settings_placeholder_nickname)
                     )
                     Surface(
-                        color = Color(0xFFF8F5F6),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            AccountMetaRow("권한", role.toDisplayText())
-                            AccountMetaRow("가입일", currentUser?.createdAt.orEmpty().ifBlank { "연동 예정" })
+                            AccountMetaRow(
+                                stringResource(Res.string.account_settings_meta_role),
+                                stringResource(role.toDisplayText())
+                            )
+                            AccountMetaRow(
+                                stringResource(Res.string.account_settings_meta_joined_at),
+                                currentUser?.createdAt.orEmpty().ifBlank {
+                                    stringResource(Res.string.account_settings_meta_joined_pending)
+                                }
+                            )
                             if (role == UserRole.CAFE_OWNER) {
-                                AccountMetaRow("운영 카페 수", "${myInfoFeed?.ownedCafes?.size ?: 0}곳")
+                                AccountMetaRow(
+                                    stringResource(Res.string.account_settings_meta_owned_cafe_count_label),
+                                    stringResource(
+                                        Res.string.account_settings_meta_owned_cafe_count_value,
+                                        myInfoFeed.ownedCafes.size
+                                    )
+                                )
                             }
                         }
                     }
                     if (role == UserRole.CAFE_OWNER) {
                         Text(
-                            text = "운영 권한 정보는 카페 관리 화면에서 이어서 확인할 수 있습니다.",
+                            text = stringResource(Res.string.account_settings_owner_hint),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF7C7480)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -210,10 +254,10 @@ private fun AccountSettingsContentScreen(
         }
         item {
             AccountSectionCard(
-                title = "저장",
+                title = stringResource(Res.string.account_settings_section_save),
                 icon = Icons.Default.ManageAccounts
             ) {
-                SectionEyebrow("닉네임 변경 사항을 반영합니다")
+                SectionEyebrow(stringResource(Res.string.account_settings_section_save_eyebrow))
                 Button(
                     onClick = { onAction(AccountSettingsAction.ClickSaveUserInfo) },
                     modifier = Modifier
@@ -221,27 +265,30 @@ private fun AccountSettingsContentScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFD1DC),
-                        contentColor = Color(0xFF2B2330)
+                        containerColor = ConCafeColors.primaryContainer,
+                        contentColor = ConCafeColors.textPrimary
                     )
                 ) {
-                    Text("사용자 정보 저장", fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(Res.string.account_settings_save_user),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
         if (role == UserRole.CAST) {
             item {
                 AccountSectionCard(
-                    title = "캐스트 연결 상태",
+                    title = stringResource(Res.string.account_settings_section_cast_status),
                     icon = Icons.Default.Storefront
                 ) {
-                    SectionEyebrow("현재 연결된 프로필 요약")
+                    SectionEyebrow(stringResource(Res.string.account_settings_section_cast_status_eyebrow))
                     Text(
                         text = currentCast?.desc.orEmpty().ifBlank {
-                            "캐스트 설명이 아직 없습니다. 전용 수정 화면에서 프로필과 공개 정보를 편집할 수 있습니다."
+                            stringResource(Res.string.account_settings_cast_desc_empty)
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6F6673)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -249,45 +296,55 @@ private fun AccountSettingsContentScreen(
         if (role == UserRole.ADMIN || role == UserRole.CAFE_OWNER) {
             item {
                 AccountSectionCard(
-                    title = "권한 연결 상태",
+                    title = stringResource(Res.string.account_settings_section_owner_status),
                     icon = Icons.Default.Storefront
                 ) {
-                    SectionEyebrow("현재 계정에 연결된 운영 권한")
+                    SectionEyebrow(stringResource(Res.string.account_settings_section_owner_status_eyebrow))
                     Text(
                         text = if (role == UserRole.ADMIN) {
-                            "관리자 계정은 운영 승인과 검토 작업을 수행합니다."
+                            stringResource(Res.string.account_settings_admin_status_desc)
                         } else {
-                            "운영 카페 ${myInfoFeed?.ownedCafes?.size ?: 0}곳이 현재 계정과 연결되어 있습니다."
+                            stringResource(
+                                Res.string.account_settings_owner_status_desc,
+                                myInfoFeed.ownedCafes.size
+                            )
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6F6673)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
         item {
             AccountSectionCard(
-                title = "보안 및 연결",
+                title = stringResource(Res.string.account_settings_section_security),
                 icon = Icons.Default.Lock
             ) {
-                SectionEyebrow("전용 화면으로 이동해 안전하게 처리합니다")
-                LinkedDestinationRow(
-                    title = "비밀번호 변경",
-                    description = "현재 비밀번호 확인 후 새 비밀번호를 설정합니다.",
-                    icon = Icons.Default.Lock,
-                    onClick = { onAction(AccountSettingsAction.ClickOpenChangePassword) }
-                )
+                SectionEyebrow(stringResource(Res.string.account_settings_section_security_eyebrow))
+                if (uiState.canChangePassword) {
+                    LinkedDestinationRow(
+                        title = stringResource(Res.string.account_settings_link_change_password_title),
+                        description = stringResource(Res.string.account_settings_link_change_password_desc),
+                        icon = Icons.Default.Lock,
+                        onClick = { onAction(AccountSettingsAction.ClickOpenChangePassword) }
+                    )
+                }
                 if (role == UserRole.CAST) {
                     LinkedDestinationRow(
-                        title = "캐스트 정보 수정",
+                        title = stringResource(Res.string.account_settings_link_cast_edit_title),
                         description = buildString {
-                            append(currentCast?.name?.ifBlank { "연결된 캐스트 프로필" } ?: "연결된 캐스트 프로필")
+                            append(
+                                currentCast?.name?.ifBlank {
+                                    stringResource(Res.string.account_settings_link_cast_profile_default)
+                                } ?: stringResource(Res.string.account_settings_link_cast_profile_default)
+                            )
                             if (!currentCast?.conceptRole.isNullOrBlank()) {
                                 append(" · ")
                                 append(currentCast?.conceptRole)
                             }
                         },
-                        supporting = linkedCafeName ?: "캐스트 프로필 전체 편집 화면으로 이동합니다.",
+                        supporting = linkedCafeName
+                            ?: stringResource(Res.string.account_settings_link_cast_edit_supporting),
                         icon = Icons.Default.Badge,
                         onClick = { onAction(AccountSettingsAction.ClickOpenCastEdit) }
                     )
@@ -300,8 +357,12 @@ private fun AccountSettingsContentScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (uiState.isDeleteRequested) "회원탈퇴 요청 완료" else "회원탈퇴",
-                    color = if (uiState.isDeleteRequested) Color(0xFFB84473) else Color(0xFF8E8794)
+                    text = if (uiState.isDeleteRequested) {
+                        stringResource(Res.string.account_settings_delete_requested)
+                    } else {
+                        stringResource(Res.string.account_settings_delete)
+                    },
+                    color = if (uiState.isDeleteRequested) ConCafeColors.primary else ConCafeColors.textMuted
                 )
             }
         }
@@ -315,7 +376,7 @@ private fun SectionEyebrow(
     Text(
         text = text,
         style = MaterialTheme.typography.bodySmall,
-        color = Color(0xFF8E8794)
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
@@ -330,26 +391,30 @@ private fun AccountHeroCard(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        listOf(Color(0xFFEF6797), Color(0xFFF7A0C1))
+                        listOf(ConCafeColors.primary, ConCafeColors.secondary)
                     ),
                     shape = MaterialTheme.shapes.extraLarge
                 )
                 .padding(20.dp)
         ) {
             Text(
-                text = currentUser?.nickname?.ifBlank { "ConCafe User" } ?: "ConCafe User",
+                text = currentUser?.nickname?.ifBlank {
+                    stringResource(Res.string.account_settings_default_user_name)
+                } ?: stringResource(Res.string.account_settings_default_user_name),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = currentUser?.email?.ifBlank { "로그인 정보 없음" } ?: "로그인 정보 없음",
+                text = currentUser?.email?.ifBlank {
+                    stringResource(Res.string.account_settings_no_login_info)
+                } ?: stringResource(Res.string.account_settings_no_login_info),
                 color = Color.White.copy(alpha = 0.92f),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 4.dp)
             )
             Text(
-                text = currentUser?.role.toRoleSummary(),
+                text = stringResource(currentUser?.role.toRoleSummary()),
                 color = Color.White.copy(alpha = 0.92f),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 14.dp)
@@ -364,13 +429,13 @@ private fun AccountSectionCard(
     icon: ImageVector,
     content: @Composable () -> Unit
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(icon, contentDescription = null, tint = ConCafeColors.primary)
                 Text(
                     text = title,
                     modifier = Modifier.padding(start = 10.dp),
@@ -392,7 +457,7 @@ private fun LinkedDestinationCard(
     onClick: () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.clickable(onClick = onClick)
     ) {
         Row(
@@ -404,10 +469,10 @@ private fun LinkedDestinationCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .background(Color(0xFFFFF1F7), MaterialTheme.shapes.large),
+                    .background(ConCafeColors.background, MaterialTheme.shapes.large),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = Color(0xFFEF6797))
+                Icon(icon, contentDescription = null, tint = ConCafeColors.primary)
             }
             Column(
                 modifier = Modifier
@@ -417,11 +482,11 @@ private fun LinkedDestinationCard(
             ) {
                 Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                 if (description.isNotBlank()) {
-                    Text(description, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF302732))
+                    Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
-                Text(supporting, style = MaterialTheme.typography.bodySmall, color = Color(0xFF7C7480))
+                Text(supporting, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFB3ACB7))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = ConCafeColors.outlineStrong)
         }
     }
 }
@@ -437,7 +502,7 @@ private fun LinkedDestinationRow(
     LinkedDestinationCard(
         title = title,
         description = description,
-        supporting = supporting ?: "이 화면에서 직접 편집하지 않고 전용 화면으로 이동합니다.",
+        supporting = supporting ?: stringResource(Res.string.account_settings_link_default_supporting),
         icon = icon,
         onClick = onClick
     )
@@ -452,14 +517,16 @@ private fun AccountMetaRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = Color(0xFF7C7480), style = MaterialTheme.typography.bodySmall)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Text(value, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
 @Composable
 private fun DeleteAccountDialog(
-    confirmation: String,
+    authProvider: AuthProvider,
+    password: String,
+    errorMessage: String?,
     onValueChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
@@ -470,50 +537,67 @@ private fun DeleteAccountDialog(
             Icon(
                 imageVector = Icons.Default.WarningAmber,
                 contentDescription = null,
-                tint = Color(0xFFD1436F)
+                tint = ConCafeColors.primary
             )
         },
-        title = { Text("회원탈퇴 확인") },
+        title = { Text(stringResource(Res.string.account_settings_delete_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("정말 탈퇴하려면 아래 입력칸에 '탈퇴'를 입력해 주세요.")
-                ConCafeFormField(
-                    label = "확인 문구",
-                    value = confirmation,
-                    onValueChange = onValueChange,
-                    placeholder = "탈퇴"
+                Text(
+                    when (authProvider) {
+                        AuthProvider.GOOGLE -> stringResource(Res.string.account_settings_delete_dialog_desc_google)
+                        AuthProvider.KAKAO -> stringResource(Res.string.account_settings_delete_dialog_desc_kakao)
+                        AuthProvider.APPLE -> stringResource(Res.string.account_settings_delete_dialog_desc_apple)
+                        else -> stringResource(Res.string.account_settings_delete_dialog_desc)
+                    }
                 )
+                if (authProvider == AuthProvider.EMAIL || authProvider == AuthProvider.UNKNOWN) {
+                    ConCafeFormField(
+                        label = stringResource(Res.string.account_settings_delete_password_label),
+                        value = password,
+                        onValueChange = onValueChange,
+                        placeholder = stringResource(Res.string.account_settings_delete_password_placeholder),
+                        isPassword = true
+                    )
+                }
+                if (!errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ConCafeColors.primary
+                    )
+                }
             }
         },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("회원탈퇴")
+                Text(stringResource(Res.string.account_settings_delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(Res.string.common_cancel))
             }
         }
     )
 }
 
-private fun UserRole?.toDisplayText(): String {
+private fun UserRole?.toDisplayText(): StringResource {
     return when (this) {
-        UserRole.ADMIN -> "관리자"
-        UserRole.CAFE_OWNER -> "카페 운영자"
-        UserRole.CAST -> "캐스트"
-        UserRole.VISITOR -> "일반 유저"
-        null -> "게스트"
+        UserRole.ADMIN -> Res.string.account_settings_role_admin
+        UserRole.CAFE_OWNER -> Res.string.account_settings_role_owner
+        UserRole.CAST -> Res.string.account_settings_role_cast
+        UserRole.VISITOR -> Res.string.account_settings_role_visitor
+        null -> Res.string.account_settings_role_guest
     }
 }
 
-private fun UserRole?.toRoleSummary(): String {
+private fun UserRole?.toRoleSummary(): StringResource {
     return when (this) {
-        UserRole.CAST -> "캐스트 계정으로 팬과의 접점을 관리하고 있어요."
-        UserRole.CAFE_OWNER -> "운영 카페와 함께 계정 권한을 관리하고 있어요."
-        UserRole.ADMIN -> "운영 관리용 관리자 계정입니다."
-        UserRole.VISITOR -> "팬 활동과 리뷰 기록을 관리하는 일반 계정입니다."
-        null -> "로그인이 필요한 화면입니다."
+        UserRole.CAST -> Res.string.account_settings_role_summary_cast
+        UserRole.CAFE_OWNER -> Res.string.account_settings_role_summary_owner
+        UserRole.ADMIN -> Res.string.account_settings_role_summary_admin
+        UserRole.VISITOR -> Res.string.account_settings_role_summary_visitor
+        null -> Res.string.account_settings_role_summary_guest
     }
 }

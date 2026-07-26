@@ -15,6 +15,7 @@ enum CafeDashboardEvent {
     case navigateToNoticeEvent(cafeId: String)
     case navigateToMenuGoods(cafeId: String)
     case navigateToCastEdit(cafeId: String, castId: String?)
+    case navigateToCastList(cafeId: String)
     case navigateToSchedule(castId: String?)
     case navigateToExternalLink(title: String, url: String)
 }

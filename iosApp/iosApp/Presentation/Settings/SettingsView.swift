@@ -31,7 +31,7 @@ struct SettingsView: View {
                 onNavigationAction(.navigateToExternalLink(title: title, url: url))
             }
         }
-        .navigationTitle("설정")
+        .navigationTitle(String(localized: String.LocalizationValue("settings_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -43,6 +43,16 @@ private struct SettingsContentView: View {
 
     var body: some View {
         List {
+            Section(String(localized: String.LocalizationValue("settings_preferences_title"), table: "Localizable")) {
+                ThemePickerRow(
+                    selectedThemeMode: uiState.themeMode,
+                    onSelect: { onAction(.themeModeSelected($0)) }
+                )
+                BrandThemePickerRow(
+                    selectedBrandTheme: uiState.brandTheme,
+                    onSelect: { onAction(.brandThemeSelected($0)) }
+                )
+            }
             Section {
                 SettingsRow(item: .account)
                     .contentShape(Rectangle())
@@ -50,9 +60,6 @@ private struct SettingsContentView: View {
                 SettingsRow(item: .notification)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.notificationSettingsTapped) }
-                SettingsRow(item: .customerSupport)
-                    .contentShape(Rectangle())
-                    .onTapGesture { onAction(.customerSupportTapped) }
                 SettingsRow(item: .inquiry)
                     .contentShape(Rectangle())
                     .onTapGesture { onAction(.inquiryTapped) }
@@ -72,6 +79,78 @@ private struct SettingsContentView: View {
                 }
             }
         }
+    }
+}
+
+private struct ThemePickerRow: View {
+    let selectedThemeMode: AppThemeMode
+
+    let onSelect: (AppThemeMode) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "paintpalette")
+                    .foregroundStyle(ConCafeColors.primary)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("settings_theme_title"), table: "Localizable"))
+                        .font(.subheadline)
+                        .bold()
+                    Text(String(localized: String.LocalizationValue("settings_theme_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            Picker(String(localized: String.LocalizationValue("settings_theme_title"), table: "Localizable"), selection: Binding(
+                get: { selectedThemeMode },
+                set: { onSelect($0) }
+            )) {
+                ForEach(AppThemeMode.allCases) { themeMode in
+                    Text(themeMode.title)
+                        .tag(themeMode)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct BrandThemePickerRow: View {
+    let selectedBrandTheme: AppBrandTheme
+
+    let onSelect: (AppBrandTheme) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(ConCafeColors.primary)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("settings_brand_theme_title"), table: "Localizable"))
+                        .font(.subheadline)
+                        .bold()
+                    Text(String(localized: String.LocalizationValue("settings_brand_theme_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            Picker(String(localized: String.LocalizationValue("settings_brand_theme_title"), table: "Localizable"), selection: Binding(
+                get: { selectedBrandTheme },
+                set: { onSelect($0) }
+            )) {
+                ForEach(AppBrandTheme.allCases) { brandTheme in
+                    Text(brandTheme.title)
+                        .tag(brandTheme)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -111,58 +190,50 @@ private struct SettingsItem {
 
     static let account = SettingsItem(
         icon: "person.crop.circle",
-        title: "계정 관리",
-        description: "프로필과 로그인 정보를 관리합니다.",
-        foregroundColor: Color(hex: "EF6797"),
+        title: String(localized: String.LocalizationValue("settings_account_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_account_desc"), table: "Localizable"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
     static let notification = SettingsItem(
         icon: "bell.badge",
-        title: "알림 설정",
-        description: "출근, 생일, 공지 알림 설정 영역입니다.",
-        foregroundColor: Color(hex: "EF6797"),
+        title: String(localized: String.LocalizationValue("settings_notification_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_notification_desc"), table: "Localizable"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
     static func appInfo(version: String) -> SettingsItem {
         SettingsItem(
             icon: "info.circle",
-            title: "앱 정보",
-            description: "현재 설치된 앱 버전을 확인합니다.",
-            foregroundColor: Color(hex: "EF6797"),
+            title: String(localized: String.LocalizationValue("settings_app_info_title"), table: "Localizable"),
+            description: String(localized: String.LocalizationValue("settings_app_info_desc"), table: "Localizable"),
+            foregroundColor: ConCafeColors.primary,
             trailingText: "v\(version)"
         )
     }
 
-    static let customerSupport = SettingsItem(
-        icon: "headphones",
-        title: "고객지원",
-        description: "서비스 이용 관련 문의를 남길 수 있습니다.",
-        foregroundColor: Color(hex: "EF6797"),
-        trailingText: nil
-    )
-
     static let inquiry = SettingsItem(
         icon: "bubble.left.and.text.bubble.right",
-        title: "문의하기",
-        description: "불편사항이나 제안을 입력 폼으로 전달합니다.",
-        foregroundColor: Color(hex: "EF6797"),
+        title: String(localized: String.LocalizationValue("settings_inquiry_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_inquiry_desc"), table: "Localizable"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
     static let privacyPolicy = SettingsItem(
         icon: "lock.doc",
-        title: "개인정보 처리방침",
-        description: "개인정보 처리방침 외부 링크를 확인합니다.",
-        foregroundColor: Color(hex: "EF6797"),
+        title: String(localized: String.LocalizationValue("settings_privacy_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_privacy_desc"), table: "Localizable"),
+        foregroundColor: ConCafeColors.primary,
         trailingText: nil
     )
 
     static let signOut = SettingsItem(
         icon: "rectangle.portrait.and.arrow.right",
-        title: "로그아웃",
-        description: "현재 계정에서 로그아웃합니다.",
+        title: String(localized: String.LocalizationValue("settings_sign_out_title"), table: "Localizable"),
+        description: String(localized: String.LocalizationValue("settings_sign_out_desc"), table: "Localizable"),
         foregroundColor: .red,
         trailingText: nil
     )

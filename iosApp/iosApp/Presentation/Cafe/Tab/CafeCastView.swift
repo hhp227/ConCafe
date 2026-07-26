@@ -15,41 +15,96 @@ struct CafeCastView: View {
 
     let isLoadingMore: Bool
 
+    let onPagingTriggerDisappear: () -> Void
+
     let onAction: (CafeAction) -> Void
+
+    @State private var contentWidth: CGFloat = 0
+
+    @State private var lastPagingTriggerCount: Int = 0
+
+    @State private var pagingCooldownUntil: Date?
 
     var body: some View {
         if maids.isEmpty {
-            emptyCard("등록된 메이드가 없습니다.")
+            emptyCard(String(localized: String.LocalizationValue("cafe_cast_empty"), table: "Localizable"))
         } else {
             VStack(spacing: 12) {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                LazyVGrid(columns: cafeCastGridColumns(for: contentWidth), spacing: 12) {
                     ForEach(Array(maids.enumerated()), id: \.element.cast.id) { index, maid in
+                        let attendanceStatus = CastScheduleAttendanceUtils.attendanceStatus(schedule: maid.todaySchedule)
+
                         ConCafeCastCard(
                             name: maid.cast.name,
                             subtitle: maid.cast.desc,
+                            imageUrl: maid.cast.profileImage,
                             subtitleLineLimit: 2,
+                            attendanceStatusText: cafeCastAttendanceStatusText(attendanceStatus),
                             isWorking: maid.isWorking,
                             onTap: { onAction(.maidTapped(id: maid.cast.id)) }
                         )
+                        .id(maid.cast.id)
                         .onAppear {
-                            guard index == maids.indices.last,
-                                  canLoadMore,
-                                  !isLoadingMore else { return }
-                            onAction(.loadMoreCasts)
+                            loadMoreIfNeeded(appearedIndex: index)
                         }
+                        .lazyListImagePrefetch(
+                            index: index,
+                            imageUrls: maids.map { $0.cast.profileImage },
+                            aheadCount: 12,
+                            displaySize: .thumbnail
+                        )
+                        .frame(minHeight: cafeCastCardMinimumHeight)
                     }
                 }
-                if canLoadMore {
-                    Group {
-                        if isLoadingMore {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
+                .animation(.snappy(duration: 0.25), value: maids.map { $0.cast.id })
+                pagingFooter
+            }
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            contentWidth = proxy.size.width
                         }
-                    }
-                    .padding(.top, 12)
+                        .onChange(of: proxy.size.width) { nextWidth in
+                            contentWidth = nextWidth
+                        }
                 }
+            )
+            .onChange(of: maids.count) { _ in
+                guard lastPagingTriggerCount != 0 else { return }
+                pagingCooldownUntil = Date().addingTimeInterval(cafeCastPagingCooldownSeconds)
             }
         }
+    }
+
+    @ViewBuilder
+    private var pagingFooter: some View {
+        if canLoadMore || isLoadingMore {
+            VStack(spacing: 0) {
+                if isLoadingMore {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else if canLoadMore {
+                    Color.clear
+                        .frame(height: 40)
+                }
+            }
+            .padding(.top, 12)
+            .onDisappear {
+                onPagingTriggerDisappear()
+            }
+        }
+    }
+
+    private func loadMoreIfNeeded(appearedIndex: Int) {
+        guard canLoadMore, !isLoadingMore else { return }
+        if let pagingCooldownUntil, Date() < pagingCooldownUntil {
+            return
+        }
+        guard appearedIndex >= maids.count - 1 else { return }
+        guard lastPagingTriggerCount != maids.count else { return }
+        lastPagingTriggerCount = maids.count
+        onAction(.loadMoreCasts)
     }
 
     private func emptyCard(_ text: String) -> some View {
@@ -58,13 +113,50 @@ struct CafeCastView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(Color.white)
+            .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func cafeCastAttendanceStatusText(_ status: CastAttendanceStatus) -> String? {
+        switch status {
+        case .upcoming:
+            return String(localized: String.LocalizationValue("cast_today_upcoming"), table: "Localizable")
+        case .onShift:
+            return String(localized: String.LocalizationValue("cast_today_working"), table: "Localizable")
+        case .completed:
+            return String(localized: String.LocalizationValue("cast_today_finished"), table: "Localizable")
+        default:
+            return nil
+        }
+    }
+
+    private func cafeCastGridColumns(for contentWidth: CGFloat) -> [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: cafeCastGridItemSpacing),
+            count: cafeCastGridColumnCount(for: contentWidth)
+        )
+    }
+
+    private func cafeCastGridColumnCount(for contentWidth: CGFloat) -> Int {
+        let availableWidth = contentWidth - cafeCastGridHorizontalPadding
+        let minimumGridWidth = (cafeCastGridMinimumCellWidth * 2) + cafeCastGridItemSpacing
+        let normalizedWidth = max(availableWidth, minimumGridWidth)
+        let rawCount = Int((normalizedWidth + cafeCastGridItemSpacing) /
+            (cafeCastGridMinimumCellWidth + cafeCastGridItemSpacing))
+        return min(max(rawCount, cafeCastGridMinimumColumnCount), cafeCastGridMaximumColumnCount)
     }
 }
 
 struct CafeCastView_Previews: PreviewProvider {
     static var previews: some View {
-        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onAction: { _ in })
+        CafeCastView(maids: [], canLoadMore: false, isLoadingMore: false, onPagingTriggerDisappear: {}, onAction: { _ in })
     }
 }
+
+private let cafeCastGridMinimumColumnCount = 2
+private let cafeCastGridMaximumColumnCount = 4
+private let cafeCastGridHorizontalPadding: CGFloat = 24
+private let cafeCastGridItemSpacing: CGFloat = 12
+private let cafeCastGridMinimumCellWidth: CGFloat = 180
+private let cafeCastCardMinimumHeight: CGFloat = 198
+private let cafeCastPagingCooldownSeconds: TimeInterval = 0.8

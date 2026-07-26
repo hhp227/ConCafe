@@ -17,10 +17,16 @@ interface NoticeRepository {
         cursor: String?,
         pageSize: Int
     ): PagedResult<CafeEventManagementItem>
+    suspend fun getHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem>
     suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem
     suspend fun createCafeEvent(input: CafeEventCreate): CafeEventManagementItem
     suspend fun updateCafeNotice(input: CafeNoticeUpdate): CafeNoticeManagementItem
     suspend fun updateCafeEvent(input: CafeEventUpdate): CafeEventManagementItem
     suspend fun deleteCafeNotice(cafeId: String, noticeId: String): String
     suspend fun deleteCafeEvent(cafeId: String, eventId: String): String
+    suspend fun isCafeEventLikedByUser(cafeId: String, eventId: String, userId: String): Boolean
+    suspend fun toggleCafeEventLike(cafeId: String, eventId: String, userId: String): Boolean
 }

@@ -2,17 +2,22 @@ package com.hhp227.concafe.presentation.main.cafemanagement.cafedashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hhp227.concafe.core.util.TimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.BannerEvent
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
@@ -21,25 +26,42 @@ import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
 import com.hhp227.concafe.domain.event.CastClaimEvent as CastClaimDomainEvent
 import com.hhp227.concafe.domain.event.CastEvent as CastDomainEvent
+import com.hhp227.concafe.domain.event.VisitEvent
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
+import com.hhp227.concafe.domain.usecase.GetGuestCastSchedulesUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
+import com.hhp227.concafe.domain.usecase.UpsertGuestCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.DeleteGuestCastScheduleUseCase
 
 class CafeDashboardViewModel(
     private val cafeId: String,
     private val getCafeCastPageUseCase: GetCafeCastPageUseCase,
     private val getCafeDashboardUseCase: GetCafeDashboardUseCase,
     private val getPendingCastClaimsForCafeUseCase: GetPendingCastClaimsForCafeUseCase,
+    private val getGuestCastSchedulesUseCase: GetGuestCastSchedulesUseCase,
     private val approveCastClaimUseCase: ApproveCastClaimUseCase,
     private val rejectCastClaimUseCase: RejectCastClaimUseCase,
+    private val cafeExternalLinkLocalUseCase: CafeExternalLinkLocalUseCase,
+    private val updateCafeSocialMediaUseCase: UpdateCafeSocialMediaUseCase,
+    private val updateCafeReservationUrlUseCase: UpdateCafeReservationUrlUseCase,
+    private val updateCafeTableCountsUseCase: UpdateCafeTableCountsUseCase,
+    private val upsertGuestCastScheduleUseCase: UpsertGuestCastScheduleUseCase,
+    private val deleteGuestCastScheduleUseCase: DeleteGuestCastScheduleUseCase,
     private val deleteCastUseCase: DeleteCastUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castClaimEventPublisher: CastClaimEventPublisher,
-    private val castEventPublisher: CastEventPublisher
+    private val castEventPublisher: CastEventPublisher,
+    private val visitEventPublisher: VisitEventPublisher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CafeDashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -58,11 +80,17 @@ class CafeDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             cafe = result.data,
+                            instagramId = result.data.socialMedia["instagram"].orEmpty(),
+                            twitterId = result.data.socialMedia["twitter"].orEmpty(),
+                            tiktokId = result.data.socialMedia["tiktok"].orEmpty(),
+                            youtubeId = result.data.socialMedia["youtube"].orEmpty(),
+                            reservationUrl = result.data.reservationUrl.orEmpty(),
                             isLoading = false
                         )
                     }
                     refreshCastPreviews(resetMessage = false)
                     refreshClaimData(resetMessage = false)
+                    refreshGuestSchedules(resetMessage = false)
                 }
                 is AppResult.Failure -> {
                     _uiState.update {
@@ -70,6 +98,7 @@ class CafeDashboardViewModel(
                             cafe = null,
                             castPreviews = emptyList(),
                             pendingCastClaims = emptyList(),
+                            guestSchedules = emptyList(),
                             nextCastCursor = null,
                             hasMoreCasts = false,
                             isLoading = false,
@@ -89,7 +118,7 @@ class CafeDashboardViewModel(
                     infoMessage = if (append) it.infoMessage else null
                 )
             }
-
+            if (append) delay(PAGINATION_DELAY_MILLIS)
             when (val result = getCafeCastPageUseCase.invoke(cafeId, cursor, pageSize)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -110,7 +139,7 @@ class CafeDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             isLoadingMoreCasts = false,
-                            infoMessage = "소속 캐스트 목록을 불러오지 못했습니다."
+                            infoMessage = "dashboard_info_cast_list_load_failed"
                         )
                     }
                 }
@@ -166,7 +195,7 @@ class CafeDashboardViewModel(
                 val selectedCastId = _uiState.value.selectedCastId
                 if (selectedCastId == null) {
                     _uiState.update {
-                        it.copy(infoMessage = "출근표를 관리할 캐스트를 목록에서 선택해 주세요.")
+                        it.copy(infoMessage = "dashboard_info_select_cast_for_schedule")
                     }
                 } else {
                     viewModelScope.launch {
@@ -182,6 +211,22 @@ class CafeDashboardViewModel(
                     )
                 }
             }
+            CafeDashboardShortcut.SOCIAL_MEDIA -> {
+                _uiState.update {
+                    it.copy(
+                        isSocialMediaSheetVisible = true,
+                        infoMessage = null
+                    )
+                }
+            }
+            CafeDashboardShortcut.RESERVATION -> {
+                _uiState.update {
+                    it.copy(
+                        isReservationSheetVisible = true,
+                        infoMessage = null
+                    )
+                }
+            }
         }
     }
 
@@ -191,10 +236,22 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun loadExternalLinks() {
+        val links = cafeExternalLinkLocalUseCase.load(cafeId).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
+        }
+        _uiState.update { it.copy(externalLinks = links) }
+    }
+
     private fun dismissExternalLinkSheet() {
         _uiState.update {
             it.copy(
                 isExternalLinkSheetVisible = false,
+                editingExternalLinkId = null,
                 externalLinkTitle = "",
                 externalLinkUrl = ""
             )
@@ -212,23 +269,31 @@ class CafeDashboardViewModel(
     private fun submitExternalLink() {
         val currentState = _uiState.value
         if (!currentState.isExternalLinkSubmitEnabled) {
-            _uiState.update { it.copy(infoMessage = "제목과 링크 URL을 모두 입력해 주세요.") }
+            _uiState.update { it.copy(infoMessage = "dashboard_info_external_link_input_required") }
             return
+        }
+        val isEdit = currentState.editingExternalLinkId != null
+        val updatedLinks = cafeExternalLinkLocalUseCase.upsert(
+            cafeId = cafeId,
+            linkId = currentState.editingExternalLinkId,
+            title = currentState.externalLinkTitle,
+            url = currentState.externalLinkUrl
+        ).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
         }
 
         _uiState.update {
             it.copy(
-                externalLinks = listOf(
-                    CafeDashboardExternalLink(
-                        id = "external-link-${System.currentTimeMillis()}",
-                        title = currentState.externalLinkTitle.trim(),
-                        url = currentState.externalLinkUrl.trim()
-                    )
-                ) + it.externalLinks,
+                externalLinks = updatedLinks,
                 isExternalLinkSheetVisible = false,
+                editingExternalLinkId = null,
                 externalLinkTitle = "",
                 externalLinkUrl = "",
-                infoMessage = "외부 링크를 추가했습니다."
+                infoMessage = if (isEdit) "dashboard_info_external_link_updated" else "dashboard_info_external_link_added"
             )
         }
     }
@@ -240,19 +305,308 @@ class CafeDashboardViewModel(
         }
     }
 
-    private fun clickDeleteExternalLink(linkId: String) {
-        val hasItem = _uiState.value.externalLinks.any { it.id == linkId }
-        if (!hasItem) return
+    private fun clickEditExternalLink(linkId: String) {
+        val link = _uiState.value.externalLinks.firstOrNull { it.id == linkId } ?: return
         _uiState.update {
             it.copy(
-                externalLinks = it.externalLinks.filterNot { item -> item.id == linkId },
-                infoMessage = "외부 링크를 삭제했습니다."
+                isExternalLinkSheetVisible = true,
+                editingExternalLinkId = link.id,
+                externalLinkTitle = link.title,
+                externalLinkUrl = link.url,
+                infoMessage = null
             )
+        }
+    }
+
+    private fun clickDeleteExternalLink(linkId: String) {
+        if (_uiState.value.externalLinks.none { it.id == linkId }) return
+        val updatedLinks = cafeExternalLinkLocalUseCase.delete(cafeId, linkId).map { persisted ->
+            CafeDashboardExternalLink(
+                id = persisted.id,
+                title = persisted.title,
+                url = persisted.url
+            )
+        }
+        _uiState.update {
+            it.copy(
+                externalLinks = updatedLinks,
+                infoMessage = "dashboard_info_external_link_deleted"
+            )
+        }
+    }
+
+    private fun changeSocialMediaInstagram(value: String) {
+        _uiState.update { it.copy(instagramId = value) }
+    }
+
+    private fun changeSocialMediaTwitter(value: String) {
+        _uiState.update { it.copy(twitterId = value) }
+    }
+
+    private fun changeSocialMediaTiktok(value: String) {
+        _uiState.update { it.copy(tiktokId = value) }
+    }
+
+    private fun changeSocialMediaYoutube(value: String) {
+        _uiState.update { it.copy(youtubeId = value) }
+    }
+
+    private fun submitSocialMedia() {
+        val currentState = _uiState.value
+        _uiState.update { it.copy(isSavingSocialMedia = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeSocialMediaUseCase.invoke(
+                cafeId = cafeId,
+                instagramId = currentState.instagramId.trim().takeIf { it.isNotEmpty() },
+                twitterId = currentState.twitterId.trim().takeIf { it.isNotEmpty() },
+                tiktokId = currentState.tiktokId.trim().takeIf { it.isNotEmpty() },
+                youtubeId = currentState.youtubeId.trim().takeIf { it.isNotEmpty() }
+            )) {
+                is AppResult.Success -> {
+                    val newSocialMedia = buildMap {
+                        currentState.instagramId.trim().takeIf { it.isNotEmpty() }?.let { put("instagram", it) }
+                        currentState.twitterId.trim().takeIf { it.isNotEmpty() }?.let { put("twitter", it) }
+                        currentState.tiktokId.trim().takeIf { it.isNotEmpty() }?.let { put("tiktok", it) }
+                        currentState.youtubeId.trim().takeIf { it.isNotEmpty() }?.let { put("youtube", it) }
+                    }
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(socialMedia = newSocialMedia),
+                            isSavingSocialMedia = false,
+                            isSocialMediaSheetVisible = false,
+                            infoMessage = "dashboard_info_social_media_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSavingSocialMedia = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun dismissSocialMediaSheet() {
+        _uiState.update { it.copy(isSocialMediaSheetVisible = false) }
+    }
+
+    private fun dismissReservationSheet() {
+        _uiState.update { it.copy(isReservationSheetVisible = false, reservationUrl = _uiState.value.cafe?.reservationUrl.orEmpty()) }
+    }
+
+    private fun changeReservationUrl(value: String) {
+        _uiState.update { it.copy(reservationUrl = value) }
+    }
+
+    private fun submitReservation() {
+        val currentState = _uiState.value
+        val url = currentState.reservationUrl.trim()
+        _uiState.update { it.copy(isSavingReservation = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeReservationUrlUseCase.invoke(
+                cafeId = cafeId,
+                reservationUrl = url.takeIf { it.isNotEmpty() }
+            )) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(reservationUrl = url.takeIf { it.isNotEmpty() }),
+                            isSavingReservation = false,
+                            isReservationSheetVisible = false,
+                            infoMessage = "dashboard_info_reservation_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSavingReservation = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun clickTableCountMetric() {
+        val tableCounts = _uiState.value.cafe?.tableCounts
+        _uiState.update {
+            it.copy(
+                isTableCountSheetVisible = true,
+                currentTableCountInput = (tableCounts?.current ?: 0).toString(),
+                totalTableCountInput = (tableCounts?.total ?: 0).toString(),
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun refreshGuestSchedules(resetMessage: Boolean = true) {
+        if (resetMessage) {
+            _uiState.update { it.copy(infoMessage = null) }
+        }
+        val dateOptions = TimeUtils.isoDateOptionsFromToday(GUEST_SCHEDULE_DISPLAY_DAYS)
+        val startDate = dateOptions.firstOrNull() ?: return
+        val endDate = dateOptions.lastOrNull() ?: return
+        _uiState.update { state ->
+            state.copy(
+                guestDateOptions = dateOptions,
+                guestDate = state.guestDate.ifBlank { dateOptions.firstOrNull().orEmpty() }
+            )
+        }
+        viewModelScope.launch {
+            when (val result = getGuestCastSchedulesUseCase.invoke(cafeId, startDate, endDate)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(guestSchedules = result.data.sortedByGuestSchedule())
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = result.error.toString()) }
+                }
+            }
+        }
+    }
+
+    private fun clickAddGuest() {
+        val dateOptions = _uiState.value.guestDateOptions.ifEmpty {
+            TimeUtils.isoDateOptionsFromToday(GUEST_SCHEDULE_DISPLAY_DAYS)
+        }
+        _uiState.update {
+            it.copy(
+                isGuestSheetVisible = true,
+                guestName = "",
+                guestProfileImage = "",
+                guestDate = dateOptions.firstOrNull().orEmpty(),
+                guestStartTime = CafeDashboardUiState.DEFAULT_GUEST_START_TIME,
+                guestEndTime = CafeDashboardUiState.DEFAULT_GUEST_END_TIME,
+                guestMemo = "",
+                guestDateOptions = dateOptions,
+                infoMessage = null
+            )
+        }
+    }
+
+    private fun dismissGuestSheet() {
+        _uiState.update { it.copy(isGuestSheetVisible = false) }
+    }
+
+    private fun submitGuest() {
+        val state = _uiState.value
+        if (!state.isGuestSubmitEnabled) {
+            _uiState.update { it.copy(infoMessage = "게스트 이름과 출연 시간을 확인해 주세요") }
+            return
+        }
+        _uiState.update { it.copy(isGuestSaving = true, infoMessage = null) }
+        viewModelScope.launch {
+            when (
+                val result = upsertGuestCastScheduleUseCase.invoke(
+                    GuestCastScheduleUpsert(
+                        cafeId = cafeId,
+                        date = state.guestDate,
+                        name = state.guestName,
+                        profileImage = state.guestProfileImage.takeIf { it.isNotBlank() },
+                        startTime = state.guestStartTime,
+                        endTime = state.guestEndTime,
+                        memo = state.guestMemo.takeIf { it.isNotBlank() }
+                    )
+                )
+            ) {
+                is AppResult.Success -> {
+                    _uiState.update { current ->
+                        current.copy(
+                            isGuestSaving = false,
+                            isGuestSheetVisible = false,
+                            guestSchedules = (current.guestSchedules.filterNot { it.id == result.data.id } + result.data)
+                                .sortedByGuestSchedule(),
+                            infoMessage = "게스트 출연을 추가했습니다"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(isGuestSaving = false, infoMessage = "게스트 출연 저장에 실패했습니다") }
+                }
+            }
+        }
+    }
+
+    private fun deleteGuest(scheduleId: String) {
+        viewModelScope.launch {
+            when (deleteGuestCastScheduleUseCase.invoke(scheduleId)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            guestSchedules = it.guestSchedules.filterNot { guest -> guest.id == scheduleId },
+                            infoMessage = "게스트 출연을 삭제했습니다"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update { it.copy(infoMessage = "게스트 출연 삭제에 실패했습니다") }
+                }
+            }
+        }
+    }
+
+    private fun dismissTableCountSheet() {
+        _uiState.update { it.copy(isTableCountSheetVisible = false) }
+    }
+
+    private fun changeCurrentTableCount(value: String) {
+        _uiState.update { it.copy(currentTableCountInput = value) }
+    }
+
+    private fun changeTotalTableCount(value: String) {
+        _uiState.update { state ->
+            val newTotal = value.toIntOrNull()
+            val currentInput = state.currentTableCountInput.toIntOrNull() ?: 0
+            val clampedCurrent = if (newTotal != null && currentInput > newTotal) newTotal.toString() else state.currentTableCountInput
+            state.copy(totalTableCountInput = value, currentTableCountInput = clampedCurrent)
+        }
+    }
+
+    private fun submitTableCounts() {
+        val currentState = _uiState.value
+        if (!currentState.isTableCountSubmitEnabled) return
+        val current = currentState.currentTableCountInput.toInt()
+        val total = currentState.totalTableCountInput.toInt()
+        _uiState.update { it.copy(isSavingTableCounts = true) }
+        viewModelScope.launch {
+            when (val result = updateCafeTableCountsUseCase.invoke(cafeId, current, total)) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            cafe = it.cafe?.copy(tableCounts = com.hhp227.concafe.domain.model.TableCounts(current, total)),
+                            isSavingTableCounts = false,
+                            isTableCountSheetVisible = false,
+                            infoMessage = "dashboard_info_table_counts_saved"
+                        )
+                    }
+                }
+                is AppResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isSavingTableCounts = false,
+                            infoMessage = result.error.toString()
+                        )
+                    }
+                }
+            }
         }
     }
 
     private fun dismissInfoMessage() {
         _uiState.update { it.copy(infoMessage = null) }
+    }
+
+    private fun clickCastListDetail() {
+        viewModelScope.launch {
+            _event.emit(CafeDashboardEvent.NavigateToCastList(cafeId))
+        }
     }
 
     private fun clickCastSchedule(castId: String) {
@@ -267,7 +621,7 @@ class CafeDashboardViewModel(
     private fun clickDeleteCast() {
         val selectedCastId = _uiState.value.selectedCastId
         if (selectedCastId == null) {
-            _uiState.update { it.copy(infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요.") }
+            _uiState.update { it.copy(infoMessage = "dashboard_info_select_cast_for_delete") }
             return
         }
         _uiState.update { it.copy(isDeleteCastDialogVisible = true, infoMessage = null) }
@@ -283,7 +637,7 @@ class CafeDashboardViewModel(
             _uiState.update {
                 it.copy(
                     isDeleteCastDialogVisible = false,
-                    infoMessage = "삭제할 캐스트를 목록에서 선택해 주세요."
+                    infoMessage = "dashboard_info_select_cast_for_delete"
                 )
             }
             return
@@ -295,7 +649,7 @@ class CafeDashboardViewModel(
                     _uiState.update {
                         it.copy(
                             isDeleteCastDialogVisible = false,
-                            infoMessage = "캐스트 프로필을 삭제했습니다."
+                            infoMessage = "dashboard_info_cast_deleted"
                         )
                     }
                 }
@@ -315,7 +669,7 @@ class CafeDashboardViewModel(
         viewModelScope.launch {
             when (val result = approveCastClaimUseCase.invoke(claimId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 승인했습니다.") }
+                    _uiState.update { it.copy(infoMessage = "dashboard_info_cast_claim_approved") }
                     refreshClaimData(resetMessage = false)
                     refreshCastPreviews(resetMessage = false)
                 }
@@ -330,7 +684,7 @@ class CafeDashboardViewModel(
         viewModelScope.launch {
             when (val result = rejectCastClaimUseCase.invoke(claimId)) {
                 is AppResult.Success -> {
-                    _uiState.update { it.copy(infoMessage = "캐스트 프로필 연결 요청을 반려했습니다.") }
+                    _uiState.update { it.copy(infoMessage = "dashboard_info_cast_claim_rejected") }
                     refreshClaimData(resetMessage = false)
                 }
                 is AppResult.Failure -> {
@@ -368,6 +722,9 @@ class CafeDashboardViewModel(
                     is CafeDetailEvent.CafeInfoUpdated -> if (event.cafeId == cafeId) {
                         patchCafeInfo(event.cafe)
                     }
+                    is CafeDetailEvent.FavoriteToggled -> if (event.cafeId == cafeId) {
+                        patchFollowerCount(isFavorite = event.isFavorite)
+                    }
                     is CafeDetailEvent.MenuCreated,
                     is CafeDetailEvent.MenuUpdated,
                     is CafeDetailEvent.MenuDeleted,
@@ -391,7 +748,7 @@ class CafeDashboardViewModel(
                         patchUpdatedBannerPreview(event.banner)
                     }
                     is BannerEvent.Deleted -> if (event.banner.cafeId == cafeId) {
-                        patchDeletedBannerPreview(event.banner.title)
+                        loadCafeDashboard()
                     }
                 }
             }
@@ -400,45 +757,27 @@ class CafeDashboardViewModel(
 
     private fun patchUpdatedBannerPreview(updatedBanner: HomeBanner) {
         _uiState.update { state ->
-            val currentCafe = state.cafe ?: return@update state
-            val currentPreview = currentCafe.homeBannerPreview
-            if (currentPreview.title != updatedBanner.title) {
-                return@update state
-            }
-            val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
-                "ACTIVE" -> "노출 중"
-                "SCHEDULED" -> "예약 중"
-                else -> "미노출"
-            }
-            state.copy(
-                cafe = currentCafe.copy(
-                    homeBannerPreview = currentPreview.copy(
-                        title = updatedBanner.title,
-                        period = "노출 ${updatedBanner.displayDays}일",
-                        statusLabel = statusLabel
+            val currentCafe = state.cafe
+            if (currentCafe == null) {
+                state
+            } else {
+                val currentPreview = currentCafe.homeBannerPreview
+                val statusLabel = when (updatedBanner.statusLabel.uppercase()) {
+                    "ACTIVE" -> "dashboard_banner_status_active"
+                    "SCHEDULED" -> "dashboard_banner_status_scheduled"
+                    else -> "dashboard_banner_status_hidden"
+                }
+                state.copy(
+                    cafe = currentCafe.copy(
+                        homeBannerPreview = currentPreview.copy(
+                            title = updatedBanner.title,
+                            period = "dashboard_banner_period_days:${updatedBanner.displayDays}",
+                            statusLabel = statusLabel,
+                            imageUrl = updatedBanner.imageUrl
+                        )
                     )
                 )
-            )
-        }
-    }
-
-    private fun patchDeletedBannerPreview(deletedBannerTitle: String) {
-        _uiState.update { state ->
-            val currentCafe = state.cafe ?: return@update state
-            val currentPreview = currentCafe.homeBannerPreview
-
-            if (currentPreview.title != deletedBannerTitle) {
-                return@update state
             }
-            state.copy(
-                cafe = currentCafe.copy(
-                    homeBannerPreview = currentPreview.copy(
-                        title = "등록된 배너 없음",
-                        period = "-",
-                        statusLabel = "미노출"
-                    )
-                )
-            )
         }
     }
 
@@ -450,6 +789,21 @@ class CafeDashboardViewModel(
                     city = cafe.region.city,
                     rating = cafe.ratingAvg
                 )
+            )
+        }
+    }
+
+    private fun patchFollowerCount(isFavorite: Boolean) {
+        _uiState.update { state ->
+            state.copy(
+                cafe = state.cafe?.let { cafe ->
+                    val nextCount = if (isFavorite) {
+                        cafe.followerCount + 1
+                    } else {
+                        (cafe.followerCount - 1).coerceAtLeast(0)
+                    }
+                    cafe.copy(followerCount = nextCount)
+                }
             )
         }
     }
@@ -467,7 +821,10 @@ class CafeDashboardViewModel(
                             state.copy(
                                 castPreviews = state.castPreviews.map { preview ->
                                     if (preview.id == event.cast.id) {
-                                        preview.copy(name = event.cast.name)
+                                        preview.copy(
+                                            name = event.cast.name,
+                                            profileImage = event.cast.profileImage
+                                        )
                                     } else {
                                         preview
                                     }
@@ -490,6 +847,22 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun observeVisitEvent() {
+        jobs[TaskKey.OBSERVE_VISIT_EVENT]?.cancel()
+        jobs[TaskKey.OBSERVE_VISIT_EVENT] = viewModelScope.launch {
+            visitEventPublisher.events.collectLatest { event ->
+                when (event) {
+                    is VisitEvent.Created -> if (event.cafeId == cafeId) {
+                        _uiState.update { state ->
+                            state.copy(cafe = state.cafe?.copy(todayCheckIns = state.cafe.todayCheckIns + 1))
+                        }
+                    }
+                    is VisitEvent.Deleted -> Unit
+                }
+            }
+        }
+    }
+
     private fun observeCastClaimEvent() {
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT]?.cancel()
         jobs[TaskKey.OBSERVE_CAST_CLAIM_EVENT] = viewModelScope.launch {
@@ -506,6 +879,19 @@ class CafeDashboardViewModel(
         }
     }
 
+    private fun startCastClaimPolling() {
+        jobs[TaskKey.POLL_CAST_CLAIM]?.cancel()
+        jobs[TaskKey.POLL_CAST_CLAIM] = viewModelScope.launch {
+            while (isActive) {
+                delay(CAST_CLAIM_POLLING_INTERVAL_MILLIS)
+
+                if (isActive) {
+                    refreshClaimData(resetMessage = false)
+                }
+            }
+        }
+    }
+
     fun onAction(action: CafeDashboardAction) {
         when (action) {
             CafeDashboardAction.ClickBack -> clickBack()
@@ -516,8 +902,10 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ChangeExternalLinkUrl -> changeExternalLinkUrl(action.value)
             CafeDashboardAction.SubmitExternalLink -> submitExternalLink()
             is CafeDashboardAction.ClickExternalLinkItem -> clickExternalLinkItem(action.linkId)
+            is CafeDashboardAction.ClickEditExternalLink -> clickEditExternalLink(action.linkId)
             is CafeDashboardAction.ClickDeleteExternalLink -> clickDeleteExternalLink(action.linkId)
             is CafeDashboardAction.ClickCastSchedule -> clickCastSchedule(action.castId)
+            CafeDashboardAction.ClickCastListDetail -> clickCastListDetail()
             CafeDashboardAction.ClickDeleteCast -> clickDeleteCast()
             CafeDashboardAction.ConfirmDeleteCast -> confirmDeleteCast()
             CafeDashboardAction.DismissDeleteCastDialog -> dismissDeleteCastDialog()
@@ -525,6 +913,30 @@ class CafeDashboardViewModel(
             is CafeDashboardAction.ClickRejectCastClaim -> clickRejectCastClaim(action.claimId)
             CafeDashboardAction.ClickLoadMoreCasts -> clickLoadMoreCasts()
             CafeDashboardAction.DismissInfoMessage -> dismissInfoMessage()
+            is CafeDashboardAction.ChangeSocialMediaInstagram -> changeSocialMediaInstagram(action.value)
+            is CafeDashboardAction.ChangeSocialMediaTwitter -> changeSocialMediaTwitter(action.value)
+            is CafeDashboardAction.ChangeSocialMediaTiktok -> changeSocialMediaTiktok(action.value)
+            is CafeDashboardAction.ChangeSocialMediaYoutube -> changeSocialMediaYoutube(action.value)
+            CafeDashboardAction.SubmitSocialMedia -> submitSocialMedia()
+            CafeDashboardAction.DismissSocialMediaSheet -> dismissSocialMediaSheet()
+            CafeDashboardAction.DismissReservationSheet -> dismissReservationSheet()
+            is CafeDashboardAction.ChangeReservationUrl -> changeReservationUrl(action.value)
+            CafeDashboardAction.SubmitReservation -> submitReservation()
+            CafeDashboardAction.ClickTableCountMetric -> clickTableCountMetric()
+            CafeDashboardAction.ClickAddGuest -> clickAddGuest()
+            CafeDashboardAction.DismissGuestSheet -> dismissGuestSheet()
+            is CafeDashboardAction.ChangeGuestName -> _uiState.update { it.copy(guestName = action.value) }
+            is CafeDashboardAction.ChangeGuestProfileImage -> _uiState.update { it.copy(guestProfileImage = action.value) }
+            is CafeDashboardAction.ChangeGuestDate -> _uiState.update { it.copy(guestDate = action.value) }
+            is CafeDashboardAction.ChangeGuestStartTime -> _uiState.update { it.copy(guestStartTime = action.value) }
+            is CafeDashboardAction.ChangeGuestEndTime -> _uiState.update { it.copy(guestEndTime = action.value) }
+            is CafeDashboardAction.ChangeGuestMemo -> _uiState.update { it.copy(guestMemo = action.value) }
+            CafeDashboardAction.SubmitGuest -> submitGuest()
+            is CafeDashboardAction.DeleteGuest -> deleteGuest(action.scheduleId)
+            CafeDashboardAction.DismissTableCountSheet -> dismissTableCountSheet()
+            is CafeDashboardAction.ChangeCurrentTableCount -> changeCurrentTableCount(action.value)
+            is CafeDashboardAction.ChangeTotalTableCount -> changeTotalTableCount(action.value)
+            CafeDashboardAction.SubmitTableCounts -> submitTableCounts()
         }
     }
 
@@ -533,6 +945,9 @@ class CafeDashboardViewModel(
         observeCafeDetailEvent()
         observeCastClaimEvent()
         observeCastEvent()
+        observeVisitEvent()
+        startCastClaimPolling()
+        loadExternalLinks()
         loadCafeDashboard()
     }
 
@@ -546,6 +961,16 @@ class CafeDashboardViewModel(
         OBSERVE_BANNER_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
         OBSERVE_CAST_EVENT,
-        OBSERVE_CAST_CLAIM_EVENT
+        OBSERVE_CAST_CLAIM_EVENT,
+        OBSERVE_VISIT_EVENT,
+        POLL_CAST_CLAIM
     }
+}
+
+private const val CAST_CLAIM_POLLING_INTERVAL_MILLIS = 30_000L
+private const val PAGINATION_DELAY_MILLIS = 1_000L
+private const val GUEST_SCHEDULE_DISPLAY_DAYS = 30
+
+private fun List<GuestCastSchedule>.sortedByGuestSchedule(): List<GuestCastSchedule> {
+    return sortedWith(compareBy({ it.date }, { it.startTime }, { it.name }))
 }

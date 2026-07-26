@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import AuthenticationServices
 
 struct SignInView: View {
@@ -18,6 +19,9 @@ struct SignInView: View {
             uiState: viewModel.uiState,
             onBack: {
                 onNavigationAction(.navigateBack)
+            },
+            onResetPassword: {
+                onNavigationAction(.navigateToResetPassword)
             },
             onSignUp: {
                 onNavigationAction(.navigateToSignUp)
@@ -38,9 +42,12 @@ private struct SignInContentView: View {
     
     let onBack: () -> Void
 
+    let onResetPassword: () -> Void
+
     let onSignUp: () -> Void
     
     let onAction: (SignInAction) -> Void
+
     
     var body: some View {
         ScrollView {
@@ -57,12 +64,14 @@ private struct SignInContentView: View {
         }
         .background(
             LinearGradient(
-                colors: [Color(hex: "FFF2F7"), Color(hex: "FFFBFD"), Color(hex: "FDEDF4")],
+                colors: UITraitCollection.current.userInterfaceStyle == .dark
+                    ? [ConCafeColors.background, ConCafeColors.background, ConCafeColors.background]
+                    : [ConCafeColors.background, ConCafeColors.background, ConCafeColors.surfaceTint],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         )
-        .navigationTitle("로그인")
+        .navigationTitle(String(localized: String.LocalizationValue("signin_title"), table: "Localizable"))
     }
     
     private var logoSection: some View {
@@ -72,41 +81,57 @@ private struct SignInContentView: View {
     private var formCard: some View {
         VStack(spacing: 14) {
             VStack(spacing: 12) {
-                TextField("이메일", text: Binding(
+                TextField(String(localized: String.LocalizationValue("signin_email_label"), table: "Localizable"), text: Binding(
                     get: { uiState.email },
                     set: { onAction(.emailChanged($0)) }
                 ))
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
                 .autocorrectionDisabled()
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                SecureField("비밀번호", text: Binding(
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline,
+                            lineWidth: 1
+                        )
+                )
+                SecureField(String(localized: String.LocalizationValue("signin_password_label"), table: "Localizable"), text: Binding(
                     get: { uiState.password },
                     set: { onAction(.passwordChanged($0)) }
                 ))
+                .foregroundStyle(.primary)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
-                .background(Color.white)
+                .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }) : Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.16) : ConCafeColors.outline,
+                            lineWidth: 1
+                        )
+                )
             }
             if let errorMessage = uiState.errorMessage {
                 Text(errorMessage)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "D1436F"))
+                    .foregroundStyle(ConCafeColors.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             Button {
                 onAction(.signInTapped)
             } label: {
-                Text(uiState.isLoading ? "로그인 중..." : "로그인")
+                Text(uiState.isLoading ? String(localized: String.LocalizationValue("signin_loading"), table: "Localizable") : String(localized: String.LocalizationValue("signin_submit"), table: "Localizable"))
                     .font(.headline)
-                    .foregroundStyle(Color(hex: "2B2330"))
+                    .foregroundStyle(ConCafeColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color(hex: "FFD1DC"))
+                    .background(ConCafeColors.primaryContainer)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .disabled(uiState.isLoading)
@@ -120,17 +145,17 @@ private struct SignInContentView: View {
     private var socialButtons: some View {
         VStack(spacing: 12) {
             SignInSocialButton(
-                title: "카카오로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_kakao"), table: "Localizable"),
                 icon: "kakao_icon",
                 background: Color(hex: "FEE500"),
-                foreground: .black,
+                foreground: .primary,
                 outlined: false,
                 action: {
                     onAction(.socialSignInTapped(provider: .kakao))
                 }
             )
             SignInSocialButton(
-                title: "구글로 시작하기",
+                title: String(localized: String.LocalizationValue("signup_social_google"), table: "Localizable"),
                 icon: "google_logo",
                 background: .white,
                 foreground: Color(hex: "222222"),
@@ -141,8 +166,19 @@ private struct SignInContentView: View {
             )
             SignInWithAppleButton(
                 .signIn,
-                onRequest: { request in },
-                onCompletion: { result in }
+                onRequest: { request in
+                    request.requestedScopes = [.fullName, .email]
+                },
+                onCompletion: { result in
+                    if case let .success(authorization) = result,
+                       let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                       let identityTokenData = credential.identityToken,
+                       let identityToken = String(data: identityTokenData, encoding: .utf8) {
+                        onAction(.appleIdTokenReceived(identityToken))
+                    } else {
+                        onAction(.socialSignInTapped(provider: .apple))
+                    }
+                }
             )
             .signInWithAppleButtonStyle(.black)
             .frame(height: 52)
@@ -153,10 +189,13 @@ private struct SignInContentView: View {
     
     private var footerLinks: some View {
         HStack(spacing: 8) {
-            Text("비밀번호 찾기")
+            Button(action: onResetPassword) {
+                Text(String(localized: String.LocalizationValue("signin_forgot_password"), table: "Localizable"))
+            }
+            .buttonStyle(.plain)
             Text("|")
             Button(action: onSignUp) {
-                Text("회원가입")
+                Text(String(localized: String.LocalizationValue("signin_sign_up"), table: "Localizable"))
             }
             .buttonStyle(.plain)
         }

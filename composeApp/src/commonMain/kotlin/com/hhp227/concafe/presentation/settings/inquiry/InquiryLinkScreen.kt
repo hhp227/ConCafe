@@ -3,45 +3,16 @@ package com.hhp227.concafe.presentation.settings.inquiry
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -51,8 +22,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.inquiry_back_content_description
+import concafe.composeapp.generated.resources.inquiry_input_section_desc
+import concafe.composeapp.generated.resources.inquiry_input_section_title
+import concafe.composeapp.generated.resources.inquiry_message_label
+import concafe.composeapp.generated.resources.inquiry_message_placeholder
+import concafe.composeapp.generated.resources.inquiry_screen_title
+import concafe.composeapp.generated.resources.inquiry_submit
+import concafe.composeapp.generated.resources.inquiry_submitting
+import concafe.composeapp.generated.resources.inquiry_title_label
+import concafe.composeapp.generated.resources.inquiry_title_placeholder
+import concafe.composeapp.generated.resources.inquiry_type_bug_report
+import concafe.composeapp.generated.resources.inquiry_type_section_desc
+import concafe.composeapp.generated.resources.inquiry_type_section_title
+import concafe.composeapp.generated.resources.inquiry_type_service
+import concafe.composeapp.generated.resources.inquiry_type_suggestion
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
+import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +65,6 @@ fun InquiryLinkScreen(
             }
         }
     }
-
     InquiryLinkContentScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -95,10 +84,13 @@ private fun InquiryLinkContentScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("문의하기") },
+                title = { Text(stringResource(Res.string.inquiry_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(InquiryLinkAction.ClickBack) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.inquiry_back_content_description)
+                        )
                     }
                 }
             )
@@ -106,14 +98,14 @@ private fun InquiryLinkContentScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Surface(
-                color = Color.White.copy(alpha = 0.92f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                 shadowElevation = 8.dp
             ) {
                 Box(
                     modifier = Modifier
                         .navigationBarsPadding()
                         .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color(0x33FFD1DC)))
+                        .border(BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.2f)))
                         .padding(horizontal = 16.dp, vertical = 14.dp)
                 ) {
                     Button(
@@ -124,13 +116,17 @@ private fun InquiryLinkContentScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD1DC),
-                            contentColor = Color(0xFF2B2330)
+                            containerColor = ConCafeColors.primaryContainer,
+                            contentColor = ConCafeColors.textPrimary
                         )
                     ) {
-                        Icon(Icons.Default.Send, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                         Text(
-                            text = if (uiState.isSubmitting) "접수 중..." else "문의 접수",
+                            text = if (uiState.isSubmitting) {
+                                stringResource(Res.string.inquiry_submitting)
+                            } else {
+                                stringResource(Res.string.inquiry_submit)
+                            },
                             modifier = Modifier.padding(start = 8.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -142,10 +138,16 @@ private fun InquiryLinkContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F5F6), Color(0xFFFFFBFD))
-                    )
+                .then(
+                    if (isSystemInDarkTheme()) {
+                        Modifier.background(ConCafeColors.background)
+                    } else {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                colors = listOf(ConCafeColors.surfaceVariant, ConCafeColors.background)
+                            )
+                        )
+                    }
                 )
                 .padding(innerPadding)
         ) {
@@ -161,24 +163,24 @@ private fun InquiryLinkContentScreen(
                     )
                 }
                 item {
-                    InquirySectionCard(title = "문의 입력") {
+                    InquirySectionCard(title = stringResource(Res.string.inquiry_input_section_title)) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
-                                text = "입력한 문의는 서버에 저장되어 운영팀이 확인합니다.",
+                                text = stringResource(Res.string.inquiry_input_section_desc),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF6F6673)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             ConCafeFormField(
-                                label = "제목",
+                                label = stringResource(Res.string.inquiry_title_label),
                                 value = uiState.title,
                                 onValueChange = { onAction(InquiryLinkAction.ChangeTitle(it)) },
-                                placeholder = "문의 제목을 입력하세요"
+                                placeholder = stringResource(Res.string.inquiry_title_placeholder)
                             )
                             ConCafeFormField(
-                                label = "문의 내용",
+                                label = stringResource(Res.string.inquiry_message_label),
                                 value = uiState.message,
                                 onValueChange = { onAction(InquiryLinkAction.ChangeMessage(it)) },
-                                placeholder = "상세 내용을 입력해 주세요",
+                                placeholder = stringResource(Res.string.inquiry_message_placeholder),
                                 minLines = 7,
                                 singleLine = false
                             )
@@ -186,7 +188,7 @@ private fun InquiryLinkContentScreen(
                                 Text(
                                     text = uiState.errorMessage,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFD1436F)
+                                    color = ConCafeColors.primary
                                 )
                             }
                         }
@@ -202,11 +204,11 @@ private fun InquiryTypeCard(
     selectedType: InquiryType,
     onSelect: (InquiryType) -> Unit
 ) {
-    InquirySectionCard(title = "문의 유형") {
+    InquirySectionCard(title = stringResource(Res.string.inquiry_type_section_title)) {
         Text(
-            text = "문의 성격에 맞는 항목을 선택해 주세요.",
+            text = stringResource(Res.string.inquiry_type_section_desc),
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF6F6673)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         InquiryTypeDropdown(
             selectedType = selectedType,
@@ -226,8 +228,8 @@ private fun InquiryTypeDropdown(
         Surface(
             onClick = { expanded = true },
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFF8F5F6),
-            border = BorderStroke(1.dp, Color(0x4DFFD1DC)),
+            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else ConCafeColors.surfaceVariant,
+            border = BorderStroke(1.dp, ConCafeColors.primaryContainer.copy(alpha = 0.3f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(
@@ -236,14 +238,14 @@ private fun InquiryTypeDropdown(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = selectedType.title,
+                    text = localizedInquiryTypeTitle(selectedType),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF2B2330)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = Color(0xFF7C7480),
+                    tint = ConCafeColors.textSecondary,
                     modifier = Modifier.align(androidx.compose.ui.Alignment.CenterEnd)
                 )
             }
@@ -254,7 +256,7 @@ private fun InquiryTypeDropdown(
         ) {
             InquiryType.entries.forEach { type ->
                 DropdownMenuItem(
-                    text = { Text(type.title) },
+                    text = { Text(localizedInquiryTypeTitle(type)) },
                     onClick = {
                         onSelect(type)
                         expanded = false
@@ -266,12 +268,23 @@ private fun InquiryTypeDropdown(
 }
 
 @Composable
+private fun localizedInquiryTypeTitle(
+    type: InquiryType
+): String {
+    return when (type) {
+        InquiryType.SERVICE -> stringResource(Res.string.inquiry_type_service)
+        InquiryType.BUG_REPORT -> stringResource(Res.string.inquiry_type_bug_report)
+        InquiryType.SUGGESTION -> stringResource(Res.string.inquiry_type_suggestion)
+    }
+}
+
+@Composable
 private fun InquirySectionCard(
     title: String,
     content: @Composable () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(

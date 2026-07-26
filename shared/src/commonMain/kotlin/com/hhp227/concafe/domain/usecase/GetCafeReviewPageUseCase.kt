@@ -4,16 +4,18 @@ import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeDetailReview
+import com.hhp227.concafe.domain.model.Review
 import com.hhp227.concafe.domain.repository.CafeRepository
 import com.hhp227.concafe.domain.repository.ReviewRepository
 import com.hhp227.concafe.domain.repository.UserRepository
-import com.hhp227.concafe.domain.repository.VisitRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class GetCafeReviewPageUseCase(
     private val cafeRepository: CafeRepository,
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
-    private val visitRepository: VisitRepository
+    private val reviewUserNicknameCache: CafeReviewUserNicknameCache
 ) {
     suspend operator fun invoke(
         cafeId: String,
@@ -21,35 +23,49 @@ class GetCafeReviewPageUseCase(
         pageSize: Int = DEFAULT_PAGE_SIZE
     ): AppResult<PagedResult<CafeDetailReview>> {
         return try {
-            val detail = cafeRepository.getCafeDetail(cafeId)
+            val loaded = coroutineScope {
+                val detailDeferred = async {
+                    cafeRepository.getCafeDetail(cafeId)
+                }
+                val reviewsDeferred = async {
+                    reviewRepository.getCafeReviews(
+                        cafeId = cafeId,
+                        cursor = cursor,
+                        pageSize = pageSize
+                    )
+                }
+
+                detailDeferred.await() to reviewsDeferred.await()
+            }
+            val detail = loaded.first
             val castNameById = detail.casts.associate { cast -> cast.id to cast.name }
-            val reviews = reviewRepository.getCafeReviews(
+            val reviews = loaded.second
+            val userNicknameById = resolveReviewNicknameByUserId(
                 cafeId = cafeId,
-                cursor = cursor,
-                pageSize = pageSize
+                reviews = reviews.items
             )
 
             AppResult.Success(
                 PagedResult(
                     items = reviews.items.map { review ->
-                        val user = userRepository.getUser(review.userId)
-                        val visits = visitRepository.getVisits(
-                            userId = review.userId,
-                            cursor = null,
-                            pageSize = 20
-                        ).items
-                        val verified = visits.any { it.cafeId == cafeId && it.verified }
+                        val userNickname = review.userNickname
+                            .takeIf { nickname -> nickname.isNotBlank() }
+                            ?: userNicknameById[review.userId]
+                            ?: UNKNOWN_USER_NICKNAME
+                        val verified = review.visitVerified
                         val taggedCastNames = review.taggedCastIds.mapNotNull { castId -> castNameById[castId] }
 
                         CafeDetailReview(
                             id = review.id,
-                            userNickname = user.nickname,
+                            userId = review.userId,
+                            userNickname = userNickname,
                             rating = review.rating,
                             content = review.content,
                             taggedCastNames = taggedCastNames,
                             likeCount = review.likeCount,
                             createdDate = review.createdAt.take(10),
-                            verified = verified
+                            verified = verified,
+                            imageUrls = review.imageUrls
                         )
                     },
                     nextCursor = reviews.nextCursor,
@@ -65,7 +81,58 @@ class GetCafeReviewPageUseCase(
         }
     }
 
+    private suspend fun resolveReviewNicknameByUserId(
+        cafeId: String,
+        reviews: List<Review>
+    ): Map<String, String> {
+        val reviewUserIds = reviews
+            .map { review -> review.userId }
+            .distinct()
+            .filter { userId -> userId.isNotBlank() }
+        val reviewNicknameByUserId = reviews
+            .mapNotNull { review ->
+                val nickname = review.userNickname.trim().takeIf { value -> value.isNotEmpty() }
+                    ?: return@mapNotNull null
+
+                review.userId to nickname
+            }
+            .toMap()
+
+        reviewUserNicknameCache.putAll(cafeId, reviewNicknameByUserId)
+        val cachedNicknameByUserId = reviewUserNicknameCache.getNicknames(cafeId, reviewUserIds)
+        val resolvedNicknameByUserId = mutableMapOf<String, String>()
+
+        resolvedNicknameByUserId.putAll(cachedNicknameByUserId)
+        resolvedNicknameByUserId.putAll(reviewNicknameByUserId)
+
+        val unresolvedUserIds = reviewUserIds.filter { userId ->
+            resolvedNicknameByUserId[userId].isNullOrBlank()
+        }
+
+        if (unresolvedUserIds.isNotEmpty()) {
+            val loadedNicknameByUserId = coroutineScope {
+                unresolvedUserIds.associateWith { userId ->
+                    async {
+                        runCatching {
+                            userRepository.getUser(userId).nickname.trim()
+                                .takeIf { nickname -> nickname.isNotEmpty() }
+                        }.getOrNull()
+                    }
+                }.mapValues { (_, deferredNickname) ->
+                    deferredNickname.await()
+                }.mapNotNull { (userId, nickname) ->
+                    nickname?.let { value -> userId to value }
+                }.toMap()
+            }
+
+            reviewUserNicknameCache.putAll(cafeId, loadedNicknameByUserId)
+            resolvedNicknameByUserId.putAll(loadedNicknameByUserId)
+        }
+        return resolvedNicknameByUserId
+    }
+
     companion object {
         const val DEFAULT_PAGE_SIZE = 15
+        private const val UNKNOWN_USER_NICKNAME = "알 수 없음"
     }
 }

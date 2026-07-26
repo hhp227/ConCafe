@@ -6,24 +6,48 @@
 //
 
 import SwiftUI
+import Shared
 
 struct NotificationSettingsView: View {
     let onNavigationAction: (NavigationAction) -> Void
 
     @StateObject private var viewModel = NotificationSettingsViewModel()
 
+    @State private var toastMessage: String?
+
     var body: some View {
-        NotificationSettingsContentView(
-            uiState: viewModel.uiState,
-            onAction: viewModel.onAction
-        )
+        ZStack {
+            NotificationSettingsContentView(
+                uiState: viewModel.uiState,
+                onAction: viewModel.onAction
+            )
+            if viewModel.uiState.isLoading {
+                ProgressView()
+            }
+        }
         .onReceive(viewModel.event) { event in
             switch event {
             case .navigateBack:
                 onNavigationAction(.navigateBack)
+            case .showMessage(let message):
+                toastMessage = message
             }
         }
-        .navigationTitle("알림 설정")
+        .alert(String(localized: String.LocalizationValue("common_notification"), table: "Localizable"), isPresented: Binding(
+            get: { toastMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    toastMessage = nil
+                }
+            }
+        )) {
+            Button(String(localized: String.LocalizationValue("common_confirm"), table: "Localizable"), role: .cancel) {
+                toastMessage = nil
+            }
+        } message: {
+            Text(toastMessage ?? "")
+        }
+        .navigationTitle(String(localized: String.LocalizationValue("notification_settings_title"), table: "Localizable"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -37,68 +61,109 @@ private struct NotificationSettingsContentView: View {
         ScrollView {
             VStack(spacing: 18) {
                 heroCard
-                settingsCard(title: "기본 수신") {
+                settingsCard(title: String(localized: String.LocalizationValue("notification_settings_basic_title"), table: "Localizable")) {
                     NotificationToggleRow(
                         symbol: "bell.badge.fill",
-                        iconBackground: Color(hex: "FFE6F1"),
-                        iconForeground: Color(hex: "EB5F97"),
-                        title: "푸시 알림 받기",
-                        description: "새 공지와 팬 활동 업데이트를 앱 푸시로 받아요.",
+                        iconBackground: ConCafeColors.surfaceTint,
+                        iconForeground: ConCafeColors.primary,
+                        title: String(localized: String.LocalizationValue("notification_settings_push_title"), table: "Localizable"),
+                        description: String(localized: String.LocalizationValue("notification_settings_push_desc"), table: "Localizable"),
                         isOn: uiState.isPushNotificationsEnabled,
-                        onToggle: { onAction(.pushNotificationsToggled($0)) }
+                        onToggle: { onAction(.pushNotificationsToggled($0)) },
+                        isEnabled: !uiState.isSaving
                     )
                 }
-                settingsCard(title: "알림 종류") {
+                settingsCard(title: String(localized: String.LocalizationValue("notification_settings_type_title"), table: "Localizable")) {
                     VStack(spacing: 12) {
                         NotificationToggleRow(
                             symbol: "figure.walk.motion",
-                            iconBackground: Color(hex: "E4F7EC"),
-                            iconForeground: Color(hex: "2E9E5B"),
-                            title: "출근 알림",
-                            description: "팔로우한 캐스트의 오늘 출근 소식을 빠르게 받아요.",
+                            iconBackground: ConCafeColors.successContainer,
+                            iconForeground: ConCafeColors.success,
+                            title: String(localized: String.LocalizationValue("notification_settings_shift_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_shift_desc"), table: "Localizable"),
                             isOn: uiState.isShiftNotificationsEnabled,
-                            onToggle: { onAction(.shiftNotificationsToggled($0)) }
+                            onToggle: { onAction(.shiftNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                         NotificationToggleRow(
                             symbol: "birthday.cake.fill",
-                            iconBackground: Color(hex: "FFE6F1"),
-                            iconForeground: Color(hex: "EB5F97"),
-                            title: "생일 알림",
-                            description: "생일이 다가오는 캐스트와 당일 이벤트를 놓치지 않아요.",
+                            iconBackground: ConCafeColors.surfaceTint,
+                            iconForeground: ConCafeColors.primary,
+                            title: String(localized: String.LocalizationValue("notification_settings_birthday_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_birthday_desc"), table: "Localizable"),
                             isOn: uiState.isBirthdayNotificationsEnabled,
-                            onToggle: { onAction(.birthdayNotificationsToggled($0)) }
+                            onToggle: { onAction(.birthdayNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                         NotificationToggleRow(
                             symbol: "megaphone.fill",
-                            iconBackground: Color(hex: "E8F0FF"),
-                            iconForeground: Color(hex: "4A79E8"),
-                            title: "공지 알림",
-                            description: "카페 공지와 이벤트 업데이트를 우선적으로 받아요.",
+                            iconBackground: ConCafeColors.infoContainer,
+                            iconForeground: ConCafeColors.info,
+                            title: String(localized: String.LocalizationValue("notification_settings_notice_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_notice_desc"), table: "Localizable"),
                             isOn: uiState.isNoticeNotificationsEnabled,
-                            onToggle: { onAction(.noticeNotificationsToggled($0)) }
+                            onToggle: { onAction(.noticeNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
+                        )
+                        if uiState.isCastRole {
+                            NotificationToggleRow(
+                                symbol: "person.badge.plus.fill",
+                                iconBackground: ConCafeColors.primaryContainer,
+                                iconForeground: ConCafeColors.primary,
+                                title: String(localized: String.LocalizationValue("notification_settings_follow_title"), table: "Localizable"),
+                                description: String(localized: String.LocalizationValue("notification_settings_follow_desc"), table: "Localizable"),
+                                isOn: uiState.isFollowNotificationsEnabled,
+                                onToggle: { onAction(.followNotificationsToggled($0)) },
+                                isEnabled: !uiState.isSaving
+                            )
+                        }
+                        NotificationToggleRow(
+                            symbol: "party.popper.fill",
+                            iconBackground: ConCafeColors.warningContainer,
+                            iconForeground: ConCafeColors.warning,
+                            title: String(localized: String.LocalizationValue("notification_settings_event_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_event_desc"), table: "Localizable"),
+                            isOn: uiState.isEventNotificationsEnabled,
+                            onToggle: { onAction(.eventNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
+                        )
+                        NotificationToggleRow(
+                            symbol: "bubble.left.and.bubble.right.fill",
+                            iconBackground: ConCafeColors.infoContainer,
+                            iconForeground: ConCafeColors.info,
+                            title: String(localized: String.LocalizationValue("notification_settings_community_title"), table: "Localizable"),
+                            description: String(localized: String.LocalizationValue("notification_settings_community_desc"), table: "Localizable"),
+                            isOn: uiState.isCommunityNotificationsEnabled,
+                            onToggle: { onAction(.communityNotificationsToggled($0)) },
+                            isEnabled: !uiState.isSaving
                         )
                     }
                 }
-                settingsCard(title: "조용한 시간") {
+                settingsCard(title: String(localized: String.LocalizationValue("notification_settings_quiet_title"), table: "Localizable")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("밤 시간이나 하루 요약 모드를 선택해 알림 강도를 조절할 수 있어요.")
+                        Text(String(localized: String.LocalizationValue("notification_settings_quiet_desc"), table: "Localizable"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         quietHoursChips
                         quietHoursDescriptionCard
+                        if let errorMessage = uiState.errorMessage {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundStyle(ConCafeColors.primary)
+                        }
                     }
                 }
             }
             .padding(16)
             .padding(.bottom, 24)
         }
-        .background(Color(hex: "FFFBFD"))
+        .background(ConCafeColors.background)
     }
 
     private var heroCard: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("알림 스타일을 취향에 맞게 조절하세요")
+                Text(String(localized: String.LocalizationValue("notification_settings_hero_title"), table: "Localizable"))
                     .font(.headline)
                     .bold()
                     .foregroundStyle(.white)
@@ -119,7 +184,7 @@ private struct NotificationSettingsContentView: View {
         .padding(20)
         .background(
             LinearGradient(
-                colors: [Color(hex: "EF6797"), Color(hex: "F7A0C1")],
+                colors: [ConCafeColors.primary, ConCafeColors.secondary],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -128,68 +193,82 @@ private struct NotificationSettingsContentView: View {
     }
 
     private var quietHoursChips: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(NotificationQuietHoursOption.allCases) { option in
+        let quietHourOptions: [NotificationQuietHoursMode] = [.off, .night, .allDay]
+        return VStack(alignment: .leading, spacing: 8) {
+            ForEach(quietHourOptions, id: \.self) { option in
                 Button {
                     onAction(.quietHoursSelected(option))
                 } label: {
                     HStack {
-                        Text(option.title)
+                        Text(option.titleText)
                             .font(.subheadline)
                             .bold()
-                            .foregroundStyle(uiState.quietHoursOption == option ? Color(hex: "B84473") : Color(hex: "5F5664"))
+                            .foregroundStyle(uiState.quietHoursOption == option ? ConCafeColors.primary : .primary)
                         Spacer()
                         if uiState.quietHoursOption == option {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(Color(hex: "EF6797"))
+                                .foregroundStyle(ConCafeColors.primary)
                         }
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity)
-                    .background(uiState.quietHoursOption == option ? Color(hex: "FFF1F7") : .white)
+                    .background(uiState.quietHoursOption == option ? ConCafeColors.background : Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
-                                uiState.quietHoursOption == option ? Color(hex: "FFD6E5") : Color(hex: "F0E8ED"),
+                                uiState.quietHoursOption == option ? ConCafeColors.primaryContainer : ConCafeColors.primaryContainer,
                                 lineWidth: 1
                             )
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(uiState.isSaving)
             }
         }
     }
 
     private var quietHoursDescriptionCard: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(uiState.quietHoursOption.title)
+            Text(uiState.quietHoursOption.titleText)
                 .font(.subheadline)
                 .bold()
-                .foregroundStyle(Color(hex: "B84473"))
-            Text(uiState.quietHoursOption.description)
+                .foregroundStyle(ConCafeColors.primary)
+            Text(uiState.quietHoursOption.descriptionText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "FFF6FA"))
+        .background(ConCafeColors.background)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color(hex: "FFD6E5"), lineWidth: 1)
+                .stroke(ConCafeColors.primaryContainer, lineWidth: 1)
         )
     }
 
     private var heroSummary: String {
-        let enabledCount = [
+        var toggles = [
             uiState.isPushNotificationsEnabled,
             uiState.isShiftNotificationsEnabled,
             uiState.isBirthdayNotificationsEnabled,
-            uiState.isNoticeNotificationsEnabled
-        ].filter { $0 }.count
-        return "현재 \(enabledCount)개 알림을 켜 두었고, \(uiState.quietHoursOption.title) 모드로 받을 예정입니다."
+            uiState.isNoticeNotificationsEnabled,
+            uiState.isEventNotificationsEnabled,
+            uiState.isCommunityNotificationsEnabled
+        ]
+
+        if uiState.isCastRole {
+            toggles.append(uiState.isFollowNotificationsEnabled)
+        }
+        let enabledCount = toggles.filter { $0 }.count
+        return String(
+            format: String(localized: String.LocalizationValue("notification_settings_hero_summary"), table: "Localizable"),
+            locale: Locale.current,
+            enabledCount,
+            uiState.quietHoursOption.titleText
+        )
     }
 
     private func settingsCard<Content: View>(
@@ -198,13 +277,13 @@ private struct NotificationSettingsContentView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title)
-                .font(.title3)
+                .font(.headline)
                 .bold()
             content()
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white)
+        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }
@@ -223,6 +302,8 @@ private struct NotificationToggleRow: View {
     let isOn: Bool
 
     let onToggle: (Bool) -> Void
+
+    let isEnabled: Bool
 
     var body: some View {
         HStack(spacing: 14) {
@@ -248,7 +329,8 @@ private struct NotificationToggleRow: View {
                 set: onToggle
             ))
             .labelsHidden()
-            .tint(Color(hex: "EF6797"))
+            .tint(ConCafeColors.primary)
+            .disabled(!isEnabled)
         }
     }
 }
@@ -256,5 +338,33 @@ private struct NotificationToggleRow: View {
 struct NotificationSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationSettingsView(onNavigationAction: { _ in })
+    }
+}
+
+private extension NotificationQuietHoursMode {
+    var titleText: String {
+        switch self {
+        case .off:
+            return String(localized: String.LocalizationValue("notification_quiet_off_title"), table: "Localizable")
+        case .night:
+            return String(localized: String.LocalizationValue("notification_quiet_night_title"), table: "Localizable")
+        case .allDay:
+            return String(localized: String.LocalizationValue("notification_quiet_all_day_title"), table: "Localizable")
+        default:
+            return String(localized: String.LocalizationValue("notification_quiet_night_title"), table: "Localizable")
+        }
+    }
+
+    var descriptionText: String {
+        switch self {
+        case .off:
+            return String(localized: String.LocalizationValue("notification_quiet_off_desc"), table: "Localizable")
+        case .night:
+            return String(localized: String.LocalizationValue("notification_quiet_night_desc"), table: "Localizable")
+        case .allDay:
+            return String(localized: String.LocalizationValue("notification_quiet_all_day_desc"), table: "Localizable")
+        default:
+            return String(localized: String.LocalizationValue("notification_quiet_night_desc"), table: "Localizable")
+        }
     }
 }

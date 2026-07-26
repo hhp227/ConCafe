@@ -1,7 +1,6 @@
 package com.hhp227.concafe.presentation.component
 
 import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,19 +9,37 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import org.jetbrains.skia.Image
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.jetbrains.skia.Image as SkiaImage
 import java.awt.GraphicsEnvironment
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
+import java.util.Base64
+import javax.imageio.ImageIO
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.math.roundToInt
 
 @Composable
 actual fun CompatImagePicker(
@@ -31,6 +48,7 @@ actual fun CompatImagePicker(
 ) {
     val launchPicker = {
         chooseImageFile()?.let(onImageSelected)
+        Unit
     }
 
     content(launchPicker)
@@ -39,72 +57,272 @@ actual fun CompatImagePicker(
 @Composable
 actual fun CompatImageDisplay(
     imageUrl: String?,
-    modifier: Modifier
+    modifier: Modifier,
+    applyRoundedClip: Boolean,
+    contentScale: ContentScale,
+    displaySize: ImageDisplaySize
 ) {
-    val imageBitmap = imageUrl?.let { decodeImageBitmap(it) }
+    val normalizedImageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() }
+    // Cache key includes displaySize so the same URL can be cached at different resolutions.
+    val cacheKey = if (normalizedImageUrl == null) null else "$normalizedImageUrl|$displaySize"
+    val imageBitmap by produceState<ImageBitmap?>(initialValue = null, key1 = cacheKey) {
+        value = if (cacheKey == null || normalizedImageUrl == null) null
+        else decodeImageBitmap(normalizedImageUrl, cacheKey, displaySize)
+    }
+    val resolvedImageBitmap = imageBitmap
 
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        if (imageBitmap == null) {
+        if (resolvedImageBitmap == null) {
             Icon(
                 painter = rememberVectorPainter(Icons.Default.Image),
                 contentDescription = null,
-                tint = Color(0xFF8C7A85),
+                tint = ConCafeColors.textMuted,
                 modifier = Modifier.fillMaxSize(0.36f)
             )
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .background(
-                        Color(0x1A8B6F7A),
-                        RoundedCornerShape(20.dp)
+                        ConCafeColors.textSecondary.copy(alpha = 0.1f),
+                        if (applyRoundedClip) RoundedCornerShape(20.dp) else RoundedCornerShape(0.dp)
                     )
             )
         } else {
+            val imageModifier = if (applyRoundedClip) {
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+            } else {
+                Modifier.fillMaxSize()
+            }
             Image(
-                bitmap = imageBitmap,
+                bitmap = resolvedImageBitmap,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                modifier = imageModifier,
+                contentScale = contentScale
             )
         }
     }
 }
 
 private fun chooseImageFile(): String? {
-    if (GraphicsEnvironment.isHeadless()) {
-        return null
-    }
-
-    val chooser = JFileChooser().apply {
-        dialogTitle = "이미지 선택"
-        fileSelectionMode = JFileChooser.FILES_ONLY
-        isAcceptAllFileFilterUsed = false
-        fileFilter = FileNameExtensionFilter(
-            "이미지 파일 (JPG, JPEG, PNG, WEBP)",
-            "jpg",
-            "jpeg",
-            "png",
-            "webp"
-        )
-    }
-    return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        chooser.selectedFile?.let { File(it.absolutePath).absolutePath }
+    if (!GraphicsEnvironment.isHeadless()) {
+        val chooser = JFileChooser().apply {
+            dialogTitle = "이미지 선택"
+            fileSelectionMode = JFileChooser.FILES_ONLY
+            isAcceptAllFileFilterUsed = false
+            fileFilter = FileNameExtensionFilter(
+                "이미지 파일 (JPG, JPEG, PNG, WEBP)",
+                "jpg",
+                "jpeg",
+                "png",
+                "webp"
+            )
+        }
+        return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            chooser.selectedFile?.let { File(it.absolutePath).absolutePath }
+        } else {
+            null
+        }
     } else {
-        null
+        return null
     }
 }
 
-private fun decodeImageBitmap(imageUrl: String): ImageBitmap? {
-    return runCatching {
-        val bytes = if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-            URL(imageUrl).readBytes()
-        } else {
+@Composable
+actual fun rememberImagePrefetcher(): ImagePrefetcher {
+    return remember {
+        object : ImagePrefetcher {
+            override fun prefetch(imageUrls: List<String?>, displaySize: ImageDisplaySize) {
+                imageUrls
+                    .asSequence()
+                    .mapNotNull { it?.trim()?.takeIf(String::isNotEmpty) }
+                    .distinct()
+                    .forEach { url ->
+                        val cacheKey = "$url|$displaySize"
+
+                        if (!JvmImagePrefetchRegistry.markRunning(cacheKey)) return@forEach
+                        JvmImagePrefetchScope.launch {
+                            try {
+                                decodeImageBitmap(
+                                    imageUrl = url,
+                                    cacheKey = cacheKey,
+                                    displaySize = displaySize
+                                )
+                            } finally {
+                                JvmImagePrefetchRegistry.markFinished(cacheKey)
+                            }
+                        }
+                    }
+            }
+        }
+    }
+}
+
+private suspend fun decodeImageBitmap(
+    imageUrl: String,
+    cacheKey: String,
+    displaySize: ImageDisplaySize
+): ImageBitmap? {
+    JvmImageBitmapMemoryCache.get(cacheKey)?.let { return it }
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val bytes = readImageBytes(imageUrl) ?: return@runCatching null
+            val bitmap = decodeWithImageIo(bytes, displaySize) ?: decodeWithSkia(bytes) ?: return@runCatching null
+
+            JvmImageBitmapMemoryCache.put(cacheKey, bitmap)
+            bitmap
+        }.getOrNull()
+    }
+}
+
+private fun readImageBytes(imageUrl: String): ByteArray? {
+    return when {
+        imageUrl.startsWith("data:image/", ignoreCase = true) -> {
+            val base64 = imageUrl.substringAfter(',', missingDelimiterValue = "")
+            if (base64.isBlank()) null else Base64.getDecoder().decode(base64)
+        }
+        imageUrl.startsWith("http://", ignoreCase = true) || imageUrl.startsWith("https://", ignoreCase = true) -> {
+            JvmImageDiskCache.getOrPut(imageUrl) {
+                openHttpConnection(imageUrl).inputStream.use { it.readBytes() }
+            }
+        }
+        imageUrl.startsWith("file:", ignoreCase = true) -> {
+            File(URI(imageUrl)).readBytes()
+        }
+        else -> {
             File(imageUrl).readBytes()
         }
+    }
+}
 
-        Image.makeFromEncoded(bytes).asImageBitmap()
+private fun openHttpConnection(imageUrl: String): HttpURLConnection {
+    return (URL(imageUrl).openConnection() as HttpURLConnection).apply {
+        instanceFollowRedirects = true
+        connectTimeout = 10_000
+        readTimeout = 20_000
+        setRequestProperty("User-Agent", "ConCafe Desktop")
+        setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8")
+    }
+}
+
+private fun decodeWithSkia(bytes: ByteArray): ImageBitmap? {
+    return runCatching {
+        SkiaImage.makeFromEncoded(bytes).toComposeImageBitmap()
     }.getOrNull()
+}
+
+private fun decodeWithImageIo(
+    bytes: ByteArray,
+    displaySize: ImageDisplaySize
+): ImageBitmap? {
+    val original = ByteArrayInputStream(bytes).use { ImageIO.read(it) } ?: return null
+    val maxPx = displaySize.maxPx()
+    val scaled = if (maxPx != null) scaleDown(original, maxPx) else original
+    return scaled.toComposeImageBitmap()
+}
+
+private fun ImageDisplaySize.maxPx(): Int? = when (this) {
+    ImageDisplaySize.THUMBNAIL -> 512
+    ImageDisplaySize.MEDIUM -> 1200
+    ImageDisplaySize.FULL -> 3840
+}
+
+private fun scaleDown(source: BufferedImage, maxPx: Int): BufferedImage {
+    val srcW = source.width
+    val srcH = source.height
+    if (srcW <= maxPx && srcH <= maxPx) return source
+    val ratio = maxPx.toFloat() / maxOf(srcW, srcH)
+    val dstW = (srcW * ratio).roundToInt().coerceAtLeast(1)
+    val dstH = (srcH * ratio).roundToInt().coerceAtLeast(1)
+    val type = if (source.type != BufferedImage.TYPE_CUSTOM) source.type else BufferedImage.TYPE_INT_ARGB
+    val result = BufferedImage(dstW, dstH, type)
+    val g = result.createGraphics()
+
+    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+    g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+    g.drawImage(source, 0, 0, dstW, dstH, null)
+    g.dispose()
+    return result
+}
+
+private object JvmImageBitmapMemoryCache {
+    private const val MAX_ENTRIES = 200
+    private val cache = object : LinkedHashMap<String, ImageBitmap>(MAX_ENTRIES, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?): Boolean {
+            return size > MAX_ENTRIES
+        }
+    }
+
+    fun get(key: String): ImageBitmap? = synchronized(cache) {
+        cache[key]
+    }
+
+    fun put(key: String, value: ImageBitmap) = synchronized(cache) {
+        cache[key] = value
+    }
+}
+
+private object JvmImagePrefetchScope {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    fun launch(block: suspend () -> Unit) {
+        scope.launch { block() }
+    }
+}
+
+private object JvmImagePrefetchRegistry {
+    private val runningKeys = mutableSetOf<String>()
+
+    fun markRunning(cacheKey: String): Boolean = synchronized(runningKeys) {
+        runningKeys.add(cacheKey)
+    }
+
+    fun markFinished(cacheKey: String) = synchronized(runningKeys) {
+        runningKeys.remove(cacheKey)
+        Unit
+    }
+}
+
+private object JvmImageDiskCache {
+    private const val MAX_BYTES = 512L * 1024L * 1024L
+    private val cacheDir = File(System.getProperty("java.io.tmpdir"), "concafe-image-cache").apply {
+        mkdirs()
+    }
+
+    fun getOrPut(imageUrl: String, fetch: () -> ByteArray): ByteArray {
+        val file = File(cacheDir, imageUrl.toCacheFileName())
+        if (file.isFile && file.length() > 0L) {
+            file.setLastModified(System.currentTimeMillis())
+            return file.readBytes()
+        }
+
+        val bytes = fetch()
+        runCatching {
+            evictIfNeeded(bytes.size.toLong())
+            file.writeBytes(bytes)
+        }
+        return bytes
+    }
+
+    private fun evictIfNeeded(incomingBytes: Long) {
+        val files = cacheDir.listFiles()?.filter { it.isFile } ?: return
+        var totalBytes = files.sumOf { it.length() } + incomingBytes
+        if (totalBytes <= MAX_BYTES) return
+
+        files.sortedBy { it.lastModified() }.forEach { file ->
+            if (totalBytes <= MAX_BYTES) return
+            totalBytes -= file.length()
+            file.delete()
+        }
+    }
+
+    private fun String.toCacheFileName(): String {
+        var hash = 1125899906842597L
+        forEach { char -> hash = 31 * hash + char.code }
+        return hash.toString(16).replace("-", "m")
+    }
 }

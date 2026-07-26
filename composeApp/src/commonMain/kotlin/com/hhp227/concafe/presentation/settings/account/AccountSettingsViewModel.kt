@@ -2,6 +2,21 @@ package com.hhp227.concafe.presentation.settings.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.account_settings_delete_password_required
+import concafe.composeapp.generated.resources.account_settings_error_delete_apple_ios_only
+import concafe.composeapp.generated.resources.account_settings_error_delete_failed
+import concafe.composeapp.generated.resources.account_settings_error_delete_google_reauth_failed
+import concafe.composeapp.generated.resources.account_settings_error_delete_invalid_password
+import concafe.composeapp.generated.resources.account_settings_error_delete_kakao_reauth_failed
+import concafe.composeapp.generated.resources.account_settings_error_load_failed
+import concafe.composeapp.generated.resources.account_settings_error_profile_save_failed
+import concafe.composeapp.generated.resources.account_settings_error_session_expired
+import concafe.composeapp.generated.resources.account_settings_message_cast_profile_missing
+import concafe.composeapp.generated.resources.account_settings_message_enter_nickname
+import concafe.composeapp.generated.resources.account_settings_message_saved
+import com.hhp227.concafe.domain.common.AppError
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -10,12 +25,24 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.model.AuthProvider
+import com.hhp227.concafe.domain.model.DeleteAccountRequest
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
+import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
+import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 
 class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -23,8 +50,11 @@ class AccountSettingsViewModel(
     private val _event = MutableSharedFlow<AccountSettingsEvent>(replay = 0)
     val event = _event.asSharedFlow()
 
+    private val jobs = mutableMapOf<TaskKey, Job>()
+
     private fun observeSession() {
-        viewModelScope.launch {
+        jobs[TaskKey.ObserveSession]?.cancel()
+        jobs[TaskKey.ObserveSession] = viewModelScope.launch {
             observeCurrentUserUseCase.invoke().collectLatest {
                 loadAccountSettings()
             }
@@ -34,7 +64,8 @@ class AccountSettingsViewModel(
     private fun loadAccountSettings() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch {
+        jobs[TaskKey.LoadAccountSettings]?.cancel()
+        jobs[TaskKey.LoadAccountSettings] = viewModelScope.launch {
             when (val result = getMyInfoUseCase.invoke()) {
                 is AppResult.Success -> {
                     _uiState.value = _uiState.value.copy(
@@ -48,7 +79,7 @@ class AccountSettingsViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "계정 정보를 불러오지 못했습니다."
+                            errorMessage = getString(Res.string.account_settings_error_load_failed)
                         )
                     }
                 }
@@ -64,9 +95,47 @@ class AccountSettingsViewModel(
 
     private fun clickSaveUserInfo() {
         val state = _uiState.value
-        when {
-            state.nicknameInput.isBlank() -> emitMessage("닉네임을 입력해 주세요.")
-            else -> emitMessage("계정 기본 정보를 저장했어요. 현재 단계에서는 로컬 상태에 반영됩니다.")
+        val nicknameInput = state.nicknameInput
+        val profileImage = state.myInfoFeed?.user?.profileImage
+
+        if (nicknameInput.isBlank()) {
+            emitMessage(Res.string.account_settings_message_enter_nickname)
+        } else {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+
+            jobs[TaskKey.SaveUserInfo]?.cancel()
+            jobs[TaskKey.SaveUserInfo] = viewModelScope.launch {
+                when (val result = updateUserProfileUseCase.invoke(nicknameInput, profileImage)) {
+                    is AppResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null,
+                                nicknameInput = result.data.nickname,
+                                myInfoFeed = it.myInfoFeed?.copy(user = result.data)
+                            )
+                        }
+                        emitMessage(Res.string.account_settings_message_saved)
+                    }
+
+                    is AppResult.Failure -> {
+                        val message = mapProfileUpdateFailureMessage(result)
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = null
+                            )
+                        }
+                        emitMessage(message)
+                    }
+                }
+            }
         }
     }
 
@@ -74,7 +143,7 @@ class AccountSettingsViewModel(
         val state = _uiState.value
         val cast = state.myInfoFeed?.castDetail?.cast
         if (cast?.id.isNullOrBlank()) {
-            emitMessage("연결된 캐스트 프로필이 아직 없습니다.")
+            emitMessage(Res.string.account_settings_message_cast_profile_missing)
             return
         }
         viewModelScope.launch {
@@ -97,7 +166,8 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = true,
-                deleteConfirmation = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
@@ -106,30 +176,149 @@ class AccountSettingsViewModel(
         _uiState.update {
             it.copy(
                 isDeleteDialogVisible = false,
-                deleteConfirmation = ""
+                deletePassword = "",
+                deletePasswordErrorMessage = null
             )
         }
     }
 
     private fun clickDeleteAccount() {
         val state = _uiState.value
-        if (state.deleteConfirmation != DELETE_CONFIRMATION_TEXT) {
-            emitMessage("'$DELETE_CONFIRMATION_TEXT'를 정확히 입력해 주세요.")
-            return
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        jobs[TaskKey.DeleteAccount]?.cancel()
+        jobs[TaskKey.DeleteAccount] = viewModelScope.launch {
+            val result = when (state.authProvider) {
+                AuthProvider.EMAIL, AuthProvider.UNKNOWN -> {
+                    if (state.deletePassword.isBlank()) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                deletePasswordErrorMessage = getString(Res.string.account_settings_delete_password_required)
+                            )
+                        }
+                        return@launch
+                    }
+                    deleteAccountUseCase.invoke(
+                        DeleteAccountRequest(
+                            provider = AuthProvider.EMAIL,
+                            password = state.deletePassword
+                        )
+                    )
+                }
+                AuthProvider.GOOGLE -> {
+                    runCatching { googleIdTokenProvider.getGoogleIdToken() }
+                        .fold(
+                            onSuccess = { token ->
+                                deleteAccountUseCase.invoke(
+                                    DeleteAccountRequest(
+                                        provider = AuthProvider.GOOGLE,
+                                        idToken = token
+                                    )
+                                )
+                            },
+                            onFailure = {
+                                AppResult.Failure(
+                                    AppError.ValidationFailed("google reauth failed")
+                                )
+                            }
+                        )
+                }
+                AuthProvider.KAKAO -> {
+                    runCatching { kakaoIdTokenProvider.getKakaoAuthPayload().idToken }
+                        .fold(
+                            onSuccess = { token ->
+                                deleteAccountUseCase.invoke(
+                                    DeleteAccountRequest(
+                                        provider = AuthProvider.KAKAO,
+                                        idToken = token
+                                    )
+                                )
+                            },
+                            onFailure = {
+                                AppResult.Failure(
+                                    AppError.ValidationFailed("kakao reauth failed")
+                                )
+                            }
+                        )
+                }
+                AuthProvider.APPLE -> {
+                    AppResult.Failure(
+                        AppError.ValidationFailed("apple delete not supported on compose")
+                    )
+                }
+            }
+            when (result) {
+                is AppResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            isDeleteRequested = true,
+                            isDeleteDialogVisible = false,
+                            deletePassword = ""
+                        )
+                    }
+                    _event.emit(AccountSettingsEvent.NavigateToMain)
+                }
+
+                is AppResult.Failure -> {
+                    val message = mapDeleteFailureMessage(result)
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            deletePasswordErrorMessage = message
+                        )
+                    }
+                }
+            }
         }
-        _uiState.update {
-            it.copy(
-                isDeleteRequested = true,
-                isDeleteDialogVisible = false,
-                deleteConfirmation = ""
-            )
-        }
-        emitMessage("회원탈퇴 요청 단계를 진행했어요. 실제 서버 삭제 연동은 후속 단계에서 연결됩니다.")
     }
 
     private fun emitMessage(message: String) {
         viewModelScope.launch {
             _event.emit(AccountSettingsEvent.ShowMessage(message))
+        }
+    }
+
+    private fun emitMessage(message: StringResource) {
+        viewModelScope.launch {
+            _event.emit(AccountSettingsEvent.ShowMessage(getString(message)))
+        }
+    }
+
+    private suspend fun mapDeleteFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString()
+        val normalized = rawError.uppercase()
+
+        return if (normalized.contains("INVALID PASSWORD")
+            || normalized.contains("INVALID_LOGIN_CREDENTIALS")
+            || normalized.contains("INVALID_PASSWORD")
+            || normalized.contains("EMAIL_NOT_FOUND")
+        ) {
+            getString(Res.string.account_settings_error_delete_invalid_password)
+        } else if (normalized.contains("GOOGLE REAUTH FAILED")) {
+            getString(Res.string.account_settings_error_delete_google_reauth_failed)
+        } else if (normalized.contains("KAKAO REAUTH FAILED")) {
+            getString(Res.string.account_settings_error_delete_kakao_reauth_failed)
+        } else if (normalized.contains("APPLE DELETE NOT SUPPORTED")) {
+            getString(Res.string.account_settings_error_delete_apple_ios_only)
+        } else {
+            getString(Res.string.account_settings_error_delete_failed)
+        }
+    }
+
+    private suspend fun mapProfileUpdateFailureMessage(failure: AppResult.Failure): String {
+        val rawError = failure.error.toString().uppercase()
+
+        return if (rawError.contains("UNAUTHORIZED")) {
+            getString(Res.string.account_settings_error_session_expired)
+        } else if (rawError.contains("VALIDATIONFAILED")) {
+            getString(Res.string.account_settings_message_enter_nickname)
+        } else {
+            getString(Res.string.account_settings_error_profile_save_failed)
         }
     }
 
@@ -142,11 +331,20 @@ class AccountSettingsViewModel(
             AccountSettingsAction.ClickOpenChangePassword -> clickOpenChangePassword()
             AccountSettingsAction.ClickShowDeleteDialog -> clickShowDeleteDialog()
             AccountSettingsAction.ClickDismissDeleteDialog -> clickDismissDeleteDialog()
-            is AccountSettingsAction.ChangeDeleteConfirmation -> _uiState.update {
-                it.copy(deleteConfirmation = action.value)
+            is AccountSettingsAction.ChangeDeletePassword -> _uiState.update {
+                it.copy(
+                    deletePassword = action.value,
+                    deletePasswordErrorMessage = null
+                )
             }
             AccountSettingsAction.ClickDeleteAccount -> clickDeleteAccount()
         }
+    }
+
+    override fun onCleared() {
+        jobs.values.forEach(Job::cancel)
+        jobs.clear()
+        super.onCleared()
     }
 
     init {
@@ -154,7 +352,10 @@ class AccountSettingsViewModel(
         observeSession()
     }
 
-    private companion object {
-        private const val DELETE_CONFIRMATION_TEXT = "탈퇴"
+    private enum class TaskKey {
+        ObserveSession,
+        LoadAccountSettings,
+        SaveUserInfo,
+        DeleteAccount
     }
 }

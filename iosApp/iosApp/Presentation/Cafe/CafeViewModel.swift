@@ -13,10 +13,14 @@ import KMPNativeCoroutinesAsync
 @MainActor
 final class CafeViewModel: ObservableObject {
     private let cafeId: String
-    
+
     private let getCafeDetailUseCase: GetCafeDetailUseCase
 
+    private let getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase
+
     private let getCafeCastListPageUseCase: GetCafeCastListPageUseCase
+
+    private let getCafeEventPageUseCase: GetCafeEventPageUseCase
 
     private let getCafeNoticePageUseCase: GetCafeNoticePageUseCase
 
@@ -24,14 +28,20 @@ final class CafeViewModel: ObservableObject {
 
     private let toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase
 
+    private let deleteReviewUseCase: DeleteReviewUseCase
+
+    private let shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase
+
+    private let markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase
+
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
     private let reviewEventPublisher: ReviewEventPublisher
-    
+
     @Published private(set) var uiState = CafeUiState.empty
-    
+
     let event = PassthroughSubject<CafeEvent, Never>()
-    
+
     private var tasks: [TaskKey: Task<Void, Never>] = [:]
 
     private func observeCafeDetailEvent() {
@@ -42,6 +52,10 @@ final class CafeViewModel: ObservableObject {
                     switch event {
                     case is CafeDetailEvent.CafeInfoUpdated:
                         self.loadCafeDetail()
+                    case let favorite as CafeDetailEvent.FavoriteToggled:
+                        if favorite.cafeId == self.cafeId {
+                            self.uiState.isFavorite = favorite.isFavorite
+                        }
                     case is CafeDetailEvent.GoodsCreated,
                         is CafeDetailEvent.GoodsDeleted,
                         is CafeDetailEvent.GoodsUpdated,
@@ -58,7 +72,7 @@ final class CafeViewModel: ObservableObject {
             }
         }
     }
-    
+
     private func observeReviewEvent() {
         tasks[.reviewEvent]?.cancel()
         tasks[.reviewEvent] = Task {
@@ -70,7 +84,6 @@ final class CafeViewModel: ObservableObject {
                             await MainActor.run {
                                 self.uiState.shouldScrollToTopOnReturn = true
                             }
-                            self.loadCafeDetail(refreshReviews: false)
                             self.refreshReviewPage()
                         }
                     case let deleted as ReviewEvent.Deleted:
@@ -107,13 +120,16 @@ final class CafeViewModel: ObservableObject {
                         isLoadingMoreCasts: uiState.isLoadingMoreCasts,
                         errorMessage: nil,
                         selectedTab: uiState.selectedTab,
-                        detail: feed.detail,
+                        detail: mergeLoadedMenuGoods(feed.detail),
                         casts: uiState.casts,
                         castsNextCursor: uiState.castsNextCursor,
                         canLoadMoreCasts: uiState.canLoadMoreCasts,
+                        isLoadingMenuGoods: uiState.isLoadingMenuGoods,
+                        hasLoadedMenuGoods: uiState.hasLoadedMenuGoods,
                         isLoadingMoreNotices: uiState.isLoadingMoreNotices,
                         noticesNextCursor: uiState.noticesNextCursor,
                         canLoadMoreNotices: uiState.canLoadMoreNotices,
+                        events: uiState.events,
                         notices: uiState.notices,
                         isLoadingMoreReviews: uiState.isLoadingMoreReviews,
                         reviewsNextCursor: feed.reviewsNextCursor,
@@ -122,26 +138,35 @@ final class CafeViewModel: ObservableObject {
                         isFavorite: feed.isFavorite,
                         isLoggedIn: feed.isLoggedIn,
                         isVisitVerified: feed.isVisitVerified,
-                        shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn
+                        shouldScrollToTopOnReturn: uiState.shouldScrollToTopOnReturn,
+                        currentUserId: feed.currentUserId,
+                        shouldShowFavoriteTooltip: uiState.shouldShowFavoriteTooltip ||
+                            shouldShowDetailTooltipUseCase.invoke(type: .cafeFavorite)
                     )
                     refreshCastPage()
                     if uiState.selectedTab == .notices, uiState.notices.isEmpty {
                         refreshNoticePage()
+                    }
+                    if uiState.selectedTab == .notices, uiState.events.isEmpty {
+                        refreshEventPage()
+                    }
+                    if uiState.selectedTab == .menu, !uiState.hasLoadedMenuGoods {
+                        loadMenuGoods()
                     }
                     if refreshReviews, uiState.selectedTab == .reviews {
                         refreshReviewPage()
                     }
                 } else if result is AppResultFailure {
                     uiState.isLoading = false
-                    uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 } else {
                     uiState.isLoading = false
-                    uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                    uiState.errorMessage = nil
                 }
             } catch {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
-                uiState.errorMessage = "카페 상세 데이터를 불러오지 못했습니다."
+                uiState.errorMessage = nil
             }
         }
     }
@@ -152,11 +177,16 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreCasts = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeCastListPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
                    let page = success.data as? PagedResult<CafeDetailCast> {
-                    uiState.casts = append ? (uiState.casts + page.items as! [CafeDetailCast]) : page.items as! [CafeDetailCast]
+                    let items = page.items as! [CafeDetailCast]
+                    uiState.casts = (append ? uiState.casts + items : items).sortedByTodayWorkFirst()
                     uiState.castsNextCursor = page.nextCursor
                     uiState.canLoadMoreCasts = page.hasNext
                     uiState.isLoadingMoreCasts = false
@@ -174,6 +204,43 @@ final class CafeViewModel: ObservableObject {
         loadCastPage(cursor: nil, append: false)
     }
 
+    private func loadMenuGoods() {
+        guard let detail = uiState.detail else { return }
+        guard !uiState.isLoadingMenuGoods, !uiState.hasLoadedMenuGoods else { return }
+
+        tasks[.menuGoods]?.cancel()
+        tasks[.menuGoods] = Task {
+            uiState.isLoadingMenuGoods = true
+
+            do {
+                let result = try await getCafeMenuGoodsUseCase.invoke(cafeId: detail.cafe.id)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let section = success.data as? CafeMenuGoodsSection {
+                    uiState.isLoadingMenuGoods = false
+                    uiState.hasLoadedMenuGoods = true
+                    if let currentDetail = uiState.detail {
+                        uiState.detail = CafeDetail(
+                            cafe: currentDetail.cafe,
+                            images: currentDetail.images,
+                            casts: currentDetail.casts,
+                            menus: section.menus,
+                            goods: section.goods,
+                            notices: currentDetail.notices,
+                            businessHours: currentDetail.businessHours,
+                            phoneNumber: currentDetail.phoneNumber
+                        )
+                    }
+                } else {
+                    uiState.isLoadingMenuGoods = false
+                }
+            } catch {
+                if Task.isCancelled { return }
+                uiState.isLoadingMenuGoods = false
+            }
+        }
+    }
+
     private func loadMoreCasts() {
         guard uiState.canLoadMoreCasts,
               !uiState.isLoadingMoreCasts,
@@ -187,6 +254,10 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreNotices = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeNoticePageUseCase.invoke(cafeId: self.cafeId, query: "", cursor: cursor, pageSize: 15)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -210,6 +281,27 @@ final class CafeViewModel: ObservableObject {
         loadNoticePage(cursor: nil, append: false)
     }
 
+    private func loadEventPage() {
+        tasks[.eventPage]?.cancel()
+        tasks[.eventPage] = Task {
+            do {
+                let result = try await getCafeEventPageUseCase.invoke(cafeId: self.cafeId, query: "", cursor: nil, pageSize: 30)
+
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let page = success.data as? PagedResult<CafeEventManagementItem> {
+                    let items = page.items as! [CafeEventManagementItem]
+                    uiState.events = items.sorted { $0.statusPriority < $1.statusPriority }
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    private func refreshEventPage() {
+        loadEventPage()
+    }
+
     private func loadMoreNotices() {
         guard uiState.canLoadMoreNotices,
               !uiState.isLoadingMoreNotices,
@@ -223,6 +315,10 @@ final class CafeViewModel: ObservableObject {
             uiState.isLoadingMoreReviews = append
 
             do {
+                if append {
+                    try await Task.sleep(nanoseconds: Self.paginationDelayNanoseconds)
+                    if Task.isCancelled { return }
+                }
                 let result = try await getCafeReviewPageUseCase.invoke(cafeId: self.cafeId, cursor: cursor, pageSize: 15)
 
                 if let success = result as? AppResultSuccess<AnyObject>,
@@ -258,13 +354,16 @@ final class CafeViewModel: ObservableObject {
             do {
                 let result = try await toggleFavoriteCafeUseCase.invoke(cafeId: cafeId)
 
-                if let failure = result as? AppResultFailure {
+                if let success = result as? AppResultSuccess<AnyObject>,
+                   let isFavorite = success.data as? NSNumber {
+                    uiState.isFavorite = isFavorite.boolValue
+                    uiState.isLoggedIn = true
+                } else if let failure = result as? AppResultFailure {
                     if failure.error is AppErrorUnauthorized {
                         event.send(.navigateToSignIn)
                     }
                 } else {
                     uiState.isLoggedIn = true
-                    loadCafeDetail()
                 }
             } catch {
                 if Task.isCancelled { return }
@@ -276,7 +375,22 @@ final class CafeViewModel: ObservableObject {
         if !uiState.isLoggedIn {
             event.send(.navigateToSignIn)
         } else {
-            event.send(.navigateToReviewEdit(cafeId: cafeId))
+            event.send(.navigateToReviewEdit(cafeId: cafeId, reviewId: nil))
+        }
+    }
+
+    private func deleteReview(reviewId: String) {
+        Task {
+            do {
+                let result = try await deleteReviewUseCase.invoke(cafeId: cafeId, reviewId: reviewId)
+
+                if result is AppResultFailure {
+                    event.send(.showReviewDeleteFailedMessage)
+                }
+            } catch {
+                if Task.isCancelled { return }
+                event.send(.showReviewDeleteFailedMessage)
+            }
         }
     }
 
@@ -286,8 +400,14 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateBack)
         case .changeTab(let tab):
             uiState.selectedTab = tab
+            if tab == .menu, !uiState.hasLoadedMenuGoods {
+                loadMenuGoods()
+            }
             if tab == .notices, uiState.notices.isEmpty {
                 refreshNoticePage()
+            }
+            if tab == .notices, uiState.events.isEmpty {
+                refreshEventPage()
             }
             if tab == .reviews, uiState.reviews.isEmpty {
                 refreshReviewPage()
@@ -296,37 +416,63 @@ final class CafeViewModel: ObservableObject {
             event.send(.navigateToCast(id: id))
         case .favoriteTapped:
             toggleFavorite()
+        case .favoriteTooltipShown:
+            markDetailTooltipShownUseCase.invoke(type: .cafeFavorite)
+        case .dismissFavoriteTooltip:
+            uiState.shouldShowFavoriteTooltip = false
         case .writeReviewTapped:
             writeReview()
         case .loadMoreCasts:
             loadMoreCasts()
         case .loadMoreNotices:
             loadMoreNotices()
+        case .eventTapped(let eventId):
+            event.send(.navigateToCafeEvent(cafeId: cafeId, eventId: eventId))
         case .loadMoreReviews:
             loadMoreReviews()
         case .refresh:
             loadCafeDetail()
+        case .pagingTriggerDisappeared:
+            break
         case .consumeScrollToTopOnReturn:
             uiState.shouldScrollToTopOnReturn = false
+        case .editReview(let reviewId):
+            event.send(.navigateToReviewEdit(cafeId: cafeId, reviewId: reviewId))
+        case .deleteReview(let reviewId):
+            deleteReview(reviewId: reviewId)
+        case .reviewImageTapped(let imageUrl):
+            event.send(.navigateToPicture(imageUrl: imageUrl))
+        case .reportReview:
+            event.send(.showReviewReportedMessage)
         }
     }
 
     init(
         cafeId: String,
         getCafeDetailUseCase: GetCafeDetailUseCase = KoinInitializerKt.resolveGetCafeDetailUseCase(),
+        getCafeMenuGoodsUseCase: GetCafeMenuGoodsUseCase = KoinInitializerKt.resolveGetCafeMenuGoodsUseCase(),
         getCafeCastListPageUseCase: GetCafeCastListPageUseCase = KoinInitializerKt.resolveGetCafeCastListPageUseCase(),
+        getCafeEventPageUseCase: GetCafeEventPageUseCase = KoinInitializerKt.resolveGetCafeEventPageUseCase(),
         getCafeNoticePageUseCase: GetCafeNoticePageUseCase = KoinInitializerKt.resolveGetCafeNoticePageUseCase(),
         getCafeReviewPageUseCase: GetCafeReviewPageUseCase = KoinInitializerKt.resolveGetCafeReviewPageUseCase(),
         toggleFavoriteCafeUseCase: ToggleFavoriteCafeUseCase = KoinInitializerKt.resolveToggleFavoriteCafeUseCase(),
+        deleteReviewUseCase: DeleteReviewUseCase = KoinInitializerKt.resolveDeleteReviewUseCase(),
+        shouldShowDetailTooltipUseCase: ShouldShowDetailTooltipUseCase = KoinInitializerKt.resolveShouldShowDetailTooltipUseCase(),
+        markDetailTooltipShownUseCase: MarkDetailTooltipShownUseCase = KoinInitializerKt.resolveMarkDetailTooltipShownUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         reviewEventPublisher: ReviewEventPublisher = KoinInitializerKt.resolveReviewEventPublisher()
     ) {
         self.cafeId = cafeId
         self.getCafeDetailUseCase = getCafeDetailUseCase
+        self.getCafeMenuGoodsUseCase = getCafeMenuGoodsUseCase
         self.getCafeCastListPageUseCase = getCafeCastListPageUseCase
+        self.getCafeEventPageUseCase = getCafeEventPageUseCase
         self.getCafeNoticePageUseCase = getCafeNoticePageUseCase
         self.getCafeReviewPageUseCase = getCafeReviewPageUseCase
         self.toggleFavoriteCafeUseCase = toggleFavoriteCafeUseCase
+        self.deleteReviewUseCase = deleteReviewUseCase
+        self.shouldShowDetailTooltipUseCase = shouldShowDetailTooltipUseCase
+        self.markDetailTooltipShownUseCase = markDetailTooltipShownUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.reviewEventPublisher = reviewEventPublisher
 
@@ -334,7 +480,7 @@ final class CafeViewModel: ObservableObject {
         observeReviewEvent()
         loadCafeDetail()
     }
-    
+
     deinit {
         tasks.values.forEach { $0.cancel() }
         tasks.removeAll()
@@ -342,10 +488,64 @@ final class CafeViewModel: ObservableObject {
 
     private enum TaskKey {
         case detail
+        case menuGoods
         case castPage
+        case eventPage
         case noticePage
         case reviewPage
         case cafeDetail
         case reviewEvent
+    }
+
+    private func mergeLoadedMenuGoods(_ detail: CafeDetail?) -> CafeDetail? {
+        guard let detail else { return nil }
+        guard uiState.hasLoadedMenuGoods, let currentDetail = uiState.detail else {
+            return detail
+        }
+        return CafeDetail(
+            cafe: detail.cafe,
+            images: detail.images,
+            casts: detail.casts,
+            menus: currentDetail.menus,
+            goods: currentDetail.goods,
+            notices: detail.notices,
+            businessHours: detail.businessHours,
+            phoneNumber: detail.phoneNumber
+        )
+    }
+
+    private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
+}
+
+private extension CafeEventManagementItem {
+    var statusPriority: Int {
+        let normalized = statusLabel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized.contains("진행 중") || normalized.contains("진행중") || normalized.contains("ongoing") {
+            return 0
+        }
+        if normalized.contains("예정") || normalized.contains("upcoming") || normalized.contains("scheduled") {
+            return 1
+        }
+        if normalized.contains("종료") || normalized.contains("ended") || normalized.contains("end") {
+            return 2
+        }
+        return 3
+    }
+}
+
+private extension Array where Element == CafeDetailCast {
+    func sortedByTodayWorkFirst() -> [CafeDetailCast] {
+        sorted { lhs, rhs in
+            let lhsHasTodaySchedule = lhs.todaySchedule != nil
+            let rhsHasTodaySchedule = rhs.todaySchedule != nil
+
+            if lhsHasTodaySchedule != rhsHasTodaySchedule {
+                return lhsHasTodaySchedule
+            }
+            if lhs.cast.name != rhs.cast.name {
+                return lhs.cast.name < rhs.cast.name
+            }
+            return lhs.cast.id < rhs.cast.id
+        }
     }
 }

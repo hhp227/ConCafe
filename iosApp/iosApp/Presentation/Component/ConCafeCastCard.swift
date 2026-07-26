@@ -6,13 +6,18 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct ConCafeCastCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let name: String
 
     let subtitle: String
 
-    var containerColor = Color(hex: "FFF9FC")
+    var imageUrl: String? = nil
+
+    var containerColor = ConCafeColors.background
 
     var containerCornerRadius: CGFloat = 18
 
@@ -28,24 +33,42 @@ struct ConCafeCastCard: View {
 
     var conceptRole: String? = nil
 
+    var attendanceStatusText: String? = nil
+
     var isWorking = false
 
     let onTap: () -> Void
 
     var body: some View {
+        let statusText = attendanceStatusText ?? (isWorking ? "출근중" : nil)
+
         VStack(alignment: .leading, spacing: 0) {
-            LinearGradient(
-                colors: [Color(hex: "FFDCE8"), Color(hex: "FFC4D8")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            GeometryReader { proxy in
+                ZStack {
+                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: imageUrl) {
+                        CachedAsyncImage(
+                            url: imageUrl,
+                            placeholder: Color.clear,
+                            displaySize: .thumbnail
+                        )
+                    } else {
+                        LinearGradient(
+                            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
+                .clipped()
+            }
             .frame(height: imageHeight)
-            .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
             .overlay(alignment: .topTrailing) {
-                if isWorking || !(conceptRole?.isEmpty ?? true) {
+                if !(statusText?.isEmpty ?? true) || !(conceptRole?.isEmpty ?? true) {
                     HStack(spacing: 6) {
-                        if isWorking {
-                            Text("출근중")
+                        if let statusText, !statusText.isEmpty {
+                            Text(statusText)
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
@@ -65,17 +88,18 @@ struct ConCafeCastCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name)
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(colorScheme == .dark ? .white : .primary)
                     .lineLimit(1)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(Color(hex: "7E7E7E"))
+                    .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.78) : .secondary)
                     .lineLimit(subtitleLineLimit)
                     .frame(minHeight: subtitleLineLimit == 2 ? 28 : nil, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)
                 if let metaText, !metaText.isEmpty {
                     Text(metaText)
                         .font(.caption)
-                        .foregroundStyle(Color(hex: "EF6797"))
+                        .foregroundStyle(ConCafeColors.primary)
                 }
             }
             .padding(contentPadding)

@@ -15,6 +15,10 @@ struct FanManagementUiState {
     var castClaimStatus: CastClaimStatusCard? = nil
     var castClaimSheet: CastClaimSheet? = nil
     var isClaimSheetVisible: Bool = false
+    var isAnnouncementSheetVisible: Bool = false
+    var announcementTitle: String = ""
+    var announcementBody: String = ""
+    var isSendingAnnouncement: Bool = false
     var infoMessage: String? = nil
 
     struct CastClaimStatusCard: Hashable {
@@ -68,11 +72,27 @@ struct FanManagementUiState {
         case rejected
     }
 
+    var isAnnouncementSubmitEnabled: Bool {
+        !announcementTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !announcementBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !isSendingAnnouncement
+    }
+
+    var hasPrimaryContent: Bool {
+        fanManagementData != nil || castClaimStatus != nil
+    }
+
     static let empty = FanManagementUiState(
         isLoading: true,
         errorMessage: nil,
         fanManagementData: nil,
         castClaimStatus: nil,
+        castClaimSheet: nil,
+        isClaimSheetVisible: false,
+        isAnnouncementSheetVisible: false,
+        announcementTitle: "",
+        announcementBody: "",
+        isSendingAnnouncement: false,
         infoMessage: nil
     )
 }

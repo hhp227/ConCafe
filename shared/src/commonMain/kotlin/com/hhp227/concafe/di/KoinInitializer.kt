@@ -1,20 +1,26 @@
 package com.hhp227.concafe.di
 
 import com.hhp227.concafe.domain.event.publisher.BannerEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeEventEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
+import com.hhp227.concafe.domain.event.publisher.CafeOwnerClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CafeRegistrationClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastClaimEventPublisher
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import com.hhp227.concafe.domain.event.publisher.VisitEventPublisher
 import com.hhp227.concafe.domain.event.publisher.NoticeManagementEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ScheduleManagementEventPublisher
-import com.hhp227.concafe.domain.repository.AuthRepository
+import com.hhp227.concafe.domain.event.publisher.UserEventPublisher
 import com.hhp227.concafe.domain.usecase.DeleteCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.CafeExternalLinkLocalUseCase
 import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.CreateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.CreateInquiryUseCase
+import com.hhp227.concafe.domain.usecase.CreateCommunityPostReportUseCase
+import com.hhp227.concafe.domain.usecase.CreateUserBlockUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCafeRegistrationClaimUseCase
@@ -23,63 +29,122 @@ import com.hhp227.concafe.domain.usecase.DeleteCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDashboardUseCase
 import com.hhp227.concafe.domain.usecase.DeleteCastUseCase
+import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
+import com.hhp227.concafe.domain.usecase.DeleteReviewUseCase
+import com.hhp227.concafe.domain.usecase.GetReviewUseCase
+import com.hhp227.concafe.domain.usecase.UpdateReviewUseCase
+import com.hhp227.concafe.domain.usecase.ChangePasswordUseCase
+import com.hhp227.concafe.domain.usecase.CheckAppUpdateUseCase
 import com.hhp227.concafe.domain.usecase.DeleteHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeCastListPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeMenuGoodsUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeNoticePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.CreateVisitUseCase
 import com.hhp227.concafe.domain.usecase.CreateReviewUseCase
 import com.hhp227.concafe.domain.usecase.CreateCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCastDetailUseCase
+import com.hhp227.concafe.domain.usecase.GetBirthdayCastsUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetExploreCastPageUseCase
-import com.hhp227.concafe.domain.usecase.GetHomeFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeBannersUseCase
+import com.hhp227.concafe.domain.usecase.GetHomeCafeEventsUseCase
+import com.hhp227.concafe.domain.usecase.GetNearbyCafePageUseCase
+import com.hhp227.concafe.domain.usecase.GetPopularCastPageUseCase
+import com.hhp227.concafe.domain.usecase.GetRecentNoticesUseCase
 import com.hhp227.concafe.domain.usecase.GetHomeBannerManagementUseCase
 import com.hhp227.concafe.domain.usecase.GetFanManagementDataUseCase
 import com.hhp227.concafe.domain.usecase.GetMyCastClaimStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetMyRequestableCastPageUseCase
 import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminReportPageUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminUserPageUseCase
+import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
+import com.hhp227.concafe.domain.usecase.GetNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.GetRankingFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetScheduleManagementDataUseCase
+import com.hhp227.concafe.domain.usecase.GetGuestCastSchedulesUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCastClaimsForCafeUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeOwnerClaimsUseCase
 import com.hhp227.concafe.domain.usecase.GetPendingCafeRegistrationClaimsUseCase
 import com.hhp227.concafe.domain.usecase.MarkNotificationReadUseCase
+import com.hhp227.concafe.domain.usecase.UpdateNotificationSettingsUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ObserveNetworkAlertStateUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.RestoreSessionUseCase
+import com.hhp227.concafe.domain.usecase.RegisterPushTokenUseCase
+import com.hhp227.concafe.domain.usecase.SendFanAnnouncementUseCase
+import com.hhp227.concafe.domain.usecase.RequestPasswordResetUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithAppleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
+import com.hhp227.concafe.domain.usecase.CompleteSignUpForCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFollowCastUseCase
 import com.hhp227.concafe.domain.usecase.ToggleFavoriteCafeUseCase
+import com.hhp227.concafe.domain.usecase.DeleteImageUseCase
 import com.hhp227.concafe.domain.usecase.UploadImageUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeInfoUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeSocialMediaUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeReservationUrlUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeEventUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCafeNoticeUseCase
 import com.hhp227.concafe.domain.usecase.UpdateHomeBannerUseCase
 import com.hhp227.concafe.domain.usecase.UpdateCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.UpsertGuestCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.DeleteGuestCastScheduleUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
 import com.hhp227.concafe.domain.usecase.ApproveCastClaimUseCase
+import com.hhp227.concafe.domain.usecase.ClearNativeAdUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeScheduleCalendarUseCase
+import com.hhp227.concafe.domain.usecase.LoadNativeAdUseCase
 import com.hhp227.concafe.domain.usecase.RejectCastClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeOwnerClaimUseCase
 import com.hhp227.concafe.domain.usecase.RejectCafeRegistrationClaimUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCastUseCase
 import com.hhp227.concafe.domain.usecase.UpsertCafeMenuGoodsUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostPageUseCase
+import com.hhp227.concafe.domain.usecase.CreateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.IncrementCommunityPostViewCountUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.CheckCommunityPostLikedUseCase
+import com.hhp227.concafe.domain.usecase.ToggleCommunityPostLikeUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityCommentsUseCase
+import com.hhp227.concafe.domain.usecase.AddCommunityCommentUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityPostUseCase
+import com.hhp227.concafe.domain.usecase.GetCommunityCommentPageUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCommunityCommentUseCase
+import com.hhp227.concafe.domain.usecase.DeleteCommunityCommentUseCase
+import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
+import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
+import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
+import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ObserveBrandThemeUseCase
+import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.SetBrandThemeUseCase
+import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
+import com.hhp227.concafe.domain.usecase.ToggleCafeEventLikeUseCase
+import com.hhp227.concafe.domain.usecase.UpdateCafeTableCountsUseCase
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.mp.KoinPlatform.getKoin
 
 private var koinApplication: KoinApplication? = null
 
@@ -90,14 +155,49 @@ fun doInitKoin(): KoinApplication? {
 fun doInitKoin(extraModules: List<Module>): KoinApplication? {
     return if (koinApplication == null) {
         startKoin {
-            modules(concafeModules + extraModules)
+            modules(concafeModules + sharedPlatformModules() + extraModules)
         }.also { koinApplication = it }
     } else {
         null
     }
 }
 
-fun resolveGetHomeFeedUseCase(): GetHomeFeedUseCase {
+fun resolveGetHomeBannersUseCase(): GetHomeBannersUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetBirthdayCastsUseCase(): GetBirthdayCastsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetRecentNoticesUseCase(): GetRecentNoticesUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetHomeCafeEventsUseCase(): GetHomeCafeEventsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetNearbyCafePageUseCase(): GetNearbyCafePageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetPopularCastPageUseCase(): GetPopularCastPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -153,6 +253,13 @@ fun resolveGetCafeEventPageUseCase(): GetCafeEventPageUseCase {
     return koin.get()
 }
 
+fun resolveGetCafeEventParticipantCastsUseCase(): GetCafeEventParticipantCastsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetCafeCastPageUseCase(): GetCafeCastPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -168,6 +275,13 @@ fun resolveGetCafeCastListPageUseCase(): GetCafeCastListPageUseCase {
 }
 
 fun resolveGetCheckInGuestFeedUseCase(): GetCheckInGuestFeedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCheckInMapCafePageUseCase(): GetCheckInMapCafePageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -196,6 +310,13 @@ fun resolveCreateCastClaimUseCase(): CreateCastClaimUseCase {
 }
 
 fun resolveCreateCafeEventUseCase(): CreateCafeEventUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCafeExternalLinkLocalUseCase(): CafeExternalLinkLocalUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -265,6 +386,48 @@ fun resolveDeleteCastUseCase(): DeleteCastUseCase {
     return koin.get()
 }
 
+fun resolveDeleteAccountUseCase(): DeleteAccountUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteReviewUseCase(): DeleteReviewUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateReviewUseCase(): UpdateReviewUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetReviewUseCase(): GetReviewUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveChangePasswordUseCase(): ChangePasswordUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCheckAppUpdateUseCase(): CheckAppUpdateUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveDeleteHomeBannerUseCase(): DeleteHomeBannerUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -294,6 +457,13 @@ fun resolveGetCheckInUserFeedUseCase(): GetCheckInUserFeedUseCase {
 }
 
 fun resolveGetCafeDetailUseCase(): GetCafeDetailUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCafeMenuGoodsUseCase(): GetCafeMenuGoodsUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -363,6 +533,27 @@ fun resolveGetScheduleManagementDataUseCase(): GetScheduleManagementDataUseCase 
     return koin.get()
 }
 
+fun resolveGetGuestCastSchedulesUseCase(): GetGuestCastSchedulesUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpsertGuestCastScheduleUseCase(): UpsertGuestCastScheduleUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteGuestCastScheduleUseCase(): DeleteGuestCastScheduleUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetSignUpCafeListUseCase(): GetSignUpCafeListUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -398,6 +589,13 @@ fun resolveGetNotificationFeedUseCase(): GetNotificationFeedUseCase {
     return koin.get()
 }
 
+fun resolveGetNotificationSettingsUseCase(): GetNotificationSettingsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveGetMainNavigationUseCase(): GetMainNavigationUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -419,6 +617,34 @@ fun resolveSignInUseCase(): SignInUseCase {
     return koin.get()
 }
 
+fun resolveSignInWithGoogleIdTokenUseCase(): SignInWithGoogleIdTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithAppleIdTokenUseCase(): SignInWithAppleIdTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithKakaoIdTokenUseCase(): SignInWithKakaoIdTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRequestPasswordResetUseCase(): RequestPasswordResetUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveRestoreSessionUseCase(): RestoreSessionUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -433,7 +659,35 @@ fun resolveSignUpUseCase(): SignUpUseCase {
     return koin.get()
 }
 
+fun resolveCompleteSignUpForCurrentUserUseCase(): CompleteSignUpForCurrentUserUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveMarkNotificationReadUseCase(): MarkNotificationReadUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRegisterPushTokenUseCase(): RegisterPushTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateNotificationSettingsUseCase(): UpdateNotificationSettingsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSendFanAnnouncementUseCase(): SendFanAnnouncementUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -455,6 +709,34 @@ fun resolveToggleFavoriteCafeUseCase(): ToggleFavoriteCafeUseCase {
 }
 
 fun resolveUpdateCafeInfoUseCase(): UpdateCafeInfoUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeSocialMediaUseCase(): UpdateCafeSocialMediaUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeTableCountsUseCase(): UpdateCafeTableCountsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCafeReservationUrlUseCase(): UpdateCafeReservationUrlUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateUserProfileUseCase(): UpdateUserProfileUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -559,7 +841,70 @@ fun resolveObserveNetworkAlertStateUseCase(): ObserveNetworkAlertStateUseCase {
     return koin.get()
 }
 
+fun resolveObserveThemeModeUseCase(): ObserveThemeModeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSetThemeModeUseCase(): SetThemeModeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveObserveBrandThemeUseCase(): ObserveBrandThemeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSetBrandThemeUseCase(): SetBrandThemeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveShouldShowDetailTooltipUseCase(): ShouldShowDetailTooltipUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveMarkDetailTooltipShownUseCase(): MarkDetailTooltipShownUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveUploadImageUseCase(): UploadImageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteImageUseCase(): DeleteImageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveLoadNativeAdUseCase(): LoadNativeAdUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveClearNativeAdUseCase(): ClearNativeAdUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -577,6 +922,13 @@ fun resolveBannerEventPublisher(): BannerEventPublisher {
     return koin.get()
 }
 
+fun resolveCafeEventEventPublisher(): CafeEventEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveCafeDetailEventPublisher(): CafeDetailEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -585,6 +937,13 @@ fun resolveCafeDetailEventPublisher(): CafeDetailEventPublisher {
 }
 
 fun resolveCafeRegistrationClaimEventPublisher(): CafeRegistrationClaimEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCafeOwnerClaimEventPublisher(): CafeOwnerClaimEventPublisher {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
@@ -620,6 +979,171 @@ fun resolveReviewEventPublisher(): ReviewEventPublisher {
 }
 
 fun resolveScheduleManagementEventPublisher(): ScheduleManagementEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveVisitEventPublisher(): VisitEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUserEventPublisher(): UserEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetAdminOperationsMetricsUseCase(): GetAdminOperationsMetricsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetAdminInquiryPageUseCase(): GetAdminInquiryPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCafeScheduleCalendarUseCase(): GetCafeScheduleCalendarUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityPostPageUseCase(): GetCommunityPostPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateCommunityPostUseCase(): CreateCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCommunityPostEventPublisher(): CommunityPostEventPublisher {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCheckCommunityPostLikedUseCase(): CheckCommunityPostLikedUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityPostUseCase(): GetCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveIncrementCommunityPostViewCountUseCase(): IncrementCommunityPostViewCountUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDeleteCommunityPostUseCase(): DeleteCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveToggleCommunityPostLikeUseCase(): ToggleCommunityPostLikeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityCommentsUseCase(): GetCommunityCommentsUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveAddCommunityCommentUseCase(): AddCommunityCommentUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateCommunityPostUseCase(): UpdateCommunityPostUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetCommunityCommentPageUseCase(): GetCommunityCommentPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveUpdateCommunityCommentUseCase(): UpdateCommunityCommentUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveDeleteCommunityCommentUseCase(): DeleteCommunityCommentUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveGetCafeEventLikeStatusUseCase(): GetCafeEventLikeStatusUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveToggleCafeEventLikeUseCase(): ToggleCafeEventLikeUseCase {
+    val koin = requireNotNull(koinApplication?.koin)
+    return koin.get()
+}
+
+fun resolveCreateCommunityPostReportUseCase(): CreateCommunityPostReportUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveCreateUserBlockUseCase(): CreateUserBlockUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetAdminReportPageUseCase(): GetAdminReportPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetAdminUserPageUseCase(): GetAdminUserPageUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

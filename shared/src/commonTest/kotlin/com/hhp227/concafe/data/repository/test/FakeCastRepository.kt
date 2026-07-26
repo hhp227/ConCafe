@@ -5,6 +5,7 @@ import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.domain.model.CafeDetailCast
 import com.hhp227.concafe.domain.model.Cast
+import com.hhp227.concafe.domain.model.CastFollowerSnapshot
 import com.hhp227.concafe.domain.model.CastDetail
 import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.domain.model.CastScheduleStatus
@@ -12,6 +13,8 @@ import com.hhp227.concafe.domain.model.CastScheduleUpdate
 import com.hhp227.concafe.domain.model.CastSort
 import com.hhp227.concafe.domain.model.CastUpsert
 import com.hhp227.concafe.domain.model.CheckInCastSummary
+import com.hhp227.concafe.domain.model.GuestCastSchedule
+import com.hhp227.concafe.domain.model.GuestCastScheduleUpsert
 import com.hhp227.concafe.domain.repository.CastRepository
 
 class FakeCastRepository(
@@ -44,6 +47,7 @@ class FakeCastRepository(
             CastSort.POPULAR -> filtered.sortedByDescending { it.followerCount }
             CastSort.LATEST -> filtered.sortedByDescending { it.id }
             CastSort.FOLLOWERS -> filtered.sortedByDescending { it.followerCount }
+            CastSort.HOME_LINKED_FIRST -> TODO()
         }
 
         return dataSource.toPaged(filtered, cursor, pageSize)
@@ -51,6 +55,38 @@ class FakeCastRepository(
 
     override suspend fun getHomePopularCastPage(cursor: String?, pageSize: Int): PagedResult<Cast> {
         return dataSource.homePopularCastPage(cursor, pageSize)
+    }
+
+    override suspend fun getBirthdayCasts(
+        month: Int,
+        dayOfMonth: Int,
+        limit: Int
+    ): List<Cast> {
+        val safeLimit = if (limit > 0) {
+            limit
+        } else {
+            1
+        }
+        return dataSource.casts
+            .asSequence()
+            .filter { cast ->
+                val birthday = cast.birthday
+                if (birthday == null) {
+                    false
+                } else {
+                    val parts = birthday.split("-")
+                    if (parts.size != 3) {
+                        false
+                    } else {
+                        val birthMonth = parts[1].toIntOrNull()
+                        val birthDay = parts[2].toIntOrNull()
+                        birthMonth == month && birthDay == dayOfMonth
+                    }
+                }
+            }
+            .sortedByDescending { cast -> cast.id }
+            .take(safeLimit)
+            .toList()
     }
 
     override suspend fun getCastDetail(castId: String): CastDetail {
@@ -113,12 +149,70 @@ class FakeCastRepository(
         return dataSource.castScheduleStatuses(castId, fromDate, toDate)
     }
 
+    override suspend fun getWorkingCastIdsByCafeAndDate(cafeId: String, date: String): Set<String> {
+        return dataSource.casts
+            .asSequence()
+            .filter { cast -> cast.cafeId == cafeId }
+            .filter { cast ->
+                dataSource.castScheduleStatuses(cast.id, date, date)[date] == CastScheduleStatus.WORK
+            }
+            .map { cast -> cast.id }
+            .toSet()
+    }
+
     override suspend fun updateCastSchedule(update: CastScheduleUpdate): CastSchedule? {
         return dataSource.updateCastSchedule(update)
     }
 
+    override suspend fun getGuestCastSchedules(cafeId: String, fromDate: String, toDate: String): List<GuestCastSchedule> {
+        return emptyList()
+    }
+
+    override suspend fun upsertGuestCastSchedule(input: GuestCastScheduleUpsert): GuestCastSchedule {
+        return GuestCastSchedule(
+            id = input.id ?: "guest-schedule-test",
+            cafeId = input.cafeId,
+            date = input.date,
+            name = input.name,
+            profileImage = input.profileImage,
+            startTime = input.startTime,
+            endTime = input.endTime,
+            memo = input.memo
+        )
+    }
+
+    override suspend fun deleteGuestCastSchedule(scheduleId: String) = Unit
+
     override suspend fun isFollowing(userId: String, castId: String): Boolean {
         return dataSource.followedCastIdsByUser[userId]?.contains(castId) == true
+    }
+
+    override suspend fun getFollowedCastIds(userId: String): List<String> {
+        return dataSource.followedCastIdsByUser[userId]
+            ?.toList()
+            .orEmpty()
+            .sorted()
+    }
+
+    override suspend fun getFollowedCasts(userId: String): List<Cast> {
+        val followedCastIds = getFollowedCastIds(userId)
+        val idSet = followedCastIds.toSet()
+        return dataSource.casts
+            .asSequence()
+            .filter { cast -> idSet.contains(cast.id) }
+            .toList()
+    }
+
+    override suspend fun getCastsByIds(castIds: List<String>): List<Cast> {
+        val idSet = castIds.toSet()
+        return dataSource.casts
+            .asSequence()
+            .filter { cast -> idSet.contains(cast.id) }
+            .toList()
+    }
+
+    override suspend fun getCastByLinkedUserId(userId: String): Cast? {
+        return dataSource.casts.firstOrNull { cast -> cast.linkedUserId == userId }
     }
 
     override suspend fun followCast(userId: String, castId: String) {
@@ -136,6 +230,15 @@ class FakeCastRepository(
             .filterValues { followedIds -> followedIds.contains(castId) }
             .keys
             .sorted()
+    }
+
+    override suspend fun getFollowerSnapshots(castId: String): List<CastFollowerSnapshot> {
+        return getFollowerUserIds(castId).map { followerUserId ->
+            CastFollowerSnapshot(
+                userId = followerUserId,
+                followedAt = ""
+            )
+        }
     }
 
     override suspend fun getPopularTodayCasts(limit: Int): List<CheckInCastSummary> {

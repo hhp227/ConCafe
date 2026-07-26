@@ -9,15 +9,29 @@ sealed interface CafeAction {
 
     data object ClickFavorite : CafeAction
 
+    data object MarkFavoriteTooltipShown : CafeAction
+
+    data object DismissFavoriteTooltip : CafeAction
+
     data object ClickWriteReview : CafeAction
 
     data object LoadMoreCasts : CafeAction
 
     data object LoadMoreNotices : CafeAction
 
+    data class ClickEvent(val eventId: String) : CafeAction
+
     data object LoadMoreReviews : CafeAction
 
     data object Refresh : CafeAction
 
     data object ConsumeScrollToTopOnReturn : CafeAction
+
+    data class EditReview(val reviewId: String) : CafeAction
+
+    data class DeleteReview(val reviewId: String) : CafeAction
+
+    data class ClickReviewImage(val imageUrl: String) : CafeAction
+
+    data class ReportReview(val reviewId: String) : CafeAction
 }

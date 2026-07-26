@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import com.hhp227.concafe.presentation.navigation.NavigationEvent.NavigateTo
 import com.hhp227.concafe.presentation.navigation.Route.Banner
 import com.hhp227.concafe.presentation.navigation.Route.Cafe
+import com.hhp227.concafe.presentation.navigation.Route.CafeEvent
 import com.hhp227.concafe.presentation.navigation.Route.BannerEdit
 import com.hhp227.concafe.presentation.navigation.Route.CafeDashboard
 import com.hhp227.concafe.presentation.navigation.Route.CafeInfoEdit
@@ -18,8 +19,11 @@ import com.hhp227.concafe.presentation.navigation.Route.Main
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoods
 import com.hhp227.concafe.presentation.navigation.Route.MenuGoodsEdit
 import com.hhp227.concafe.presentation.navigation.Route.NoticeEvent
+import com.hhp227.concafe.presentation.navigation.Route.Picture
 import com.hhp227.concafe.presentation.navigation.Route.ReviewEdit
+import com.hhp227.concafe.presentation.navigation.Route.CastManagement
 import com.hhp227.concafe.presentation.navigation.Route.Schedule
+import com.hhp227.concafe.presentation.navigation.Route.CheckInMap
 
 class NavigationViewModel : ViewModel() {
     private val _event = MutableSharedFlow<NavigationEvent>()
@@ -36,6 +40,12 @@ class NavigationViewModel : ViewModel() {
                 }
                 is NavigationAction.NavigateToCafe -> {
                     _event.emit(NavigateTo(Cafe(action.id)))
+                }
+                is NavigationAction.NavigateToCafeEvent -> {
+                    _event.emit(NavigateTo(CafeEvent(action.cafeId, action.eventId, action.showCafeButton)))
+                }
+                is NavigationAction.ReplaceWithCafe -> {
+                    _event.emit(NavigationEvent.ReplaceCurrent(Cafe(action.id)))
                 }
                 is NavigationAction.NavigateToCafeDashboard -> {
                     _event.emit(NavigateTo(CafeDashboard(action.id)))
@@ -75,6 +85,12 @@ class NavigationViewModel : ViewModel() {
                 is NavigationAction.NavigateToSchedule -> {
                     _event.emit(NavigateTo(Schedule(action.castId)))
                 }
+                is NavigationAction.NavigateToCastManagement -> {
+                    _event.emit(NavigateTo(CastManagement(action.cafeId, action.cafeName)))
+                }
+                is NavigationAction.NavigateToCastList -> {
+                    _event.emit(NavigateTo(Route.CastList(action.cafeId)))
+                }
                 is NavigationAction.NavigateToMenuGoods -> {
                     _event.emit(NavigateTo(MenuGoods(action.id)))
                 }
@@ -82,13 +98,22 @@ class NavigationViewModel : ViewModel() {
                     _event.emit(NavigateTo(MenuGoodsEdit(action.cafeId, action.itemId)))
                 }
                 is NavigationAction.NavigateToReviewEdit -> {
-                    _event.emit(NavigateTo(ReviewEdit(action.cafeId)))
+                    _event.emit(NavigateTo(ReviewEdit(action.cafeId, action.reviewId)))
+                }
+                is NavigationAction.NavigateToPicture -> {
+                    _event.emit(NavigateTo(Picture(action.imageUrl)))
+                }
+                is NavigationAction.NavigateToCheckInMap -> {
+                    _event.emit(NavigateTo(CheckInMap(action.initialRegionKey)))
                 }
                 NavigationAction.NavigateToSignIn -> {
                     _event.emit(NavigateTo(Route.SignIn))
                 }
                 NavigationAction.NavigateToSignUp -> {
                     _event.emit(NavigateTo(Route.SignUp))
+                }
+                NavigationAction.NavigateToResetPassword -> {
+                    _event.emit(NavigateTo(Route.ResetPassword))
                 }
                 is NavigationAction.NavigateToNotification -> {
                     _event.emit(NavigateTo(Route.Notification))
@@ -105,11 +130,26 @@ class NavigationViewModel : ViewModel() {
                 NavigationAction.NavigateToInquiry -> {
                     _event.emit(NavigateTo(Route.Inquiry))
                 }
+                NavigationAction.NavigateToUserManagement -> {
+                    _event.emit(NavigateTo(Route.UserManagement))
+                }
                 NavigationAction.NavigateToChangePassword -> {
                     _event.emit(NavigateTo(Route.ChangePassword))
                 }
+                NavigationAction.NavigateToCommunity -> {
+                    _event.emit(NavigateTo(Route.Community))
+                }
+                is NavigationAction.NavigateToPostEdit -> {
+                    _event.emit(NavigateTo(Route.PostEdit(action.postId)))
+                }
+                is NavigationAction.NavigateToPostDetail -> {
+                    _event.emit(NavigateTo(Route.PostDetail(action.postId)))
+                }
                 is NavigationAction.NavigateBack -> {
                     _event.emit(NavigationEvent.NavigateBack)
+                }
+                NavigationAction.RefreshUnreadNotificationCount -> {
+                    _event.emit(NavigationEvent.RefreshUnreadNotificationCount)
                 }
             }
         }

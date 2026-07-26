@@ -1,0 +1,55 @@
+package com.hhp227.concafe.data.source
+
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.hhp227.concafe.data.model.AndroidNativeAdHandle
+import com.hhp227.concafe.data.model.NativeAdHandle
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+
+class AndroidNativeAdDataSource(
+    private val context: Context
+) : NativeAdDataSource {
+    override suspend fun loadAd(slot: Int): NativeAdHandle? =
+        suspendCancellableCoroutine { cont ->
+            MobileAds.initialize(context) { _ ->
+                if (!cont.isActive) return@initialize
+
+                val adUnitId = if ((context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                    RANKING_NATIVE_TEST_AD_UNIT_ID
+                } else {
+                    when (slot) {
+                        in COMMUNITY_NATIVE_AD_SLOT_START..Int.MAX_VALUE -> COMMUNITY_NATIVE_AD_UNIT_ID
+                        2 -> RANKING_NATIVE_AD_UNIT_ID_SLOT_2
+                        else -> RANKING_NATIVE_AD_UNIT_ID_SLOT_1
+                    }
+                }
+                val loader = AdLoader.Builder(context, adUnitId)
+                    .forNativeAd { ad ->
+                        if (cont.isActive) cont.resume(AndroidNativeAdHandle(ad))
+                    }
+                    .withAdListener(object : AdListener() {
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    })
+                    .build()
+
+                loader.loadAd(AdRequest.Builder().build())
+            }
+        }
+
+    companion object {
+        private const val RANKING_NATIVE_AD_UNIT_ID_SLOT_1 = "ca-app-pub-6216021268300256/6596242282"
+        private const val RANKING_NATIVE_AD_UNIT_ID_SLOT_2 = "ca-app-pub-6216021268300256/8770701214"
+        private const val COMMUNITY_NATIVE_AD_UNIT_ID = "ca-app-pub-6216021268300256/8699552014"
+        private const val COMMUNITY_NATIVE_AD_SLOT_START = 100
+
+        private const val RANKING_NATIVE_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
+    }
+}

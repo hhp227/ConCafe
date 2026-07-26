@@ -17,9 +17,12 @@ struct CafeUiState {
     var casts: [CafeDetailCast]
     var castsNextCursor: String?
     var canLoadMoreCasts: Bool
+    var isLoadingMenuGoods: Bool
+    var hasLoadedMenuGoods: Bool
     var isLoadingMoreNotices: Bool
     var noticesNextCursor: String?
     var canLoadMoreNotices: Bool
+    var events: [CafeEventManagementItem]
     var notices: [CafeNoticeManagementItem]
     var isLoadingMoreReviews: Bool
     var reviewsNextCursor: String?
@@ -29,6 +32,8 @@ struct CafeUiState {
     var isLoggedIn: Bool
     var isVisitVerified: Bool
     var shouldScrollToTopOnReturn: Bool
+    var currentUserId: String?
+    var shouldShowFavoriteTooltip: Bool
 
     static let empty = CafeUiState(
         isLoading: false,
@@ -39,9 +44,12 @@ struct CafeUiState {
         casts: [],
         castsNextCursor: nil,
         canLoadMoreCasts: false,
+        isLoadingMenuGoods: false,
+        hasLoadedMenuGoods: false,
         isLoadingMoreNotices: false,
         noticesNextCursor: nil,
         canLoadMoreNotices: false,
+        events: [],
         notices: [],
         isLoadingMoreReviews: false,
         reviewsNextCursor: nil,
@@ -50,14 +58,16 @@ struct CafeUiState {
         isFavorite: false,
         isLoggedIn: false,
         isVisitVerified: false,
-        shouldScrollToTopOnReturn: false
+        shouldScrollToTopOnReturn: false,
+        currentUserId: nil,
+        shouldShowFavoriteTooltip: false
     )
 
-    enum TabType: String, CaseIterable {
-        case info = "정보"
-        case maids = "메이드"
-        case menu = "메뉴"
-        case reviews = "리뷰"
-        case notices = "공지"
+    enum TabType: CaseIterable {
+        case info
+        case casts
+        case menu
+        case reviews
+        case notices
     }
 }

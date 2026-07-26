@@ -19,7 +19,8 @@ final class TimeUtils {
     }
 
     static func epochDay(fromIsoDate value: String) -> Int? {
-        let parts = value.split(separator: "-")
+        guard let normalized = normalizeDateOnly(value) else { return nil }
+        let parts = normalized.split(separator: "-")
         guard parts.count == 3,
               let year = Int(parts[0]),
               let month = Int(parts[1]),
@@ -66,7 +67,8 @@ final class TimeUtils {
         time: Date,
         fallback: String = "2026-03-09T15:00:00Z"
     ) -> String {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
         let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
         let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
 
@@ -78,7 +80,23 @@ final class TimeUtils {
             return fallback
         }
 
-        return String(format: "%04d-%02d-%02dT%02d:%02d:00Z", year, month, day, hour, minute)
+        var localDateTimeComponents = DateComponents()
+        localDateTimeComponents.year = year
+        localDateTimeComponents.month = month
+        localDateTimeComponents.day = day
+        localDateTimeComponents.hour = hour
+        localDateTimeComponents.minute = minute
+        localDateTimeComponents.second = 0
+        localDateTimeComponents.timeZone = TimeZone.current
+
+        guard let localDateTime = calendar.date(from: localDateTimeComponents) else {
+            return fallback
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+        return formatter.string(from: localDateTime)
     }
 
     static func formatHourMinute(_ date: Date) -> String {
@@ -86,6 +104,116 @@ final class TimeUtils {
         formatter.calendar = Calendar.current
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
+    }
+
+    static func formatHourMinute(hour: Int, minute: Int) -> String {
+        String(format: "%02d:%02d", hour, minute)
+    }
+
+    static func formatIsoDate(_ date: Date) -> String {
+        let formatter = makeIsoDateFormatter()
+        return formatter.string(from: date)
+    }
+
+    static func currentIsoDate() -> String {
+        formatIsoDate(Date())
+    }
+
+    static func isoDateOptionsFromToday(days: Int) -> [String] {
+        guard days > 0 else { return [] }
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: Date())
+
+        return (0..<days)
+            .compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
+            .map(formatIsoDate)
+    }
+
+    static func isCurrentDateVisitedAt(_ visitedAt: String) -> Bool {
+        let today = currentIsoDate()
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+
+        if let parsed = formatter.date(from: visitedAt) {
+            let dateFormatter = makeIsoDateFormatter()
+            return dateFormatter.string(from: parsed) == today
+        } else {
+            return visitedAt.hasPrefix(today)
+        }
+    }
+
+    static func currentMonthDayLabelKorean() -> String {
+        let components = Calendar.current.dateComponents([.month, .day], from: Date())
+        let month = components.month ?? 1
+        let day = components.day ?? 1
+        return "\(month)월 \(day)일"
+    }
+
+    static func parseHourMinute(
+        _ value: String,
+        defaultHour: Int = 10,
+        defaultMinute: Int = 0
+    ) -> Date {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "H:mm"
+        if let parsed = formatter.date(from: normalized) {
+            return parsed
+        }
+
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = defaultHour
+        components.minute = defaultMinute
+        components.second = 0
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    static func extractNormalizedHourMinuteList(from value: String) -> [String] {
+        let pattern = #"(\d{1,2}):(\d{2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(location: 0, length: value.utf16.count)
+        let matches = regex.matches(in: value, range: range)
+        return matches.compactMap { match in
+            guard
+                let hourRange = Range(match.range(at: 1), in: value),
+                let minuteRange = Range(match.range(at: 2), in: value),
+                let hour = Int(value[hourRange]),
+                let minute = Int(value[minuteRange]),
+                (0...23).contains(hour),
+                (0...59).contains(minute)
+            else {
+                return nil
+            }
+            return formatHourMinute(hour: hour, minute: minute)
+        }
+    }
+
+    static func normalizeBirthdayInput(_ raw: String) -> String {
+        let digits = String(raw.filter { $0.isNumber }.prefix(8))
+        if digits.count <= 2 {
+            return digits
+        }
+        if digits.count <= 4 {
+            return "\(digits.prefix(2))/\(digits.dropFirst(2))"
+        }
+        return "\(digits.prefix(2))/\(digits.dropFirst(2).prefix(2))/\(digits.dropFirst(4))"
+    }
+
+    static func parseBirthdayDate(_ value: String) -> Date? {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter.date(from: normalized)
+    }
+
+    static func formatBirthdayDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yyyy"
         return formatter.string(from: date)
     }
 
@@ -101,12 +229,23 @@ final class TimeUtils {
         return options
     }
 
+    static func defaultHourlyTimeOptions(startHour: Int = 8, endHour: Int = 27) -> [String] {
+        (startHour...endHour).map { hour in
+            let displayHour = hour == 24 ? 24 : hour % 24
+            return String(format: "%02d:00", displayHour)
+        }
+    }
+
     static func computeDurationMinutes(start: String, end: String) -> Int {
-        max(parseTimeMinutes(end) - parseTimeMinutes(start), 0)
+        let startMinutes = parseTimeMinutes(start)
+        let endMinutes = parseTimeMinutes(end)
+        let duration = endMinutes - startMinutes
+        return duration < 0 ? duration + 24 * 60 : duration
     }
 
     private static func dayOfWeekIndex(fromIsoDate date: String) -> Int? {
-        let parts = date.split(separator: "-")
+        guard let normalized = normalizeDateOnly(date) else { return nil }
+        let parts = normalized.split(separator: "-")
         guard parts.count == 3,
               let year = Int(parts[0]),
               let month = Int(parts[1]),
@@ -137,10 +276,40 @@ final class TimeUtils {
         }
     }
 
-    private static func parseTimeMinutes(_ time: String) -> Int {
+    static func currentTimeMinutes() -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+
+    static func parseTimeMinutes(_ time: String) -> Int {
         let parts = time.split(separator: ":")
         let hour = Int(parts.first ?? "0") ?? 0
         let minute = Int(parts.dropFirst().first ?? "0") ?? 0
         return hour * 60 + minute
+    }
+
+    private static func normalizeDateOnly(_ value: String) -> String? {
+        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pattern = #"(\d{4})[-./](\d{2})[-./](\d{2})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(location: 0, length: text.utf16.count)
+        guard let match = regex.firstMatch(in: text, range: range),
+              let yearRange = Range(match.range(at: 1), in: text),
+              let monthRange = Range(match.range(at: 2), in: text),
+              let dayRange = Range(match.range(at: 3), in: text) else {
+            return nil
+        }
+        let year = text[yearRange]
+        let month = text[monthRange]
+        let day = text[dayRange]
+        return "\(year)-\(month)-\(day)"
+    }
+
+    private static func makeIsoDateFormatter() -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
     }
 }

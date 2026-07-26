@@ -22,42 +22,42 @@ struct SignUpUiState {
         var title: String {
             switch self {
             case .visitor:
-                return "일반 회원"
+                return String(localized: String.LocalizationValue("signup_user_type_visitor_title"), table: "Localizable")
             case .cast:
-                return "캐스트 (메이드)"
+                return String(localized: String.LocalizationValue("signup_user_type_cast_title"), table: "Localizable")
             case .cafeOwner:
-                return "카페 운영자"
+                return String(localized: String.LocalizationValue("signup_user_type_owner_title"), table: "Localizable")
             }
         }
 
         var subtitle: String {
             switch self {
             case .visitor:
-                return "컨셉카페를 방문하고 즐기는 팬"
+                return String(localized: String.LocalizationValue("signup_user_type_visitor_subtitle"), table: "Localizable")
             case .cast:
-                return "카페에서 근무하는 캐스트/메이드"
+                return String(localized: String.LocalizationValue("signup_user_type_cast_subtitle"), table: "Localizable")
             case .cafeOwner:
-                return "컨셉카페를 운영하는 사업자"
+                return String(localized: String.LocalizationValue("signup_user_type_owner_subtitle"), table: "Localizable")
             }
         }
 
         var badge: String {
             switch self {
             case .visitor:
-                return "간편 가입 · 소셜 로그인"
+                return String(localized: String.LocalizationValue("signup_user_type_visitor_badge"), table: "Localizable")
             case .cast:
-                return "프로필 관리 · 소속 카페 등록"
+                return String(localized: String.LocalizationValue("signup_user_type_cast_badge"), table: "Localizable")
             case .cafeOwner:
-                return "카페 관리 · 휴대폰 인증 필수"
+                return String(localized: String.LocalizationValue("signup_user_type_owner_badge"), table: "Localizable")
             }
         }
 
         var submitLabel: String {
             switch self {
             case .cast:
-                return "가입 신청하기"
+                return String(localized: String.LocalizationValue("signup_submit_cast"), table: "Localizable")
             case .visitor, .cafeOwner:
-                return "가입하기"
+                return String(localized: String.LocalizationValue("signup_submit"), table: "Localizable")
             }
         }
     }
@@ -76,13 +76,25 @@ struct SignUpUiState {
 
     var name: String = ""
 
+    var isCafeOwner: Bool = false
+
     var phone: String = ""
+
+    var phoneVerificationId: String?
 
     var verificationCode: String = ""
 
     var hasRequestedVerification: Bool = false
 
     var isPhoneVerified: Bool = false
+
+    var signupCompleted: Bool = false
+
+    var isSocialFlow: Bool = false
+
+    var socialProvider: SignUpProvider?
+
+    var hasAuthenticatedSocialAccount: Bool = false
 
     var selectedCafe: Cafe?
 

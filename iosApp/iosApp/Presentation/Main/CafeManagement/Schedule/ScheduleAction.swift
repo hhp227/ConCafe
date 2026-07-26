@@ -12,6 +12,7 @@ enum ScheduleAction {
     case clickBack
     case clickMore
     case clickCalendar
+    case selectPeriod(SchedulePeriod)
     case selectDay(id: String)
     case clickEditDay(id: String)
     case dismissEditSheet
