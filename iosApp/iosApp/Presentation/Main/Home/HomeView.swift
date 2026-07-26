@@ -109,17 +109,24 @@ private struct HomeContentView: View {
         } else {
             // 배경을 ZStack 자식으로 두면 ignoresSafeArea가 정렬 경계를 화면 최상단까지 넓혀
             // 스켈레톤 배너가 상단 크롬 아래로 밀려 가려진다. 배경은 background 수정자로만 처리한다.
+            // topLeading 정렬: 카드 행이 화면보다 넓어도 왼쪽 16pt에서 시작해
+            // 오른쪽만 잘리게 한다 (Compose LazyRow와 동일한 보임새).
             homeSkeleton
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(ConCafeColors.background.ignoresSafeArea())
         }
     }
 
     private var homeSkeleton: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        let containerWidth = UIScreen.main.bounds.width
+        let bannerWidth = max(containerWidth - 32, 0)
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+
+        // 배너는 실제 배너와 같은 화면폭 기반 고정 크기로 만든다.
+        // 가변폭(maxWidth: .infinity) 체인은 카드 행이 화면보다 넓을 때 렌더가 깨진다.
+        return VStack(alignment: .leading, spacing: 24) {
             ShimmerBox(cornerRadius: 16)
-                .frame(maxWidth: .infinity)
-                .frame(height: homeBannerHeight(containerWidth: UIScreen.main.bounds.width))
+                .frame(width: bannerWidth, height: bannerHeight)
                 .padding(.horizontal, 16)
             ForEach(0..<2, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 10) {
