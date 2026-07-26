@@ -29,6 +29,7 @@ import com.hhp227.concafe.data.model.NativeAdHandle
 import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.presentation.component.CommunityNativeAd
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
@@ -124,10 +125,9 @@ private fun CommunityContentScreen(
         when {
             uiState.isLoading -> {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize().padding(innerPadding)
                 ) {
-                    CircularProgressIndicator(color = ConCafeColors.primary)
+                    ShimmerCardListSkeleton(itemCount = 4, imageHeight = 96.dp)
                 }
             }
             uiState.posts.isEmpty() -> {

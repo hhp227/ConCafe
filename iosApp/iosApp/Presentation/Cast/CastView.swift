@@ -99,8 +99,8 @@ private struct CastContentView: View {
                 summarySectionMinY = value
             }
         } else if uiState.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ShimmerCardListSkeleton(itemCount: 2, imageHeight: 260)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         } else {
             VStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("cast_error_detail_load_failed"), table: "Localizable"))

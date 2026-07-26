@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -126,10 +127,7 @@ private fun CastManagementContentScreen(
             ) {
                 when {
                     uiState.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = ConCafeColors.primary
-                        )
+                        ShimmerListSkeleton(itemCount = 8, avatarSize = 56.dp)
                     }
                     uiState.errorMessage != null -> {
                         Text(

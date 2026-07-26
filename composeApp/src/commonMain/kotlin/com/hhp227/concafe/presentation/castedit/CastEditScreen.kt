@@ -35,6 +35,7 @@ import com.hhp227.concafe.core.util.TimeUtils
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ShimmerFormSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -197,10 +198,9 @@ private fun CastEditContentScreen(
         ) {
             if (uiState.isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    CircularProgressIndicator(color = ConCafeColors.primary)
+                    ShimmerFormSkeleton()
                 }
             } else {
                 LazyColumn(

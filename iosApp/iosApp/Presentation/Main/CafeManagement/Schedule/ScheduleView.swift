@@ -397,10 +397,8 @@ private struct ScheduleContentView: View {
                     }
                 }
             } else {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .tint(ConCafeColors.primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                ShimmerListSkeleton(itemCount: 8, avatarSize: 40)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
     }

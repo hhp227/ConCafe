@@ -284,10 +284,8 @@ private struct MenuGoodsContentView: View {
     }
 
     private var loadingCard: some View {
-        ProgressView()
-            .tint(ConCafeColors.primary)
+        ShimmerListSkeleton(itemCount: 4, avatarSize: 84, isAvatarCircular: false)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 48)
             .background(UITraitCollection.current.userInterfaceStyle == .dark ? Color(uiColor: .secondarySystemBackground) : Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(

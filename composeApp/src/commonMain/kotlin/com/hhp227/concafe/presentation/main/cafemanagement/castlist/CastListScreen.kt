@@ -55,6 +55,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeCastPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -211,10 +212,7 @@ private fun CastListContentScreen(
                     .weight(1f)
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = ConCafeColors.primary
-                    )
+                    ShimmerListSkeleton(itemCount = 8, avatarSize = 56.dp)
                 } else if (uiState.filteredCasts.isEmpty()) {
                     Text(
                         text = if (uiState.isSearching) {

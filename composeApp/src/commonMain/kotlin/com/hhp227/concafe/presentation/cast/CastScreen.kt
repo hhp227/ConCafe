@@ -46,6 +46,7 @@ import com.hhp227.concafe.domain.model.CastSchedule
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.DetailTooltipBox
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -215,10 +216,9 @@ private fun CastContentScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
+                        .padding(innerPadding)
                 ) {
-                    CircularProgressIndicator()
+                    ShimmerCardListSkeleton(itemCount = 2, imageHeight = 260.dp)
                 }
             }
             else -> {

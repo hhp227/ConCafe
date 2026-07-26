@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -500,10 +501,8 @@ private fun LoadingCard() {
             .clip(RoundedCornerShape(24.dp))
             .background(if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surface else Color.White)
             .border(BorderStroke(1.dp, ConCafeColors.primaryContainer), RoundedCornerShape(24.dp))
-            .padding(vertical = 44.dp),
-        contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = ConCafeColors.primary)
+        ShimmerListSkeleton(itemCount = 4, avatarSize = 84.dp, isAvatarCircular = false)
     }
 }
 

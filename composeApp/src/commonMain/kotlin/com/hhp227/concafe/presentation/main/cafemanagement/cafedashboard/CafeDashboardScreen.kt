@@ -33,6 +33,7 @@ import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementQrCode
 import com.hhp227.concafe.presentation.main.cafemanagement.rememberCafeManagementQrCodeSaver
@@ -233,10 +234,9 @@ private fun CafeDashboardContentScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
+                        .padding(innerPadding)
                 ) {
-                    CircularProgressIndicator()
+                    ShimmerCardListSkeleton(itemCount = 3, imageHeight = 120.dp)
                 }
             } else {
                 LazyColumn(

@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.NotificationListItem
 import com.hhp227.concafe.domain.model.NotificationSection
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -100,10 +101,9 @@ private fun NotificationContentScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
+                        .padding(innerPadding)
                 ) {
-                    CircularProgressIndicator()
+                    ShimmerListSkeleton(itemCount = 8)
                 }
             }
             !uiState.isLoggedIn -> {

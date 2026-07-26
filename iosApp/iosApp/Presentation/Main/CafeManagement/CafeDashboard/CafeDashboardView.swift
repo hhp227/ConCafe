@@ -163,12 +163,8 @@ private struct CafeDashboardContentView: View {
     var body: some View {
         Group {
             if uiState.isLoading {
-                VStack {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 48)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                ShimmerCardListSkeleton(itemCount: 3, imageHeight: 120)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 GeometryReader { geometry in
                     let contentWidth = max(0, geometry.size.width - 40)

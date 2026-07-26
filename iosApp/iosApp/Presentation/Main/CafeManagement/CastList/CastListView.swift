@@ -102,10 +102,8 @@ private struct CastListContentView: View {
                 .padding(.bottom, 8)
             }
             if uiState.isLoading {
-                Spacer()
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                Spacer()
+                ShimmerListSkeleton(itemCount: 8, avatarSize: 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else if uiState.filteredCasts.isEmpty {
                 Spacer()
                 Text(

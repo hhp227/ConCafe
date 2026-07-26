@@ -73,10 +73,9 @@ private struct ReviewEditContentView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     if uiState.isLoading {
-                        ProgressView()
-                            .tint(ConCafeColors.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 32)
+                        ShimmerListItemSkeleton(avatarSize: 64, isAvatarCircular: false)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 20)
                     } else {
                         cafeInfoSection
                     }

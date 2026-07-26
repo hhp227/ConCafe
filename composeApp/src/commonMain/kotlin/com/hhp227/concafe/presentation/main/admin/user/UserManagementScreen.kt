@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.AdminUserFilter
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import org.koin.core.context.GlobalContext
@@ -69,8 +70,8 @@ fun UserManagementScreen(
             item { FilterRow(uiState = uiState, onAction = viewModel::onAction) }
             if (uiState.isLoading) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = ConCafeColors.primary)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        ShimmerListSkeleton(itemCount = 8)
                     }
                 }
             } else if (uiState.users.isEmpty()) {

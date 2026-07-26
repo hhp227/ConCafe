@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +61,7 @@ import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -194,10 +194,7 @@ private fun CafeEventContentScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                uiState.isLoading -> CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = ConCafeColors.primary
-                )
+                uiState.isLoading -> ShimmerCardListSkeleton(itemCount = 2, imageHeight = 200.dp)
                 uiState.event != null -> CafeEventDetailContent(
                     uiState = uiState,
                     listState = listState,

@@ -107,14 +107,56 @@ private struct HomeContentView: View {
             }
             .background(ConCafeColors.background)
         } else {
-            ZStack {
+            ZStack(alignment: .top) {
                 ConCafeColors.background
                     .ignoresSafeArea()
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                    .controlSize(.regular)
+                homeSkeleton
             }
         }
+    }
+
+    private var homeSkeleton: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            ShimmerBox(cornerRadius: 16)
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
+                .padding(.horizontal, 16)
+            ForEach(0..<2, id: \.self) { _ in
+                VStack(alignment: .leading, spacing: 10) {
+                    ShimmerBox()
+                        .frame(width: 140, height: 18)
+                        .padding(.horizontal, 16)
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ShimmerBox(cornerRadius: 16)
+                                    .frame(width: 132, height: 130)
+                                ShimmerBox()
+                                    .frame(width: 100, height: 14)
+                                    .padding(.top, 8)
+                                ShimmerBox()
+                                    .frame(width: 80, height: 12)
+                                    .padding(.top, 6)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                ShimmerBox()
+                    .frame(width: 140, height: 18)
+                ForEach(0..<3, id: \.self) { _ in
+                    ShimmerListItemSkeleton(
+                        avatarSize: 92,
+                        isAvatarCircular: false
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.vertical, 16)
+        .clipped()
     }
 
     private var communitySection: some View {

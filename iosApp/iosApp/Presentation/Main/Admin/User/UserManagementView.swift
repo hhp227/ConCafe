@@ -50,9 +50,7 @@ struct UserManagementView: View {
     @ViewBuilder
     private var content: some View {
         if viewModel.uiState.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 48)
+            ShimmerListSkeleton(itemCount: 8)
         } else if viewModel.uiState.users.isEmpty {
             Text("\(viewModel.uiState.selectedFilter.label) 목록이 없습니다.")
                 .font(.subheadline)

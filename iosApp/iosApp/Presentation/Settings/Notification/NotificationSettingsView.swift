@@ -22,7 +22,9 @@ struct NotificationSettingsView: View {
                 onAction: viewModel.onAction
             )
             if viewModel.uiState.isLoading {
-                ProgressView()
+                ShimmerListSkeleton(itemCount: 8, avatarSize: 32, isAvatarCircular: false)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .background(ConCafeColors.background)
             }
         }
         .onReceive(viewModel.event) { event in

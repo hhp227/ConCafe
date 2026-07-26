@@ -167,9 +167,7 @@ private struct ExploreContentView: View {
     @ViewBuilder
     private func gridContent(contentWidth: CGFloat) -> some View {
         if uiState.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 32)
+            ShimmerCardGridSkeleton()
         } else if uiState.errorMessage != nil {
             Text(String(localized: String.LocalizationValue("explore_error_load_failed"), table: "Localizable"))
                 .foregroundStyle(.red)

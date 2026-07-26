@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ShimmerListItemSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -175,10 +176,9 @@ private fun ReviewEditContentScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 16.dp, vertical = 20.dp)
                 ) {
-                    CircularProgressIndicator(color = ConCafeColors.primary)
+                    ShimmerListItemSkeleton(avatarSize = 64.dp, isAvatarCircular = false)
                 }
             } else {
                 CafeInfoSection(uiState = uiState)

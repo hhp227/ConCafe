@@ -606,10 +606,7 @@ private struct BannerSelectorSheet: View {
             )
             .padding(.horizontal, 24)
             if uiState.isSelectorLoading {
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
+                ShimmerListSkeleton(itemCount: 4, isAvatarCircular: false)
             } else if uiState.activeSelectorItemCount == 0 {
                 Text(String(localized: String.LocalizationValue("banneredit_selector_empty"), table: "Localizable"))
                     .font(.subheadline)

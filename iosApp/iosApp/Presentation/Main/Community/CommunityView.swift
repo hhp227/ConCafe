@@ -41,12 +41,8 @@ private struct CommunityContentView: View {
         ZStack(alignment: .bottomTrailing) {
             Group {
                 if uiState.isLoading {
-                    VStack {
-                        Spacer()
-                        ProgressView().tint(ConCafeColors.primary)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity)
+                    ShimmerCardListSkeleton(itemCount: 4, imageHeight: 96)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else if uiState.posts.isEmpty {
                     VStack {
                         Spacer()

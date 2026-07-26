@@ -315,9 +315,7 @@ private struct CafeContentView: View {
                     .padding(.vertical, 20)
                 }
         } else if uiState.isLoading {
-            ProgressView()
-            .frame(maxWidth: .infinity)
-            .padding(.top, 160)
+            cafeSkeleton(topSafeArea: topSafeArea)
         } else {
             VStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("cafe_error_detail_load_failed"), table: "Localizable"))
@@ -331,6 +329,42 @@ private struct CafeContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
         }
+    }
+
+    private func cafeSkeleton(topSafeArea: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ShimmerBox(cornerRadius: 0)
+                .frame(maxWidth: .infinity)
+                .frame(height: 230 + topSafeArea)
+            VStack(alignment: .leading, spacing: 10) {
+                ShimmerBox()
+                    .frame(width: 180, height: 24)
+                ShimmerBox()
+                    .frame(width: 120, height: 14)
+                ShimmerBox()
+                    .frame(width: 140, height: 14)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 18)
+            HStack(spacing: 10) {
+                ForEach(0..<4, id: \.self) { _ in
+                    ShimmerBox(cornerRadius: 999)
+                        .frame(width: 64, height: 32)
+                }
+            }
+            .padding(.horizontal, 16)
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(0..<3, id: \.self) { _ in
+                    ShimmerListItemSkeleton(
+                        avatarSize: 84,
+                        isAvatarCircular: false
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 20)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {

@@ -29,6 +29,7 @@ import com.hhp227.concafe.domain.model.CafeManagementData
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.fixedBottomBarInsets
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -468,12 +469,9 @@ private fun BannerSelectorSheet(
         )
         if (uiState.isSelectorLoading) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircularProgressIndicator(color = ConCafeColors.primary)
+                ShimmerListSkeleton(itemCount = 4, isAvatarCircular = false)
             }
         } else if (uiState.activeSelectorItemCount == 0) {
             Box(

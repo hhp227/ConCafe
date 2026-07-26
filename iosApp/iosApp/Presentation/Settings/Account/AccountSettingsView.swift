@@ -64,8 +64,8 @@ private struct AccountSettingsContentView: View {
     var body: some View {
         Group {
             if uiState.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ShimmerFormSkeleton()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 ScrollView {
                     VStack(spacing: 18) {
