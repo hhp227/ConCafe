@@ -23,8 +23,11 @@ struct CheckInView: View {
                 .ignoresSafeArea()
             Group {
                 if viewModel.uiState.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    VStack(spacing: 0) {
+                        ShimmerCardListSkeleton(itemCount: 1, imageHeight: 220)
+                        ShimmerListSkeleton(itemCount: 4)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else if viewModel.uiState.currentUser == nil {
                     CheckInGuestContentView(
                         uiState: viewModel.uiState,

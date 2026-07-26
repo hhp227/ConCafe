@@ -266,6 +266,7 @@
 		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
 		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000001 /* DetailTooltipBox.swift */; };
+		0B3000012FCF000000000002 /* Shimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000002 /* Shimmer.swift */; };
 		A1010002AABBCCDDEEFF0002 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1011002AABBCCDDEEFF0002 /* iOSApp.swift */; };
 		A1010004AABBCCDDEEFF0004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011004AABBCCDDEEFF0004 /* Assets.xcassets */; };
 		A1010005AABBCCDDEEFF0005 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1011005AABBCCDDEEFF0005 /* Preview Assets.xcassets */; };
@@ -535,6 +536,7 @@
 		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
 		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		0B3000002FCF000000000001 /* DetailTooltipBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTooltipBox.swift; sourceTree = "<group>"; };
+		0B3000002FCF000000000002 /* Shimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shimmer.swift; sourceTree = "<group>"; };
 		A1011000AABBCCDDEEFF0000 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		A1011002AABBCCDDEEFF0002 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		A1011004AABBCCDDEEFF0004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1154,6 +1156,7 @@
 				0A1614002F802D5A00088B82 /* RankingNativeAd.swift */,
 				0A2BC2AC2F8693BD005B3087 /* CheckInCafeMapView.swift */,
 				0B3000002FCF000000000001 /* DetailTooltipBox.swift */,
+				0B3000002FCF000000000002 /* Shimmer.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -1614,6 +1617,7 @@
 				0A3E34852F5E886300AA813D /* NotificationAction.swift in Sources */,
 				0A94E09F2F5C6F1C0006722D /* ScrollableConCafeTabBar.swift in Sources */,
 				0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */,
+				0B3000012FCF000000000002 /* Shimmer.swift in Sources */,
 				0AA7620D2F8BB08C00092934 /* CheckInQrScannerView.swift in Sources */,
 				0A3470732F611AD6005F9A8C /* ExternalLinkView.swift in Sources */,
 				0AFECA532F62CE3300C2C099 /* ReviewEditEvent.swift in Sources */,

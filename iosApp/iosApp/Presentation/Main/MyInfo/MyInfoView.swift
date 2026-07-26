@@ -17,10 +17,8 @@ struct MyInfoView: View {
     var body: some View {
         Group {
             if viewModel.uiState.isLoading {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(ConCafeColors.primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ShimmerListSkeleton(itemCount: 6, avatarSize: 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else if viewModel.uiState.isLoggedIn {
                 ProfileMyInfoView(
                     uiState: viewModel.uiState,

@@ -23,9 +23,7 @@ struct CafeMenuView: View {
         let hasGoods = !goods.isEmpty
 
         if isLoading && !hasMenu && !hasGoods {
-            ProgressView()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+            ShimmerListSkeleton(itemCount: 6, avatarSize: 84, isAvatarCircular: false)
         } else if !hasMenu && !hasGoods {
             emptyCard(String(localized: String.LocalizationValue("cafe_menu_empty"), table: "Localizable"))
         } else {

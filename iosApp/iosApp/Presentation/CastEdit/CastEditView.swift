@@ -115,13 +115,8 @@ private struct CastEditContentView: View {
         ZStack(alignment: .bottom) {
             Group {
                 if uiState.isLoading {
-                    VStack {
-                        Spacer()
-                        ProgressView()
-                            .tint(ConCafeColors.primary)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ShimmerFormSkeleton()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else {
                     ScrollView {
                         VStack(spacing: 20) {

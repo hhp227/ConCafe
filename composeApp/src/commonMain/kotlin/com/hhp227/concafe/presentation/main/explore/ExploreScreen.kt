@@ -46,6 +46,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyListGridImagePrefetch
+import com.hhp227.concafe.presentation.component.ShimmerCardGridSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -247,12 +248,9 @@ fun ExploreContentScreen(
             if (uiState.isLoading) {
                 item {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        CircularProgressIndicator()
+                        ShimmerCardGridSkeleton()
                     }
                 }
             } else if (uiState.errorMessage != null) {

@@ -69,9 +69,8 @@ private struct CastManagementContentView: View {
                     .padding(.bottom, 8)
             }
             if uiState.isLoading {
-                Spacer()
-                ProgressView()
-                Spacer()
+                ShimmerListSkeleton(itemCount: 8, avatarSize: 56)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else if let error = uiState.errorMessage {
                 Spacer()
                 Text(String(localized: String.LocalizationValue(error), table: "Localizable"))

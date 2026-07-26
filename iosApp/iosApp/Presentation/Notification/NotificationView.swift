@@ -46,8 +46,8 @@ private struct NotificationContentView: View {
     var body: some View {
         Group {
             if uiState.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ShimmerListSkeleton(itemCount: 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else if !uiState.isLoggedIn {
                 NotificationSignInRequiredView(onAction: onAction)
             } else {

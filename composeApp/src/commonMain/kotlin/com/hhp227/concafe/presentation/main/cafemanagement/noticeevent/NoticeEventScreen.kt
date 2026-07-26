@@ -33,6 +33,7 @@ import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.CompatImagePicker
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -988,12 +989,9 @@ private fun NoticeCard(
 @Composable
 private fun LoadingStateCard() {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxWidth()
     ) {
-        CircularProgressIndicator(color = ConCafeColors.primary)
+        ShimmerCardListSkeleton(itemCount = 2, imageHeight = 120.dp)
     }
 }
 

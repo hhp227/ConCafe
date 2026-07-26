@@ -124,9 +124,8 @@ private struct RankingContentView: View {
     private var rankingList: some View {
         VStack(spacing: 12) {
             if uiState.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 28)
+                ShimmerListSkeleton(itemCount: 8, avatarSize: 64)
+                    .padding(.horizontal, -16)
             } else if !uiState.rankingEntries.isEmpty {
                 ForEach(uiState.rankingEntries, id: \.id) { item in
                     rankingCard(item)

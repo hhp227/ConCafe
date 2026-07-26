@@ -411,10 +411,8 @@ private struct NoticeEventContentView: View {
     }
 
     private var loadingCard: some View {
-        ProgressView()
-            .tint(ConCafeColors.primary)
+        ShimmerCardListSkeleton(itemCount: 2, imageHeight: 120)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 32)
     }
 
     private func emptyStateCard(message: String) -> some View {

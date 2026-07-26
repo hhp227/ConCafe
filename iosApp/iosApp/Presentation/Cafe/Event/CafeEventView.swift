@@ -133,9 +133,8 @@ private struct CafeEventContentView: View {
                 heroBottomMinY = value
             }
         } else if uiState.isLoading {
-            ProgressView()
-                .tint(ConCafeColors.primary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ShimmerCardListSkeleton(itemCount: 2, imageHeight: 200)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         } else {
             CafeEventErrorContent(
                 message: uiState.errorMessage == "Event not found."

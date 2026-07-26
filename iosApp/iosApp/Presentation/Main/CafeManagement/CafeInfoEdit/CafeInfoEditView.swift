@@ -168,10 +168,7 @@ private struct CafeInfoEditContentView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     if uiState.isLoading {
-                        ProgressView()
-                            .tint(ConCafeColors.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 32)
+                        ShimmerFormSkeleton()
                     }
                     if let infoMessage = uiState.infoMessage {
                         infoBanner(

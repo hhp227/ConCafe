@@ -32,6 +32,7 @@ import com.hhp227.concafe.domain.model.ScheduleManagementDaySchedule
 import com.hhp227.concafe.domain.model.ScheduleManagementWeekDay
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.schedule_action_close
@@ -457,10 +458,7 @@ private fun ScheduleContentScreen(
                         onAction = onAction
                     )                }
             } else {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = ConCafeColors.primary
-                )
+                ShimmerListSkeleton(itemCount = 8, avatarSize = 40.dp)
             }
         }
     }

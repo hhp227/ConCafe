@@ -193,9 +193,12 @@ private struct CafeContentView: View {
                     }
                 }
                 if uiState.detail != nil, isTabPinned {
+                    // 핀 트리거와 동일 기준: 스크롤 뷰처럼 상단 safe area(툴팁 인셋 포함)를 무시한
+                    // 원시 상단에서 safeAreaInsets.top만큼 내리면 인라인 탭이 멈추는 지점과 일치한다.
                     pinnedTabHeader()
-                        .padding(.top, pinnedTabTopPadding(in: proxy))
+                        .padding(.top, proxy.safeAreaInsets.top)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .ignoresSafeArea(edges: .top)
                         .zIndex(2)
                 }
                 if uiState.selectedTab == .reviews, uiState.detail != nil, uiState.isLoggedIn {
@@ -315,9 +318,7 @@ private struct CafeContentView: View {
                     .padding(.vertical, 20)
                 }
         } else if uiState.isLoading {
-            ProgressView()
-            .frame(maxWidth: .infinity)
-            .padding(.top, 160)
+            cafeSkeleton(topSafeArea: topSafeArea)
         } else {
             VStack(spacing: 12) {
                 Text(String(localized: String.LocalizationValue("cafe_error_detail_load_failed"), table: "Localizable"))
@@ -331,6 +332,42 @@ private struct CafeContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 160)
         }
+    }
+
+    private func cafeSkeleton(topSafeArea: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ShimmerBox(cornerRadius: 0)
+                .frame(maxWidth: .infinity)
+                .frame(height: 230 + topSafeArea)
+            VStack(alignment: .leading, spacing: 10) {
+                ShimmerBox()
+                    .frame(width: 180, height: 24)
+                ShimmerBox()
+                    .frame(width: 120, height: 14)
+                ShimmerBox()
+                    .frame(width: 140, height: 14)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 18)
+            HStack(spacing: 10) {
+                ForEach(0..<4, id: \.self) { _ in
+                    ShimmerBox(cornerRadius: 999)
+                        .frame(width: 64, height: 32)
+                }
+            }
+            .padding(.horizontal, 16)
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(0..<3, id: \.self) { _ in
+                    ShimmerListItemSkeleton(
+                        avatarSize: 84,
+                        isAvatarCircular: false
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 20)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func heroSection(detail: CafeDetail, topSafeArea: CGFloat) -> some View {
@@ -488,7 +525,10 @@ private struct CafeContentView: View {
             }
         )
         .frame(maxWidth: .infinity)
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
+        .background(
+            Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
+            ignoresSafeAreaEdges: []
+        )
         .zIndex(1)
     }
 
@@ -496,11 +536,10 @@ private struct CafeContentView: View {
         VStack(spacing: 0) {
             tabHeader()
         }
-        .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }))
-    }
-
-    private func pinnedTabTopPadding(in proxy: GeometryProxy) -> CGFloat {
-        max(0, proxy.safeAreaInsets.top - proxy.frame(in: .global).minY)
+        .background(
+            Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .secondarySystemBackground : .white }),
+            ignoresSafeAreaEdges: []
+        )
     }
 
     @ViewBuilder

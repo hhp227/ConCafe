@@ -21,6 +21,7 @@ import com.hhp227.concafe.domain.model.CafeMenu
 import com.hhp227.concafe.domain.model.Goods
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
 import concafe.composeapp.generated.resources.*
@@ -38,13 +39,9 @@ fun CafeMenuScreen(
 
     if (isLoading && !hasMenu && !hasGoods) {
         Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxWidth()
         ) {
-            CircularProgressIndicator(
-                color = ConCafeColors.primary,
-                strokeWidth = 2.dp
-            )
+            ShimmerListSkeleton(itemCount = 6, avatarSize = 84.dp, isAvatarCircular = false)
         }
         return
     }

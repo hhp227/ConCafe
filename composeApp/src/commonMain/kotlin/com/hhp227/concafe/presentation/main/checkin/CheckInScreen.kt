@@ -42,6 +42,8 @@ import com.hhp227.concafe.presentation.component.CheckInCafeMap
 import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeFormField
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
@@ -357,11 +359,11 @@ private fun CheckInContentScreen(
 ) {
     when {
         uiState.isLoading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                CircularProgressIndicator()
+                ShimmerCardListSkeleton(itemCount = 1, imageHeight = 220.dp)
+                ShimmerListSkeleton(itemCount = 4)
             }
         }
         uiState.currentUser == null -> {

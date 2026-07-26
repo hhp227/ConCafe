@@ -107,14 +107,63 @@ private struct HomeContentView: View {
             }
             .background(ConCafeColors.background)
         } else {
-            ZStack {
-                ConCafeColors.background
-                    .ignoresSafeArea()
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                    .controlSize(.regular)
-            }
+            // 배경을 ZStack 자식으로 두면 ignoresSafeArea가 정렬 경계를 화면 최상단까지 넓혀
+            // 스켈레톤 배너가 상단 크롬 아래로 밀려 가려진다. 배경은 background 수정자로만 처리한다.
+            // topLeading 정렬: 카드 행이 화면보다 넓어도 왼쪽 16pt에서 시작해
+            // 오른쪽만 잘리게 한다 (Compose LazyRow와 동일한 보임새).
+            homeSkeleton
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(ConCafeColors.background.ignoresSafeArea())
         }
+    }
+
+    private var homeSkeleton: some View {
+        let containerWidth = UIScreen.main.bounds.width
+        let bannerWidth = max(containerWidth - 32, 0)
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
+
+        // 배너는 실제 배너와 같은 화면폭 기반 고정 크기로 만든다.
+        // 가변폭(maxWidth: .infinity) 체인은 카드 행이 화면보다 넓을 때 렌더가 깨진다.
+        return VStack(alignment: .leading, spacing: 24) {
+            ShimmerBox(cornerRadius: 16)
+                .frame(width: bannerWidth, height: bannerHeight)
+                .padding(.horizontal, 16)
+            ForEach(0..<2, id: \.self) { _ in
+                VStack(alignment: .leading, spacing: 10) {
+                    ShimmerBox()
+                        .frame(width: 140, height: 18)
+                        .padding(.horizontal, 16)
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ShimmerBox(cornerRadius: 16)
+                                    .frame(width: 132, height: 130)
+                                ShimmerBox()
+                                    .frame(width: 100, height: 14)
+                                    .padding(.top, 8)
+                                ShimmerBox()
+                                    .frame(width: 80, height: 12)
+                                    .padding(.top, 6)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                ShimmerBox()
+                    .frame(width: 140, height: 18)
+                ForEach(0..<3, id: \.self) { _ in
+                    ShimmerListItemSkeleton(
+                        avatarSize: 92,
+                        isAvatarCircular: false
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.vertical, 16)
+        .clipped()
     }
 
     private var communitySection: some View {
@@ -445,17 +494,17 @@ private struct HomeBannerSection: View {
         .frame(height: sectionHeight)
     }
 
-    private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
-        let horizontalPadding: CGFloat = 32
-        let contentWidth = max(containerWidth - horizontalPadding, 0)
-        return min(contentWidth * (10.0 / 16.0), 360)
-    }
-
     private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
         let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
         let indicatorHeight: CGFloat = uiState.banners.count > 1 ? 18 : 0
         return bannerHeight + indicatorHeight
     }
+}
+
+private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
+    let horizontalPadding: CGFloat = 32
+    let contentWidth = max(containerWidth - horizontalPadding, 0)
+    return min(contentWidth * (10.0 / 16.0), 360)
 }
 
 private struct HomeBannerItem: View {

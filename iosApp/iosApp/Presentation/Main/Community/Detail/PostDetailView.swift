@@ -117,9 +117,11 @@ private struct PostDetailContentView: View {
     var body: some View {
         Group {
             if uiState.isLoading || uiState.isDeleting {
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 0) {
+                    ShimmerCardListSkeleton(itemCount: 1, imageHeight: 180)
+                    ShimmerListSkeleton(itemCount: 4, avatarSize: 32)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else if uiState.post == nil {
                 Text(String(localized: String.LocalizationValue("post_detail_load_failed"), table: "Localizable"))
                     .foregroundStyle(.secondary)
@@ -302,10 +304,7 @@ private struct PostDetailContentView: View {
             .padding(.vertical, 12)
 
             if uiState.isLoadingComments {
-                ProgressView()
-                    .tint(ConCafeColors.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                ShimmerListSkeleton(itemCount: 3, avatarSize: 32)
             } else {
                 if uiState.isLoadingMoreComments {
                     ProgressView()

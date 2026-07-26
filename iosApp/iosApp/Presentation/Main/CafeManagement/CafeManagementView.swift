@@ -92,12 +92,8 @@ private struct CafeManagementContentView: View {
                     }
                 }
             } else {
-                VStack {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 48)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                ShimmerCardGridSkeleton()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
         .background(ConCafeColors.background)

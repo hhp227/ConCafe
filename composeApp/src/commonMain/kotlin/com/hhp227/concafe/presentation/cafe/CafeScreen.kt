@@ -35,6 +35,8 @@ import com.hhp227.concafe.presentation.cafe.tab.*
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.DetailTooltipBox
 import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
+import com.hhp227.concafe.presentation.component.ShimmerBox
+import com.hhp227.concafe.presentation.component.ShimmerListItemSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
@@ -301,14 +303,7 @@ fun CafeContentScreen(
                     }
                 } else if (uiState.isLoading) {
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 80.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        CafeSkeletonScreen(modifier = Modifier.fillMaxWidth())
                     }
                 } else {
                     item {
@@ -365,6 +360,63 @@ fun CafeContentScreen(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CafeSkeletonScreen(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(330.dp),
+            shape = RoundedCornerShape(0.dp)
+        )
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(24.dp)
+            )
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.35f)
+                    .height(14.dp)
+            )
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.4f)
+                    .height(14.dp)
+            )
+        }
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            repeat(4) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .width(64.dp)
+                        .height(32.dp),
+                    shape = RoundedCornerShape(999.dp)
+                )
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            repeat(3) {
+                ShimmerListItemSkeleton(
+                    avatarSize = 84.dp,
+                    isAvatarCircular = false
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun CafeHeroSection(
     detail: CafeDetail

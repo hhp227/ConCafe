@@ -36,6 +36,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Comment
 import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.Res
@@ -298,10 +300,12 @@ private fun PostDetailContentScreen(
                 when {
                     uiState.isLoading || uiState.isDeleting -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            CircularProgressIndicator(color = pink)
+                            Column {
+                                ShimmerCardListSkeleton(itemCount = 1, imageHeight = 180.dp)
+                                ShimmerListSkeleton(itemCount = 4, avatarSize = 32.dp)
+                            }
                         }
                     }
                     uiState.post == null -> {
@@ -353,10 +357,9 @@ private fun PostDetailContentScreen(
                             if (uiState.isLoadingComments) {
                                 item {
                                     Box(
-                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                        contentAlignment = Alignment.Center
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = pink, strokeWidth = 2.dp)
+                                        ShimmerListSkeleton(itemCount = 3, avatarSize = 32.dp)
                                     }
                                 }
                             } else {

@@ -38,6 +38,7 @@ import com.hhp227.concafe.presentation.component.CapsuleDropdown
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.RankingNativeAd
+import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
@@ -139,12 +140,9 @@ private fun RankingContent(
         if (uiState.isLoading) {
             item {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 28.dp),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    CircularProgressIndicator()
+                    ShimmerListSkeleton(itemCount = 8, avatarSize = 64.dp)
                 }
             }
         } else if (uiState.rankingEntries.isNotEmpty()) {

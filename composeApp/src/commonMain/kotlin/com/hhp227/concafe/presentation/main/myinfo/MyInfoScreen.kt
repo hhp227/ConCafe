@@ -69,8 +69,8 @@ fun MyInfoScreen(
     }
     when {
         uiState.isLoading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            Box(modifier = Modifier.fillMaxSize()) {
+                ShimmerListSkeleton(itemCount = 6, avatarSize = 56.dp)
             }
         }
         !uiState.isLoggedIn -> {

@@ -56,6 +56,8 @@ import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyGridImagePrefetch
 import com.hhp227.concafe.presentation.component.LazyListImagePrefetch
+import com.hhp227.concafe.presentation.component.ShimmerBox
+import com.hhp227.concafe.presentation.component.ShimmerListItemSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.navigation.NavigationAction
@@ -403,13 +405,93 @@ fun HomeContentScreen(
             }
         }
     } else {
-        Box(
+        HomeSkeletonScreen(
             modifier = Modifier
                 .fillMaxSize()
-                .background(screenBackgroundColor),
-            contentAlignment = Alignment.Center
+                .background(screenBackgroundColor)
+        )
+    }
+}
+
+@Composable
+private fun HomeSkeletonScreen(modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier) {
+        val bannerHeight = homeBannerHeight(maxWidth)
+
+        HomeSkeletonContent(bannerHeight = bannerHeight)
+    }
+}
+
+@Composable
+private fun HomeSkeletonContent(bannerHeight: Dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        ShimmerBox(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(bannerHeight),
+            shape = RoundedCornerShape(16.dp)
+        )
+        repeat(2) {
+            Column {
+                ShimmerBox(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .width(140.dp)
+                        .height(18.dp)
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(3) {
+                        Column(modifier = Modifier.width(132.dp)) {
+                            ShimmerBox(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(130.dp),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            ShimmerBox(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.8f)
+                                    .height(14.dp)
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            ShimmerBox(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f)
+                                    .height(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CircularProgressIndicator(color = ConCafeColors.primary)
+            ShimmerBox(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(18.dp)
+            )
+            repeat(3) {
+                ShimmerListItemSkeleton(
+                    avatarSize = 92.dp,
+                    isAvatarCircular = false
+                )
+            }
         }
     }
 }
