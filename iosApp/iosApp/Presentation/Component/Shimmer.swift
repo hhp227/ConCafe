@@ -33,7 +33,7 @@ struct ShimmerBox: View {
             let sweepStart = -ShimmerAppearance.band - originX
             let sweepEnd = ShimmerAppearance.travel + ShimmerAppearance.band - originX
 
-            ConCafeColors.surfaceVariant
+            ConCafeColors.outline
                 .overlay(
                     LinearGradient(
                         gradient: Gradient(colors: [

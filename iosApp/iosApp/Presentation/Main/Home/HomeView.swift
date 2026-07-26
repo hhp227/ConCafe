@@ -119,7 +119,7 @@ private struct HomeContentView: View {
         VStack(alignment: .leading, spacing: 24) {
             ShimmerBox(cornerRadius: 16)
                 .frame(maxWidth: .infinity)
-                .frame(height: 200)
+                .frame(height: homeBannerHeight(containerWidth: UIScreen.main.bounds.width))
                 .padding(.horizontal, 16)
             ForEach(0..<2, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 10) {
@@ -487,17 +487,17 @@ private struct HomeBannerSection: View {
         .frame(height: sectionHeight)
     }
 
-    private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
-        let horizontalPadding: CGFloat = 32
-        let contentWidth = max(containerWidth - horizontalPadding, 0)
-        return min(contentWidth * (10.0 / 16.0), 360)
-    }
-
     private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
         let bannerHeight = homeBannerHeight(containerWidth: containerWidth)
         let indicatorHeight: CGFloat = uiState.banners.count > 1 ? 18 : 0
         return bannerHeight + indicatorHeight
     }
+}
+
+private func homeBannerHeight(containerWidth: CGFloat) -> CGFloat {
+    let horizontalPadding: CGFloat = 32
+    let contentWidth = max(containerWidth - horizontalPadding, 0)
+    return min(contentWidth * (10.0 / 16.0), 360)
 }
 
 private struct HomeBannerItem: View {

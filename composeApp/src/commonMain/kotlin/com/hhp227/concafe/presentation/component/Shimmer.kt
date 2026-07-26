@@ -86,7 +86,7 @@ fun ShimmerBox(
         modifier = modifier
             .onGloballyPositioned { originX = it.positionInRoot().x }
             .clip(shape)
-            .background(ConCafeColors.surfaceVariant)
+            .background(ConCafeColors.outline)
             .background(brush)
     )
 }

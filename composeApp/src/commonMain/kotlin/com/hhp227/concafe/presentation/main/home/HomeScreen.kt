@@ -415,15 +415,26 @@ fun HomeContentScreen(
 
 @Composable
 private fun HomeSkeletonScreen(modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier) {
+        val bannerHeight = homeBannerHeight(maxWidth)
+
+        HomeSkeletonContent(bannerHeight = bannerHeight)
+    }
+}
+
+@Composable
+private fun HomeSkeletonContent(bannerHeight: Dp) {
     Column(
-        modifier = modifier.padding(vertical = 20.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(200.dp),
+                .height(bannerHeight),
             shape = RoundedCornerShape(16.dp)
         )
         repeat(2) {
