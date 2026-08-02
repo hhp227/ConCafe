@@ -10,6 +10,9 @@ users/{userId}
 ├─ banned
 ├─ blurCredits
 ├─ createdAt
+├─ lastLoginAt
+├─ dormant
+├─ dormantAt
 └─ stats
    ├─ visitCount
    ├─ reviewCount
