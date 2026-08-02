@@ -2157,7 +2157,10 @@ abstract class FirestoreBaseDataSource(
             banned = banned,
             createdAt = createdAt,
             phoneNumber = phoneNumber,
-            signupCompleted = signupCompleted
+            signupCompleted = signupCompleted,
+            lastLoginAt = fields.getFirestoreString("lastLoginAt"),
+            dormant = fields.getFirestoreBoolean("dormant") ?: false,
+            dormantAt = fields.getFirestoreString("dormantAt")
         )
     }
 

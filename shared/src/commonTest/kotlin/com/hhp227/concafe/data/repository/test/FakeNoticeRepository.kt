@@ -59,6 +59,33 @@ class FakeNoticeRepository(
         return dataSource.toPaged(filtered, cursor, pageSize)
     }
 
+    private val likedEventKeysByUserId = mutableMapOf<String, MutableSet<String>>()
+
+    override suspend fun isCafeEventLikedByUser(cafeId: String, eventId: String, userId: String): Boolean {
+        return likedEventKeysByUserId[userId]?.contains("$cafeId:$eventId") == true
+    }
+
+    override suspend fun toggleCafeEventLike(cafeId: String, eventId: String, userId: String): Boolean {
+        val likedKeys = likedEventKeysByUserId.getOrPut(userId) { mutableSetOf() }
+        val eventKey = "$cafeId:$eventId"
+
+        return if (likedKeys.contains(eventKey)) {
+            likedKeys.remove(eventKey)
+            false
+        } else {
+            likedKeys.add(eventKey)
+            true
+        }
+    }
+
+    override suspend fun getHomeCafeEventPage(
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<CafeEventManagementItem> {
+        val sorted = dataSource.cafeEventManagementItems.sortedByDescending { it.startDate }
+        return dataSource.toPaged(sorted, cursor, pageSize)
+    }
+
     override suspend fun createCafeNotice(input: CafeNoticeCreate): CafeNoticeManagementItem {
         if (input.cafeId.isBlank()) throw IllegalArgumentException("cafeId is required")
         if (input.title.isBlank()) throw IllegalArgumentException("notice title is required")

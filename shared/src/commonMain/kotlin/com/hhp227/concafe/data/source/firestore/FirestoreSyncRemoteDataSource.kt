@@ -38,6 +38,31 @@ class FirestoreSyncRemoteDataSource(
         )
     }
 
+    override suspend fun fetchDormantAccountPage(
+        filter: DormantAccountFilter,
+        lastLoginBefore: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<User> {
+        val safePageSize = pageSize.coerceAtLeast(1)
+        val idToken = tokenProvider.getIdToken()
+        val cursorFieldPath = if (filter == DormantAccountFilter.DORMANT) "createdAt" else "lastLoginAt"
+        val documents = runDormantAccountPageQuery(filter, lastLoginBefore, cursor, safePageSize + 1, idToken)
+        val pageDocuments = documents.take(safePageSize)
+        val hasNext = documents.size > safePageSize
+        val nextCursorToken = if (hasNext) {
+            pageDocuments.lastOrNull()?.get("fields")?.jsonObject?.getFirestoreString(cursorFieldPath)
+        } else {
+            null
+        }
+
+        return PagedResult(
+            items = pageDocuments.mapNotNull { parseUserDocument(it) },
+            nextCursor = nextCursorToken,
+            hasNext = hasNext
+        )
+    }
+
     override suspend fun fetchMyPageSummary(userId: String): MyPageSummary? {
         val idToken = tokenProvider.getIdToken()
         val document = loadUserDocument(userId = userId, idToken = idToken) ?: return null
@@ -68,6 +93,29 @@ class FirestoreSyncRemoteDataSource(
         restApi.patch(path = path, body = body, idToken = tokenProvider.getIdToken(), updateMask = listOf("nickname", "profileImage"))
     }
 
+    override suspend fun updateUserDormantStatus(userId: String, dormant: Boolean, dormantAt: String?) {
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "dormant" to firestoreBoolean(dormant),
+                "dormantAt" to firestoreNullableString(dormantAt)
+            )
+        )
+        restApi.patch(path = path, body = body, idToken = tokenProvider.getIdToken(), updateMask = listOf("dormant", "dormantAt"))
+    }
+
+    override suspend fun updateUserLastLogin(userId: String, lastLoginAt: String) {
+        val path = "${config.documentBasePath()}/${FirestorePaths.USERS}/$userId"
+        val body = firestoreDocumentBody(
+            mapOf(
+                "lastLoginAt" to firestoreString(lastLoginAt),
+                "dormant" to firestoreBoolean(false),
+                "dormantAt" to firestoreNullableString(null)
+            )
+        )
+        restApi.patch(path = path, body = body, idToken = tokenProvider.getIdToken(), updateMask = listOf("lastLoginAt", "dormant", "dormantAt"))
+    }
+
     override suspend fun pushUser(user: User) {
         val idToken = tokenProvider.getIdToken()
         val existingAffiliatedCafeId = loadUserDocument(userId = user.id, idToken = idToken)?.let { parseUserAffiliatedCafeId(it) }
@@ -83,6 +131,9 @@ class FirestoreSyncRemoteDataSource(
                 "createdAt" to firestoreString(user.createdAt),
                 "phoneNumber" to firestoreNullableString(user.phoneNumber),
                 "signupCompleted" to firestoreBoolean(user.signupCompleted),
+                "lastLoginAt" to firestoreNullableString(user.lastLoginAt),
+                "dormant" to firestoreBoolean(user.dormant),
+                "dormantAt" to firestoreNullableString(user.dormantAt),
                 "affiliatedCafeId" to firestoreNullableString(existingAffiliatedCafeId)
             )
         )
@@ -417,6 +468,64 @@ class FirestoreSyncRemoteDataSource(
         return Json.parseToJsonElement(response).jsonArray.mapNotNull { it.jsonObject["document"]?.jsonObject }
     }
 
+    private suspend fun runDormantAccountPageQuery(
+        filter: DormantAccountFilter,
+        lastLoginBefore: String,
+        cursor: String?,
+        limit: Int,
+        idToken: String?
+    ): List<JsonObject> {
+        val whereSection = when (filter) {
+            DormantAccountFilter.DORMANT -> """
+                "fieldFilter": {
+                  "field": { "fieldPath": "dormant" },
+                  "op": "EQUAL",
+                  "value": { "booleanValue": true }
+                }
+            """.trimIndent()
+            DormantAccountFilter.CANDIDATE -> """
+                "compositeFilter": {
+                  "op": "AND",
+                  "filters": [
+                    {
+                      "fieldFilter": {
+                        "field": { "fieldPath": "dormant" },
+                        "op": "EQUAL",
+                        "value": { "booleanValue": false }
+                      }
+                    },
+                    {
+                      "fieldFilter": {
+                        "field": { "fieldPath": "lastLoginAt" },
+                        "op": "LESS_THAN_OR_EQUAL",
+                        "value": { "stringValue": "${escapeFirestoreQueryString(lastLoginBefore)}" }
+                      }
+                    }
+                  ]
+                }
+            """.trimIndent()
+        }
+        val orderBySection = when (filter) {
+            DormantAccountFilter.DORMANT -> """[{ "field": { "fieldPath": "createdAt" }, "direction": "DESCENDING" }]"""
+            DormantAccountFilter.CANDIDATE -> """[{ "field": { "fieldPath": "lastLoginAt" }, "direction": "ASCENDING" }]"""
+        }
+        val startAfterSection = cursor.toCreatedAtStartAfterSection()
+        val body = """
+            {
+              "structuredQuery": {
+                "from": [{ "collectionId": "${FirestorePaths.USERS}" }],
+                "where": {
+                  $whereSection
+                },
+                "orderBy": $orderBySection$startAfterSection,
+                "limit": ${limit.coerceAtLeast(1)}
+              }
+            }
+        """.trimIndent()
+        val response = restApi.post(path = "${config.documentBasePath()}:runQuery", body = body, idToken = idToken)
+        return Json.parseToJsonElement(response).jsonArray.mapNotNull { it.jsonObject["document"]?.jsonObject }
+    }
+
     private suspend fun loadCafeRegistrationClaimDocument(claimId: String, idToken: String?): JsonObject {
         val path = "${config.documentBasePath()}/${FirestorePaths.CAFE_REGISTRATION_CLAIMS}/$claimId"
         return Json.parseToJsonElement(restApi.get(path = path, idToken = idToken)).jsonObject
@@ -577,7 +686,10 @@ class FirestoreSyncRemoteDataSource(
             banned = fields.getFirestoreBoolean("banned") ?: false,
             createdAt = createdAt,
             phoneNumber = fields.getFirestoreString("phoneNumber"),
-            signupCompleted = fields.getFirestoreBoolean("signupCompleted") ?: true
+            signupCompleted = fields.getFirestoreBoolean("signupCompleted") ?: true,
+            lastLoginAt = fields.getFirestoreString("lastLoginAt"),
+            dormant = fields.getFirestoreBoolean("dormant") ?: false,
+            dormantAt = fields.getFirestoreString("dormantAt")
         )
     }
 

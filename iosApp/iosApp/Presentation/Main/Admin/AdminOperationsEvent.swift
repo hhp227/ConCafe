@@ -13,4 +13,6 @@ enum AdminOperationsEvent {
     case navigateToBannerEdit
 
     case navigateToUserManagement
+
+    case navigateToDormantAccount
 }

@@ -258,4 +258,12 @@ class FakeCastRepository(
                 )
             }
     }
+
+    override suspend fun getWorkingCastSchedulesByCafeAndDate(cafeId: String, date: String): Map<String, CastSchedule> {
+        return emptyMap()
+    }
+
+    override suspend fun getCafeCasts(cafeId: String): List<Cast> {
+        return dataSource.casts.filter { it.cafeId == cafeId }
+    }
 }

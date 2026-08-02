@@ -263,6 +263,11 @@
 		0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000032FB1000000B10000 /* UserManagementUiState.swift */; };
 		0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000042FB1000000B10000 /* UserManagementAction.swift */; };
 		0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1000052FB1000000B10000 /* UserManagementEvent.swift */; };
+		0B6000112FB6000000B60000 /* DormantAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6000012FB6000000B60000 /* DormantAccountView.swift */; };
+		0B6000122FB6000000B60000 /* DormantAccountViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6000022FB6000000B60000 /* DormantAccountViewModel.swift */; };
+		0B6000132FB6000000B60000 /* DormantAccountUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6000032FB6000000B60000 /* DormantAccountUiState.swift */; };
+		0B6000142FB6000000B60000 /* DormantAccountAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6000042FB6000000B60000 /* DormantAccountAction.swift */; };
+		0B6000152FB6000000B60000 /* DormantAccountEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6000052FB6000000B60000 /* DormantAccountEvent.swift */; };
 		0B2000212FB2000000B20000 /* ScreenCaptureProtectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */; };
 		0B2000282FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */; };
 		0B3000012FCF000000000001 /* DetailTooltipBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3000002FCF000000000001 /* DetailTooltipBox.swift */; };
@@ -533,6 +538,11 @@
 		0B1000032FB1000000B10000 /* UserManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementUiState.swift; sourceTree = "<group>"; };
 		0B1000042FB1000000B10000 /* UserManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementAction.swift; sourceTree = "<group>"; };
 		0B1000052FB1000000B10000 /* UserManagementEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementEvent.swift; sourceTree = "<group>"; };
+		0B6000012FB6000000B60000 /* DormantAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DormantAccountView.swift; sourceTree = "<group>"; };
+		0B6000022FB6000000B60000 /* DormantAccountViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DormantAccountViewModel.swift; sourceTree = "<group>"; };
+		0B6000032FB6000000B60000 /* DormantAccountUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DormantAccountUiState.swift; sourceTree = "<group>"; };
+		0B6000042FB6000000B60000 /* DormantAccountAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DormantAccountAction.swift; sourceTree = "<group>"; };
+		0B6000052FB6000000B60000 /* DormantAccountEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DormantAccountEvent.swift; sourceTree = "<group>"; };
 		0B2000202FB2000000B20000 /* ScreenCaptureProtectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectedView.swift; sourceTree = "<group>"; };
 		0B2000272FB2000000B20000 /* ScreenCaptureProtectionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureProtectionViewModifier.swift; sourceTree = "<group>"; };
 		0B3000002FCF000000000001 /* DetailTooltipBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTooltipBox.swift; sourceTree = "<group>"; };
@@ -604,6 +614,7 @@
 			isa = PBXGroup;
 			children = (
 				0B1000202FB1000000B10000 /* User */,
+				0B6000202FB6000000B60000 /* Dormant */,
 				0A0C66922F5C055F00B0CDE4 /* AdminOperationsView.swift */,
 				0A8ABA582F5C1B8300265D4F /* AdminOperationsViewModel.swift */,
 				0A8ABA5A2F5C1BA300265D4F /* AdminOperationsUiState.swift */,
@@ -1205,6 +1216,18 @@
 			path = User;
 			sourceTree = "<group>";
 		};
+		0B6000202FB6000000B60000 /* Dormant */ = {
+			isa = PBXGroup;
+			children = (
+				0B6000012FB6000000B60000 /* DormantAccountView.swift */,
+				0B6000022FB6000000B60000 /* DormantAccountViewModel.swift */,
+				0B6000032FB6000000B60000 /* DormantAccountUiState.swift */,
+				0B6000042FB6000000B60000 /* DormantAccountAction.swift */,
+				0B6000052FB6000000B60000 /* DormantAccountEvent.swift */,
+			);
+			path = Dormant;
+			sourceTree = "<group>";
+		};
 		0B2000222FB2000000B20000 /* Security */ = {
 			isa = PBXGroup;
 			children = (
@@ -1385,9 +1408,11 @@
 				0A341CB22F60365400CC07CF /* CafeDashboardAction.swift in Sources */,
 				0A8ABA592F5C1B8300265D4F /* AdminOperationsViewModel.swift in Sources */,
 				0B1000112FB1000000B10000 /* UserManagementView.swift in Sources */,
+				0B6000112FB6000000B60000 /* DormantAccountView.swift in Sources */,
 				0A341CB62F605E9400CC07CF /* CafeDashboardShortcut.swift in Sources */,
 				0A8ABA5D2F5C1BC400265D4F /* AdminOperationsAction.swift in Sources */,
 				0B1000122FB1000000B10000 /* UserManagementViewModel.swift in Sources */,
+				0B6000122FB6000000B60000 /* DormantAccountViewModel.swift in Sources */,
 				0A8ABA632F5C1C3000265D4F /* CafeManagementUiState.swift in Sources */,
 				0A6B6AC42F60705500E395C2 /* CafeInfoEditViewModel.swift in Sources */,
 				0A6B6AC82F60709700E395C2 /* CafeInfoEditEvent.swift in Sources */,
@@ -1462,6 +1487,7 @@
 				0A51B0532F6155F800051A97 /* CastEditViewModel.swift in Sources */,
 				0A8ABA5B2F5C1BA300265D4F /* AdminOperationsUiState.swift in Sources */,
 				0B1000132FB1000000B10000 /* UserManagementUiState.swift in Sources */,
+				0B6000132FB6000000B60000 /* DormantAccountUiState.swift in Sources */,
 				0A785C9F2F5A7B76004037A8 /* ExploreViewModel.swift in Sources */,
 				0A580DB72F59711000390F67 /* CheckInView.swift in Sources */,
 				0A0C66A02F5C0E4F00B0CDE4 /* SignInViewModel.swift in Sources */,
@@ -1590,6 +1616,7 @@
 				0A0C66952F5C05FF00B0CDE4 /* Color.swift in Sources */,
 				0A8ABA5F2F5C1BDB00265D4F /* AdminOperationsEvent.swift in Sources */,
 				0B1000142FB1000000B10000 /* UserManagementAction.swift in Sources */,
+				0B6000142FB6000000B60000 /* DormantAccountAction.swift in Sources */,
 				0A7E616F2FA09787005E1311 /* PostDetailAction.swift in Sources */,
 				0A785CC32F5A7E80004037A8 /* CafeUiState.swift in Sources */,
 				0A6B33552F610C870074940F /* NoticeEventAction.swift in Sources */,
@@ -1602,6 +1629,7 @@
 				0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */,
 				0A0C66932F5C055F00B0CDE4 /* AdminOperationsView.swift in Sources */,
 				0B1000152FB1000000B10000 /* UserManagementEvent.swift in Sources */,
+				0B6000152FB6000000B60000 /* DormantAccountEvent.swift in Sources */,
 				0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */,
 				0A400E232F655F3500BD41C7 /* InquiryEvent.swift in Sources */,
 				0A785CA32F5A7BAE004037A8 /* ExploreUiState.swift in Sources */,

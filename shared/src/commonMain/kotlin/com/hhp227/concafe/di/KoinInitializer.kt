@@ -68,6 +68,8 @@ import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminReportPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminUserPageUseCase
+import com.hhp227.concafe.domain.usecase.GetDormantAccountPageUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserDormantStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
@@ -1144,6 +1146,20 @@ fun resolveGetAdminReportPageUseCase(): GetAdminReportPageUseCase {
 }
 
 fun resolveGetAdminUserPageUseCase(): GetAdminUserPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetDormantAccountPageUseCase(): GetDormantAccountPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateUserDormantStatusUseCase(): UpdateUserDormantStatusUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

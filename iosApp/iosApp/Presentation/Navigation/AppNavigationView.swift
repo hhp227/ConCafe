@@ -97,6 +97,8 @@ struct AppNavigationView: View {
                 InquiryView(onNavigationAction: viewModel.onAction)
             case .userManagement:
                 UserManagementView(onNavigationAction: viewModel.onAction)
+            case .dormantAccount:
+                DormantAccountView(onNavigationAction: viewModel.onAction)
             case .changePassword:
                 ChangePasswordView(onNavigationAction: viewModel.onAction)
             case .community:

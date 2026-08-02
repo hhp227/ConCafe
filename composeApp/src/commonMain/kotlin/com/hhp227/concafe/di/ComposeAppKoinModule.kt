@@ -10,6 +10,7 @@ import com.hhp227.concafe.presentation.cast.CastViewModel
 import com.hhp227.concafe.presentation.castedit.CastEditViewModel
 import com.hhp227.concafe.presentation.main.MainViewModel
 import com.hhp227.concafe.presentation.main.admin.AdminOperationsViewModel
+import com.hhp227.concafe.presentation.main.admin.dormant.DormantAccountViewModel
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.CafeManagementViewModel
 import com.hhp227.concafe.presentation.main.cafemanagement.castlist.CastListViewModel
@@ -63,6 +64,7 @@ private val composeAppPresentationModule = module {
     factory { (cafeId: String, castId: String) -> CastEditViewModel(cafeId, castId, get(), get(), get(), get()) }
     factory { AdminOperationsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { UserManagementViewModel(get()) }
+    factory { DormantAccountViewModel(get(), get()) }
     factory { (cafeId: String?) -> BannerViewModel(cafeId, get(), get(), get()) }
     factory { (initialCafeId: String?, initialBannerId: String?) ->
         BannerEditViewModel(initialCafeId, initialBannerId, get(), get(), get(), get(), get(), get(), get(), get())

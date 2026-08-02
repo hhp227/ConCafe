@@ -5145,6 +5145,39 @@ export const onScheduleDeleteExpiredClaims = onSchedule(
   }
 );
 
+export const onScheduleMarkDormantUsers = onSchedule(
+  {
+    schedule: "0 4 * * *",
+    timeZone: "Asia/Seoul",
+  },
+  async () => {
+    const firestore = db();
+    const BATCH_SIZE = 500;
+    const DORMANT_THRESHOLD_DAYS = 365;
+    const cutoff = new Date(Date.now() - DORMANT_THRESHOLD_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const now = new Date().toISOString();
+    const snapshot = await firestore
+      .collection("users")
+      .where("lastLoginAt", "<=", cutoff)
+      .get();
+    const targetDocs = snapshot.docs.filter((doc) => {
+      const data = doc.data() as Record<string, unknown> | undefined;
+      return data?.dormant !== true && data?.role !== "ADMIN";
+    });
+    let totalMarked = 0;
+
+    for (let i = 0; i < targetDocs.length; i += BATCH_SIZE) {
+      const batch = firestore.batch();
+      const chunk = targetDocs.slice(i, i + BATCH_SIZE);
+      chunk.forEach((doc) => batch.update(doc.ref, {dormant: true, dormantAt: now}));
+      await batch.commit();
+      totalMarked += chunk.length;
+    }
+
+    logger.info("onScheduleMarkDormantUsers completed.", {totalMarked});
+  }
+);
+
 export const onScheduleSendWeeklyCommunityHighlight = onSchedule(
   {
     schedule: "0 10 * * 1",

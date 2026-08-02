@@ -20,6 +20,7 @@ import com.hhp227.concafe.presentation.main.community.CommunityScreen
 import com.hhp227.concafe.presentation.main.community.detail.PostDetailScreen
 import com.hhp227.concafe.presentation.main.community.edit.PostEditScreen
 import com.hhp227.concafe.presentation.main.MainScreen
+import com.hhp227.concafe.presentation.main.admin.dormant.DormantAccountScreen
 import com.hhp227.concafe.presentation.main.admin.user.UserManagementScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banner.BannerScreen
 import com.hhp227.concafe.presentation.main.cafemanagement.banneredit.BannerEditScreen
@@ -331,6 +332,9 @@ private fun DetailRoutePane(
         }
         Route.UserManagement -> {
             UserManagementScreen(onNavigationAction = onNavigationAction)
+        }
+        Route.DormantAccount -> {
+            DormantAccountScreen(onNavigationAction = onNavigationAction)
         }
         Route.ChangePassword -> {
             ChangePasswordScreen(

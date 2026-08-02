@@ -40,6 +40,7 @@ sealed interface NavigationAction {
     data object NavigateToAccountSettings : NavigationAction
     data object NavigateToInquiry : NavigationAction
     data object NavigateToUserManagement : NavigationAction
+    data object NavigateToDormantAccount : NavigationAction
     data object NavigateToChangePassword : NavigationAction
     data object NavigateToCommunity : NavigationAction
     data class NavigateToPostEdit(val postId: String? = null) : NavigationAction

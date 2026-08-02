@@ -8,6 +8,11 @@ import com.hhp227.concafe.domain.repository.ReviewRepository
 class FakeReviewRepository(
     private val dataSource: ConCafeDataSource
 ) : ReviewRepository {
+    override suspend fun getReview(reviewId: String): Review {
+        return dataSource.reviews.firstOrNull { it.id == reviewId }
+            ?: throw NoSuchElementException("review not found")
+    }
+
     override suspend fun getCafeReviews(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Review> {
         val items = dataSource.reviews.filter { it.cafeId == cafeId }.sortedByDescending { it.createdAt }
         return dataSource.toPaged(items, cursor, pageSize)

@@ -6,6 +6,7 @@ import com.hhp227.concafe.data.source.MockConCafeDataSource
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.event.CastEvent
 import com.hhp227.concafe.domain.event.publisher.CastEventPublisher
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -21,7 +22,7 @@ class ToggleFollowCastUseCaseTest {
         val castRepository = FakeCastRepository(dataSource)
         val castEventPublisher = CastEventPublisher()
         val useCase = ToggleFollowCastUseCase(authRepository, castRepository, castEventPublisher)
-        val eventDeferred = async { castEventPublisher.events.first() }
+        val eventDeferred = async(start = CoroutineStart.UNDISPATCHED) { castEventPublisher.events.first() }
 
         val result = useCase("maid-2")
         val event = eventDeferred.await()
@@ -41,7 +42,7 @@ class ToggleFollowCastUseCaseTest {
         val castRepository = FakeCastRepository(dataSource)
         val castEventPublisher = CastEventPublisher()
         val useCase = ToggleFollowCastUseCase(authRepository, castRepository, castEventPublisher)
-        val eventDeferred = async { castEventPublisher.events.first() }
+        val eventDeferred = async(start = CoroutineStart.UNDISPATCHED) { castEventPublisher.events.first() }
 
         val result = useCase("maid-1")
         val event = eventDeferred.await()

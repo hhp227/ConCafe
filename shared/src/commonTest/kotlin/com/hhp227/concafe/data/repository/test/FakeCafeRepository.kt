@@ -9,6 +9,7 @@ import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeSort
 import com.hhp227.concafe.domain.model.CheckInCafeSummary
+import com.hhp227.concafe.domain.model.TableCounts
 import com.hhp227.concafe.domain.repository.CafeRepository
 
 class FakeCafeRepository(
@@ -131,6 +132,16 @@ class FakeCafeRepository(
                     checkInCount = dataSource.cafeCheckInCountById[cafe.id] ?: 0
                 )
             }
+    }
+
+    override suspend fun updateCafeTableCounts(cafeId: String, current: Int, total: Int) {
+        dataSource.cafes.replaceAll { cafe ->
+            if (cafe.id == cafeId) {
+                cafe.copy(tableCounts = TableCounts(current = current, total = total))
+            } else {
+                cafe
+            }
+        }
     }
 
     override suspend fun updateCafeSocialMedia(

@@ -10,5 +10,8 @@ data class User(
     val banned: Boolean,
     val createdAt: String,
     val phoneNumber: String? = null,
-    val signupCompleted: Boolean = true
+    val signupCompleted: Boolean = true,
+    val lastLoginAt: String? = null,
+    val dormant: Boolean = false,
+    val dormantAt: String? = null
 )

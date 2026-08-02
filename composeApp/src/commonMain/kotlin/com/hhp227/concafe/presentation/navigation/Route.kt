@@ -105,6 +105,9 @@ sealed interface Route {
     data object UserManagement : Route
 
     @Serializable
+    data object DormantAccount : Route
+
+    @Serializable
     data object ChangePassword : Route
 
     @Serializable
