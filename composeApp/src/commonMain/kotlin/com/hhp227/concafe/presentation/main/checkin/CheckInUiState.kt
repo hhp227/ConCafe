@@ -5,10 +5,12 @@ import com.hhp227.concafe.domain.model.CheckInCastSummary
 import com.hhp227.concafe.domain.model.CheckInVisitEntry
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
+import com.hhp227.concafe.presentation.theme.AppContentLayout
 
 data class CheckInUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val contentLayout: AppContentLayout = AppContentLayout.FULL_BLEED,
     val currentUser: User? = null,
     val currentLocationLabel: String = "",
     val userCityKey: String? = null,

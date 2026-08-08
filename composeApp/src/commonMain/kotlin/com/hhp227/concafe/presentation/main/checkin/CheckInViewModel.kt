@@ -27,9 +27,11 @@ import com.hhp227.concafe.domain.usecase.DismissReviewPromptUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
+import com.hhp227.concafe.domain.usecase.ObserveContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
+import com.hhp227.concafe.presentation.theme.toPresentationContentLayout
 
 class CheckInViewModel(
     private val getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase,
@@ -37,6 +39,7 @@ class CheckInViewModel(
     private val getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase,
     private val createVisitUseCase: CreateVisitUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val observeContentLayoutUseCase: ObserveContentLayoutUseCase,
     private val shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase,
     private val dismissReviewPromptUseCase: DismissReviewPromptUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
@@ -82,6 +85,15 @@ class CheckInViewModel(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    private fun observeContentLayout() {
+        jobs[TaskKey.OBSERVE_CONTENT_LAYOUT]?.cancel()
+        jobs[TaskKey.OBSERVE_CONTENT_LAYOUT] = viewModelScope.launch {
+            observeContentLayoutUseCase.invoke().collect { contentLayout ->
+                _uiState.update { it.copy(contentLayout = contentLayout.toPresentationContentLayout()) }
             }
         }
     }
@@ -647,6 +659,7 @@ class CheckInViewModel(
 
     init {
         observeSession()
+        observeContentLayout()
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
@@ -664,6 +677,7 @@ class CheckInViewModel(
     private enum class TaskKey {
         LOAD_GUEST_FEED,
         OBSERVE_SESSION,
+        OBSERVE_CONTENT_LAYOUT,
         LOAD_USER_VISIT_PAGE,
         SUBMIT_VISIT,
         REQUEST_LOCATION_PERMISSION,

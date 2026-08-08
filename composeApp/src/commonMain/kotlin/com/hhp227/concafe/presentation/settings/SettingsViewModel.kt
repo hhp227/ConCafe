@@ -9,20 +9,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.hhp227.concafe.domain.common.AppResult
-import com.hhp227.concafe.domain.usecase.ObserveBannerLayoutUseCase
+import com.hhp227.concafe.domain.usecase.ObserveContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.ObserveBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
-import com.hhp227.concafe.domain.usecase.SetBannerLayoutUseCase
+import com.hhp227.concafe.domain.usecase.SetContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.SetBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
-import com.hhp227.concafe.presentation.theme.AppBannerLayout
+import com.hhp227.concafe.presentation.theme.AppContentLayout
 import com.hhp227.concafe.presentation.theme.AppBrandTheme
 import com.hhp227.concafe.presentation.theme.AppThemeMode
-import com.hhp227.concafe.presentation.theme.toDomainBannerLayout
+import com.hhp227.concafe.presentation.theme.toDomainContentLayout
 import com.hhp227.concafe.presentation.theme.toDomainBrandTheme
 import com.hhp227.concafe.presentation.theme.toDomainThemeMode
-import com.hhp227.concafe.presentation.theme.toPresentationBannerLayout
+import com.hhp227.concafe.presentation.theme.toPresentationContentLayout
 import com.hhp227.concafe.presentation.theme.toPresentationBrandTheme
 import com.hhp227.concafe.presentation.theme.toPresentationThemeMode
 import kotlinx.coroutines.Job
@@ -33,8 +33,8 @@ class SettingsViewModel(
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val observeBrandThemeUseCase: ObserveBrandThemeUseCase,
     private val setBrandThemeUseCase: SetBrandThemeUseCase,
-    private val observeBannerLayoutUseCase: ObserveBannerLayoutUseCase,
-    private val setBannerLayoutUseCase: SetBannerLayoutUseCase
+    private val observeContentLayoutUseCase: ObserveContentLayoutUseCase,
+    private val setContentLayoutUseCase: SetContentLayoutUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -123,16 +123,16 @@ class SettingsViewModel(
         }
     }
 
-    private fun selectBannerLayout(bannerLayout: AppBannerLayout) {
-        setBannerLayoutUseCase.invoke(bannerLayout.toDomainBannerLayout())
-        _uiState.update { it.copy(bannerLayout = bannerLayout) }
+    private fun selectContentLayout(contentLayout: AppContentLayout) {
+        setContentLayoutUseCase.invoke(contentLayout.toDomainContentLayout())
+        _uiState.update { it.copy(contentLayout = contentLayout) }
     }
 
-    private fun observeBannerLayout() {
-        jobs[JobKey.OBSERVE_BANNER_LAYOUT]?.cancel()
-        jobs[JobKey.OBSERVE_BANNER_LAYOUT] = viewModelScope.launch {
-            observeBannerLayoutUseCase.invoke().collect { bannerLayout ->
-                _uiState.update { it.copy(bannerLayout = bannerLayout.toPresentationBannerLayout()) }
+    private fun observeContentLayout() {
+        jobs[JobKey.OBSERVE_CONTENT_LAYOUT]?.cancel()
+        jobs[JobKey.OBSERVE_CONTENT_LAYOUT] = viewModelScope.launch {
+            observeContentLayoutUseCase.invoke().collect { contentLayout ->
+                _uiState.update { it.copy(contentLayout = contentLayout.toPresentationContentLayout()) }
             }
         }
     }
@@ -152,14 +152,14 @@ class SettingsViewModel(
             SettingsAction.ClickSignOut -> signOut()
             is SettingsAction.SelectThemeMode -> selectThemeMode(action.themeMode)
             is SettingsAction.SelectBrandTheme -> selectBrandTheme(action.brandTheme)
-            is SettingsAction.SelectBannerLayout -> selectBannerLayout(action.bannerLayout)
+            is SettingsAction.SelectContentLayout -> selectContentLayout(action.contentLayout)
         }
     }
 
     init {
         observeThemeMode()
         observeBrandTheme()
-        observeBannerLayout()
+        observeContentLayout()
     }
 
     override fun onCleared() {
@@ -172,7 +172,7 @@ class SettingsViewModel(
         SIGN_OUT,
         OBSERVE_THEME,
         OBSERVE_BRAND_THEME,
-        OBSERVE_BANNER_LAYOUT
+        OBSERVE_CONTENT_LAYOUT
     }
 
     private companion object {

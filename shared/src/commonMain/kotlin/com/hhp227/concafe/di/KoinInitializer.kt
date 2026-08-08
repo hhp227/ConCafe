@@ -137,10 +137,10 @@ import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
 import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
-import com.hhp227.concafe.domain.usecase.ObserveBannerLayoutUseCase
+import com.hhp227.concafe.domain.usecase.ObserveContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.ObserveBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
-import com.hhp227.concafe.domain.usecase.SetBannerLayoutUseCase
+import com.hhp227.concafe.domain.usecase.SetContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.SetBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
@@ -873,14 +873,14 @@ fun resolveSetBrandThemeUseCase(): SetBrandThemeUseCase {
     return koin.get()
 }
 
-fun resolveObserveBannerLayoutUseCase(): ObserveBannerLayoutUseCase {
+fun resolveObserveContentLayoutUseCase(): ObserveContentLayoutUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }
     return koin.get()
 }
 
-fun resolveSetBannerLayoutUseCase(): SetBannerLayoutUseCase {
+fun resolveSetContentLayoutUseCase(): SetContentLayoutUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

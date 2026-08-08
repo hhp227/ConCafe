@@ -28,7 +28,7 @@ final class HomeViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
-    private let observeBannerLayoutUseCase: ObserveBannerLayoutUseCase
+    private let observeContentLayoutUseCase: ObserveContentLayoutUseCase
 
     private let bannerEventPublisher: BannerEventPublisher
 
@@ -79,7 +79,7 @@ final class HomeViewModel: ObservableObject {
                     isLoading: false,
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    bannerLayout: uiState.bannerLayout,
+                    contentLayout: uiState.contentLayout,
                     banners: ((loaded.0 as? AppResultSuccess<AnyObject>)?.data as? [HomeBanner]) ?? uiState.banners,
                     popularCasts: popularCastPage?.casts ?? uiState.popularCasts,
                     popularCastCafeNames: popularCastPage.map { Self.dictionary(from: $0.cafeNames) } ?? uiState.popularCastCafeNames,
@@ -105,7 +105,7 @@ final class HomeViewModel: ObservableObject {
                     isLoading: false,
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    bannerLayout: uiState.bannerLayout,
+                    contentLayout: uiState.contentLayout,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -141,7 +141,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -178,7 +178,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -215,7 +215,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -253,7 +253,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -293,7 +293,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -327,7 +327,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: uiState.isLoginPromptVisible,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -362,7 +362,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -387,7 +387,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -414,7 +414,7 @@ final class HomeViewModel: ObservableObject {
                 uiState = HomeUiState(
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    bannerLayout: uiState.bannerLayout,
+                    contentLayout: uiState.contentLayout,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -452,7 +452,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: uiState.isLoginPromptVisible,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -486,7 +486,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: append ? (uiState.popularCasts + page.casts) : page.casts,
                         popularCastCafeNames: append
@@ -515,7 +515,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -542,7 +542,7 @@ final class HomeViewModel: ObservableObject {
                 uiState = HomeUiState(
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    bannerLayout: uiState.bannerLayout,
+                    contentLayout: uiState.contentLayout,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -580,7 +580,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: uiState.isLoginPromptVisible,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -614,7 +614,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -639,7 +639,7 @@ final class HomeViewModel: ObservableObject {
                     uiState = HomeUiState(
                         isLoggedIn: uiState.isLoggedIn,
                         isLoginPromptVisible: uiState.isLoginPromptVisible,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -666,7 +666,7 @@ final class HomeViewModel: ObservableObject {
                 uiState = HomeUiState(
                     isLoggedIn: uiState.isLoggedIn,
                     isLoginPromptVisible: uiState.isLoginPromptVisible,
-                    bannerLayout: uiState.bannerLayout,
+                    contentLayout: uiState.contentLayout,
                     banners: uiState.banners,
                     popularCasts: uiState.popularCasts,
                     popularCastCafeNames: uiState.popularCastCafeNames,
@@ -707,7 +707,7 @@ final class HomeViewModel: ObservableObject {
                         isLoading: uiState.isLoading,
                         isLoggedIn: user != nil,
                         isLoginPromptVisible: user == nil ? uiState.isLoginPromptVisible : false,
-                        bannerLayout: uiState.bannerLayout,
+                        contentLayout: uiState.contentLayout,
                         banners: uiState.banners,
                         popularCasts: uiState.popularCasts,
                         popularCastCafeNames: uiState.popularCastCafeNames,
@@ -750,15 +750,15 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func observeBannerLayout() {
-        tasks[.bannerLayout]?.cancel()
-        tasks[.bannerLayout] = Task {
+    private func observeContentLayout() {
+        tasks[.contentLayout]?.cancel()
+        tasks[.contentLayout] = Task {
             do {
-                for try await bannerLayout in asyncSequence(for: observeBannerLayoutUseCase.invoke()) {
-                    uiState.bannerLayout = AppBannerLayout(bannerLayout: bannerLayout)
+                for try await contentLayout in asyncSequence(for: observeContentLayoutUseCase.invoke()) {
+                    uiState.contentLayout = AppContentLayout(contentLayout: contentLayout)
                 }
             } catch {
-                uiState.bannerLayout = .fullBleed
+                uiState.contentLayout = .fullBleed
             }
         }
     }
@@ -872,7 +872,7 @@ final class HomeViewModel: ObservableObject {
         uiState = HomeUiState(
             isLoggedIn: uiState.isLoggedIn,
             isLoginPromptVisible: uiState.isLoginPromptVisible,
-            bannerLayout: uiState.bannerLayout,
+            contentLayout: uiState.contentLayout,
             banners: uiState.banners,
             popularCasts: uiState.popularCasts,
             popularCastCafeNames: uiState.popularCastCafeNames.merging([cafe.id: cafe.name]) { _, new in new },
@@ -914,7 +914,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: true,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -985,7 +985,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: false,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -1011,7 +1011,7 @@ final class HomeViewModel: ObservableObject {
             uiState = HomeUiState(
                 isLoggedIn: uiState.isLoggedIn,
                 isLoginPromptVisible: false,
-                bannerLayout: uiState.bannerLayout,
+                contentLayout: uiState.contentLayout,
                 banners: uiState.banners,
                 popularCasts: uiState.popularCasts,
                 popularCastCafeNames: uiState.popularCastCafeNames,
@@ -1058,7 +1058,7 @@ final class HomeViewModel: ObservableObject {
         getRecentNoticesUseCase: GetRecentNoticesUseCase = KoinInitializerKt.resolveGetRecentNoticesUseCase(),
         getCommunityPostPageUseCase: GetCommunityPostPageUseCase = KoinInitializerKt.resolveGetCommunityPostPageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        observeBannerLayoutUseCase: ObserveBannerLayoutUseCase = KoinInitializerKt.resolveObserveBannerLayoutUseCase(),
+        observeContentLayoutUseCase: ObserveContentLayoutUseCase = KoinInitializerKt.resolveObserveContentLayoutUseCase(),
         bannerEventPublisher: BannerEventPublisher = KoinInitializerKt.resolveBannerEventPublisher(),
         cafeEventEventPublisher: CafeEventEventPublisher = KoinInitializerKt.resolveCafeEventEventPublisher(),
         cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher = KoinInitializerKt.resolveCafeRegistrationClaimEventPublisher(),
@@ -1074,7 +1074,7 @@ final class HomeViewModel: ObservableObject {
         self.getRecentNoticesUseCase = getRecentNoticesUseCase
         self.getCommunityPostPageUseCase = getCommunityPostPageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
-        self.observeBannerLayoutUseCase = observeBannerLayoutUseCase
+        self.observeContentLayoutUseCase = observeContentLayoutUseCase
         self.bannerEventPublisher = bannerEventPublisher
         self.cafeEventEventPublisher = cafeEventEventPublisher
         self.cafeRegistrationClaimEventPublisher = cafeRegistrationClaimEventPublisher
@@ -1083,7 +1083,7 @@ final class HomeViewModel: ObservableObject {
         self.communityPostEventPublisher = communityPostEventPublisher
 
         observeSession()
-        observeBannerLayout()
+        observeContentLayout()
         observeBannerEvent()
         observeCafeEventEvent()
         observeCafeRegistrationClaimEvent()
@@ -1117,7 +1117,7 @@ final class HomeViewModel: ObservableObject {
         case homeCafeEvents
         case homeCafeEventPage
         case session
-        case bannerLayout
+        case contentLayout
         case bannerEvent
         case cafeEventEvent
         case cafeRegistrationClaimEvent

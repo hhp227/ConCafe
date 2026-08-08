@@ -11,6 +11,7 @@ import Shared
 struct CheckInUiState {
     var isLoading: Bool
     var errorMessage: String?
+    var contentLayout: AppContentLayout = .fullBleed
     var currentUser: User?
     var currentLocationLabel: String
     var userCityKey: String?
@@ -33,6 +34,7 @@ struct CheckInUiState {
     static let empty = CheckInUiState(
         isLoading: false,
         errorMessage: nil,
+        contentLayout: .fullBleed,
         currentUser: nil,
         currentLocationLabel: "",
         userCityKey: nil,

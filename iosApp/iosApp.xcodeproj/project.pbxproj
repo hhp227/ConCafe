@@ -84,7 +84,7 @@
 		0A3BB9822F9930C600737CDB /* CafeEventEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */; };
 		0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */; };
 		0AC0FE000AC0FE000AC0FE03 /* AppBrandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */; };
-		0AC0FE000AC0FE000AC0FE05 /* AppBannerLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE000AC0FE000AC0FE06 /* AppBannerLayout.swift */; };
+		0AC0FE000AC0FE000AC0FE05 /* AppContentLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE000AC0FE000AC0FE06 /* AppContentLayout.swift */; };
 		0A3D3AC02F6D1F3400167893 /* NetworkStatusBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */; };
 		0A3DB80A2F649F2E00064804 /* BannerEditUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */; };
 		0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3DB80B2F649F5000064804 /* BannerEditAction.swift */; };
@@ -360,7 +360,7 @@
 		0A3BB9812F9930C600737CDB /* CafeEventEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CafeEventEvent.swift; sourceTree = "<group>"; };
 		0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeMode.swift; sourceTree = "<group>"; };
 		0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBrandTheme.swift; sourceTree = "<group>"; };
-		0AC0FE000AC0FE000AC0FE06 /* AppBannerLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBannerLayout.swift; sourceTree = "<group>"; };
+		0AC0FE000AC0FE000AC0FE06 /* AppContentLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContentLayout.swift; sourceTree = "<group>"; };
 		0A3D3ABF2F6D1F3400167893 /* NetworkStatusBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatusBannerView.swift; sourceTree = "<group>"; };
 		0A3DB8092F649F2E00064804 /* BannerEditUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditUiState.swift; sourceTree = "<group>"; };
 		0A3DB80B2F649F5000064804 /* BannerEditAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerEditAction.swift; sourceTree = "<group>"; };
@@ -787,7 +787,7 @@
 			isa = PBXGroup;
 			children = (
 				0AC0FE000AC0FE000AC0FE04 /* AppBrandTheme.swift */,
-				0AC0FE000AC0FE000AC0FE06 /* AppBannerLayout.swift */,
+				0AC0FE000AC0FE000AC0FE06 /* AppContentLayout.swift */,
 				0A3C35722FAB279F00CB6B11 /* AppThemeMode.swift */,
 			);
 			path = Theme;
@@ -1642,7 +1642,7 @@
 				0A3DB80C2F649F5000064804 /* BannerEditAction.swift in Sources */,
 				0A3C35732FAB279F00CB6B11 /* AppThemeMode.swift in Sources */,
 				0AC0FE000AC0FE000AC0FE03 /* AppBrandTheme.swift in Sources */,
-				0AC0FE000AC0FE000AC0FE05 /* AppBannerLayout.swift in Sources */,
+				0AC0FE000AC0FE000AC0FE05 /* AppContentLayout.swift in Sources */,
 				0A785CB92F5A7DAD004037A8 /* RankingUiState.swift in Sources */,
 				0A27C8E72F614CDD00573900 /* ScheduleAction.swift in Sources */,
 				0A94E09B2F5C6D3A0006722D /* ConCafeTabBar.swift in Sources */,

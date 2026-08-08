@@ -12,7 +12,7 @@ struct HomeUiState {
     var isLoading: Bool = false
     var isLoggedIn: Bool
     var isLoginPromptVisible: Bool
-    var bannerLayout: AppBannerLayout = .fullBleed
+    var contentLayout: AppContentLayout = .fullBleed
     let banners: [HomeBanner]
     let popularCasts: [Cast]
     let popularCastCafeNames: [String: String]
@@ -37,7 +37,7 @@ struct HomeUiState {
         isLoading: false,
         isLoggedIn: false,
         isLoginPromptVisible: false,
-        bannerLayout: .fullBleed,
+        contentLayout: .fullBleed,
         banners: [],
         popularCasts: [],
         popularCastCafeNames: [:],

@@ -52,9 +52,9 @@ private struct SettingsContentView: View {
                     selectedBrandTheme: uiState.brandTheme,
                     onSelect: { onAction(.brandThemeSelected($0)) }
                 )
-                BannerLayoutPickerRow(
-                    selectedBannerLayout: uiState.bannerLayout,
-                    onSelect: { onAction(.bannerLayoutSelected($0)) }
+                ContentLayoutPickerRow(
+                    selectedContentLayout: uiState.contentLayout,
+                    onSelect: { onAction(.contentLayoutSelected($0)) }
                 )
             }
             Section {
@@ -158,10 +158,10 @@ private struct BrandThemePickerRow: View {
     }
 }
 
-private struct BannerLayoutPickerRow: View {
-    let selectedBannerLayout: AppBannerLayout
+private struct ContentLayoutPickerRow: View {
+    let selectedContentLayout: AppContentLayout
 
-    let onSelect: (AppBannerLayout) -> Void
+    let onSelect: (AppContentLayout) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -170,22 +170,22 @@ private struct BannerLayoutPickerRow: View {
                     .foregroundStyle(ConCafeColors.primary)
                     .frame(width: 24)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(localized: String.LocalizationValue("settings_banner_layout_title"), table: "Localizable"))
+                    Text(String(localized: String.LocalizationValue("settings_content_layout_title"), table: "Localizable"))
                         .font(.subheadline)
                         .bold()
-                    Text(String(localized: String.LocalizationValue("settings_banner_layout_desc"), table: "Localizable"))
+                    Text(String(localized: String.LocalizationValue("settings_content_layout_desc"), table: "Localizable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
             }
-            Picker(String(localized: String.LocalizationValue("settings_banner_layout_title"), table: "Localizable"), selection: Binding(
-                get: { selectedBannerLayout },
+            Picker(String(localized: String.LocalizationValue("settings_content_layout_title"), table: "Localizable"), selection: Binding(
+                get: { selectedContentLayout },
                 set: { onSelect($0) }
             )) {
-                ForEach(AppBannerLayout.allCases) { bannerLayout in
-                    Text(bannerLayout.title)
-                        .tag(bannerLayout)
+                ForEach(AppContentLayout.allCases) { contentLayout in
+                    Text(contentLayout.title)
+                        .tag(contentLayout)
                 }
             }
             .pickerStyle(.segmented)

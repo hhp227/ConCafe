@@ -189,10 +189,10 @@
     <string name="settings_brand_theme_desc">アプリのカラーテーマを選択できます。</string>
     <string name="settings_brand_theme_maid">メイドカフェ</string>
     <string name="settings_brand_theme_mens">メンズコンカフェ</string>
-    <string name="settings_banner_layout_title">ホームバナースタイル</string>
-    <string name="settings_banner_layout_desc">ホームバナーを画面幅いっぱいに表示するか選択できます。</string>
-    <string name="settings_banner_layout_full_bleed">フルブリード</string>
-    <string name="settings_banner_layout_legacy">クラシック</string>
+    <string name="settings_content_layout_title">表示スタイル</string>
+    <string name="settings_content_layout_desc">ホームバナーとチェックインマップを画面幅いっぱいに表示するか選択できます。</string>
+    <string name="settings_content_layout_full_bleed">フルブリード</string>
+    <string name="settings_content_layout_legacy">クラシック</string>
     <string name="settings_account_title">アカウント管理</string>
     <string name="settings_account_desc">プロフィールとログイン情報を管理します。</string>
     <string name="settings_notification_title">通知設定</string>

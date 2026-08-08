@@ -204,9 +204,10 @@ private struct CheckInGuestContentView: View {
                     onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) },
                     onRegionChanged: { onAction(.mapRegionChanged(region: $0)) },
-                    onMapFullViewTap: { onAction(.mapFullViewTapped) }
+                    onMapFullViewTap: { onAction(.mapFullViewTapped) },
+                    contentLayout: uiState.contentLayout
                 )
-                .padding(.top, 16)
+                .padding(.top, uiState.contentLayout.topPadding(legacy: mapSectionTopPadding))
                 CheckInLoginPromotionSection(onAction: onAction)
                 CheckInSectionTitle(
                     title: String(localized: String.LocalizationValue("checkin_section_popular_cafe_title"), table: "Localizable"),
@@ -291,9 +292,10 @@ private struct CheckInUserContentView: View {
                     onCheckInForCafeTap: { onAction(.checkInForCafeTapped(cafeId: $0)) },
                     onCheckInTap: { onAction(.checkInTapped) },
                     onRegionChanged: { onAction(.mapRegionChanged(region: $0)) },
-                    onMapFullViewTap: { onAction(.mapFullViewTapped) }
+                    onMapFullViewTap: { onAction(.mapFullViewTapped) },
+                    contentLayout: uiState.contentLayout
                 )
-                .padding(.top, 16)
+                .padding(.top, uiState.contentLayout.topPadding(legacy: mapSectionTopPadding))
                 CheckInPrimaryButton(title: String(localized: String.LocalizationValue("checkin_new_visit_cta"), table: "Localizable")) {
                     onAction(.checkInTapped)
                 }
@@ -343,6 +345,8 @@ struct CheckInMapSection: View {
     var showsExpandButton: Bool = true
 
     var showsCheckInButton: Bool = true
+
+    var contentLayout: AppContentLayout = .legacy
 
     var mapHeight: CGFloat = 240
 
@@ -401,7 +405,7 @@ struct CheckInMapSection: View {
                     onCheckInForCafeTap: onCheckInForCafeTap,
                     showsCheckInButton: showsCheckInButton
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: contentLayout.cornerRadius(legacy: mapCornerRadius), style: .continuous))
                 .onChange(of: mapPins.map(\.id)) { visiblePinIds in
                     if let selectedPinId, !visiblePinIds.contains(selectedPinId) {
                         self.selectedPinId = nil
@@ -437,12 +441,17 @@ struct CheckInMapSection: View {
                 endPoint: .bottom
             )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: contentLayout.cornerRadius(legacy: mapCardCornerRadius), style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.08) : Color.white.opacity(0.8), lineWidth: 1)
+            RoundedRectangle(cornerRadius: contentLayout.cornerRadius(legacy: mapCardCornerRadius), style: .continuous)
+                .stroke(
+                    contentLayout == .legacy
+                        ? (UITraitCollection.current.userInterfaceStyle == .dark ? Color.white.opacity(0.08) : Color.white.opacity(0.8))
+                        : Color.clear,
+                    lineWidth: 1
+                )
         )
-        .padding(.horizontal, 16)
+        .padding(.horizontal, contentLayout.horizontalPadding)
     }
 
     private var filteredCafes: [CheckInCafeSummary] {
@@ -1376,3 +1385,7 @@ struct CheckInView_Previews: PreviewProvider {
         CheckInView(onNavigationAction: { _ in })
     }
 }
+
+private let mapSectionTopPadding: CGFloat = 16
+private let mapCardCornerRadius: CGFloat = 28
+private let mapCornerRadius: CGFloat = 24

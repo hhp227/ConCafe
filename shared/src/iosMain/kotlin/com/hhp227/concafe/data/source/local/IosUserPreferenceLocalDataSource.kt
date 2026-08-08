@@ -1,6 +1,6 @@
 package com.hhp227.concafe.data.source.local
 
-import com.hhp227.concafe.domain.model.BannerLayout
+import com.hhp227.concafe.domain.model.ContentLayout
 import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
@@ -16,7 +16,7 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
 
     private val brandTheme = MutableStateFlow(loadBrandTheme())
 
-    private val bannerLayout = MutableStateFlow(loadBannerLayout())
+    private val contentLayout = MutableStateFlow(loadContentLayout())
 
     private val DetailTooltipType.preferenceKey: String
         get() = when (this) {
@@ -44,14 +44,14 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
         this.brandTheme.value = brandTheme
     }
 
-    override fun observeBannerLayout(): Flow<BannerLayout> {
-        return bannerLayout.asStateFlow()
+    override fun observeContentLayout(): Flow<ContentLayout> {
+        return contentLayout.asStateFlow()
     }
 
-    override fun setBannerLayout(bannerLayout: BannerLayout) {
-        defaults.setObject(bannerLayout.name, forKey = KEY_BANNER_LAYOUT)
+    override fun setContentLayout(contentLayout: ContentLayout) {
+        defaults.setObject(contentLayout.name, forKey = KEY_CONTENT_LAYOUT)
         defaults.synchronize()
-        this.bannerLayout.value = bannerLayout
+        this.contentLayout.value = contentLayout
     }
 
     override fun hasShownDetailTooltip(type: DetailTooltipType): Boolean {
@@ -76,15 +76,15 @@ class IosUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
         return BrandTheme.entries.firstOrNull { it.name == storedValue } ?: BrandTheme.MAID_CAFE
     }
 
-    private fun loadBannerLayout(): BannerLayout {
-        val storedValue = defaults.stringForKey(KEY_BANNER_LAYOUT)
-        return BannerLayout.entries.firstOrNull { it.name == storedValue } ?: BannerLayout.FULL_BLEED
+    private fun loadContentLayout(): ContentLayout {
+        val storedValue = defaults.stringForKey(KEY_CONTENT_LAYOUT)
+        return ContentLayout.entries.firstOrNull { it.name == storedValue } ?: ContentLayout.FULL_BLEED
     }
 
     private companion object {
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_BRAND_THEME = "brand_theme"
-        private const val KEY_BANNER_LAYOUT = "banner_layout"
+        private const val KEY_CONTENT_LAYOUT = "content_layout"
         private const val LEGACY_KEY_THEME_MODE = "concafe.theme.mode"
         private const val KEY_CAFE_FAVORITE_TOOLTIP_SHOWN = "cafe_favorite_tooltip_shown"
         private const val KEY_CAST_FOLLOW_TOOLTIP_SHOWN = "cast_follow_tooltip_shown"

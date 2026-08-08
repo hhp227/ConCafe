@@ -103,7 +103,7 @@ private struct HomeContentView: View {
                         birthdaySection
                     }
                 }
-                .padding(.top, uiState.bannerLayout.feedTopPadding)
+                .padding(.top, uiState.contentLayout.topPadding(legacy: feedTopPadding))
                 .padding(.bottom, 16)
             }
             .background(ConCafeColors.background)
@@ -120,16 +120,16 @@ private struct HomeContentView: View {
 
     private var homeSkeleton: some View {
         let containerWidth = UIScreen.main.bounds.width
-        let bannerLayout = uiState.bannerLayout
-        let bannerWidth = max(containerWidth - bannerLayout.horizontalPadding * 2, 0)
-        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, bannerLayout: bannerLayout)
+        let contentLayout = uiState.contentLayout
+        let bannerWidth = max(containerWidth - contentLayout.horizontalPadding * 2, 0)
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, contentLayout: contentLayout)
 
         // 배너는 실제 배너와 같은 화면폭 기반 고정 크기로 만든다.
         // 가변폭(maxWidth: .infinity) 체인은 카드 행이 화면보다 넓을 때 렌더가 깨진다.
         return VStack(alignment: .leading, spacing: 24) {
-            ShimmerBox(cornerRadius: bannerLayout.skeletonCornerRadius)
+            ShimmerBox(cornerRadius: contentLayout.cornerRadius(legacy: bannerSkeletonCornerRadius))
                 .frame(width: bannerWidth, height: bannerHeight)
-                .padding(.horizontal, bannerLayout.horizontalPadding)
+                .padding(.horizontal, contentLayout.horizontalPadding)
             ForEach(0..<2, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 10) {
                     ShimmerBox()
@@ -164,7 +164,7 @@ private struct HomeContentView: View {
             }
             .padding(.horizontal, 16)
         }
-        .padding(.top, bannerLayout.feedTopPadding)
+        .padding(.top, contentLayout.topPadding(legacy: feedTopPadding))
         .padding(.bottom, 16)
         .clipped()
     }
@@ -459,21 +459,21 @@ private struct HomeBannerSection: View {
 
     var body: some View {
         let containerWidth = UIScreen.main.bounds.width
-        let bannerLayout = uiState.bannerLayout
-        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, bannerLayout: bannerLayout)
+        let contentLayout = uiState.contentLayout
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, contentLayout: contentLayout)
         let sectionHeight = bannerSectionHeight(containerWidth: containerWidth)
 
-        VStack(spacing: bannerLayout == .legacy ? 10 : 0) {
+        VStack(spacing: contentLayout == .legacy ? 10 : 0) {
             if !uiState.banners.isEmpty {
                 TabView(selection: $currentBannerPage) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, banner in
                         HomeBannerItem(
                             banner: banner,
                             height: bannerHeight,
-                            bannerLayout: bannerLayout
+                            contentLayout: contentLayout
                         )
                         .frame(maxWidth: .infinity)
-                        .padding(.horizontal, bannerLayout.horizontalPadding)
+                        .padding(.horizontal, contentLayout.horizontalPadding)
                         .onTapGesture {
                             onAction(.bannerTapped(banner))
                         }
@@ -483,7 +483,7 @@ private struct HomeBannerSection: View {
                 .frame(height: bannerHeight)
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .overlay(alignment: .bottomTrailing) {
-                    if bannerLayout == .fullBleed && uiState.banners.count > 1 {
+                    if contentLayout == .fullBleed && uiState.banners.count > 1 {
                         Text("\(currentBannerPage + 1) / \(uiState.banners.count)")
                             .font(.caption2)
                             .foregroundStyle(.white)
@@ -495,9 +495,9 @@ private struct HomeBannerSection: View {
                     }
                 }
             } else {
-                HomeBannerPlaceholderCard(height: bannerHeight, bannerLayout: bannerLayout)
+                HomeBannerPlaceholderCard(height: bannerHeight, contentLayout: contentLayout)
             }
-            if bannerLayout == .legacy && uiState.banners.count > 1 {
+            if contentLayout == .legacy && uiState.banners.count > 1 {
                 HStack(spacing: 6) {
                     ForEach(Array(uiState.banners.enumerated()), id: \.element.id) { index, _ in
                         RoundedRectangle(cornerRadius: 999)
@@ -512,16 +512,16 @@ private struct HomeBannerSection: View {
     }
 
     private func bannerSectionHeight(containerWidth: CGFloat) -> CGFloat {
-        let bannerLayout = uiState.bannerLayout
-        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, bannerLayout: bannerLayout)
+        let contentLayout = uiState.contentLayout
+        let bannerHeight = homeBannerHeight(containerWidth: containerWidth, contentLayout: contentLayout)
         // 풀블리드는 페이지 표시를 배너 위에 겹쳐 그리므로 별도 높이를 더하지 않는다.
-        let indicatorHeight: CGFloat = (bannerLayout == .legacy && uiState.banners.count > 1) ? 18 : 0
+        let indicatorHeight: CGFloat = (contentLayout == .legacy && uiState.banners.count > 1) ? 18 : 0
         return bannerHeight + indicatorHeight
     }
 }
 
-private func homeBannerHeight(containerWidth: CGFloat, bannerLayout: AppBannerLayout) -> CGFloat {
-    let contentWidth = max(containerWidth - bannerLayout.horizontalPadding * 2, 0)
+private func homeBannerHeight(containerWidth: CGFloat, contentLayout: AppContentLayout) -> CGFloat {
+    let contentWidth = max(containerWidth - contentLayout.horizontalPadding * 2, 0)
     return min(contentWidth * (10.0 / 16.0), 360)
 }
 
@@ -530,10 +530,10 @@ private struct HomeBannerItem: View {
 
     let height: CGFloat
 
-    let bannerLayout: AppBannerLayout
+    let contentLayout: AppContentLayout
 
     private var cardShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: bannerLayout.cornerRadius, style: .continuous)
+        RoundedRectangle(cornerRadius: contentLayout.cornerRadius(legacy: bannerCornerRadius), style: .continuous)
     }
 
     var body: some View {
@@ -657,7 +657,7 @@ private struct HomeCommunityPostCard: View {
 private struct HomeBannerPlaceholderCard: View {
     let height: CGFloat
 
-    let bannerLayout: AppBannerLayout
+    let contentLayout: AppContentLayout
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -676,8 +676,8 @@ private struct HomeBannerPlaceholderCard: View {
             }
             .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: bannerLayout.cornerRadius, style: .continuous))
-        .padding(.horizontal, bannerLayout.horizontalPadding)
+        .clipShape(RoundedRectangle(cornerRadius: contentLayout.cornerRadius(legacy: bannerCornerRadius), style: .continuous))
+        .padding(.horizontal, contentLayout.horizontalPadding)
         .frame(height: height)
     }
 }
@@ -832,3 +832,7 @@ struct HomeView_Previews: PreviewProvider {
         HomeContentView(uiState: .empty, currentBannerPage: Binding(get: { 1 }, set: { _ in }), onAction: { _ in })
     }
 }
+
+private let feedTopPadding: CGFloat = 16
+private let bannerCornerRadius: CGFloat = 20
+private let bannerSkeletonCornerRadius: CGFloat = 16

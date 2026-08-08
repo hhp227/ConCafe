@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
-import com.hhp227.concafe.presentation.theme.AppBannerLayout
+import com.hhp227.concafe.presentation.theme.AppContentLayout
 import com.hhp227.concafe.presentation.theme.AppBrandTheme
 import com.hhp227.concafe.presentation.theme.AppThemeMode
 import concafe.composeapp.generated.resources.Res
@@ -42,10 +42,10 @@ import concafe.composeapp.generated.resources.settings_privacy_desc
 import concafe.composeapp.generated.resources.settings_privacy_title
 import concafe.composeapp.generated.resources.settings_sign_out_desc
 import concafe.composeapp.generated.resources.settings_sign_out_title
-import concafe.composeapp.generated.resources.settings_banner_layout_desc
-import concafe.composeapp.generated.resources.settings_banner_layout_full_bleed
-import concafe.composeapp.generated.resources.settings_banner_layout_legacy
-import concafe.composeapp.generated.resources.settings_banner_layout_title
+import concafe.composeapp.generated.resources.settings_content_layout_desc
+import concafe.composeapp.generated.resources.settings_content_layout_full_bleed
+import concafe.composeapp.generated.resources.settings_content_layout_legacy
+import concafe.composeapp.generated.resources.settings_content_layout_title
 import concafe.composeapp.generated.resources.settings_brand_theme_desc
 import concafe.composeapp.generated.resources.settings_brand_theme_maid
 import concafe.composeapp.generated.resources.settings_brand_theme_mens
@@ -156,8 +156,8 @@ private fun SettingsContentScreen(
             )
         }
         item {
-            SettingsBannerLayoutCard(
-                selectedBannerLayout = uiState.bannerLayout,
+            SettingsContentLayoutCard(
+                selectedContentLayout = uiState.contentLayout,
                 onAction = onAction
             )
         }
@@ -269,8 +269,8 @@ private fun SettingsThemeCard(
 }
 
 @Composable
-private fun SettingsBannerLayoutCard(
-    selectedBannerLayout: AppBannerLayout,
+private fun SettingsContentLayoutCard(
+    selectedContentLayout: AppContentLayout,
     onAction: (SettingsAction) -> Unit
 ) {
     Card(
@@ -294,11 +294,11 @@ private fun SettingsBannerLayoutCard(
                         .padding(start = 14.dp)
                 ) {
                     Text(
-                        text = stringResource(Res.string.settings_banner_layout_title),
+                        text = stringResource(Res.string.settings_content_layout_title),
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = stringResource(Res.string.settings_banner_layout_desc),
+                        text = stringResource(Res.string.settings_content_layout_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -309,19 +309,19 @@ private fun SettingsBannerLayoutCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ThemeOptionButton(
-                    text = stringResource(Res.string.settings_banner_layout_full_bleed),
-                    selected = selectedBannerLayout == AppBannerLayout.FULL_BLEED,
+                    text = stringResource(Res.string.settings_content_layout_full_bleed),
+                    selected = selectedContentLayout == AppContentLayout.FULL_BLEED,
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        onAction(SettingsAction.SelectBannerLayout(AppBannerLayout.FULL_BLEED))
+                        onAction(SettingsAction.SelectContentLayout(AppContentLayout.FULL_BLEED))
                     }
                 )
                 ThemeOptionButton(
-                    text = stringResource(Res.string.settings_banner_layout_legacy),
-                    selected = selectedBannerLayout == AppBannerLayout.LEGACY,
+                    text = stringResource(Res.string.settings_content_layout_legacy),
+                    selected = selectedContentLayout == AppContentLayout.LEGACY,
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        onAction(SettingsAction.SelectBannerLayout(AppBannerLayout.LEGACY))
+                        onAction(SettingsAction.SelectContentLayout(AppContentLayout.LEGACY))
                     }
                 )
             }

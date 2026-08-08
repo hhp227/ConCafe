@@ -22,9 +22,9 @@ final class SettingsViewModel: ObservableObject {
 
     private let setBrandThemeUseCase: SetBrandThemeUseCase
 
-    private let observeBannerLayoutUseCase: ObserveBannerLayoutUseCase
+    private let observeContentLayoutUseCase: ObserveContentLayoutUseCase
 
-    private let setBannerLayoutUseCase: SetBannerLayoutUseCase
+    private let setContentLayoutUseCase: SetContentLayoutUseCase
 
     @Published private(set) var uiState = SettingsUiState.empty
 
@@ -113,20 +113,20 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    private func selectBannerLayout(_ bannerLayout: AppBannerLayout) {
-        setBannerLayoutUseCase.invoke(bannerLayout: bannerLayout.sharedBannerLayout)
-        uiState.bannerLayout = bannerLayout
+    private func selectContentLayout(_ contentLayout: AppContentLayout) {
+        setContentLayoutUseCase.invoke(contentLayout: contentLayout.sharedContentLayout)
+        uiState.contentLayout = contentLayout
     }
 
-    private func observeBannerLayout() {
-        tasks[.observeBannerLayout]?.cancel()
-        tasks[.observeBannerLayout] = Task {
+    private func observeContentLayout() {
+        tasks[.observeContentLayout]?.cancel()
+        tasks[.observeContentLayout] = Task {
             do {
-                for try await bannerLayout in asyncSequence(for: observeBannerLayoutUseCase.invoke()) {
-                    uiState.bannerLayout = AppBannerLayout(bannerLayout: bannerLayout)
+                for try await contentLayout in asyncSequence(for: observeContentLayoutUseCase.invoke()) {
+                    uiState.contentLayout = AppContentLayout(contentLayout: contentLayout)
                 }
             } catch {
-                uiState.bannerLayout = .fullBleed
+                uiState.contentLayout = .fullBleed
             }
         }
     }
@@ -151,8 +151,8 @@ final class SettingsViewModel: ObservableObject {
             selectThemeMode(themeMode)
         case .brandThemeSelected(let brandTheme):
             selectBrandTheme(brandTheme)
-        case .bannerLayoutSelected(let bannerLayout):
-            selectBannerLayout(bannerLayout)
+        case .contentLayoutSelected(let contentLayout):
+            selectContentLayout(contentLayout)
         }
     }
 
@@ -162,20 +162,20 @@ final class SettingsViewModel: ObservableObject {
         setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase(),
         observeBrandThemeUseCase: ObserveBrandThemeUseCase = KoinInitializerKt.resolveObserveBrandThemeUseCase(),
         setBrandThemeUseCase: SetBrandThemeUseCase = KoinInitializerKt.resolveSetBrandThemeUseCase(),
-        observeBannerLayoutUseCase: ObserveBannerLayoutUseCase = KoinInitializerKt.resolveObserveBannerLayoutUseCase(),
-        setBannerLayoutUseCase: SetBannerLayoutUseCase = KoinInitializerKt.resolveSetBannerLayoutUseCase()
+        observeContentLayoutUseCase: ObserveContentLayoutUseCase = KoinInitializerKt.resolveObserveContentLayoutUseCase(),
+        setContentLayoutUseCase: SetContentLayoutUseCase = KoinInitializerKt.resolveSetContentLayoutUseCase()
     ) {
         self.signOutUseCase = signOutUseCase
         self.observeThemeModeUseCase = observeThemeModeUseCase
         self.setThemeModeUseCase = setThemeModeUseCase
         self.observeBrandThemeUseCase = observeBrandThemeUseCase
         self.setBrandThemeUseCase = setBrandThemeUseCase
-        self.observeBannerLayoutUseCase = observeBannerLayoutUseCase
-        self.setBannerLayoutUseCase = setBannerLayoutUseCase
+        self.observeContentLayoutUseCase = observeContentLayoutUseCase
+        self.setContentLayoutUseCase = setContentLayoutUseCase
 
         observeThemeMode()
         observeBrandTheme()
-        observeBannerLayout()
+        observeContentLayout()
     }
 
     deinit {
@@ -187,7 +187,7 @@ final class SettingsViewModel: ObservableObject {
         case signOut
         case observeTheme
         case observeBrandTheme
-        case observeBannerLayout
+        case observeContentLayout
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"

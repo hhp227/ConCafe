@@ -10,7 +10,7 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.usecase.*
 import com.hhp227.concafe.presentation.main.home.HomeUiState.Companion.empty
-import com.hhp227.concafe.presentation.theme.toPresentationBannerLayout
+import com.hhp227.concafe.presentation.theme.toPresentationContentLayout
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -26,7 +26,7 @@ class HomeViewModel(
     private val getRecentNoticesUseCase: GetRecentNoticesUseCase,
     private val getCommunityPostPageUseCase: GetCommunityPostPageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val observeBannerLayoutUseCase: ObserveBannerLayoutUseCase,
+    private val observeContentLayoutUseCase: ObserveContentLayoutUseCase,
     private val bannerEventPublisher: BannerEventPublisher,
     private val cafeEventEventPublisher: CafeEventEventPublisher,
     private val cafeRegistrationClaimEventPublisher: CafeRegistrationClaimEventPublisher,
@@ -297,11 +297,11 @@ class HomeViewModel(
         }
     }
 
-    private fun observeBannerLayout() {
-        jobs[TaskKey.OBSERVE_BANNER_LAYOUT]?.cancel()
-        jobs[TaskKey.OBSERVE_BANNER_LAYOUT] = viewModelScope.launch {
-            observeBannerLayoutUseCase.invoke().collect { bannerLayout ->
-                _uiState.update { it.copy(bannerLayout = bannerLayout.toPresentationBannerLayout()) }
+    private fun observeContentLayout() {
+        jobs[TaskKey.OBSERVE_CONTENT_LAYOUT]?.cancel()
+        jobs[TaskKey.OBSERVE_CONTENT_LAYOUT] = viewModelScope.launch {
+            observeContentLayoutUseCase.invoke().collect { contentLayout ->
+                _uiState.update { it.copy(contentLayout = contentLayout.toPresentationContentLayout()) }
             }
         }
     }
@@ -476,7 +476,7 @@ class HomeViewModel(
 
     init {
         observeSession()
-        observeBannerLayout()
+        observeContentLayout()
         observeBannerEvent()
         observeCafeEventEvent()
         observeCafeRegistrationClaimEvent()
@@ -494,7 +494,7 @@ class HomeViewModel(
         HOME_CAFE_EVENTS,
         HOME_CAFE_EVENT_PAGE,
         OBSERVE_BANNER_EVENT,
-        OBSERVE_BANNER_LAYOUT,
+        OBSERVE_CONTENT_LAYOUT,
         OBSERVE_CAFE_EVENT_EVENT,
         OBSERVE_CAFE_REGISTRATION_CLAIM_EVENT,
         OBSERVE_CAFE_DETAIL_EVENT,
