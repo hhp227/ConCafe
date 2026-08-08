@@ -22,6 +22,10 @@ final class SettingsViewModel: ObservableObject {
 
     private let setBrandThemeUseCase: SetBrandThemeUseCase
 
+    private let observeBannerLayoutUseCase: ObserveBannerLayoutUseCase
+
+    private let setBannerLayoutUseCase: SetBannerLayoutUseCase
+
     @Published private(set) var uiState = SettingsUiState.empty
 
     let event = PassthroughSubject<SettingsEvent, Never>()
@@ -109,6 +113,24 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    private func selectBannerLayout(_ bannerLayout: AppBannerLayout) {
+        setBannerLayoutUseCase.invoke(bannerLayout: bannerLayout.sharedBannerLayout)
+        uiState.bannerLayout = bannerLayout
+    }
+
+    private func observeBannerLayout() {
+        tasks[.observeBannerLayout]?.cancel()
+        tasks[.observeBannerLayout] = Task {
+            do {
+                for try await bannerLayout in asyncSequence(for: observeBannerLayoutUseCase.invoke()) {
+                    uiState.bannerLayout = AppBannerLayout(bannerLayout: bannerLayout)
+                }
+            } catch {
+                uiState.bannerLayout = .fullBleed
+            }
+        }
+    }
+
     func onAction(_ action: SettingsAction) {
         switch action {
         case .backTapped:
@@ -129,6 +151,8 @@ final class SettingsViewModel: ObservableObject {
             selectThemeMode(themeMode)
         case .brandThemeSelected(let brandTheme):
             selectBrandTheme(brandTheme)
+        case .bannerLayoutSelected(let bannerLayout):
+            selectBannerLayout(bannerLayout)
         }
     }
 
@@ -137,16 +161,21 @@ final class SettingsViewModel: ObservableObject {
         observeThemeModeUseCase: ObserveThemeModeUseCase = KoinInitializerKt.resolveObserveThemeModeUseCase(),
         setThemeModeUseCase: SetThemeModeUseCase = KoinInitializerKt.resolveSetThemeModeUseCase(),
         observeBrandThemeUseCase: ObserveBrandThemeUseCase = KoinInitializerKt.resolveObserveBrandThemeUseCase(),
-        setBrandThemeUseCase: SetBrandThemeUseCase = KoinInitializerKt.resolveSetBrandThemeUseCase()
+        setBrandThemeUseCase: SetBrandThemeUseCase = KoinInitializerKt.resolveSetBrandThemeUseCase(),
+        observeBannerLayoutUseCase: ObserveBannerLayoutUseCase = KoinInitializerKt.resolveObserveBannerLayoutUseCase(),
+        setBannerLayoutUseCase: SetBannerLayoutUseCase = KoinInitializerKt.resolveSetBannerLayoutUseCase()
     ) {
         self.signOutUseCase = signOutUseCase
         self.observeThemeModeUseCase = observeThemeModeUseCase
         self.setThemeModeUseCase = setThemeModeUseCase
         self.observeBrandThemeUseCase = observeBrandThemeUseCase
         self.setBrandThemeUseCase = setBrandThemeUseCase
+        self.observeBannerLayoutUseCase = observeBannerLayoutUseCase
+        self.setBannerLayoutUseCase = setBannerLayoutUseCase
 
         observeThemeMode()
         observeBrandTheme()
+        observeBannerLayout()
     }
 
     deinit {
@@ -158,6 +187,7 @@ final class SettingsViewModel: ObservableObject {
         case signOut
         case observeTheme
         case observeBrandTheme
+        case observeBannerLayout
     }
 
     private static let privacyPolicyTitle = "개인정보 처리방침"

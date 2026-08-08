@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.source.local
 
+import com.hhp227.concafe.domain.model.BannerLayout
 import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
@@ -13,6 +14,10 @@ interface UserPreferenceLocalDataSource {
     fun observeBrandTheme(): Flow<BrandTheme>
 
     fun setBrandTheme(brandTheme: BrandTheme)
+
+    fun observeBannerLayout(): Flow<BannerLayout>
+
+    fun setBannerLayout(bannerLayout: BannerLayout)
 
     fun hasShownDetailTooltip(type: DetailTooltipType): Boolean
 

@@ -6,12 +6,14 @@ import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.domain.model.Notice
+import com.hhp227.concafe.presentation.theme.AppBannerLayout
 
 data class HomeUiState(
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
     val isLoginPromptVisible: Boolean = false,
     val errorMessage: String? = null,
+    val bannerLayout: AppBannerLayout = AppBannerLayout.FULL_BLEED,
     val banners: List<HomeBanner>,
     val popularCasts: List<Cast>,
     val popularCastCafeNames: Map<String, String>,
@@ -36,6 +38,7 @@ data class HomeUiState(
         fun empty() = HomeUiState(
             isLoggedIn = false,
             isLoginPromptVisible = false,
+            bannerLayout = AppBannerLayout.FULL_BLEED,
             banners = emptyList(),
             popularCasts = emptyList(),
             popularCastCafeNames = emptyMap(),

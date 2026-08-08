@@ -1,6 +1,7 @@
 package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.local.UserPreferenceLocalDataSource
+import com.hhp227.concafe.domain.model.BannerLayout
 import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
@@ -24,6 +25,14 @@ class UserPreferenceRepositoryImpl(
 
     override fun setBrandTheme(brandTheme: BrandTheme) {
         localDataSource.setBrandTheme(brandTheme)
+    }
+
+    override fun observeBannerLayout(): Flow<BannerLayout> {
+        return localDataSource.observeBannerLayout()
+    }
+
+    override fun setBannerLayout(bannerLayout: BannerLayout) {
+        localDataSource.setBannerLayout(bannerLayout)
     }
 
     override fun hasShownDetailTooltip(type: DetailTooltipType): Boolean {

@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -101,6 +103,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import com.hhp227.concafe.presentation.component.ConCafeColors
+import com.hhp227.concafe.presentation.theme.AppBannerLayout
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -188,7 +191,10 @@ fun HomeContentScreen(
                 .fillMaxSize()
                 .background(screenBackgroundColor),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(vertical = 20.dp)
+            contentPadding = PaddingValues(
+                top = uiState.bannerLayout.feedTopPadding,
+                bottom = 20.dp
+            )
         ) {
             item {
                 HomeBannerSection(
@@ -406,6 +412,7 @@ fun HomeContentScreen(
         }
     } else {
         HomeSkeletonScreen(
+            bannerLayout = uiState.bannerLayout,
             modifier = Modifier
                 .fillMaxSize()
                 .background(screenBackgroundColor)
@@ -414,28 +421,28 @@ fun HomeContentScreen(
 }
 
 @Composable
-private fun HomeSkeletonScreen(modifier: Modifier = Modifier) {
+private fun HomeSkeletonScreen(bannerLayout: AppBannerLayout, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
-        val bannerHeight = homeBannerHeight(maxWidth)
+        val bannerHeight = homeBannerHeight(maxWidth, bannerLayout)
 
-        HomeSkeletonContent(bannerHeight = bannerHeight)
+        HomeSkeletonContent(bannerHeight = bannerHeight, bannerLayout = bannerLayout)
     }
 }
 
 @Composable
-private fun HomeSkeletonContent(bannerHeight: Dp) {
+private fun HomeSkeletonContent(bannerHeight: Dp, bannerLayout: AppBannerLayout) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 20.dp),
+            .padding(top = bannerLayout.feedTopPadding, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = bannerLayout.horizontalPadding)
                 .height(bannerHeight),
-            shape = RoundedCornerShape(16.dp)
+            shape = bannerLayout.skeletonShape
         )
         repeat(2) {
             Column {
@@ -641,7 +648,8 @@ private fun HomeBannerSection(
     onAction: (HomeAction) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val bannerHeight = homeBannerHeight(maxWidth)
+        val bannerLayout = uiState.bannerLayout
+        val bannerHeight = homeBannerHeight(maxWidth, bannerLayout)
         val bannerCount = uiState.banners.size
 
         LaunchedEffect(bannerCount) {
@@ -655,27 +663,43 @@ private fun HomeBannerSection(
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (uiState.banners.isNotEmpty()) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(bannerHeight),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    pageSpacing = 12.dp
-                ) { page ->
-                    val banner = uiState.banners[page]
+                Box {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(bannerHeight),
+                        contentPadding = PaddingValues(horizontal = bannerLayout.horizontalPadding),
+                        pageSpacing = bannerLayout.pageSpacing
+                    ) { page ->
+                        val banner = uiState.banners[page]
 
-                    HomeBannerItem(
-                        banner = banner,
-                        modifier = Modifier.fillMaxSize(),
-                        onClick = { onAction(HomeAction.ClickBanner(banner)) }
-                    )
+                        HomeBannerItem(
+                            banner = banner,
+                            bannerLayout = bannerLayout,
+                            modifier = Modifier.fillMaxSize(),
+                            onClick = { onAction(HomeAction.ClickBanner(banner)) }
+                        )
+                    }
+                    if (bannerLayout == AppBannerLayout.FULL_BLEED && uiState.banners.size > 1) {
+                        Text(
+                            text = "${pagerState.currentPage + 1} / ${uiState.banners.size}",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(18.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color.Black.copy(alpha = 0.45f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             } else {
                 // 플레이스홀더에도 동일한 높이 적용
-                HomeBannerPlaceholderCard(bannerHeight)
+                HomeBannerPlaceholderCard(bannerHeight, bannerLayout)
             }
-            if (uiState.banners.size > 1) {
+            if (bannerLayout == AppBannerLayout.LEGACY && uiState.banners.size > 1) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -704,6 +728,7 @@ private fun HomeBannerSection(
 @Composable
 private fun HomeBannerItem(
     banner: HomeBanner,
+    bannerLayout: AppBannerLayout,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -712,7 +737,7 @@ private fun HomeBannerItem(
 
     Card(
         modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(20.dp)
+        shape = bannerLayout.bannerShape
     ) {
         Box(
             modifier = Modifier
@@ -731,7 +756,8 @@ private fun HomeBannerItem(
                 CompatImageDisplay(
                     imageUrl = imageUrl,
                     modifier = Modifier.matchParentSize(),
-                    displaySize = ImageDisplaySize.MEDIUM
+                    displaySize = ImageDisplaySize.MEDIUM,
+                    applyRoundedClip = bannerLayout == AppBannerLayout.LEGACY
                 )
                 Box(
                     modifier = Modifier
@@ -803,13 +829,13 @@ private fun HomeSectionPlaceholderCard(
 }
 
 @Composable
-private fun HomeBannerPlaceholderCard(height: Dp) {
+private fun HomeBannerPlaceholderCard(height: Dp, bannerLayout: AppBannerLayout) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(height)
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp)
+            .padding(horizontal = bannerLayout.horizontalPadding),
+        shape = bannerLayout.bannerShape
     ) {
         Box(
             modifier = Modifier
@@ -839,11 +865,46 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
     }
 }
 
-private fun homeBannerHeight(contentWidth: Dp): Dp {
-    val horizontalPadding = 32.dp
-    val bannerWidth = (contentWidth - horizontalPadding).coerceAtLeast(0.dp)
+private fun homeBannerHeight(contentWidth: Dp, bannerLayout: AppBannerLayout): Dp {
+    val bannerWidth = (contentWidth - bannerLayout.horizontalPadding * 2).coerceAtLeast(0.dp)
     return (bannerWidth * (10f / 16f)).coerceAtMost(360.dp)
 }
+
+/**
+ * 풀블리드는 화면 폭을 가득 채우고, 레거시는 좌우 여백을 둔 카드 형태를 유지한다.
+ */
+private val AppBannerLayout.horizontalPadding: Dp
+    get() = when (this) {
+        AppBannerLayout.FULL_BLEED -> 0.dp
+        AppBannerLayout.LEGACY -> 16.dp
+    }
+
+private val AppBannerLayout.pageSpacing: Dp
+    get() = when (this) {
+        AppBannerLayout.FULL_BLEED -> 0.dp
+        AppBannerLayout.LEGACY -> 12.dp
+    }
+
+private val AppBannerLayout.bannerShape: Shape
+    get() = when (this) {
+        AppBannerLayout.FULL_BLEED -> RectangleShape
+        AppBannerLayout.LEGACY -> RoundedCornerShape(20.dp)
+    }
+
+private val AppBannerLayout.skeletonShape: Shape
+    get() = when (this) {
+        AppBannerLayout.FULL_BLEED -> RectangleShape
+        AppBannerLayout.LEGACY -> RoundedCornerShape(16.dp)
+    }
+
+/**
+ * 풀블리드 배너는 상단 바에 붙여야 하므로 피드 상단 여백을 없앤다.
+ */
+private val AppBannerLayout.feedTopPadding: Dp
+    get() = when (this) {
+        AppBannerLayout.FULL_BLEED -> 0.dp
+        AppBannerLayout.LEGACY -> 20.dp
+    }
 
 private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
     val horizontalPadding = 16.dp

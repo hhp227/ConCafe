@@ -50,14 +50,14 @@ private val composeAppPresentationModule = module {
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MainViewModel(get(), get(), get(), get()) }
-    factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
     factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MapViewModel(get(), get(), get(), get(), get()) }
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
-    factory { SettingsViewModel(get(), get(), get(), get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String) -> CafeViewModel(cafeId, get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { (cafeId: String, eventId: String) -> CafeEventViewModel(cafeId, eventId, get(), get(), get(), get(), get(), get()) }
     factory { (castId: String) -> CastViewModel(castId, get(), get(), get(), get(), get(), get()) }

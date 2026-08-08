@@ -13,6 +13,7 @@ struct SettingsUiState {
     var appVersion: String = Self.resolvedAppVersion()
     var themeMode: AppThemeMode = .light
     var brandTheme: AppBrandTheme = .maidCafe
+    var bannerLayout: AppBannerLayout = .fullBleed
 
     static let empty = SettingsUiState()
 

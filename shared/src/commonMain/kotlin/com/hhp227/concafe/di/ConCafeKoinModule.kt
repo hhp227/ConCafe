@@ -188,6 +188,8 @@ val useCaseModule = module {
     factory { SetThemeModeUseCase(get()) }
     factory { ObserveBrandThemeUseCase(get()) }
     factory { SetBrandThemeUseCase(get()) }
+    factory { ObserveBannerLayoutUseCase(get()) }
+    factory { SetBannerLayoutUseCase(get()) }
     factory { ShouldShowDetailTooltipUseCase(get()) }
     factory { MarkDetailTooltipShownUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }
