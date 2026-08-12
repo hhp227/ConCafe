@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.presentation.component.colorFromHex
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.theme.AppContentLayout
 import com.hhp227.concafe.presentation.theme.AppBrandTheme
 import com.hhp227.concafe.presentation.theme.AppThemeMode
 import concafe.composeapp.generated.resources.Res
@@ -41,6 +42,10 @@ import concafe.composeapp.generated.resources.settings_privacy_desc
 import concafe.composeapp.generated.resources.settings_privacy_title
 import concafe.composeapp.generated.resources.settings_sign_out_desc
 import concafe.composeapp.generated.resources.settings_sign_out_title
+import concafe.composeapp.generated.resources.settings_content_layout_desc
+import concafe.composeapp.generated.resources.settings_content_layout_full_bleed
+import concafe.composeapp.generated.resources.settings_content_layout_legacy
+import concafe.composeapp.generated.resources.settings_content_layout_title
 import concafe.composeapp.generated.resources.settings_brand_theme_desc
 import concafe.composeapp.generated.resources.settings_brand_theme_maid
 import concafe.composeapp.generated.resources.settings_brand_theme_mens
@@ -151,6 +156,12 @@ private fun SettingsContentScreen(
             )
         }
         item {
+            SettingsContentLayoutCard(
+                selectedContentLayout = uiState.contentLayout,
+                onAction = onAction
+            )
+        }
+        item {
             SettingsSectionTitle(stringResource(Res.string.settings_general_title))
         }
         items(settingsItems, key = { it.id }) { item ->
@@ -251,6 +262,67 @@ private fun SettingsThemeCard(
                     selected = selectedBrandTheme == AppBrandTheme.MENS_CON_CAFE,
                     modifier = Modifier.weight(1f),
                     onClick = { onAction(SettingsAction.SelectBrandTheme(AppBrandTheme.MENS_CON_CAFE)) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsContentLayoutCard(
+    selectedContentLayout: AppContentLayout,
+    onAction: (SettingsAction) -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.ViewCarousel,
+                    contentDescription = null,
+                    tint = ConCafeColors.primary
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 14.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.settings_content_layout_title),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = stringResource(Res.string.settings_content_layout_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_content_layout_full_bleed),
+                    selected = selectedContentLayout == AppContentLayout.FULL_BLEED,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onAction(SettingsAction.SelectContentLayout(AppContentLayout.FULL_BLEED))
+                    }
+                )
+                ThemeOptionButton(
+                    text = stringResource(Res.string.settings_content_layout_legacy),
+                    selected = selectedContentLayout == AppContentLayout.LEGACY,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        onAction(SettingsAction.SelectContentLayout(AppContentLayout.LEGACY))
+                    }
                 )
             }
         }

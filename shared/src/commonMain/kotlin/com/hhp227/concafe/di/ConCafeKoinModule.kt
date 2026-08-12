@@ -116,6 +116,8 @@ val useCaseModule = module {
     factory { GetAdminInquiryPageUseCase(get(), get()) }
     factory { GetAdminReportPageUseCase(get(), get()) }
     factory { GetAdminUserPageUseCase(get(), get()) }
+    factory { GetDormantAccountPageUseCase(get(), get()) }
+    factory { UpdateUserDormantStatusUseCase(get(), get()) }
     factory { GetHomeBannerManagementUseCase(get(), get()) }
     factory { GetCafeDashboardUseCase(get(), get()) }
     factory { GetCafeEventPageUseCase(get()) }
@@ -186,6 +188,8 @@ val useCaseModule = module {
     factory { SetThemeModeUseCase(get()) }
     factory { ObserveBrandThemeUseCase(get()) }
     factory { SetBrandThemeUseCase(get()) }
+    factory { ObserveContentLayoutUseCase(get()) }
+    factory { SetContentLayoutUseCase(get()) }
     factory { ShouldShowDetailTooltipUseCase(get()) }
     factory { MarkDetailTooltipShownUseCase(get()) }
     factory { RestoreSessionUseCase(get()) }

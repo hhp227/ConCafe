@@ -85,7 +85,6 @@ private fun CommunityContentScreen(
             onAction(CommunityAction.LoadMore)
         }
     }
-
     Scaffold(
         containerColor = ConCafeColors.surfaceVariant,
         contentWindowInsets = if (showTopBar) {

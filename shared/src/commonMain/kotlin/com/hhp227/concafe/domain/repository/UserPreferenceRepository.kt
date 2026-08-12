@@ -1,5 +1,6 @@
 package com.hhp227.concafe.domain.repository
 
+import com.hhp227.concafe.domain.model.ContentLayout
 import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
@@ -13,6 +14,10 @@ interface UserPreferenceRepository {
     fun observeBrandTheme(): Flow<BrandTheme>
 
     fun setBrandTheme(brandTheme: BrandTheme)
+
+    fun observeContentLayout(): Flow<ContentLayout>
+
+    fun setContentLayout(contentLayout: ContentLayout)
 
     fun hasShownDetailTooltip(type: DetailTooltipType): Boolean
 

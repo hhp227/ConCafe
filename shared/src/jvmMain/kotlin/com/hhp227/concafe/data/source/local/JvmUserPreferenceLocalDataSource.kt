@@ -1,5 +1,6 @@
 package com.hhp227.concafe.data.source.local
 
+import com.hhp227.concafe.domain.model.ContentLayout
 import com.hhp227.concafe.domain.model.BrandTheme
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.model.ThemeMode
@@ -14,6 +15,8 @@ class JvmUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
     private val themeMode = MutableStateFlow(loadThemeMode())
 
     private val brandTheme = MutableStateFlow(loadBrandTheme())
+
+    private val contentLayout = MutableStateFlow(loadContentLayout())
 
     private val DetailTooltipType.preferenceKey: String
         get() = when (this) {
@@ -39,6 +42,15 @@ class JvmUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
         this.brandTheme.value = brandTheme
     }
 
+    override fun observeContentLayout(): Flow<ContentLayout> {
+        return contentLayout.asStateFlow()
+    }
+
+    override fun setContentLayout(contentLayout: ContentLayout) {
+        preferences.put(KEY_CONTENT_LAYOUT, contentLayout.name)
+        this.contentLayout.value = contentLayout
+    }
+
     override fun hasShownDetailTooltip(type: DetailTooltipType): Boolean {
         return preferences.getBoolean(type.preferenceKey, false)
     }
@@ -57,10 +69,16 @@ class JvmUserPreferenceLocalDataSource : UserPreferenceLocalDataSource {
         return BrandTheme.entries.firstOrNull { it.name == storedValue } ?: BrandTheme.MAID_CAFE
     }
 
+    private fun loadContentLayout(): ContentLayout {
+        val storedValue = preferences.get(KEY_CONTENT_LAYOUT, null)
+        return ContentLayout.entries.firstOrNull { it.name == storedValue } ?: ContentLayout.FULL_BLEED
+    }
+
     private companion object {
         private const val PREF_NODE = "com/hhp227/concafe/theme"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_BRAND_THEME = "brand_theme"
+        private const val KEY_CONTENT_LAYOUT = "content_layout"
         private const val KEY_CAFE_FAVORITE_TOOLTIP_SHOWN = "cafe_favorite_tooltip_shown"
         private const val KEY_CAST_FOLLOW_TOOLTIP_SHOWN = "cast_follow_tooltip_shown"
     }

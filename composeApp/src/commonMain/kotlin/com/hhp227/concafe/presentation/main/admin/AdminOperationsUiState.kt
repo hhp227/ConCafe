@@ -89,7 +89,8 @@ enum class QuickMenuIcon {
     USERS,
     BANNER,
     MODERATION,
-    ANALYTICS
+    ANALYTICS,
+    DORMANT
 }
 
 enum class QuickMenuAccent {
@@ -112,6 +113,7 @@ internal fun buildAdminMetrics(
 
 private val defaultQuickMenus = listOf(
     AdminQuickMenu("users", "유저 관리", "카페 운영자 및 차단 사용자 조회", QuickMenuIcon.USERS, QuickMenuAccent.BLUE),
+    AdminQuickMenu("dormant", "휴면계정 관리", "장기 미접속 및 휴면 계정 관리", QuickMenuIcon.DORMANT, QuickMenuAccent.ROSE),
     AdminQuickMenu("banner", "홈 배너 관리", "이벤트 및 공지 배너 수정", QuickMenuIcon.BANNER, QuickMenuAccent.PRIMARY),
     AdminQuickMenu("moderation", "신고 및 제재", "부적절한 컨텐츠 및 유저 차단", QuickMenuIcon.MODERATION, QuickMenuAccent.ROSE),
     AdminQuickMenu("analytics", "시스템 통계", "유입 분석 및 매출 리포트", QuickMenuIcon.ANALYTICS, QuickMenuAccent.BLUE)

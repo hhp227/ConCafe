@@ -52,6 +52,10 @@ private struct SettingsContentView: View {
                     selectedBrandTheme: uiState.brandTheme,
                     onSelect: { onAction(.brandThemeSelected($0)) }
                 )
+                ContentLayoutPickerRow(
+                    selectedContentLayout: uiState.contentLayout,
+                    onSelect: { onAction(.contentLayoutSelected($0)) }
+                )
             }
             Section {
                 SettingsRow(item: .account)
@@ -146,6 +150,42 @@ private struct BrandThemePickerRow: View {
                 ForEach(AppBrandTheme.allCases) { brandTheme in
                     Text(brandTheme.title)
                         .tag(brandTheme)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct ContentLayoutPickerRow: View {
+    let selectedContentLayout: AppContentLayout
+
+    let onSelect: (AppContentLayout) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "rectangle.on.rectangle")
+                    .foregroundStyle(ConCafeColors.primary)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: String.LocalizationValue("settings_content_layout_title"), table: "Localizable"))
+                        .font(.subheadline)
+                        .bold()
+                    Text(String(localized: String.LocalizationValue("settings_content_layout_desc"), table: "Localizable"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            Picker(String(localized: String.LocalizationValue("settings_content_layout_title"), table: "Localizable"), selection: Binding(
+                get: { selectedContentLayout },
+                set: { onSelect($0) }
+            )) {
+                ForEach(AppContentLayout.allCases) { contentLayout in
+                    Text(contentLayout.title)
+                        .tag(contentLayout)
                 }
             }
             .pickerStyle(.segmented)

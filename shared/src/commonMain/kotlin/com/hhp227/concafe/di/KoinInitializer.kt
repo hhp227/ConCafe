@@ -68,6 +68,8 @@ import com.hhp227.concafe.domain.usecase.GetMainNavigationUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminInquiryPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminReportPageUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminUserPageUseCase
+import com.hhp227.concafe.domain.usecase.GetDormantAccountPageUseCase
+import com.hhp227.concafe.domain.usecase.UpdateUserDormantStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetAdminOperationsMetricsUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.GetNotificationFeedUseCase
@@ -135,8 +137,10 @@ import com.hhp227.concafe.domain.event.publisher.CommunityPostEventPublisher
 import com.hhp227.concafe.domain.usecase.GetCafeEventLikeStatusUseCase
 import com.hhp227.concafe.domain.usecase.GetCafeEventParticipantCastsUseCase
 import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
+import com.hhp227.concafe.domain.usecase.ObserveContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.ObserveBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.ObserveThemeModeUseCase
+import com.hhp227.concafe.domain.usecase.SetContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.SetBrandThemeUseCase
 import com.hhp227.concafe.domain.usecase.SetThemeModeUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
@@ -869,6 +873,20 @@ fun resolveSetBrandThemeUseCase(): SetBrandThemeUseCase {
     return koin.get()
 }
 
+fun resolveObserveContentLayoutUseCase(): ObserveContentLayoutUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSetContentLayoutUseCase(): SetContentLayoutUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
 fun resolveShouldShowDetailTooltipUseCase(): ShouldShowDetailTooltipUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
@@ -1144,6 +1162,20 @@ fun resolveGetAdminReportPageUseCase(): GetAdminReportPageUseCase {
 }
 
 fun resolveGetAdminUserPageUseCase(): GetAdminUserPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveGetDormantAccountPageUseCase(): GetDormantAccountPageUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveUpdateUserDormantStatusUseCase(): UpdateUserDormantStatusUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

@@ -22,6 +22,8 @@ final class CheckInViewModel: ObservableObject {
 
     private let observeCurrentUserUseCase: ObserveCurrentUserUseCase
 
+    private let observeContentLayoutUseCase: ObserveContentLayoutUseCase
+
     private let shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase
 
     private let dismissReviewPromptUseCase: DismissReviewPromptUseCase
@@ -69,6 +71,19 @@ final class CheckInViewModel: ObservableObject {
                 if Task.isCancelled { return }
                 uiState.isLoading = false
                 uiState.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func observeContentLayout() {
+        tasks[.contentLayout]?.cancel()
+        tasks[.contentLayout] = Task {
+            do {
+                for try await contentLayout in asyncSequence(for: observeContentLayoutUseCase.invoke()) {
+                    uiState.contentLayout = AppContentLayout(contentLayout: contentLayout)
+                }
+            } catch {
+                uiState.contentLayout = .fullBleed
             }
         }
     }
@@ -686,6 +701,7 @@ final class CheckInViewModel: ObservableObject {
         getCheckInUserFeedUseCase: GetCheckInUserFeedUseCase = KoinInitializerKt.resolveGetCheckInUserFeedUseCase(),
         createVisitUseCase: CreateVisitUseCase = KoinInitializerKt.resolveCreateVisitUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
+        observeContentLayoutUseCase: ObserveContentLayoutUseCase = KoinInitializerKt.resolveObserveContentLayoutUseCase(),
         shouldShowReviewPromptUseCase: ShouldShowReviewPromptUseCase = KoinInitializerKt.resolveShouldShowReviewPromptUseCase(),
         dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
@@ -697,6 +713,7 @@ final class CheckInViewModel: ObservableObject {
         self.getCheckInUserFeedUseCase = getCheckInUserFeedUseCase
         self.createVisitUseCase = createVisitUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
+        self.observeContentLayoutUseCase = observeContentLayoutUseCase
         self.shouldShowReviewPromptUseCase = shouldShowReviewPromptUseCase
         self.dismissReviewPromptUseCase = dismissReviewPromptUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
@@ -704,6 +721,7 @@ final class CheckInViewModel: ObservableObject {
         self.visitEventPublisher = visitEventPublisher
 
         observeSession()
+        observeContentLayout()
         observeCafeDetailEvent()
         observeCastEvent()
         observeVisitEvent()
@@ -722,6 +740,7 @@ final class CheckInViewModel: ObservableObject {
         case recentVisitPage
         case submitVisit
         case session
+        case contentLayout
         case cafeDetailEvent
         case castEvent
         case visitEvent

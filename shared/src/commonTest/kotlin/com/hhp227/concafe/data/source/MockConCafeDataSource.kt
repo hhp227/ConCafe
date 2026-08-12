@@ -1176,6 +1176,10 @@ class MockConCafeDataSource : ConCafeDataSource {
         return toPaged(items, cursor, pageSize)
     }
 
+    override suspend fun getUnreadNotificationCount(userId: String): Int {
+        return notifications.count { it.userId == userId && !it.isRead }
+    }
+
     override suspend fun markNotificationAsRead(userId: String, notificationId: String) {
         val index = notifications.indexOfFirst { notification ->
             notification.userId == userId && notification.id == notificationId

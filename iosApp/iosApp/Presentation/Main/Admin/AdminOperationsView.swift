@@ -39,6 +39,8 @@ struct AdminOperationsView: View {
                 onNavigationAction(.navigateToBannerEdit())
             case .navigateToUserManagement:
                 onNavigationAction(.navigateToUserManagement)
+            case .navigateToDormantAccount:
+                onNavigationAction(.navigateToDormantAccount)
             }
         }
     }
@@ -491,6 +493,7 @@ private extension QuickMenuIcon {
         case .banner: return "rectangle.3.group.fill"
         case .moderation: return "hammer.fill"
         case .analytics: return "chart.bar.fill"
+        case .dormant: return "moon.zzz.fill"
         }
     }
 }

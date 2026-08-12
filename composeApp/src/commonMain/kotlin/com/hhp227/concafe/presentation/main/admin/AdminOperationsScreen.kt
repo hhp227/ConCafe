@@ -78,6 +78,9 @@ fun AdminOperationsScreen(
                 AdminOperationsEvent.NavigateToUserManagement -> {
                     onNavigationAction(NavigationAction.NavigateToUserManagement)
                 }
+                AdminOperationsEvent.NavigateToDormantAccount -> {
+                    onNavigationAction(NavigationAction.NavigateToDormantAccount)
+                }
             }
         }
     }
@@ -620,6 +623,7 @@ private fun QuickMenuIcon.toImageVector() = when (this) {
     QuickMenuIcon.BANNER -> Icons.Default.ViewCarousel
     QuickMenuIcon.MODERATION -> Icons.Default.Gavel
     QuickMenuIcon.ANALYTICS -> Icons.Default.BarChart
+    QuickMenuIcon.DORMANT -> Icons.Default.PersonOff
 }
 
 private fun QuickMenuAccent.backgroundColor() = when (this) {

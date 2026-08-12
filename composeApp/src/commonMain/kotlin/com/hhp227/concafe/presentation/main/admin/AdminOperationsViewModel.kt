@@ -462,6 +462,7 @@ class AdminOperationsViewModel(
                     when (action.id) {
                         ADMIN_BANNER_MENU_ID -> _event.emit(AdminOperationsEvent.NavigateToBanner)
                         ADMIN_USER_MENU_ID -> _event.emit(AdminOperationsEvent.NavigateToUserManagement)
+                        ADMIN_DORMANT_MENU_ID -> _event.emit(AdminOperationsEvent.NavigateToDormantAccount)
                         else -> {
                             val label = _uiState.value.quickMenus.firstOrNull { it.id == action.id }?.title ?: "메뉴"
                             _uiState.update { it.copy(infoMessage = "$label 연결은 다음 단계에서 이어집니다.") }
@@ -507,6 +508,7 @@ private const val PAGINATION_DELAY_MILLIS = 1_000L
 
 private const val ADMIN_BANNER_MENU_ID = "banner"
 private const val ADMIN_USER_MENU_ID = "users"
+private const val ADMIN_DORMANT_MENU_ID = "dormant"
 
 private data class AdminPendingSnapshot(
     val registrationClaims: List<PendingCafeRegistrationClaimPreview>,

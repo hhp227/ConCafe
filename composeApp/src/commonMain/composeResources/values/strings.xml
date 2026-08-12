@@ -189,6 +189,10 @@
     <string name="settings_brand_theme_desc">Choose the app's color mood.</string>
     <string name="settings_brand_theme_maid">Maid Cafe</string>
     <string name="settings_brand_theme_mens">Men's Con Cafe</string>
+    <string name="settings_content_layout_title">Display Style</string>
+    <string name="settings_content_layout_desc">Choose how the home banner and check-in map fill the screen.</string>
+    <string name="settings_content_layout_full_bleed">Full Bleed</string>
+    <string name="settings_content_layout_legacy">Classic</string>
     <string name="settings_account_title">Account</string>
     <string name="settings_account_desc">Manage your profile and sign-in info.</string>
     <string name="settings_notification_title">Notifications</string>

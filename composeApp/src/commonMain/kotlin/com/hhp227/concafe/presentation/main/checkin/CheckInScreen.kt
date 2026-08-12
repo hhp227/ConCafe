@@ -49,6 +49,10 @@ import com.hhp227.concafe.presentation.component.localizedRegionCity
 import com.hhp227.concafe.presentation.component.keyboardBottomInsets
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.navigation.NavigationAction
+import com.hhp227.concafe.presentation.theme.AppContentLayout
+import com.hhp227.concafe.presentation.theme.horizontalPadding
+import com.hhp227.concafe.presentation.theme.shape
+import com.hhp227.concafe.presentation.theme.topPadding
 import concafe.composeapp.generated.resources.Res
 import concafe.composeapp.generated.resources.auth_login_required_message
 import concafe.composeapp.generated.resources.auth_login_required_title
@@ -398,7 +402,11 @@ private fun CheckInGuestScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CafeMapSection(
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                modifier = Modifier.padding(
+                    start = uiState.contentLayout.horizontalPadding,
+                    top = uiState.contentLayout.topPadding(MAP_SECTION_TOP_PADDING),
+                    end = uiState.contentLayout.horizontalPadding
+                ),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
@@ -407,7 +415,8 @@ private fun CheckInGuestScreen(
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
                 onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
-                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) },
+                contentLayout = uiState.contentLayout
             )
             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                 LoginPromotionSection(
@@ -476,7 +485,11 @@ private fun CheckInUserScreen(
     ) {
         item {
             CafeMapSection(
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                modifier = Modifier.padding(
+                    start = uiState.contentLayout.horizontalPadding,
+                    top = uiState.contentLayout.topPadding(MAP_SECTION_TOP_PADDING),
+                    end = uiState.contentLayout.horizontalPadding
+                ),
                 currentLocationLabel = uiState.currentLocationLabel,
                 mapCafes = uiState.mapCafes,
                 userCityKey = uiState.userCityKey,
@@ -485,7 +498,8 @@ private fun CheckInUserScreen(
                 onCafeCheckIn = { onAction(CheckInAction.ClickCheckInForCafe(it)) },
                 onCheckInClick = { onAction(CheckInAction.ClickCheckIn) },
                 onRegionSelected = { onAction(CheckInAction.UpdateMapRegion(it)) },
-                onExpandClick = { onAction(CheckInAction.ClickMapFullView) }
+                onExpandClick = { onAction(CheckInAction.ClickMapFullView) },
+                contentLayout = uiState.contentLayout
             )
         }
         item {
@@ -574,6 +588,7 @@ fun CafeMapSection(
     onExpandClick: () -> Unit = {},
     showExpandButton: Boolean = true,
     showCheckInButton: Boolean = true,
+    contentLayout: AppContentLayout = AppContentLayout.LEGACY,
     mapModifier: Modifier = Modifier
         .fillMaxWidth()
         .height(240.dp)
@@ -604,7 +619,7 @@ fun CafeMapSection(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
+        shape = contentLayout.shape(MAP_CARD_CORNER_RADIUS),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
@@ -694,7 +709,7 @@ fun CafeMapSection(
                     cameraTarget = mapCameraTarget,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(contentLayout.shape(MAP_CORNER_RADIUS))
                 )
                 if (showExpandButton && !usesInlineRegionFilter) {
                     FilledTonalIconButton(
@@ -1713,3 +1728,7 @@ private fun CheckInSectionPlaceholderCard(
         }
     }
 }
+
+private val MAP_SECTION_TOP_PADDING = 16.dp
+private val MAP_CARD_CORNER_RADIUS = 28.dp
+private val MAP_CORNER_RADIUS = 24.dp

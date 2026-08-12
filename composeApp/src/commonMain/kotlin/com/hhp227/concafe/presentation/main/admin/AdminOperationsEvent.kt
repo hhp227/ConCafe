@@ -6,4 +6,6 @@ sealed interface AdminOperationsEvent {
     data object NavigateToBannerEdit : AdminOperationsEvent
 
     data object NavigateToUserManagement : AdminOperationsEvent
+
+    data object NavigateToDormantAccount : AdminOperationsEvent
 }

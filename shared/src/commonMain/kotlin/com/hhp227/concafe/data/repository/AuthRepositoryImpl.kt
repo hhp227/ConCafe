@@ -8,6 +8,7 @@ import com.hhp227.concafe.domain.model.AuthProvider
 import com.hhp227.concafe.domain.model.DeleteAccountRequest
 import com.hhp227.concafe.domain.model.User
 import com.hhp227.concafe.domain.model.UserRole
+import com.hhp227.concafe.domain.policy.DormantAccountPolicy
 import com.hhp227.concafe.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,6 +20,8 @@ class AuthRepositoryImpl(
     private val authTokenProvider: FirestoreAuthTokenProvider,
     private val firestoreSyncDataSource: FirestoreSyncDataSource
 ) : AuthRepository {
+    private val dormantAccountPolicy = DormantAccountPolicy()
+
     private suspend fun resolveEffectiveRole(
         userId: String,
         baseRole: UserRole
@@ -50,6 +53,21 @@ class AuthRepositoryImpl(
             )
         }
         return normalizedUser
+    }
+
+    private suspend fun applyLoginActivity(user: User): User {
+        val now = Clock.System.now()
+        val shouldReleaseDormant = user.dormant
+        val shouldRefreshLastLogin = dormantAccountPolicy.shouldRefreshLastLogin(user.lastLoginAt, now)
+
+        return if (shouldReleaseDormant || shouldRefreshLastLogin) {
+            val lastLoginAt = now.toString()
+
+            runCatching { firestoreSyncDataSource.updateUserLastLogin(user.id, lastLoginAt) }
+            user.copy(lastLoginAt = lastLoginAt, dormant = false, dormantAt = null)
+        } else {
+            user
+        }
     }
 
     override suspend fun signIn(email: String, password: String): User {
@@ -409,7 +427,7 @@ class AuthRepositoryImpl(
                 runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
             }
             authTokenProvider.setCachedSignupCompleted(normalizedProviderUser.signupCompleted)
-            return normalizeRoleIfNeeded(normalizedProviderUser)
+            return applyLoginActivity(normalizeRoleIfNeeded(normalizedProviderUser))
         }
 
         val fallbackRole = resolveEffectiveRole(
@@ -429,7 +447,8 @@ class AuthRepositoryImpl(
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = signupCompleted
+            signupCompleted = signupCompleted,
+            lastLoginAt = nowIsoUtc()
         )
         return createdUser
     }
@@ -462,7 +481,7 @@ class AuthRepositoryImpl(
                 runCatching { firestoreSyncDataSource.pushUser(normalizedProviderUser) }
             }
             authTokenProvider.setCachedSignupCompleted(normalizedProviderUser.signupCompleted)
-            return normalizeRoleIfNeeded(normalizedProviderUser)
+            return applyLoginActivity(normalizeRoleIfNeeded(normalizedProviderUser))
         }
 
         val currentUserEmail = authTokenProvider.getCurrentUserEmail()
@@ -488,7 +507,8 @@ class AuthRepositoryImpl(
             role = fallbackRole,
             banned = false,
             createdAt = nowIsoUtc(),
-            signupCompleted = signupCompleted
+            signupCompleted = signupCompleted,
+            lastLoginAt = nowIsoUtc()
         )
         return fallbackUser
     }

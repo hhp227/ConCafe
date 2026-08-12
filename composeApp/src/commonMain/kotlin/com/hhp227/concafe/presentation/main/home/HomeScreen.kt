@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +103,10 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import com.hhp227.concafe.presentation.component.ConCafeColors
+import com.hhp227.concafe.presentation.theme.AppContentLayout
+import com.hhp227.concafe.presentation.theme.horizontalPadding
+import com.hhp227.concafe.presentation.theme.shape
+import com.hhp227.concafe.presentation.theme.topPadding
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -189,7 +194,10 @@ fun HomeContentScreen(
                 .fillMaxSize()
                 .background(screenBackgroundColor),
             verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(bottom = 20.dp)
+            contentPadding = PaddingValues(
+                top = uiState.contentLayout.topPadding(FEED_TOP_PADDING),
+                bottom = 20.dp
+            )
         ) {
             item {
                 HomeBannerSection(
@@ -407,6 +415,7 @@ fun HomeContentScreen(
         }
     } else {
         HomeSkeletonScreen(
+            contentLayout = uiState.contentLayout,
             modifier = Modifier
                 .fillMaxSize()
                 .background(screenBackgroundColor)
@@ -415,27 +424,28 @@ fun HomeContentScreen(
 }
 
 @Composable
-private fun HomeSkeletonScreen(modifier: Modifier = Modifier) {
+private fun HomeSkeletonScreen(contentLayout: AppContentLayout, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
-        val bannerHeight = homeBannerHeight(maxWidth)
+        val bannerHeight = homeBannerHeight(maxWidth, contentLayout)
 
-        HomeSkeletonContent(bannerHeight = bannerHeight)
+        HomeSkeletonContent(bannerHeight = bannerHeight, contentLayout = contentLayout)
     }
 }
 
 @Composable
-private fun HomeSkeletonContent(bannerHeight: Dp) {
+private fun HomeSkeletonContent(bannerHeight: Dp, contentLayout: AppContentLayout) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 20.dp),
+            .padding(top = contentLayout.topPadding(FEED_TOP_PADDING), bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = contentLayout.horizontalPadding)
                 .height(bannerHeight),
-            shape = RectangleShape
+            shape = contentLayout.skeletonShape
         )
         repeat(2) {
             Column {
@@ -641,7 +651,8 @@ private fun HomeBannerSection(
     onAction: (HomeAction) -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val bannerHeight = homeBannerHeight(maxWidth)
+        val contentLayout = uiState.contentLayout
+        val bannerHeight = homeBannerHeight(maxWidth, contentLayout)
         val bannerCount = uiState.banners.size
 
         LaunchedEffect(bannerCount) {
@@ -653,34 +664,64 @@ private fun HomeBannerSection(
                 }
             }
         }
-        if (uiState.banners.isNotEmpty()) {
-            Box {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(bannerHeight)
-                ) { page ->
-                    val banner = uiState.banners[page]
-
-                    HomeBannerItem(
-                        banner = banner,
-                        modifier = Modifier.fillMaxSize(),
-                        onClick = { onAction(HomeAction.ClickBanner(banner)) }
-                    )
-                }
-                if (uiState.banners.size > 1) {
-                    Text(
-                        text = "${pagerState.currentPage + 1} / ${uiState.banners.size}",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelSmall,
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (uiState.banners.isNotEmpty()) {
+                Box {
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(18.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(Color.Black.copy(alpha = 0.45f))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
+                            .fillMaxWidth()
+                            .height(bannerHeight),
+                        contentPadding = PaddingValues(horizontal = contentLayout.horizontalPadding),
+                        pageSpacing = contentLayout.pageSpacing
+                    ) { page ->
+                        val banner = uiState.banners[page]
+
+                        HomeBannerItem(
+                            banner = banner,
+                            contentLayout = contentLayout,
+                            modifier = Modifier.fillMaxSize(),
+                            onClick = { onAction(HomeAction.ClickBanner(banner)) }
+                        )
+                    }
+                    if (contentLayout == AppContentLayout.FULL_BLEED && uiState.banners.size > 1) {
+                        Text(
+                            text = "${pagerState.currentPage + 1} / ${uiState.banners.size}",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(18.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color.Black.copy(alpha = 0.45f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            } else {
+                // 플레이스홀더에도 동일한 높이 적용
+                HomeBannerPlaceholderCard(bannerHeight, contentLayout)
+            }
+            if (contentLayout == AppContentLayout.LEGACY && uiState.banners.size > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(uiState.banners.size) { page ->
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(
+                                    width = if (pagerState.currentPage == page) 18.dp else 8.dp,
+                                    height = 8.dp
+                                )
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(
+                                    if (pagerState.currentPage == page) ConCafeColors.primary
+                                    else ConCafeColors.outline
+                                )
+                        )
+                    }
                 }
             }
         } else {
@@ -693,6 +734,7 @@ private fun HomeBannerSection(
 @Composable
 private fun HomeBannerItem(
     banner: HomeBanner,
+    contentLayout: AppContentLayout,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -701,7 +743,7 @@ private fun HomeBannerItem(
 
     Card(
         modifier = modifier.clickable { onClick() },
-        shape = RectangleShape
+        shape = contentLayout.bannerShape
     ) {
         Box(
             modifier = Modifier
@@ -721,7 +763,7 @@ private fun HomeBannerItem(
                     imageUrl = imageUrl,
                     modifier = Modifier.matchParentSize(),
                     displaySize = ImageDisplaySize.MEDIUM,
-                    applyRoundedClip = false
+                    applyRoundedClip = contentLayout == AppContentLayout.LEGACY
                 )
                 Box(
                     modifier = Modifier
@@ -793,12 +835,13 @@ private fun HomeSectionPlaceholderCard(
 }
 
 @Composable
-private fun HomeBannerPlaceholderCard(height: Dp) {
+private fun HomeBannerPlaceholderCard(height: Dp, contentLayout: AppContentLayout) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(height),
-        shape = RectangleShape
+            .height(height)
+            .padding(horizontal = contentLayout.horizontalPadding),
+        shape = contentLayout.bannerShape
     ) {
         Box(
             modifier = Modifier
@@ -828,9 +871,26 @@ private fun HomeBannerPlaceholderCard(height: Dp) {
     }
 }
 
-private fun homeBannerHeight(contentWidth: Dp): Dp {
-    return (contentWidth * (10f / 16f)).coerceAtMost(360.dp)
+private fun homeBannerHeight(contentWidth: Dp, contentLayout: AppContentLayout): Dp {
+    val bannerWidth = (contentWidth - contentLayout.horizontalPadding * 2).coerceAtLeast(0.dp)
+    return (bannerWidth * (10f / 16f)).coerceAtMost(360.dp)
 }
+
+private val FEED_TOP_PADDING = 20.dp
+private val BANNER_CORNER_RADIUS = 20.dp
+private val BANNER_SKELETON_CORNER_RADIUS = 16.dp
+
+private val AppContentLayout.pageSpacing: Dp
+    get() = when (this) {
+        AppContentLayout.FULL_BLEED -> 0.dp
+        AppContentLayout.LEGACY -> 12.dp
+    }
+
+private val AppContentLayout.bannerShape: Shape
+    get() = shape(BANNER_CORNER_RADIUS)
+
+private val AppContentLayout.skeletonShape: Shape
+    get() = shape(BANNER_SKELETON_CORNER_RADIUS)
 
 private fun nearbyCafeItemWidth(contentWidth: Dp): Dp {
     val horizontalPadding = 16.dp

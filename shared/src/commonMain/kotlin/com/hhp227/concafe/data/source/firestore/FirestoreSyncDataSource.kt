@@ -7,6 +7,7 @@ import com.hhp227.concafe.domain.model.AdminOperationsMetrics
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.AdminUserFilter
 import com.hhp227.concafe.domain.model.CafeManagementData
+import com.hhp227.concafe.domain.model.DormantAccountFilter
 import com.hhp227.concafe.domain.model.PendingCafeOwnerClaimPreview
 import com.hhp227.concafe.domain.model.PendingCafeRegistrationClaimPreview
 import com.hhp227.concafe.domain.model.User
@@ -20,12 +21,30 @@ interface FirestoreSyncDataSource {
         pageSize: Int
     ): PagedResult<User>
 
+    suspend fun fetchDormantAccountPage(
+        filter: DormantAccountFilter,
+        lastLoginBefore: String,
+        cursor: String?,
+        pageSize: Int
+    ): PagedResult<User>
+
     suspend fun fetchMyPageSummary(userId: String): MyPageSummary?
 
     suspend fun updateUserProfile(
         userId: String,
         nickname: String,
         profileImage: String?
+    )
+
+    suspend fun updateUserDormantStatus(
+        userId: String,
+        dormant: Boolean,
+        dormantAt: String?
+    )
+
+    suspend fun updateUserLastLogin(
+        userId: String,
+        lastLoginAt: String
     )
 
     suspend fun pushUser(user: User)

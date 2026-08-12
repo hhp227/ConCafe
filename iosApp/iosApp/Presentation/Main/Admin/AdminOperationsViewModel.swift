@@ -440,6 +440,8 @@ final class AdminOperationsViewModel: ObservableObject {
                 event.send(.navigateToBanner)
             } else if id == adminUserMenuId {
                 event.send(.navigateToUserManagement)
+            } else if id == adminDormantMenuId {
+                event.send(.navigateToDormantAccount)
             } else {
                 let label = uiState.quickMenus.first(where: { $0.id == id })?.title ?? "메뉴"
                 uiState.infoMessage = "\(label) 연결은 다음 단계에서 이어집니다."
@@ -499,6 +501,7 @@ final class AdminOperationsViewModel: ObservableObject {
 
 private let adminBannerMenuId = "banner"
 private let adminUserMenuId = "users"
+private let adminDormantMenuId = "dormant"
 private let claimPollingIntervalNanoseconds: UInt64 = 60_000_000_000
 private let adminInquiryPageSize: Int32 = 10
 private let adminReportPageSize: Int32 = 10
