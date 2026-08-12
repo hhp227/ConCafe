@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -723,6 +724,9 @@ private fun HomeBannerSection(
                     }
                 }
             }
+        } else {
+            // 플레이스홀더에도 동일한 높이 적용
+            HomeBannerPlaceholderCard(bannerHeight)
         }
     }
 }

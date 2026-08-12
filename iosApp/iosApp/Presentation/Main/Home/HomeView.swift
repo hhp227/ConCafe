@@ -92,7 +92,7 @@ private struct HomeContentView: View {
                         uiState: uiState,
                         currentBannerPage: $currentBannerPage,
                         onAction: onAction
-                    )
+ https://github.com/hhp227/ConCafe/pull/126/conflict?name=iosApp%252FiosApp%252FPresentation%252FMain%252FHome%252FHomeView.swift&ancestor_oid=d9ce0537a2e6c311109360fdfdd2c932ef146b1c&base_oid=8b24e3da9e10cb540180756b5b50d23fca7ba847&head_oid=250a5400f6a8f5595ae1ac80fcf30e19f520f092                   )
                     cafeEventSection
                     popularCastSection
                     nearbyCafeSection
@@ -480,7 +480,6 @@ private struct HomeBannerSection: View {
                         .tag(index)
                     }
                 }
-                .frame(height: bannerHeight)
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .overlay(alignment: .bottomTrailing) {
                     if contentLayout == .fullBleed && uiState.banners.count > 1 {
@@ -505,6 +504,8 @@ private struct HomeBannerSection: View {
                             .frame(width: currentBannerPage == index ? 18 : 8, height: 8)
                     }
                 }
+            } else {
+                HomeBannerPlaceholderCard(height: bannerHeight)
             }
         }
         .frame(maxWidth: .infinity, alignment: .top)
