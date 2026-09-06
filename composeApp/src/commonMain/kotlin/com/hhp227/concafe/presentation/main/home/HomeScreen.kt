@@ -723,10 +723,10 @@ private fun HomeBannerSection(
                         )
                     }
                 }
+            } else {
+                // 플레이스홀더에도 동일한 높이 적용
+                HomeBannerPlaceholderCard(bannerHeight, contentLayout)
             }
-        } else {
-            // 플레이스홀더에도 동일한 높이 적용
-            HomeBannerPlaceholderCard(bannerHeight)
         }
     }
 }
