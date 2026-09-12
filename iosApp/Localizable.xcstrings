@@ -50,13 +50,16 @@
         }
       }
     },
+    "%@ 계정을 휴면 상태로 전환할까요? 휴면 계정은 다시 로그인하면 자동으로 해제됩니다." : {
+
+    },
+    "%@ 계정의 휴면 상태를 해제할까요?" : {
+
+    },
     "%@ 목록이 없습니다." : {
 
     },
     "%d" : {
-
-    },
-    "%d pt" : {
 
     },
     "%lld" : {
@@ -74,182 +77,6 @@
     },
     "+%lld" : {
 
-    },
-    "settings_content_layout_desc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose how the home banner and check-in map fill the screen."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ホームバナーとチェックインマップを画面幅いっぱいに表示するか選択できます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "홈 배너와 체크인 지도를 화면에 가득 채울지 선택할 수 있습니다."
-          }
-        }
-      }
-    },
-    "settings_content_layout_full_bleed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Full Bleed"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "フルブリード"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "풀블리드"
-          }
-        }
-      }
-    },
-    "settings_content_layout_legacy" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Classic"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "クラシック"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "기존"
-          }
-        }
-      }
-    },
-    "settings_content_layout_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display Style"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "表示スタイル"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "화면 표시 스타일"
-          }
-        }
-      }
-    },
-    "settings_brand_theme_desc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose the app's color mood."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリのカラーテーマを選択できます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "앱의 색상 분위기를 선택할 수 있습니다."
-          }
-        }
-      }
-    },
-    "settings_brand_theme_maid" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maid Cafe"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "メイドカフェ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "메이드카페"
-          }
-        }
-      }
-    },
-    "settings_brand_theme_mens" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Men's Con Cafe"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "メンズコンカフェ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "맨즈콘카페"
-          }
-        }
-      }
-    },
-    "settings_brand_theme_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Theme Style"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "テーマスタイル"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "테마 스타일"
-          }
-        }
-      }
     },
     "|" : {
 
@@ -3948,28 +3775,6 @@
         }
       }
     },
-    "cafe_favorite_tooltip" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add a cafe to your favorites to receive notifications about events, table counts, notices, and other cafe updates. (Information may vary by location.)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カフェをお気に入りに登録すると、イベント、テーブル数、お知らせなどのカフェ情報を通知で受け取れます。（店舗ごとに情報が異なる場合があります。）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카페를 즐겨찾기에 등록하여 이벤트, 테이블 카운트, 공지사항등 카페 소식을 알림으로 받아보세요. (매장별 정보는 차이가 있을수 있습니다.)"
-          }
-        }
-      }
-    },
     "cafe_accessibility_more" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4121,6 +3926,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "cafe_favorite_tooltip" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a cafe to your favorites to receive notifications about events, table counts, notices, and other cafe updates. (Information may vary by location.)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カフェをお気に入りに登録すると、イベント、テーブル数、お知らせなどのカフェ情報を通知で受け取れます。（店舗ごとに情報が異なる場合があります。）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카페를 즐겨찾기에 등록하여 이벤트, 테이블 카운트, 공지사항등 카페 소식을 알림으로 받아보세요. (매장별 정보는 차이가 있을수 있습니다.)"
           }
         }
       }
@@ -7696,6 +7523,7 @@
       }
     },
     "castlist_info_cast_deleted" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7718,6 +7546,7 @@
       }
     },
     "castlist_info_load_failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -19606,6 +19435,182 @@
         }
       }
     },
+    "settings_brand_theme_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the app's color mood."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリのカラーテーマを選択できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱의 색상 분위기를 선택할 수 있습니다."
+          }
+        }
+      }
+    },
+    "settings_brand_theme_maid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maid Cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メイドカフェ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메이드카페"
+          }
+        }
+      }
+    },
+    "settings_brand_theme_mens" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Men's Con Cafe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メンズコンカフェ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "맨즈콘카페"
+          }
+        }
+      }
+    },
+    "settings_brand_theme_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme Style"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーマスタイル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테마 스타일"
+          }
+        }
+      }
+    },
+    "settings_content_layout_desc" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose how the home banner and check-in map fill the screen."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホームバナーとチェックインマップを画面幅いっぱいに表示するか選択できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "홈 배너와 체크인 지도를 화면에 가득 채울지 선택할 수 있습니다."
+          }
+        }
+      }
+    },
+    "settings_content_layout_full_bleed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Full Bleed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フルブリード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "풀블리드"
+          }
+        }
+      }
+    },
+    "settings_content_layout_legacy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラシック"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기존"
+          }
+        }
+      }
+    },
+    "settings_content_layout_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display Style"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示スタイル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 표시 스타일"
+          }
+        }
+      }
+    },
     "settings_inquiry_desc" : {
       "localizations" : {
         "en" : {
@@ -21595,6 +21600,9 @@
     "등록된 신고가 없습니다." : {
 
     },
+    "마지막 로그인 %@" : {
+
+    },
     "목록 하단에 도달하면 다음 캐스트를 이어서 불러옵니다." : {
 
     },
@@ -21664,6 +21672,9 @@
     "저장" : {
 
     },
+    "전환" : {
+
+    },
     "차단" : {
 
     },
@@ -21700,7 +21711,28 @@
     "항목 이미지 선택" : {
 
     },
+    "해제" : {
+
+    },
     "확인" : {
+
+    },
+    "휴면" : {
+
+    },
+    "휴면 예정" : {
+
+    },
+    "휴면 전환" : {
+
+    },
+    "휴면 전환일 %@" : {
+
+    },
+    "휴면 해제" : {
+
+    },
+    "휴면계정 관리" : {
 
     },
     "휴무" : {
