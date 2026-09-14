@@ -1,4 +1,4 @@
-package com.hhp227.concafe.presentation.auth.signin
+package com.hhp227.concafe.data.source.auth
 
 import android.app.Activity
 import androidx.credentials.CredentialManager

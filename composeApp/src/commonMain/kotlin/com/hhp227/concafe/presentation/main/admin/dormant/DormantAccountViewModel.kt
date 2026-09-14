@@ -63,6 +63,7 @@ class DormantAccountViewModel(
     private fun loadMore() {
         val state = _uiState.value
         val cursor = state.nextCursor
+
         if (cursor == null || !state.canLoadMore || state.isLoadingMore) return
         loadPage(cursor = cursor, append = true)
     }
@@ -76,7 +77,6 @@ class DormantAccountViewModel(
             } else {
                 _uiState.update { it.copy(isLoading = true, infoMessage = null) }
             }
-
             when (val result = getDormantAccountPageUseCase.invoke(
                 filter = _uiState.value.selectedFilter,
                 cursor = cursor,
@@ -88,6 +88,7 @@ class DormantAccountViewModel(
                     } else {
                         result.data.items.sortedBy { it.lastLoginAt }
                     }
+
                     _uiState.update { state ->
                         state.copy(
                             users = if (append) state.users + pageItems else pageItems,

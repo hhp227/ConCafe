@@ -29,7 +29,6 @@ fun formatKoreanPhoneNumber(input: String): String {
 
 fun normalizeKoreanPhoneToE164(input: String): String? {
     val digitsOnly = input.filter { char -> char.isDigit() }
-
     return if (digitsOnly.isBlank()) {
         null
     } else if (digitsOnly.startsWith("82")) {
@@ -60,6 +59,7 @@ fun PhoneNumberTextField(
     var fieldValue by remember(value) {
         mutableStateOf(TextFieldValue(value, TextRange(value.length)))
     }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)

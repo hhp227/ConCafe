@@ -247,7 +247,6 @@ class FanManagementViewModel(
                 canSubmit = if (shouldFetchCandidatePage) selectedId != null else fallbackSheet?.selectedCastId != null
             )
         }
-
         return ClaimUiState(statusCard = statusCard, claimSheet = claimSheet)
     }
 
@@ -282,6 +281,7 @@ class FanManagementViewModel(
                 LoadPresentation.BLOCKING
             }
             val isBlockingLoad = resolvedPresentation == LoadPresentation.BLOCKING
+
             _uiState.update {
                 it.copy(
                     isLoading = isBlockingLoad,
@@ -293,10 +293,12 @@ class FanManagementViewModel(
                 includeCandidatePage = true,
                 fallbackSheet = null
             )
+
             when (val result = getFanManagementDataUseCase.invoke()) {
                 is AppResult.Success -> {
                     val data = result.data
                     val cast = data.detail.cast
+
                     bindCastEvent(cast.id)
                     bindScheduleManagementEvent(cast.id)
                     _uiState.value = FanManagementUiState(
@@ -353,6 +355,7 @@ class FanManagementViewModel(
     private fun loadMoreClaimCandidates() {
         val currentSheet = _uiState.value.castClaimSheet ?: return
         val cursor = currentSheet.nextCursor ?: return
+
         if (!currentSheet.canLoadMore || currentSheet.isLoadingMore) return
         jobs[TaskKey.CLAIM_CANDIDATE_PAGE]?.cancel()
         jobs[TaskKey.CLAIM_CANDIDATE_PAGE] = viewModelScope.launch {
@@ -366,6 +369,7 @@ class FanManagementViewModel(
                 is AppResult.Success -> {
                     _uiState.update { state ->
                         val sheet = state.castClaimSheet ?: return@update state
+
                         state.copy(
                             castClaimSheet = sheet.copy(
                                 requestableCasts = sheet.requestableCasts + result.data.items,
@@ -390,6 +394,7 @@ class FanManagementViewModel(
     private fun selectClaimCandidate(castId: String) {
         _uiState.update { state ->
             val sheet = state.castClaimSheet ?: return@update state
+
             state.copy(
                 castClaimSheet = sheet.copy(
                     selectedCastId = castId,
@@ -491,6 +496,7 @@ class FanManagementViewModel(
     private fun submitCastClaim() {
         val sheet = _uiState.value.castClaimSheet ?: return
         val castId = sheet.selectedCastId ?: return
+
         _uiState.update { state ->
             state.copy(
                 castClaimSheet = sheet.copy(isSubmitting = true),
@@ -517,6 +523,7 @@ class FanManagementViewModel(
 
     private fun clickRecentFollower(followerId: String) {
         val follower = uiState.value.fanManagementData?.followers?.firstOrNull { it.id == followerId } ?: return
+
         setInfoMessage("${follower.nickname} 팬 상세 화면은 다음 단계에서 연결합니다.")
     }
 
@@ -533,6 +540,7 @@ class FanManagementViewModel(
             FanManagementAction.DismissClaimSheet -> dismissClaimSheet()
             FanManagementAction.ClickEditProfile -> {
                 val detail = uiState.value.fanManagementData?.detail ?: return
+
                 viewModelScope.launch {
                     _event.emit(
                         FanManagementEvent.NavigateToCastEdit(

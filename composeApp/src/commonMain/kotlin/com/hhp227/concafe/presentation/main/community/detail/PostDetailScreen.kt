@@ -164,7 +164,6 @@ private fun PostDetailContentScreen(
             }
         }
     }
-
     if (uiState.isReportSheetVisible) {
         val reportTypes = listOf(
             stringResource(Res.string.community_report_type_spam),
@@ -213,7 +212,6 @@ private fun PostDetailContentScreen(
             }
         }
     }
-
     if (uiState.isDeleteConfirmVisible) {
         AlertDialog(
             onDismissRequest = { onAction(PostDetailAction.DismissDeleteConfirm) },
@@ -231,7 +229,6 @@ private fun PostDetailContentScreen(
             }
         )
     }
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {

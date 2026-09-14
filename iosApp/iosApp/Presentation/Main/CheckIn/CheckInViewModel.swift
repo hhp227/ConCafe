@@ -34,7 +34,9 @@ final class CheckInViewModel: ObservableObject {
 
     private let visitEventPublisher: VisitEventPublisher
 
-    private let currentLocationProvider = IosCheckInLocationProvider()
+    private let requestLocationPermissionUseCase: RequestLocationPermissionUseCase
+
+    private let resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase
 
     @Published private(set) var uiState = CheckInUiState.empty
 
@@ -196,26 +198,10 @@ final class CheckInViewModel: ObservableObject {
         guard uiState.userCityKey == nil else { return }
         tasks[.detectCity]?.cancel()
         tasks[.detectCity] = Task {
-            if let cached = currentLocationProvider.getLastKnownLocation() {
-                let cityKey = Self.cityKeyFromCoordinates(
-                    lat: cached.location.latitude,
-                    lng: cached.location.longitude
-                )
-                if cityKey != nil {
-                    uiState.userCityKey = cityKey
-                    if uiState.selectedMapRegion == .all,
-                       let cityKey {
-                        loadMapCafesForRegion(cityKey)
-                    }
-                    return
-                }
-            }
-            let result = await currentLocationProvider.getCurrentLocation()
-            guard result.isSuccess else { return }
-            let cityKey = Self.cityKeyFromCoordinates(
-                lat: result.location.latitude,
-                lng: result.location.longitude
-            )
+            guard let result = try? await resolveCurrentRegionKeyUseCase.invoke(),
+                  let success = result as? AppResultSuccess<AnyObject> else { return }
+            let cityKey = success.data as? String
+
             uiState.userCityKey = cityKey
             if uiState.selectedMapRegion == .all,
                let cityKey {
@@ -255,21 +241,11 @@ final class CheckInViewModel: ObservableObject {
             uiState.errorMessage = "현재 위치를 확인하는 중입니다. 잠시만 기다려 주세요."
             tasks[.submitVisit] = Task {
                 do {
-                    let locationResult = await currentLocationProvider.getCurrentLocation()
-
-                    if !locationResult.isSuccess {
-                        uiState.errorMessage = locationResult.message
-                        return
-                    }
-                    let resolvedLocation = locationResult.location
                     let normalizedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
-
                     let result = try await createVisitUseCase.invoke(
                         cafeId: cafeId,
                         visitedAt: visitedAt,
-                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo,
-                        latitude: resolvedLocation.latitude,
-                        longitude: resolvedLocation.longitude
+                        memo: normalizedMemo?.isEmpty == true ? nil : normalizedMemo
                     )
 
                     if result is AppResultSuccess<AnyObject> {
@@ -283,7 +259,7 @@ final class CheckInViewModel: ObservableObject {
                             await maybeShowReviewPrompt(visit: visit)
                         }
                     } else if let failure = result as? AppResultFailure {
-                        uiState.errorMessage = "\(failure.error)"
+                        uiState.errorMessage = Self.resolveLocationFailureMessage(failure.error) ?? "\(failure.error)"
                     } else {
                         uiState.errorMessage = "체크인 저장에 실패했습니다."
                     }
@@ -329,7 +305,6 @@ final class CheckInViewModel: ObservableObject {
 
     private func maybeShowReviewPrompt(visit: Visit) async {
         guard visit.verified else { return }
-
         do {
             let result = try await shouldShowReviewPromptUseCase.invoke(visitId: visit.id)
             guard let success = result as? AppResultSuccess<AnyObject>,
@@ -523,21 +498,63 @@ final class CheckInViewModel: ObservableObject {
     func requestLocationPermissionOnEntry() {
         tasks[.locationPermission]?.cancel()
         tasks[.locationPermission] = Task {
-            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
-            if permissionResult.isGranted {
+            let status = await requestLocationPermission()
+
+            if status.isGranted {
                 detectUserCity()
-            } else if permissionResult.requiresSettings {
+            } else if status.requiresSettings {
                 event.send(.openLocationSettings)
             }
+        }
+    }
+
+    private func requestLocationPermission() async -> LocationPermissionStatus {
+        guard let result = try? await requestLocationPermissionUseCase.invoke(),
+              let success = result as? AppResultSuccess<AnyObject>,
+              let status = success.data as? LocationPermissionStatus else {
+            return .serviceUnavailable
+        }
+        return status
+    }
+
+    private static func resolvePermissionMessage(_ status: LocationPermissionStatus) -> String {
+        switch status {
+        case .granted:
+            return ""
+        case .requestPending:
+            return locationPermissionPendingMessage
+        case .preciseLocationRequired:
+            return preciseLocationRequiredMessage
+        case .serviceUnavailable:
+            return locationServiceUnavailableMessage
+        default:
+            return String(localized: String.LocalizationValue("checkin_location_mobile_only"), table: "Localizable")
+        }
+    }
+
+    private static func resolveLocationFailureMessage(_ error: AppError) -> String? {
+        guard let reason = (error as? AppErrorValidationFailed)?.reason else { return nil }
+
+        switch reason {
+        case LocationFailureReason.permissionRequired.name:
+            return preciseLocationRequiredMessage
+        case LocationFailureReason.serviceUnavailable.name:
+            return locationServiceUnavailableMessage
+        case LocationFailureReason.lowAccuracy.name:
+            return lowAccuracyMessage
+        case LocationFailureReason.unsupported.name:
+            return String(localized: String.LocalizationValue("checkin_location_mobile_only"), table: "Localizable")
+        default:
+            return nil
         }
     }
 
     private func requestCheckInPermissionAndOpenSheet(preselectCafeId: String? = nil) {
         tasks[.locationPermission]?.cancel()
         tasks[.locationPermission] = Task {
-            let permissionResult = await currentLocationProvider.requestPermissionIfNeeded()
+            let status = await requestLocationPermission()
 
-            if permissionResult.isGranted {
+            if status.isGranted {
                 uiState.isNewVisitSheetVisible = true
                 uiState.preselectCafeId = preselectCafeId
                 uiState.errorMessage = nil
@@ -545,8 +562,8 @@ final class CheckInViewModel: ObservableObject {
                 detectUserCity()
             } else {
                 uiState.isNewVisitSheetVisible = false
-                uiState.errorMessage = permissionResult.message
-                if permissionResult.requiresSettings {
+                uiState.errorMessage = Self.resolvePermissionMessage(status)
+                if status.requiresSettings {
                     event.send(.openLocationSettings)
                 }
             }
@@ -706,7 +723,9 @@ final class CheckInViewModel: ObservableObject {
         dismissReviewPromptUseCase: DismissReviewPromptUseCase = KoinInitializerKt.resolveDismissReviewPromptUseCase(),
         cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
         castEventPublisher: CastEventPublisher = KoinInitializerKt.resolveCastEventPublisher(),
-        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher()
+        visitEventPublisher: VisitEventPublisher = KoinInitializerKt.resolveVisitEventPublisher(),
+        requestLocationPermissionUseCase: RequestLocationPermissionUseCase = KoinInitializerKt.resolveRequestLocationPermissionUseCase(),
+        resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase = KoinInitializerKt.resolveResolveCurrentRegionKeyUseCase()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInMapCafePageUseCase = getCheckInMapCafePageUseCase
@@ -719,6 +738,8 @@ final class CheckInViewModel: ObservableObject {
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
         self.castEventPublisher = castEventPublisher
         self.visitEventPublisher = visitEventPublisher
+        self.requestLocationPermissionUseCase = requestLocationPermissionUseCase
+        self.resolveCurrentRegionKeyUseCase = resolveCurrentRegionKeyUseCase
 
         observeSession()
         observeContentLayout()
@@ -753,15 +774,11 @@ final class CheckInViewModel: ObservableObject {
 
     private static let recentVisitPageSize: Int32 = 12
     private static let paginationDelayNanoseconds: UInt64 = 1_000_000_000
-    private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
-        if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }
-        if (35.0...35.4).contains(lat) && (128.8...129.3).contains(lng) { return "busan" }
-        if (35.7...36.0).contains(lat) && (128.4...128.8).contains(lng) { return "daegu" }
-        if (35.35...35.60).contains(lat) && (139.50...139.75).contains(lng) { return "etc" }
-        if (35.5...35.9).contains(lat) && (139.3...139.9).contains(lng) { return "tokyo" }
-        if (34.5...34.9).contains(lat) && (135.3...135.7).contains(lng) { return "osaka" }
-        return nil
-    }
+
+    private static let preciseLocationRequiredMessage = "정확한 위치 권한이 필요합니다. 설정에서 정확한 위치를 허용해 주세요."
+    private static let lowAccuracyMessage = "위치 정확도가 낮습니다. 정확한 위치를 켜고 잠시 후 다시 시도해 주세요."
+    private static let locationPermissionPendingMessage = "위치 권한 요청 중입니다. 권한을 허용한 뒤 다시 시도해 주세요."
+    private static let locationServiceUnavailableMessage = "위치 서비스를 사용할 수 없습니다."
 }
 
 private extension String {

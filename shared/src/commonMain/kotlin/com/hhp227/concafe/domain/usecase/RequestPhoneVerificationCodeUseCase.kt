@@ -2,14 +2,18 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.repository.AuthRepository
 
-class RequestPhoneVerificationCodeUseCase {
-    operator fun invoke(phone: String): AppResult<String> {
-        val normalizedPhone = phone.trim()
-        return if (normalizedPhone.isBlank()) {
-            AppResult.Failure(AppError.ValidationFailed("phone is required"))
-        } else {
-            AppResult.Success("인증번호가 $normalizedPhone 로 전송되었습니다.")
+class RequestPhoneVerificationCodeUseCase(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(phoneNumber: String): AppResult<Unit> {
+        return try {
+            AppResult.Success(authRepository.requestPhoneVerificationCode(phoneNumber.trim()))
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "phone verification failed"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
         }
     }
 }

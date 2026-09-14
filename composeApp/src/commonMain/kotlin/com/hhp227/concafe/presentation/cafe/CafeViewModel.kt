@@ -26,6 +26,7 @@ import com.hhp227.concafe.domain.usecase.GetCafeReviewPageUseCase
 import com.hhp227.concafe.domain.event.ReviewEvent
 import com.hhp227.concafe.domain.event.publisher.CafeDetailEventPublisher
 import com.hhp227.concafe.domain.event.publisher.ReviewEventPublisher
+import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.domain.model.DetailTooltipType
 import com.hhp227.concafe.domain.usecase.MarkDetailTooltipShownUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowDetailTooltipUseCase
@@ -112,7 +113,6 @@ class CafeViewModel(
                 errorMessage = null
             )
         }
-
         jobs[JobKey.DETAIL]?.cancel()
         jobs[JobKey.DETAIL] = viewModelScope.launch {
             val result = getCafeDetailUseCase.invoke(cafeId)
@@ -197,13 +197,13 @@ class CafeViewModel(
 
     private fun loadMenuGoods() {
         val currentDetail = _uiState.value.detail ?: return
+
         if (_uiState.value.isLoadingMenuGoods || _uiState.value.hasLoadedMenuGoods) {
             return
         }
         jobs[JobKey.MENU_GOODS]?.cancel()
         jobs[JobKey.MENU_GOODS] = viewModelScope.launch {
             _uiState.update { state -> state.copy(isLoadingMenuGoods = true) }
-
             when (val result = getCafeMenuGoodsUseCase.invoke(currentDetail.cafe.id)) {
                 is AppResult.Success -> {
                     _uiState.update { state ->
@@ -227,6 +227,7 @@ class CafeViewModel(
     private fun loadMoreCasts() {
         val currentState = _uiState.value
         val cursor = currentState.castsNextCursor
+
         if (currentState.isLoadingMoreCasts || !currentState.canLoadMoreCasts || cursor == null) return
         loadCastPage(cursor = cursor, append = true)
     }
@@ -279,6 +280,7 @@ class CafeViewModel(
     private fun loadMoreNotices() {
         val currentState = _uiState.value
         val cursor = currentState.noticesNextCursor
+
         if (currentState.isLoadingMoreNotices || !currentState.canLoadMoreNotices || cursor == null) return
         loadNoticePage(cursor = cursor, append = true)
     }
@@ -313,6 +315,7 @@ class CafeViewModel(
     private fun loadMoreReviews() {
         val currentState = _uiState.value
         val cursor = currentState.reviewsNextCursor
+
         if (currentState.isLoadingMoreReviews || !currentState.canLoadMoreReviews || cursor == null) return
         loadReviewPage(cursor = cursor, append = true)
     }
@@ -448,8 +451,9 @@ class CafeViewModel(
         const val PAGINATION_DELAY_MILLIS = 1_000L
     }
 
-    private fun mergeLoadedMenuGoods(detail: com.hhp227.concafe.domain.model.CafeDetail): com.hhp227.concafe.domain.model.CafeDetail {
+    private fun mergeLoadedMenuGoods(detail: CafeDetail): CafeDetail {
         val currentDetail = _uiState.value.detail ?: return detail
+
         if (!_uiState.value.hasLoadedMenuGoods) {
             return detail
         }

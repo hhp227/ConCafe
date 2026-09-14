@@ -32,12 +32,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.core.util.RatingUtils
 import com.hhp227.concafe.domain.model.CafeDetail
 import com.hhp227.concafe.presentation.cafe.tab.*
-import com.hhp227.concafe.presentation.component.CompatImageDisplay
-import com.hhp227.concafe.presentation.component.DetailTooltipBox
-import com.hhp227.concafe.presentation.component.ScrollableConCafeTabBar
-import com.hhp227.concafe.presentation.component.ShimmerBox
-import com.hhp227.concafe.presentation.component.ShimmerListItemSkeleton
-import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.*
 import com.hhp227.concafe.presentation.navigation.NavigationAction
 import concafe.composeapp.generated.resources.*
 import kotlinx.coroutines.delay
@@ -46,7 +41,6 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import org.koin.core.parameter.parametersOf
-import com.hhp227.concafe.presentation.component.ConCafeColors
 
 @Composable
 fun CafeScreen(
@@ -580,6 +574,7 @@ private fun CafeSummarySection(detail: CafeDetail) {
 @Composable
 private fun localizedCafeConceptType(rawConceptType: String): String {
     val normalized = rawConceptType.trim()
+
     if (normalized.isEmpty()) {
         return ""
     }

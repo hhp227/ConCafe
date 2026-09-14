@@ -53,6 +53,7 @@ class ReviewEditViewModel(
                 when (val result = getCafeDetailUseCase.invoke(cafeId)) {
                     is AppResult.Success -> {
                         val detail = result.data.detail
+
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -91,6 +92,7 @@ class ReviewEditViewModel(
             when (val result = getReviewUseCase.invoke(id)) {
                 is AppResult.Success -> {
                     val review = result.data
+
                     _uiState.update {
                         it.copy(
                             rating = review.rating.toInt(),
@@ -150,6 +152,7 @@ class ReviewEditViewModel(
             }
             viewModelScope.launch {
                 val uploadedPhoto = uploadImage(currentState.photoImageUrl, "reviews")
+
                 if (!currentState.photoImageUrl.isNullOrBlank() && uploadedPhoto == null) {
                     return@launch
                 }

@@ -94,6 +94,15 @@ import com.hhp227.concafe.domain.usecase.SignInWithAppleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
 import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoUseCase
+import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
+import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
+import com.hhp227.concafe.domain.usecase.LinkPhoneCredentialUseCase
+import com.hhp227.concafe.domain.usecase.LinkEmailCredentialUseCase
+import com.hhp227.concafe.domain.usecase.DiscardIncompleteSignUpUseCase
+import com.hhp227.concafe.domain.usecase.RequestLocationPermissionUseCase
+import com.hhp227.concafe.domain.usecase.ResolveCurrentRegionKeyUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
 import com.hhp227.concafe.domain.usecase.CompleteSignUpForCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
@@ -636,6 +645,69 @@ fun resolveSignInWithAppleIdTokenUseCase(): SignInWithAppleIdTokenUseCase {
 }
 
 fun resolveSignInWithKakaoIdTokenUseCase(): SignInWithKakaoIdTokenUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithGoogleUseCase(): SignInWithGoogleUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveSignInWithKakaoUseCase(): SignInWithKakaoUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRequestPhoneVerificationCodeUseCase(): RequestPhoneVerificationCodeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveVerifyPhoneVerificationCodeUseCase(): VerifyPhoneVerificationCodeUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveLinkPhoneCredentialUseCase(): LinkPhoneCredentialUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveLinkEmailCredentialUseCase(): LinkEmailCredentialUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveDiscardIncompleteSignUpUseCase(): DiscardIncompleteSignUpUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveRequestLocationPermissionUseCase(): RequestLocationPermissionUseCase {
+    val koin = requireNotNull(koinApplication?.koin) {
+        "Koin is not initialized. Call doInitKoin() before resolving dependencies."
+    }
+    return koin.get()
+}
+
+fun resolveResolveCurrentRegionKeyUseCase(): ResolveCurrentRegionKeyUseCase {
     val koin = requireNotNull(koinApplication?.koin) {
         "Koin is not initialized. Call doInitKoin() before resolving dependencies."
     }

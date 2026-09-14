@@ -2,18 +2,18 @@ package com.hhp227.concafe.domain.usecase
 
 import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
+import com.hhp227.concafe.domain.repository.AuthRepository
 
-class VerifyPhoneVerificationCodeUseCase {
-    operator fun invoke(code: String): AppResult<Unit> {
-        val normalized = code.trim()
-        return if (normalized.length < MIN_VERIFICATION_CODE_LENGTH) {
-            AppResult.Failure(AppError.ValidationFailed("invalid verification code"))
-        } else {
-            AppResult.Success(Unit)
+class VerifyPhoneVerificationCodeUseCase(
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(code: String): AppResult<Unit> {
+        return try {
+            AppResult.Success(authRepository.verifyPhoneVerificationCode(code.trim()))
+        } catch (e: IllegalArgumentException) {
+            AppResult.Failure(AppError.ValidationFailed(e.message ?: "invalid verification code"))
+        } catch (e: Exception) {
+            AppResult.Failure(AppError.Unknown(e.message))
         }
-    }
-
-    private companion object {
-        const val MIN_VERIFICATION_CODE_LENGTH = 4
     }
 }

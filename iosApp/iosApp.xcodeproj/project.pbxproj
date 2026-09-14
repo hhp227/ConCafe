@@ -27,6 +27,9 @@
 		0A0C66AC2F5C0EF600B0CDE4 /* SignUpEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */; };
 		0A1613FF2F802D0D00088B82 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = ADA100052F90000100AAA001 /* GoogleMobileAds */; };
 		0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1614002F802D5A00088B82 /* RankingNativeAd.swift */; };
+		0AC0FE0B2FB6100100000002 /* IosNativeFirebaseAuthDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE0A2FB6100100000001 /* IosNativeFirebaseAuthDataSource.swift */; };
+		0AC0FE0E2FB6100100000005 /* IosGoogleIdTokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE0D2FB6100100000004 /* IosGoogleIdTokenProvider.swift */; };
+		0AC0FE102FB6100100000007 /* IosKakaoIdTokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC0FE0F2FB6100100000006 /* IosKakaoIdTokenProvider.swift */; };
 		0A27C8D82F614BF700573900 /* CastManagementUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D72F614BF700573900 /* CastManagementUiState.swift */; };
 		0A27C8DA2F614C1400573900 /* CastManagementAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8D92F614C1400573900 /* CastManagementAction.swift */; };
 		0A27C8DC2F614C2D00573900 /* CastManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */; };
@@ -247,7 +250,7 @@
 		0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */; };
 		0ADA5A182F77CA7D00D253AF /* ResetPasswordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */; };
 		0ADA5A1A2F77CA9C00D253AF /* ResetPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */; };
-		0ADA5A1C2F77CBA700D253AF /* IosCheckInLocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */; };
+		0ADA5A1C2F77CBA700D253AF /* IosDeviceLocationDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADA5A1B2F77CBA700D253AF /* IosDeviceLocationDataSource.swift */; };
 		0ADC46EB2F5B33E0003484E4 /* CapsuleDropdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */; };
 		0ADDB1E72F7CECF70017D66C /* PhoneUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADDB1E62F7CECF70017D66C /* PhoneUtils.swift */; };
 		0AE309CC2F6A8CEE006C40A3 /* TimeUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */; };
@@ -303,6 +306,9 @@
 		0A0C66A92F5C0EE100B0CDE4 /* SignUpAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpAction.swift; sourceTree = "<group>"; };
 		0A0C66AB2F5C0EF600B0CDE4 /* SignUpEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpEvent.swift; sourceTree = "<group>"; };
 		0A1614002F802D5A00088B82 /* RankingNativeAd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankingNativeAd.swift; sourceTree = "<group>"; };
+		0AC0FE0A2FB6100100000001 /* IosNativeFirebaseAuthDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosNativeFirebaseAuthDataSource.swift; sourceTree = "<group>"; };
+		0AC0FE0D2FB6100100000004 /* IosGoogleIdTokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosGoogleIdTokenProvider.swift; sourceTree = "<group>"; };
+		0AC0FE0F2FB6100100000006 /* IosKakaoIdTokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosKakaoIdTokenProvider.swift; sourceTree = "<group>"; };
 		0A27C8D72F614BF700573900 /* CastManagementUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementUiState.swift; sourceTree = "<group>"; };
 		0A27C8D92F614C1400573900 /* CastManagementAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementAction.swift; sourceTree = "<group>"; };
 		0A27C8DB2F614C2D00573900 /* CastManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManagementViewModel.swift; sourceTree = "<group>"; };
@@ -523,7 +529,7 @@
 		0ADA5A152F77CA6300D253AF /* ResetPasswordEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordEvent.swift; sourceTree = "<group>"; };
 		0ADA5A172F77CA7D00D253AF /* ResetPasswordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordViewModel.swift; sourceTree = "<group>"; };
 		0ADA5A192F77CA9C00D253AF /* ResetPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordView.swift; sourceTree = "<group>"; };
-		0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosCheckInLocationProvider.swift; sourceTree = "<group>"; };
+		0ADA5A1B2F77CBA700D253AF /* IosDeviceLocationDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosDeviceLocationDataSource.swift; sourceTree = "<group>"; };
 		0ADC46EA2F5B33E0003484E4 /* CapsuleDropdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapsuleDropdownLabel.swift; sourceTree = "<group>"; };
 		0ADDB1E62F7CECF70017D66C /* PhoneUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneUtils.swift; sourceTree = "<group>"; };
 		0AE309CB2F6A8CEE006C40A3 /* TimeUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtils.swift; sourceTree = "<group>"; };
@@ -981,7 +987,6 @@
 				0A785CAC2F5A7C4D004037A8 /* CheckInViewModel.swift */,
 				0A50FE922F5EB83400613093 /* CheckInUiState.swift */,
 				0A50FE942F5EB86000613093 /* CheckInAction.swift */,
-				0ADA5A1B2F77CBA700D253AF /* IosCheckInLocationProvider.swift */,
 				0AA7620C2F8BB08C00092934 /* CheckInQrScannerView.swift */,
 			);
 			path = CheckIn;
@@ -1178,9 +1183,29 @@
 		0AE309C92F6A8CD3006C40A3 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				0AC0FE0C2FB6100100000003 /* Auth */,
+				0AC0FE112FB6100100000008 /* Location */,
 				0AE309CA2F6A8CDA006C40A3 /* Util */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		0AC0FE112FB6100100000008 /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				0ADA5A1B2F77CBA700D253AF /* IosDeviceLocationDataSource.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+		0AC0FE0C2FB6100100000003 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				0AC0FE0D2FB6100100000004 /* IosGoogleIdTokenProvider.swift */,
+				0AC0FE0F2FB6100100000006 /* IosKakaoIdTokenProvider.swift */,
+				0AC0FE0A2FB6100100000001 /* IosNativeFirebaseAuthDataSource.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		0AE309CA2F6A8CDA006C40A3 /* Util */ = {
@@ -1604,6 +1629,9 @@
 				0A87EEDD2F9FA71C009E58ED /* CommunityViewModel.swift in Sources */,
 				0ADA5A162F77CA6300D253AF /* ResetPasswordEvent.swift in Sources */,
 				0A1614012F802D5A00088B82 /* RankingNativeAd.swift in Sources */,
+				0AC0FE0B2FB6100100000002 /* IosNativeFirebaseAuthDataSource.swift in Sources */,
+				0AC0FE0E2FB6100100000005 /* IosGoogleIdTokenProvider.swift in Sources */,
+				0AC0FE102FB6100100000007 /* IosKakaoIdTokenProvider.swift in Sources */,
 				0A0C66902F5C050E00B0CDE4 /* CafeManagementView.swift in Sources */,
 				0A27C8DE2F614C4600573900 /* CastManagementEvent.swift in Sources */,
 				0A6495152F99419200341F17 /* MapViewModel.swift in Sources */,
@@ -1661,7 +1689,7 @@
 				0AA036202F5AA33300A3BAF5 /* NotificationUiState.swift in Sources */,
 				0A6B6AC22F60704300E395C2 /* CafeInfoEditUiState.swift in Sources */,
 				0A580DA12F5966E400390F67 /* Route.swift in Sources */,
-				0ADA5A1C2F77CBA700D253AF /* IosCheckInLocationProvider.swift in Sources */,
+				0ADA5A1C2F77CBA700D253AF /* IosDeviceLocationDataSource.swift in Sources */,
 				0A400E252F655F4F00BD41C7 /* InquiryUiState.swift in Sources */,
 				0A50FE932F5EB83400613093 /* CheckInUiState.swift in Sources */,
 				0A3DB8102F649F8700064804 /* BannerEditViewModel.swift in Sources */,

@@ -31,8 +31,6 @@ import com.hhp227.concafe.domain.usecase.DeleteAccountUseCase
 import com.hhp227.concafe.domain.usecase.GetMyInfoUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
-import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
-import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 
@@ -40,9 +38,7 @@ class AccountSettingsViewModel(
     private val getMyInfoUseCase: GetMyInfoUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val googleIdTokenProvider: GoogleIdTokenProvider,
-    private val kakaoIdTokenProvider: KakaoIdTokenProvider
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountSettingsUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -206,41 +202,10 @@ class AccountSettingsViewModel(
                         )
                     )
                 }
-                AuthProvider.GOOGLE -> {
-                    runCatching { googleIdTokenProvider.getGoogleIdToken() }
-                        .fold(
-                            onSuccess = { token ->
-                                deleteAccountUseCase.invoke(
-                                    DeleteAccountRequest(
-                                        provider = AuthProvider.GOOGLE,
-                                        idToken = token
-                                    )
-                                )
-                            },
-                            onFailure = {
-                                AppResult.Failure(
-                                    AppError.ValidationFailed("google reauth failed")
-                                )
-                            }
-                        )
-                }
-                AuthProvider.KAKAO -> {
-                    runCatching { kakaoIdTokenProvider.getKakaoAuthPayload().idToken }
-                        .fold(
-                            onSuccess = { token ->
-                                deleteAccountUseCase.invoke(
-                                    DeleteAccountRequest(
-                                        provider = AuthProvider.KAKAO,
-                                        idToken = token
-                                    )
-                                )
-                            },
-                            onFailure = {
-                                AppResult.Failure(
-                                    AppError.ValidationFailed("kakao reauth failed")
-                                )
-                            }
-                        )
+                AuthProvider.GOOGLE, AuthProvider.KAKAO -> {
+                    deleteAccountUseCase.invoke(
+                        DeleteAccountRequest(provider = state.authProvider)
+                    )
                 }
                 AuthProvider.APPLE -> {
                     AppResult.Failure(

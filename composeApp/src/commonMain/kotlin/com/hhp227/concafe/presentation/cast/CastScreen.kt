@@ -137,6 +137,7 @@ private fun CastContentScreen(
                 summaryOffset <= with(LocalDensity.current) { SummaryTitleTriggerOffset.roundToPx() }
             } == true)
         )
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -517,6 +518,7 @@ private fun CastTodaySection(detail: CastDetail) {
     val timeText = todaySchedule?.let { schedule ->
         "${schedule.startTime} - ${schedule.endTime}"
     } ?: stringResource(Res.string.cast_today_check_schedule)
+
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent,
@@ -647,7 +649,6 @@ private fun CastScheduleCard(
 
 @Composable
 private fun CastIntroductionSection(detail: CastDetail) {
-
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)

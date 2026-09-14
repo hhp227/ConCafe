@@ -51,6 +51,7 @@ class CommunityViewModel(
         val state = _uiState.value
         if (!state.hasNext || state.isLoadingMore) return
         val pageIndex = state.posts.size / COMMUNITY_PAGE_SIZE
+
         _uiState.update { it.copy(isLoadingMore = true) }
         viewModelScope.launch {
             when (val result = getCommunityPostPageUseCase(cursor = state.nextCursor)) {
@@ -72,9 +73,11 @@ class CommunityViewModel(
 
     private fun loadNativeAd(pageIndex: Int) {
         val slot = COMMUNITY_NATIVE_AD_SLOT_START + pageIndex
+
         if (_uiState.value.nativeAds.containsKey(slot)) return
         viewModelScope.launch {
             val ad = loadNativeAdUseCase.invoke(slot)
+
             _uiState.update { state ->
                 state.copy(nativeAds = state.nativeAds + (slot to ad))
             }

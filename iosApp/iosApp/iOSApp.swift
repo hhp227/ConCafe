@@ -30,9 +30,21 @@ struct iOSApp: App {
 
     init() {
 #if canImport(GoogleMobileAds)
-        SharedPlatformModule_iosKt.doInitKoinForIos(nativeAdDataSource: IosNativeAdDataSourceImpl())
+        SharedPlatformModule_iosKt.doInitKoinForIos(
+            nativeAdDataSource: IosNativeAdDataSourceImpl(),
+            nativeFirebaseAuthDataSource: IosNativeFirebaseAuthDataSource(),
+            googleIdTokenProvider: IosGoogleIdTokenProvider(),
+            kakaoIdTokenProvider: IosKakaoIdTokenProvider(),
+            deviceLocationDataSource: IosDeviceLocationDataSource()
+        )
 #else
-        KoinInitializerKt.doInitKoin()
+        SharedPlatformModule_iosKt.doInitKoinForIos(
+            nativeAdDataSource: nil,
+            nativeFirebaseAuthDataSource: IosNativeFirebaseAuthDataSource(),
+            googleIdTokenProvider: IosGoogleIdTokenProvider(),
+            kakaoIdTokenProvider: IosKakaoIdTokenProvider(),
+            deviceLocationDataSource: IosDeviceLocationDataSource()
+        )
 #endif
     }
 }

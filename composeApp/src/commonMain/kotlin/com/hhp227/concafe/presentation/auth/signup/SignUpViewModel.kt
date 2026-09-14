@@ -20,15 +20,17 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.CompleteSignUpForCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.CreateCafeOwnerClaimUseCase
+import com.hhp227.concafe.domain.usecase.DiscardIncompleteSignUpUseCase
 import com.hhp227.concafe.domain.usecase.GetSignUpCafeListUseCase
+import com.hhp227.concafe.domain.usecase.LinkEmailCredentialUseCase
+import com.hhp227.concafe.domain.usecase.LinkPhoneCredentialUseCase
+import com.hhp227.concafe.domain.usecase.RequestPhoneVerificationCodeUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoUseCase
 import com.hhp227.concafe.domain.usecase.SignOutUseCase
 import com.hhp227.concafe.domain.usecase.SignUpUseCase
-import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
-import com.hhp227.concafe.presentation.auth.signin.GoogleIdTokenProvider
-import com.hhp227.concafe.presentation.auth.signin.KakaoIdTokenProvider
+import com.hhp227.concafe.domain.usecase.VerifyPhoneVerificationCodeUseCase
 import org.jetbrains.compose.resources.getString
 
 class SignUpViewModel(
@@ -37,14 +39,14 @@ class SignUpViewModel(
     private val signInUseCase: SignInUseCase,
     private val completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase,
     private val createCafeOwnerClaimUseCase: CreateCafeOwnerClaimUseCase,
-    private val phoneAuthProvider: PhoneAuthProvider,
-    private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
-    private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
-    private val signOutUseCase: SignOutUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val googleIdTokenProvider: GoogleIdTokenProvider,
-    private val kakaoIdTokenProvider: KakaoIdTokenProvider,
-    private val socialFirebaseAuthProvider: SocialFirebaseAuthProvider
+    private val requestPhoneVerificationCodeUseCase: RequestPhoneVerificationCodeUseCase,
+    private val verifyPhoneVerificationCodeUseCase: VerifyPhoneVerificationCodeUseCase,
+    private val linkPhoneCredentialUseCase: LinkPhoneCredentialUseCase,
+    private val linkEmailCredentialUseCase: LinkEmailCredentialUseCase,
+    private val discardIncompleteSignUpUseCase: DiscardIncompleteSignUpUseCase,
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val signInWithKakaoUseCase: SignInWithKakaoUseCase,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -199,7 +201,7 @@ class SignUpViewModel(
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            val result = phoneAuthProvider.sendCode(normalizedPhone)
+            val result = requestPhoneVerificationCodeUseCase.invoke(normalizedPhone)
 
             when (result) {
                 is AppResult.Success -> {
@@ -232,13 +234,7 @@ class SignUpViewModel(
     private fun verifyCode() {
         val code = uiState.value.verificationCode
             .mapNotNull { char ->
-                val digit = char.digitToIntOrNull()
-
-                if (digit != null) {
-                    digit.toString()
-                } else {
-                    null
-                }
+                char.digitToIntOrNull()?.toString()
             }
             .joinToString(separator = "")
 
@@ -271,7 +267,13 @@ class SignUpViewModel(
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
-            when (val result = if (isSocialCafeOwnerFlow) phoneAuthProvider.linkPhone(code) else phoneAuthProvider.verifyCode(code)) {
+            val result = if (isSocialCafeOwnerFlow) {
+                linkPhoneCredentialUseCase.invoke(code)
+            } else {
+                verifyPhoneVerificationCodeUseCase.invoke(code)
+            }
+
+            when (result) {
                 is AppResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -340,7 +342,7 @@ class SignUpViewModel(
                     }
                 }
             } else if (role == UserRole.CAFE_OWNER) {
-                when (val linkResult = phoneAuthProvider.linkEmail(normalizedEmail, currentState.password)) {
+                when (val linkResult = linkEmailCredentialUseCase.invoke(normalizedEmail, currentState.password)) {
                     is AppResult.Success -> Unit
                     is AppResult.Failure -> {
                         _uiState.update {
@@ -440,7 +442,6 @@ class SignUpViewModel(
             is AppError.Unknown -> (error.cause ?: "").uppercase()
             else -> ""
         }
-
         return if (reason.contains("INVALID_VERIFICATION_CODE")) {
             "인증번호가 일치하지 않습니다."
         } else if (reason.contains("SESSION_EXPIRED")
@@ -459,7 +460,6 @@ class SignUpViewModel(
             is AppError.Unknown -> (error.cause ?: "").uppercase()
             else -> ""
         }
-
         return if (reason.contains("EMAIL_ALREADY_IN_USE")
             || reason.contains("CREDENTIAL_ALREADY_IN_USE")) {
             "이미 사용 중인 이메일입니다."
@@ -482,7 +482,6 @@ class SignUpViewModel(
             is AppError.Unknown -> (error.cause ?: "").uppercase()
             else -> ""
         }
-
         return if (reason.contains("INVALID_VERIFICATION_CODE")) {
             "인증번호가 일치하지 않습니다."
         } else if (reason.contains("SESSION_EXPIRED")
@@ -510,7 +509,6 @@ class SignUpViewModel(
             viewModelScope.launch {
                 if (currentState.isSocialFlow) {
                     signOutUseCase.invoke()
-                    socialFirebaseAuthProvider.signOut()
                     _uiState.update {
                         it.copy(
                             isPhoneVerified = false,
@@ -525,31 +523,16 @@ class SignUpViewModel(
                         )
                     }
                 } else {
-                    when (phoneAuthProvider.cleanupIncompleteAccount()) {
-                        is AppResult.Success -> {
-                            _uiState.update {
-                                it.copy(
-                                    isPhoneVerified = false,
-                                    hasRequestedVerification = false,
-                                    phoneVerificationId = null,
-                                    signupCompleted = false,
-                                    infoMessage = null,
-                                    errorMessage = null
-                                )
-                            }
-                        }
-                        is AppResult.Failure -> {
-                            _uiState.update {
-                                it.copy(
-                                    isPhoneVerified = false,
-                                    hasRequestedVerification = false,
-                                    phoneVerificationId = null,
-                                    signupCompleted = false,
-                                    infoMessage = null,
-                                    errorMessage = null
-                                )
-                            }
-                        }
+                    discardIncompleteSignUpUseCase.invoke()
+                    _uiState.update {
+                        it.copy(
+                            isPhoneVerified = false,
+                            hasRequestedVerification = false,
+                            phoneVerificationId = null,
+                            signupCompleted = false,
+                            infoMessage = null,
+                            errorMessage = null
+                        )
                     }
                 }
             }
@@ -591,52 +574,28 @@ class SignUpViewModel(
         _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
             val autoCompleteVisitor = uiState.value.selectedUserType == SignUpUiState.UserType.VISITOR
+
             when (provider) {
                 SignUpProvider.GOOGLE -> {
-                    runCatching { googleIdTokenProvider.getGoogleIdToken() }
-                        .onFailure {
-                            _uiState.update { state ->
-                                state.copy(
+                    when (val result = signInWithGoogleUseCase.invoke()) {
+                        is AppResult.Success -> {
+                            applySocialProfile(
+                                provider = provider,
+                                email = result.data.email,
+                                nickname = result.data.nickname,
+                                autoCompleteVisitor = autoCompleteVisitor
+                            )
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
                                     isLoading = false,
                                     errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
                                     infoMessage = null
                                 )
                             }
                         }
-                        .onSuccess { idToken ->
-                            when (val result = signInWithGoogleIdTokenUseCase.invoke(idToken)) {
-                                is AppResult.Success -> {
-                                    when (socialFirebaseAuthProvider.signInWithGoogleIdToken(idToken, result.data.id)) {
-                                        is AppResult.Success -> {
-                                            applySocialProfile(
-                                                provider = provider,
-                                                email = result.data.email,
-                                                nickname = result.data.nickname,
-                                                autoCompleteVisitor = autoCompleteVisitor
-                                            )
-                                        }
-                                        is AppResult.Failure -> {
-                                            _uiState.update {
-                                                it.copy(
-                                                    isLoading = false,
-                                                    errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
-                                                    infoMessage = null
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                                is AppResult.Failure -> {
-                                    _uiState.update {
-                                        it.copy(
-                                            isLoading = false,
-                                            errorMessage = "구글 회원가입에 실패했습니다. 다시 시도해주세요.",
-                                            infoMessage = null
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    }
                 }
                 SignUpProvider.APPLE -> {
                     _uiState.update {
@@ -648,66 +607,25 @@ class SignUpViewModel(
                     }
                 }
                 SignUpProvider.KAKAO -> {
-                    runCatching { kakaoIdTokenProvider.getKakaoAuthPayload() }
-                        .onFailure {
-                            _uiState.update { state ->
-                                state.copy(
+                    when (val result = signInWithKakaoUseCase.invoke()) {
+                        is AppResult.Success -> {
+                            applySocialProfile(
+                                provider = provider,
+                                email = result.data.email,
+                                nickname = result.data.nickname,
+                                autoCompleteVisitor = autoCompleteVisitor
+                            )
+                        }
+                        is AppResult.Failure -> {
+                            _uiState.update {
+                                it.copy(
                                     isLoading = false,
                                     errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
                                     infoMessage = null
                                 )
                             }
                         }
-                        .onSuccess { payload ->
-                            val email = payload.email?.trim()
-                            val nickname = payload.nickname?.trim()
-
-                            when (val result =
-                                signInWithKakaoIdTokenUseCase.invoke(
-                                    idToken = payload.idToken,
-                                    email = email,
-                                    nickname = nickname
-                                )
-                            ) {
-                                is AppResult.Success -> {
-                                    val resolvedNickname = nickname.orEmpty().ifBlank { result.data.nickname }
-                                    when (socialFirebaseAuthProvider.signInWithKakaoIdToken(payload.idToken, result.data.id)) {
-                                        is AppResult.Success -> {
-                                            if (resolvedNickname.isNotBlank()) {
-                                                updateUserProfileUseCase.invoke(
-                                                    nickname = resolvedNickname,
-                                                    profileImage = null
-                                                )
-                                            }
-                                            applySocialProfile(
-                                                provider = provider,
-                                                email = email.orEmpty().ifBlank { result.data.email },
-                                                nickname = resolvedNickname.ifBlank { result.data.nickname },
-                                                autoCompleteVisitor = autoCompleteVisitor
-                                            )
-                                        }
-                                        is AppResult.Failure -> {
-                                            _uiState.update {
-                                                it.copy(
-                                                    isLoading = false,
-                                                    errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
-                                                    infoMessage = null
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                                is AppResult.Failure -> {
-                                    _uiState.update {
-                                        it.copy(
-                                            isLoading = false,
-                                            errorMessage = "카카오 회원가입에 실패했습니다. 다시 시도해주세요.",
-                                            infoMessage = null
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    }
                 }
             }
         }
@@ -747,7 +665,6 @@ class SignUpViewModel(
         if (!state.isSocialFlow && state.password != state.confirmPassword) return "비밀번호가 일치하지 않습니다."
         if (userType == SignUpUiState.UserType.CAFE_OWNER && !state.isPhoneVerified) return "휴대폰 인증을 완료해주세요."
         if (userType == SignUpUiState.UserType.CAST && state.selectedCafe == null) return "카페를 선택해주세요."
-
         return null
     }
 
@@ -780,7 +697,6 @@ class SignUpViewModel(
 
     private fun mapFirebaseSignUpReason(reason: String): String {
         val normalizedReason = reason.uppercase()
-
         return if (
             normalizedReason.contains("EMAIL_EXISTS") ||
             normalizedReason.contains("EMAIL ALREADY EXISTS") ||

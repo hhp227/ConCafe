@@ -44,6 +44,40 @@ class FakeAuthRepository(
         }
     }
 
+    override suspend fun signInWithGoogle(): User {
+        return signInWithGoogleIdToken("fake-google-id-token")
+    }
+
+    override suspend fun signInWithKakao(): User {
+        return signInWithKakaoIdToken("fake-kakao-id-token")
+    }
+
+    override suspend fun requestPhoneVerificationCode(phoneNumber: String) {
+        if (phoneNumber.isBlank()) {
+            throw IllegalArgumentException("phone number is required")
+        }
+    }
+
+    override suspend fun verifyPhoneVerificationCode(code: String) {
+        if (code.isBlank()) {
+            throw IllegalArgumentException("verification code is required")
+        }
+    }
+
+    override suspend fun linkPhoneCredential(code: String) {
+        if (code.isBlank()) {
+            throw IllegalArgumentException("verification code is required")
+        }
+    }
+
+    override suspend fun linkEmailCredential(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            throw IllegalArgumentException("email/password is required")
+        }
+    }
+
+    override suspend fun discardIncompleteSignUp() = Unit
+
     override suspend fun signInWithGoogleIdToken(idToken: String): User {
         if (idToken.isBlank()) {
             throw IllegalArgumentException("google idToken is required")

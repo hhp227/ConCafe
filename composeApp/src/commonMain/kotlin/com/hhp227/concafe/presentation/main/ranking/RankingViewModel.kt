@@ -107,6 +107,7 @@ class RankingViewModel(
 
     private fun patchCafeRanking(cafe: Cafe) {
         val subtitle = cafe.region.address.substringBefore("구").substringBefore("로").ifBlank { cafe.region.city }
+
         _uiState.update { state ->
             state.copy(
                 cafeRankings = state.cafeRankings.map { entry ->

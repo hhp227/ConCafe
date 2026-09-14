@@ -20,7 +20,7 @@ final class MapViewModel: ObservableObject {
 
     private let cafeDetailEventPublisher: CafeDetailEventPublisher
 
-    private let currentLocationProvider = IosCheckInLocationProvider()
+    private let resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase
 
     @Published private(set) var uiState = MapUiState.empty
 
@@ -79,27 +79,10 @@ final class MapViewModel: ObservableObject {
         guard uiState.userCityKey == nil else { return }
         tasks[.detectCity]?.cancel()
         tasks[.detectCity] = Task {
-            if let cached = currentLocationProvider.getLastKnownLocation() {
-                let cityKey = Self.cityKeyFromCoordinates(
-                    lat: cached.location.latitude,
-                    lng: cached.location.longitude
-                )
-                if cityKey != nil {
-                    uiState.userCityKey = cityKey
-                    if uiState.selectedRegion == .all,
-                       let cityKey {
-                        loadMapCafesForRegion(cityKey)
-                    }
-                    return
-                }
-            }
+            guard let result = try? await resolveCurrentRegionKeyUseCase.invoke(),
+                  let success = result as? AppResultSuccess<AnyObject> else { return }
+            let cityKey = success.data as? String
 
-            let result = await currentLocationProvider.getCurrentLocation()
-            guard result.isSuccess else { return }
-            let cityKey = Self.cityKeyFromCoordinates(
-                lat: result.location.latitude,
-                lng: result.location.longitude
-            )
             uiState.userCityKey = cityKey
             if uiState.selectedRegion == .all,
                let cityKey {
@@ -198,12 +181,14 @@ final class MapViewModel: ObservableObject {
         getCheckInGuestFeedUseCase: GetCheckInGuestFeedUseCase = KoinInitializerKt.resolveGetCheckInGuestFeedUseCase(),
         getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase = KoinInitializerKt.resolveGetCheckInMapCafePageUseCase(),
         observeCurrentUserUseCase: ObserveCurrentUserUseCase = KoinInitializerKt.resolveObserveCurrentUserUseCase(),
-        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher()
+        cafeDetailEventPublisher: CafeDetailEventPublisher = KoinInitializerKt.resolveCafeDetailEventPublisher(),
+        resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase = KoinInitializerKt.resolveResolveCurrentRegionKeyUseCase()
     ) {
         self.getCheckInGuestFeedUseCase = getCheckInGuestFeedUseCase
         self.getCheckInMapCafePageUseCase = getCheckInMapCafePageUseCase
         self.observeCurrentUserUseCase = observeCurrentUserUseCase
         self.cafeDetailEventPublisher = cafeDetailEventPublisher
+        self.resolveCurrentRegionKeyUseCase = resolveCurrentRegionKeyUseCase
 
         observeSession()
         observeCafeDetailEvent()
@@ -224,13 +209,4 @@ final class MapViewModel: ObservableObject {
         case detectCity
     }
 
-    private static func cityKeyFromCoordinates(lat: Double, lng: Double) -> String? {
-        if (37.4...37.7).contains(lat) && (126.7...127.2).contains(lng) { return "seoul" }
-        if (35.0...35.4).contains(lat) && (128.8...129.3).contains(lng) { return "busan" }
-        if (35.7...36.0).contains(lat) && (128.4...128.8).contains(lng) { return "daegu" }
-        if (35.35...35.60).contains(lat) && (139.50...139.75).contains(lng) { return "etc" }
-        if (35.5...35.9).contains(lat) && (139.3...139.9).contains(lng) { return "tokyo" }
-        if (34.5...34.9).contains(lat) && (135.3...135.7).contains(lng) { return "osaka" }
-        return nil
-    }
 }

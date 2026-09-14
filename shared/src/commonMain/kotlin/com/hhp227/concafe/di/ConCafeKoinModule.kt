@@ -60,7 +60,8 @@ val dataSourceModule = module {
 }
 
 val repositoryModule = module {
-    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
+    single<LocationRepository> { LocationRepositoryImpl(get()) }
     single<AdminOperationsRepository> { AdminOperationsRepositoryImpl(get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
     single<BannerRepository> { BannerRepositoryImpl(get(), get()) }
@@ -128,7 +129,9 @@ val useCaseModule = module {
     factory { GetCheckInGuestFeedUseCase(get(), get()) }
     factory { GetCheckInMapCafePageUseCase(get()) }
     factory { GetCheckInUserFeedUseCase(get(), get(), get()) }
-    factory { CreateVisitUseCase(get(), get(), get()) }
+    factory { CreateVisitUseCase(get(), get(), get(), get()) }
+    factory { RequestLocationPermissionUseCase(get()) }
+    factory { ResolveCurrentRegionKeyUseCase(get()) }
     factory { CreateReviewUseCase(get(), get(), get(), get()) }
     factory { CreateCastClaimUseCase(get(), get(), get()) }
     factory { CreateCafeEventUseCase(get(), get(), get()) }
@@ -197,13 +200,18 @@ val useCaseModule = module {
     factory { SignInWithAppleIdTokenUseCase(get()) }
     factory { SignInWithGoogleIdTokenUseCase(get()) }
     factory { SignInWithKakaoIdTokenUseCase(get()) }
+    factory { SignInWithGoogleUseCase(get()) }
+    factory { SignInWithKakaoUseCase(get()) }
     factory { SignInWithSocialProviderUseCase(get()) }
     factory { RequestPasswordResetUseCase(get()) }
     factory { SignUpUseCase(get()) }
     factory { CompleteSignUpForCurrentUserUseCase(get()) }
     factory { SignOutUseCase(get(), get()) }
-    factory { RequestPhoneVerificationCodeUseCase() }
-    factory { VerifyPhoneVerificationCodeUseCase() }
+    factory { RequestPhoneVerificationCodeUseCase(get()) }
+    factory { VerifyPhoneVerificationCodeUseCase(get()) }
+    factory { LinkPhoneCredentialUseCase(get()) }
+    factory { LinkEmailCredentialUseCase(get()) }
+    factory { DiscardIncompleteSignUpUseCase(get()) }
     factory { ShouldShowReviewPromptUseCase(get(), get()) }
     factory { ToggleFollowCastUseCase(get(), get(), get()) }
     factory { ToggleFavoriteCafeUseCase(get(), get(), get()) }

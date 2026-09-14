@@ -617,6 +617,7 @@ private fun RecentFollowersSection(
                 followers.take(10).forEachIndexed { index, follower ->
                     val accent = index == 0
                     val joinedLabel = follower.followedAt.toRelativeFollowerTimeLabel()
+
                     Column(
                         modifier = Modifier
                             .width(74.dp)

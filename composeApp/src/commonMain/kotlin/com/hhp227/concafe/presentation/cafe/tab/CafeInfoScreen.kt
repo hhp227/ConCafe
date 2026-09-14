@@ -282,6 +282,7 @@ private fun SocialMediaPlatformIcon(platform: SocialPlatform) {
 @Composable
 private fun ReservationButton(reservationUrl: String?, onClick: (String) -> Unit) {
     val isEnabled = !reservationUrl.isNullOrBlank()
+
     Button(
         onClick = { reservationUrl?.let { onClick(it) } },
         enabled = isEnabled,

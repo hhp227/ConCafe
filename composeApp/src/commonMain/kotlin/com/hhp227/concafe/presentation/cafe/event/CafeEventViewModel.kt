@@ -73,6 +73,7 @@ class CafeEventViewModel(
                 }
                 val isLiked = likeStatusDeferred.await()
                 val casts = castsDeferred.await()
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -99,6 +100,7 @@ class CafeEventViewModel(
                         if (event.cafeId == cafeId && event.event.id == eventId) {
                             val updatedEvent = event.event
                             val casts = (getCafeEventParticipantCastsUseCase(updatedEvent.participantCastIds) as? AppResult.Success)?.data.orEmpty()
+
                             _uiState.update {
                                 it.copy(
                                     event = updatedEvent,
@@ -148,8 +150,8 @@ class CafeEventViewModel(
             val current = _uiState.value
             val optimisticLiked = !current.isLikedByMe
             val optimisticCount = if (optimisticLiked) current.likeCount + 1 else maxOf(0, current.likeCount - 1)
-            _uiState.update { it.copy(isLikedByMe = optimisticLiked, likeCount = optimisticCount, isTogglingLike = true) }
 
+            _uiState.update { it.copy(isLikedByMe = optimisticLiked, likeCount = optimisticCount, isTogglingLike = true) }
             when (val result = toggleCafeEventLikeUseCase(cafeId, eventId)) {
                 is AppResult.Success -> {
                     _uiState.update { it.copy(isLikedByMe = result.data, isTogglingLike = false) }

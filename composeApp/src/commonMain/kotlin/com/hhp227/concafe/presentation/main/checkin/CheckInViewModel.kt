@@ -3,6 +3,9 @@ package com.hhp227.concafe.presentation.main.checkin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hhp227.concafe.core.util.TimeUtils
+import concafe.composeapp.generated.resources.Res
+import concafe.composeapp.generated.resources.checkin_location_mobile_only
+import org.jetbrains.compose.resources.getString
 import kotlinx.datetime.Clock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -13,8 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.hhp227.concafe.domain.common.AppError
 import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.Cafe
+import com.hhp227.concafe.domain.model.LocationFailureReason
+import com.hhp227.concafe.domain.model.LocationPermissionStatus
 import com.hhp227.concafe.domain.event.CafeDetailEvent
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.event.CastEvent
@@ -29,6 +35,8 @@ import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInUserFeedUseCase
 import com.hhp227.concafe.domain.usecase.ObserveContentLayoutUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
+import com.hhp227.concafe.domain.usecase.RequestLocationPermissionUseCase
+import com.hhp227.concafe.domain.usecase.ResolveCurrentRegionKeyUseCase
 import com.hhp227.concafe.domain.usecase.ShouldShowReviewPromptUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import com.hhp227.concafe.presentation.theme.toPresentationContentLayout
@@ -45,7 +53,8 @@ class CheckInViewModel(
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
     private val castEventPublisher: CastEventPublisher,
     private val visitEventPublisher: VisitEventPublisher,
-    private val checkInLocationProvider: CheckInLocationProvider
+    private val requestLocationPermissionUseCase: RequestLocationPermissionUseCase,
+    private val resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CheckInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -200,18 +209,16 @@ class CheckInViewModel(
         jobs[TaskKey.DETECT_CITY]?.cancel()
         jobs[TaskKey.DETECT_CITY] = viewModelScope.launch {
             if (_uiState.value.userCityKey != null) return@launch
-            when (val result = checkInLocationProvider.getCurrentLocation()) {
-                is CheckInLocationResult.Success -> {
-                    val cityKey = cityKeyFromCoordinates(
-                        lat = result.location.latitude,
-                        lng = result.location.longitude
-                    )
+            when (val result = resolveCurrentRegionKeyUseCase.invoke()) {
+                is AppResult.Success -> {
+                    val cityKey = result.data
+
                     _uiState.update { it.copy(userCityKey = cityKey) }
                     if (cityKey != null && _uiState.value.selectedMapRegion == ExploreUiState.RegionFilter.ALL) {
                         loadMapCafesForRegion(cityKey)
                     }
                 }
-                is CheckInLocationResult.Failure -> Unit
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -243,36 +250,27 @@ class CheckInViewModel(
                 _uiState.update {
                     it.copy(errorMessage = "현재 위치를 확인하는 중입니다. 잠시만 기다려 주세요.")
                 }
-                when (val locationResult = checkInLocationProvider.getCurrentLocation()) {
-                    is CheckInLocationResult.Failure -> {
+                when (val result = createVisitUseCase.invoke(
+                    cafeId = cafeId,
+                    visitedAt = visitedAt,
+                    memo = memo
+                )) {
+                    is AppResult.Success -> {
                         _uiState.update {
-                            it.copy(errorMessage = locationResult.message)
+                            it.copy(
+                                isNewVisitSheetVisible = false,
+                                isQrCheckInSheetVisible = false,
+                                preselectCafeId = null,
+                                errorMessage = null
+                            )
                         }
+                        refreshRecentVisitPage()
+                        maybeShowReviewPrompt(result.data)
                     }
-                    is CheckInLocationResult.Success -> {
-                        when (val result = createVisitUseCase.invoke(
-                            cafeId = cafeId,
-                            visitedAt = visitedAt,
-                            memo = memo,
-                            latitude = locationResult.location.latitude,
-                            longitude = locationResult.location.longitude
-                        )) {
-                            is AppResult.Success -> {
-                                _uiState.update {
-                                    it.copy(
-                                        isNewVisitSheetVisible = false,
-                                        isQrCheckInSheetVisible = false,
-                                        preselectCafeId = null,
-                                        errorMessage = null
-                                    )
-                                }
-                                refreshRecentVisitPage()
-                                maybeShowReviewPrompt(result.data)
-                            }
-                            is AppResult.Failure -> {
-                                _uiState.update { it.copy(errorMessage = result.error.toString()) }
-                            }
-                        }
+                    is AppResult.Failure -> {
+                        val message = resolveLocationFailureMessage(result.error) ?: result.error.toString()
+
+                        _uiState.update { it.copy(errorMessage = message) }
                     }
                 }
             }
@@ -320,28 +318,29 @@ class CheckInViewModel(
         } else {
             jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
             jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
-                when (val permissionResult = checkInLocationProvider.requestPermissionIfNeeded()) {
-                    CheckInLocationPermissionResult.Granted -> {
-                        detectUserCity()
-                        _uiState.update {
-                            it.copy(
-                                isNewVisitSheetVisible = true,
-                                preselectCafeId = preselectCafeId,
-                                errorMessage = null
-                            )
-                        }
+                val status = requestLocationPermission()
+
+                if (status.isGranted) {
+                    detectUserCity()
+                    _uiState.update {
+                        it.copy(
+                            isNewVisitSheetVisible = true,
+                            preselectCafeId = preselectCafeId,
+                            errorMessage = null
+                        )
                     }
-                    is CheckInLocationPermissionResult.Failure -> {
-                        _uiState.update {
-                            it.copy(
-                                isNewVisitSheetVisible = false,
-                                errorMessage = permissionResult.message
-                            )
-                        }
-                        _event.emit(CheckInEvent.ShowMessage(permissionResult.message))
-                        if (permissionResult.requiresSettings) {
-                            _event.emit(CheckInEvent.OpenLocationSettings)
-                        }
+                } else {
+                    val message = resolvePermissionMessage(status)
+
+                    _uiState.update {
+                        it.copy(
+                            isNewVisitSheetVisible = false,
+                            errorMessage = message
+                        )
+                    }
+                    _event.emit(CheckInEvent.ShowMessage(message))
+                    if (status.requiresSettings) {
+                        _event.emit(CheckInEvent.OpenLocationSettings)
                     }
                 }
             }
@@ -486,19 +485,47 @@ class CheckInViewModel(
     private fun requestLocationPermissionOnEntry() {
         jobs[TaskKey.REQUEST_LOCATION_PERMISSION]?.cancel()
         jobs[TaskKey.REQUEST_LOCATION_PERMISSION] = viewModelScope.launch {
-            when (val result = checkInLocationProvider.requestPermissionIfNeeded()) {
-                CheckInLocationPermissionResult.Granted -> detectUserCity()
-                is CheckInLocationPermissionResult.Failure -> {
-                    if (result.requiresSettings) {
-                        _event.emit(CheckInEvent.OpenLocationSettings)
-                    }
-                }
+            val status = requestLocationPermission()
+
+            if (status.isGranted) {
+                detectUserCity()
+            } else if (status.requiresSettings) {
+                _event.emit(CheckInEvent.OpenLocationSettings)
             }
+        }
+    }
+
+    private suspend fun requestLocationPermission(): LocationPermissionStatus {
+        return when (val result = requestLocationPermissionUseCase.invoke()) {
+            is AppResult.Success -> result.data
+            is AppResult.Failure -> LocationPermissionStatus.SERVICE_UNAVAILABLE
+        }
+    }
+
+    private suspend fun resolvePermissionMessage(status: LocationPermissionStatus): String {
+        return when (status) {
+            LocationPermissionStatus.GRANTED -> ""
+            LocationPermissionStatus.REQUEST_PENDING -> MSG_LOCATION_PERMISSION_PENDING
+            LocationPermissionStatus.PRECISE_LOCATION_REQUIRED -> MSG_PRECISE_LOCATION_REQUIRED
+            LocationPermissionStatus.SERVICE_UNAVAILABLE -> MSG_LOCATION_SERVICE_UNAVAILABLE
+            LocationPermissionStatus.UNSUPPORTED -> getString(Res.string.checkin_location_mobile_only)
+        }
+    }
+
+    private suspend fun resolveLocationFailureMessage(error: AppError): String? {
+        val reason = (error as? AppError.ValidationFailed)?.reason ?: return null
+        return when (LocationFailureReason.entries.firstOrNull { it.name == reason }) {
+            LocationFailureReason.PERMISSION_REQUIRED -> MSG_PRECISE_LOCATION_REQUIRED
+            LocationFailureReason.SERVICE_UNAVAILABLE -> MSG_LOCATION_SERVICE_UNAVAILABLE
+            LocationFailureReason.LOW_ACCURACY -> MSG_PRECISE_LOCATION_LOW_ACCURACY
+            LocationFailureReason.UNSUPPORTED -> getString(Res.string.checkin_location_mobile_only)
+            null -> null
         }
     }
 
     private fun clickQrCheckIn() {
         val currentUser = _uiState.value.currentUser
+
         if (currentUser == null) {
             _uiState.update {
                 it.copy(
@@ -525,6 +552,7 @@ class CheckInViewModel(
 
     private fun submitQrCheckIn(rawValue: String) {
         val cafeId = resolveCafeIdFromQr(rawValue)
+
         if (cafeId == null) {
             _uiState.update { it.copy(errorMessage = "QR 코드에서 카페 정보를 찾을 수 없습니다.") }
             return
@@ -537,8 +565,8 @@ class CheckInViewModel(
 
     private fun resolveCafeIdFromQr(rawValue: String): String? {
         val payload = rawValue.trim()
-        if (payload.isEmpty()) return null
 
+        if (payload.isEmpty()) return null
         val knownCafeIds = (_uiState.value.mapCafes + _uiState.value.popularCafes)
             .map { it.id }
             .toSet()
@@ -616,6 +644,7 @@ class CheckInViewModel(
                     } else {
                         action.region.key
                     }
+
                     if (regionKey != null) {
                         loadMapCafesForRegion(regionKey)
                     } else {
@@ -692,17 +721,9 @@ class CheckInViewModel(
     private companion object {
         private const val TODAY_VISIT_LIMIT = 4
         private const val PAGINATION_DELAY_MILLIS = 1_000L
-
-        fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
-            return when {
-                lat in 37.4..37.7 && lng in 126.7..127.2 -> "seoul"
-                lat in 35.0..35.4 && lng in 128.8..129.3 -> "busan"
-                lat in 35.7..36.0 && lng in 128.4..128.8 -> "daegu"
-                lat in 35.35..35.60 && lng in 139.50..139.75 -> "etc"
-                lat in 35.5..35.9 && lng in 139.3..139.9 -> "tokyo"
-                lat in 34.5..34.9 && lng in 135.3..135.7 -> "osaka"
-                else -> null
-            }
-        }
+        private const val MSG_PRECISE_LOCATION_REQUIRED = "정확한 위치 권한이 필요합니다. 설정에서 정확한 위치를 허용해 주세요."
+        private const val MSG_PRECISE_LOCATION_LOW_ACCURACY = "위치 정확도가 낮습니다. 정확한 위치를 켜고 잠시 후 다시 시도해 주세요."
+        private const val MSG_LOCATION_PERMISSION_PENDING = "위치 권한 요청 중입니다. 권한을 허용한 뒤 다시 시도해 주세요."
+        private const val MSG_LOCATION_SERVICE_UNAVAILABLE = "위치 서비스를 사용할 수 없습니다."
     }
 }
