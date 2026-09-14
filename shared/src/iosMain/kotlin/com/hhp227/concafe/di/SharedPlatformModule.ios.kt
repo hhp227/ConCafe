@@ -30,7 +30,9 @@ fun doInitKoinForIos(
 ): KoinApplication? {
     return doInitKoin(
         listOfNotNull(
-            nativeAdDataSource?.let { module { single<NativeAdDataSource> { it } } },
+            nativeAdDataSource?.let { adDataSource ->
+                module { single<NativeAdDataSource> { adDataSource } }
+            },
             module {
                 single<NativeFirebaseAuthDataSource> { nativeFirebaseAuthDataSource }
                 single<GoogleIdTokenProvider> { googleIdTokenProvider }
