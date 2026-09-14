@@ -49,6 +49,12 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.google.play.services.ads)
+            implementation(libs.firebase.auth.ktx)
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
+            implementation(libs.kakao.user)
             implementation(libs.ktor.client.android)
         }
         jvmMain.dependencies {

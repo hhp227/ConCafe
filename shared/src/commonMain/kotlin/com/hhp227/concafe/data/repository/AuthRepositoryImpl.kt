@@ -2,6 +2,9 @@ package com.hhp227.concafe.data.repository
 
 import com.hhp227.concafe.data.source.AuthDataSource
 import com.hhp227.concafe.data.source.CastRemoteDataSource
+import com.hhp227.concafe.data.source.auth.GoogleIdTokenProvider
+import com.hhp227.concafe.data.source.auth.KakaoIdTokenProvider
+import com.hhp227.concafe.data.source.auth.NativeFirebaseAuthDataSource
 import com.hhp227.concafe.data.source.firestore.FirestoreAuthTokenProvider
 import com.hhp227.concafe.data.source.firestore.FirestoreSyncDataSource
 import com.hhp227.concafe.domain.model.AuthProvider
@@ -18,7 +21,10 @@ class AuthRepositoryImpl(
     private val authDataSource: AuthDataSource,
     private val castRemoteDataSource: CastRemoteDataSource,
     private val authTokenProvider: FirestoreAuthTokenProvider,
-    private val firestoreSyncDataSource: FirestoreSyncDataSource
+    private val firestoreSyncDataSource: FirestoreSyncDataSource,
+    private val nativeAuthDataSource: NativeFirebaseAuthDataSource,
+    private val googleIdTokenProvider: GoogleIdTokenProvider,
+    private val kakaoIdTokenProvider: KakaoIdTokenProvider
 ) : AuthRepository {
     private val dormantAccountPolicy = DormantAccountPolicy()
 
@@ -92,10 +98,27 @@ class AuthRepositoryImpl(
         throw IllegalArgumentException("invalid credentials")
     }
 
+    override suspend fun signInWithGoogle(): User {
+        val idToken = googleIdTokenProvider.getGoogleIdToken()
+        return signInWithGoogleIdToken(idToken)
+    }
+
+    override suspend fun signInWithKakao(): User {
+        val payload = kakaoIdTokenProvider.getKakaoAuthPayload()
+        return signInWithKakaoIdToken(
+            idToken = payload.idToken,
+            email = payload.email,
+            nickname = payload.nickname
+        )
+    }
+
     override suspend fun signInWithGoogleIdToken(idToken: String): User {
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithGoogleIdToken(idToken)
                 ?: throw IllegalArgumentException("google sign-in is not supported")
+            bindNativeSession(session.userId) {
+                nativeAuthDataSource.signInWithGoogleIdToken(idToken)
+            }
             val user = resolveUserFromSession(
                 userId = session.userId,
                 email = session.email,
@@ -112,6 +135,9 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithAppleIdToken(idToken)
                 ?: throw IllegalArgumentException("apple sign-in is not supported")
+            bindNativeSession(session.userId) {
+                nativeAuthDataSource.signInWithAppleIdToken(idToken)
+            }
             val user = resolveUserFromSession(
                 userId = session.userId,
                 email = session.email,
@@ -132,13 +158,20 @@ class AuthRepositoryImpl(
         if (!idToken.isBlank()) {
             val session = authTokenProvider.signInWithKakaoIdToken(idToken)
                 ?: throw IllegalArgumentException("kakao sign-in is not supported")
+            bindNativeSession(session.userId) {
+                nativeAuthDataSource.signInWithKakaoIdToken(idToken)
+            }
             val resolvedEmail = resolveKakaoEmail(session.email, email)
             val resolvedDisplayName = resolveKakaoDisplayName(session.displayName, nickname)
-            val user = resolveUserFromSession(
-                userId = session.userId,
-                email = resolvedEmail,
-                displayName = resolvedDisplayName,
-                authProvider = AuthProvider.KAKAO
+            val user = applyKakaoProfile(
+                user = resolveUserFromSession(
+                    userId = session.userId,
+                    email = resolvedEmail,
+                    displayName = resolvedDisplayName,
+                    authProvider = AuthProvider.KAKAO
+                ),
+                kakaoEmail = email,
+                kakaoNickname = nickname
             )
             authDataSource.currentUserId = user.id
             return user
@@ -250,7 +283,40 @@ class AuthRepositoryImpl(
         if (authTokenProvider.supportsEmailPasswordAuth()) {
             authTokenProvider.signOut()
         }
+        runCatching { nativeAuthDataSource.signOut() }
         authDataSource.currentUserId = null
+    }
+
+    override suspend fun requestPhoneVerificationCode(phoneNumber: String) {
+        if (phoneNumber.isBlank()) {
+            throw IllegalArgumentException("phone number is required")
+        }
+        nativeAuthDataSource.sendPhoneVerificationCode(phoneNumber)
+    }
+
+    override suspend fun verifyPhoneVerificationCode(code: String) {
+        if (code.isBlank()) {
+            throw IllegalArgumentException("verification code is required")
+        }
+        nativeAuthDataSource.signInWithPhoneVerificationCode(code)
+    }
+
+    override suspend fun linkPhoneCredential(code: String) {
+        if (code.isBlank()) {
+            throw IllegalArgumentException("verification code is required")
+        }
+        nativeAuthDataSource.linkPhoneCredential(code)
+    }
+
+    override suspend fun linkEmailCredential(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            throw IllegalArgumentException("email/password is required")
+        }
+        nativeAuthDataSource.linkEmailCredential(email, password)
+    }
+
+    override suspend fun discardIncompleteSignUp() {
+        nativeAuthDataSource.deleteCurrentUser()
     }
 
     override suspend fun requestPasswordReset(email: String) {
@@ -347,7 +413,7 @@ class AuthRepositoryImpl(
             }
             AuthProvider.GOOGLE -> {
                 val socialIdToken = request.idToken?.trim()?.takeIf { it.isNotEmpty() }
-                    ?: throw IllegalArgumentException("social idToken is required")
+                    ?: googleIdTokenProvider.getGoogleIdToken()
                 val verifiedSession = authTokenProvider.signInWithGoogleIdToken(socialIdToken)
                     ?: throw IllegalArgumentException("google re-auth failed")
                 if (verifiedSession.userId != currentUserId) {
@@ -367,7 +433,7 @@ class AuthRepositoryImpl(
             }
             AuthProvider.KAKAO -> {
                 val socialIdToken = request.idToken?.trim()?.takeIf { it.isNotEmpty() }
-                    ?: throw IllegalArgumentException("social idToken is required")
+                    ?: kakaoIdTokenProvider.getKakaoAuthPayload().idToken
                 val verifiedSession = authTokenProvider.signInWithKakaoIdToken(socialIdToken)
                     ?: throw IllegalArgumentException("kakao re-auth failed")
                 if (verifiedSession.userId != currentUserId) {
@@ -381,6 +447,7 @@ class AuthRepositoryImpl(
             ?: throw IllegalStateException("delete account requires verified Firebase idToken")
         firestoreSyncDataSource.deleteCurrentUserCascade(resolvedVerifiedIdToken)
         authTokenProvider.signOut()
+        runCatching { nativeAuthDataSource.signOut() }
         authDataSource.currentUserId = null
     }
 
@@ -406,6 +473,55 @@ class AuthRepositoryImpl(
     override fun observeCurrentUser(): Flow<User?> {
         return authDataSource.currentUserIdFlow.map { userId ->
             if (userId == null) null else resolveCurrentUser()
+        }
+    }
+
+    // Establishes the platform SDK session right after the REST session so both point at the
+    // same Firebase user. If the SDK session fails or belongs to a different user, the REST
+    // session is rolled back so the app never ends up half signed in.
+    private suspend fun bindNativeSession(
+        expectedUserId: String,
+        signInNative: suspend () -> String?
+    ) {
+        val nativeUserId = try {
+            signInNative()
+        } catch (e: Exception) {
+            runCatching { authTokenProvider.signOut() }
+            throw e
+        }
+
+        if (nativeUserId != null && nativeUserId != expectedUserId) {
+            runCatching { nativeAuthDataSource.signOut() }
+            runCatching { authTokenProvider.signOut() }
+            throw IllegalArgumentException("SOCIAL_SESSION_USER_MISMATCH")
+        }
+    }
+
+    // Kakao profile values take precedence over what is stored: a completed account gets its
+    // nickname synced, an incomplete one carries email/nickname into the sign-up completion step.
+    private suspend fun applyKakaoProfile(
+        user: User,
+        kakaoEmail: String?,
+        kakaoNickname: String?
+    ): User {
+        val normalizedEmail = kakaoEmail?.trim().orEmpty()
+        val normalizedNickname = kakaoNickname?.trim().orEmpty()
+        return if (!user.signupCompleted) {
+            user.copy(
+                email = normalizedEmail.ifBlank { user.email },
+                nickname = normalizedNickname.ifBlank { user.nickname }
+            )
+        } else if (normalizedNickname.isNotBlank() && normalizedNickname != user.nickname) {
+            runCatching {
+                firestoreSyncDataSource.updateUserProfile(
+                    userId = user.id,
+                    nickname = normalizedNickname,
+                    profileImage = user.profileImage
+                )
+            }
+            user.copy(nickname = normalizedNickname)
+        } else {
+            user
         }
     }
 

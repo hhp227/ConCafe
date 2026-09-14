@@ -1,93 +1,84 @@
-package com.hhp227.concafe.presentation.main.checkin
+package com.hhp227.concafe.data.source.location
 
 import android.Manifest
 import android.app.Activity
-import android.os.Build
-import android.os.CancellationSignal
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
+import android.os.CancellationSignal
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.hhp227.concafe.domain.model.CurrentLocation
+import com.hhp227.concafe.domain.model.GeoPoint
+import com.hhp227.concafe.domain.model.LocationFailureReason
+import com.hhp227.concafe.domain.model.LocationPermissionStatus
+import com.hhp227.concafe.domain.policy.CheckInLocationPolicy
+import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
-class AndroidCheckInLocationProvider(
+class AndroidDeviceLocationDataSource(
     private val context: Context,
     private val activityProvider: () -> Activity?
-) : CheckInLocationProvider {
+) : DeviceLocationDataSource {
+    private val locationPolicy = CheckInLocationPolicy()
+
     private var hasRequestedLocationPermission = false
 
-    override suspend fun requestPermissionIfNeeded(): CheckInLocationPermissionResult {
-        val hasPermission = hasFineLocationPermission()
-
-        if (hasPermission) {
-            return CheckInLocationPermissionResult.Granted
-        } else {
-            val activity = activityProvider()
-
-            if (activity != null) {
-                val shouldOpenSettings = shouldOpenSettings(activity)
-
-                if (shouldOpenSettings) {
-                    return CheckInLocationPermissionResult.Failure(
-                        message = MSG_PRECISE_LOCATION_REQUIRED,
-                        requiresSettings = true
-                    )
-                }
-                ActivityCompat.requestPermissions(
-                    activity,
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ),
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-                hasRequestedLocationPermission = true
-                return CheckInLocationPermissionResult.Failure(
-                    message = "위치 권한 요청 중입니다. 권한을 허용한 뒤 다시 시도해 주세요.",
-                    requiresSettings = false
-                )
-            } else {
-                return CheckInLocationPermissionResult.Failure(
-                    message = MSG_PRECISE_LOCATION_REQUIRED,
-                    requiresSettings = true
-                )
-            }
+    // The permission dialog is fire-and-forget: the result is not awaited, so the first call
+    // reports REQUEST_PENDING and a later call observes the granted state.
+    override suspend fun requestPermission(): LocationPermissionStatus {
+        if (hasFineLocationPermission()) {
+            return LocationPermissionStatus.GRANTED
         }
+        val activity = activityProvider()
+            ?: return LocationPermissionStatus.PRECISE_LOCATION_REQUIRED
+
+        if (shouldOpenSettings(activity)) {
+            return LocationPermissionStatus.PRECISE_LOCATION_REQUIRED
+        }
+        ActivityCompat.requestPermissions(
+            activity,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+        hasRequestedLocationPermission = true
+        return LocationPermissionStatus.REQUEST_PENDING
     }
 
-    override suspend fun getCurrentLocation(): CheckInLocationResult {
+    override suspend fun getCurrentLocation(): CurrentLocation {
         if (!hasFineLocationPermission()) {
-            return CheckInLocationResult.Failure(MSG_PRECISE_LOCATION_REQUIRED)
+            return CurrentLocation.Unavailable(LocationFailureReason.PERMISSION_REQUIRED)
         }
-        return resolveCurrentLocation()
-    }
-
-    private suspend fun resolveCurrentLocation(): CheckInLocationResult {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-
-        if (locationManager == null) {
-            return CheckInLocationResult.Failure("위치 서비스를 사용할 수 없습니다.")
-        }
-        val realtimeLocation = requestRealtimeLocation(locationManager)
+        val locationManager = locationManager()
+            ?: return CurrentLocation.Unavailable(LocationFailureReason.SERVICE_UNAVAILABLE)
         val locations = listOfNotNull(
-            realtimeLocation,
+            requestRealtimeLocation(locationManager),
             resolveLastKnownLocation(locationManager)
         )
         val bestLocation = resolveBestLocation(locations)
         return if (bestLocation != null) {
-            CheckInLocationResult.Success(
-                location = CheckInCurrentLocation(
-                    latitude = bestLocation.latitude,
-                    longitude = bestLocation.longitude
-                )
-            )
+            CurrentLocation.Available(bestLocation.toGeoPoint())
         } else {
-            CheckInLocationResult.Failure(MSG_PRECISE_LOCATION_LOW_ACCURACY)
+            CurrentLocation.Unavailable(LocationFailureReason.LOW_ACCURACY)
         }
+    }
+
+    override suspend fun getLastKnownLocation(): GeoPoint? {
+        if (!hasFineLocationPermission()) {
+            return null
+        }
+        val locationManager = locationManager() ?: return null
+        return resolveLastKnownLocation(locationManager)?.toGeoPoint()
+    }
+
+    private fun locationManager(): LocationManager? {
+        return context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
     }
 
     private suspend fun requestRealtimeLocation(locationManager: LocationManager): Location? {
@@ -103,7 +94,7 @@ class AndroidCheckInLocationProvider(
         if (provider == null) {
             return null
         }
-        return withTimeoutOrNull(10_000L) {
+        return withTimeoutOrNull(REALTIME_LOCATION_TIMEOUT_MILLIS) {
             suspendCancellableCoroutine { continuation ->
                 val cancellationSignal = CancellationSignal()
 
@@ -167,16 +158,12 @@ class AndroidCheckInLocationProvider(
     }
 
     private fun resolveBestLocation(locations: List<Location>): Location? {
-        if (locations.isEmpty()) {
-            return null
-        }
         val now = System.currentTimeMillis()
         val candidates = locations.filter { location ->
-            val ageMillis = now - location.time
-            val isRecent = ageMillis in 0..MAX_LOCATION_AGE_MILLIS
-            val isAccurate = location.hasAccuracy() && location.accuracy in 0f..MAX_ALLOWED_ACCURACY_METERS
-
-            isRecent && isAccurate
+            location.hasAccuracy() && locationPolicy.isAcceptable(
+                accuracyMeters = location.accuracy.toDouble(),
+                ageMillis = now - location.time
+            )
         }
         return candidates.minWithOrNull(
             compareBy<Location> { it.accuracy }
@@ -184,11 +171,12 @@ class AndroidCheckInLocationProvider(
         )
     }
 
+    private fun Location.toGeoPoint(): GeoPoint {
+        return GeoPoint(latitude = latitude, longitude = longitude)
+    }
+
     private companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 7001
-        const val MAX_LOCATION_AGE_MILLIS = 30_000L
-        const val MAX_ALLOWED_ACCURACY_METERS = 80f
-        const val MSG_PRECISE_LOCATION_REQUIRED = "정확한 위치 권한이 필요합니다. 설정에서 정확한 위치를 허용해 주세요."
-        const val MSG_PRECISE_LOCATION_LOW_ACCURACY = "위치 정확도가 낮습니다. 정확한 위치를 켜고 잠시 후 다시 시도해 주세요."
+        const val REALTIME_LOCATION_TIMEOUT_MILLIS = 10_000L
     }
 }

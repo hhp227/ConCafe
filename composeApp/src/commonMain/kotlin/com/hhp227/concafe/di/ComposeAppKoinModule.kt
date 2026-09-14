@@ -46,13 +46,13 @@ import org.koin.dsl.module
 
 private val composeAppPresentationModule = module {
     factory { AppViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { SignInViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    factory { SignInViewModel(get(), get(), get(), get()) }
     factory { ResetPasswordViewModel(get()) }
     factory { SignUpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MainViewModel(get(), get(), get(), get()) }
     factory { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ExploreViewModel(get(), get(), get(), get(), get(), get()) }
-    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { CheckInViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { MapViewModel(get(), get(), get(), get(), get()) }
     factory { RankingViewModel(get(), get(), get(), get(), get(), get()) }
     factory { MyInfoViewModel(get(), get(), get(), get(), get(), get(), get()) }
@@ -82,7 +82,7 @@ private val composeAppPresentationModule = module {
     factory { FanManagementViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { (cafeId: String?, reviewId: String?) -> ReviewEditViewModel(cafeId, reviewId, get(), get(), get(), get(), get()) }
-    factory { AccountSettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    factory { AccountSettingsViewModel(get(), get(), get(), get()) }
     factory { ChangePasswordViewModel(get()) }
     factory { InquiryLinkViewModel(get()) }
     factory { NotificationSettingsViewModel(get(), get(), get()) }

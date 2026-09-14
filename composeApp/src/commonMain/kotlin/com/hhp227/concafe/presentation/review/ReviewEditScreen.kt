@@ -291,6 +291,7 @@ private fun RatingSection(
         ) {
             for (index in 1..ReviewEditUiState.maximumRating) {
                 val isSelected = index <= uiState.rating
+
                 Icon(
                     imageVector = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = stringResource(Res.string.reviewedit_rating_accessibility, index),

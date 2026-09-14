@@ -1,5 +1,7 @@
 package com.hhp227.concafe.data.source.cache
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -57,6 +59,10 @@ suspend fun <T : Any> RemoteMemoryCache.cacheFirst(
     if (cachedValue != null) return cachedValue
 
     val remoteValue = loadRemote()
+    // Remote loaders wrap requests in runCatching, which also swallows CancellationException and
+    // hands back an empty fallback. Memoizing that would blank the section for the whole session,
+    // so a cancelled load is rethrown here instead of stored.
+    currentCoroutineContext().ensureActive()
     put(key, remoteValue)
     return remoteValue
 }

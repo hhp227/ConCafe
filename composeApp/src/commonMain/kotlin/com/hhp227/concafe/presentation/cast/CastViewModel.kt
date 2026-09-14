@@ -64,6 +64,7 @@ class CastViewModel(
         viewModelScope.launch {
             reviewEventPublisher.events.collectLatest { event ->
                 val currentCafeId = _uiState.value.detail?.cafe?.id ?: return@collectLatest
+
                 when (event) {
                     is ReviewEvent.Created -> if (event.cafeId == currentCafeId) {
                         loadCastDetail()

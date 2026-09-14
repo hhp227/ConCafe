@@ -4,6 +4,7 @@ import com.hhp227.concafe.data.source.*
 import com.hhp227.concafe.domain.common.PagedResult
 import com.hhp227.concafe.domain.model.*
 import com.hhp227.concafe.domain.util.isScheduleEndAfterStart
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -241,13 +242,15 @@ class FirestoreCafeRemoteDataSource(
         val queryLimit = if (limit != null && limit > 0) limit else null
         val idToken = runCatching { tokenProvider.getIdToken() }.getOrNull()
         val tokenUserId = tokenProvider.getCurrentUserId()
-        val primaryDocuments = runCatching {
+        // A failed query propagates instead of degrading to an empty list: callers cache this
+        // result, and an empty list would read as "no favorites" for the rest of the session.
+        val primaryDocuments = try {
             runUserScopedQuery(FirestorePaths.CAFE_FAVORITES, userId, idToken, limit = queryLimit)
-        }.recoverCatching {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            println("TEST, fetchFavoriteCafeIdsRemote query failed: userId=$userId tokenUserId=$tokenUserId message=${e.message}")
             runUserScopedQuery(FirestorePaths.CAFE_FAVORITES, userId, null, limit = queryLimit)
-        }.getOrElse { error ->
-            println("TEST, fetchFavoriteCafeIdsRemote query failed: userId=$userId tokenUserId=$tokenUserId message=${error.message}")
-            emptyList()
         }
         val legacyFieldDocuments = if (primaryDocuments.isEmpty()) {
             runLegacyUserFieldQuery(FirestorePaths.CAFE_FAVORITES, userId, idToken, "uid")

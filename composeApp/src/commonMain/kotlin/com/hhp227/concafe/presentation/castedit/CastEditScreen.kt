@@ -296,6 +296,7 @@ private fun CastEditContentScreen(
                 TextButton(
                     onClick = {
                         val selected = datePickerState.selectedDateMillis
+
                         if (selected != null) {
                             onAction(CastEditAction.ChangeBirthday(TimeUtils.formatBirthdayFromEpochMillis(selected)))
                         }

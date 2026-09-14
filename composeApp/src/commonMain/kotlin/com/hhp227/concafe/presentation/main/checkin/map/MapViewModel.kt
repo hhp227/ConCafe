@@ -9,8 +9,7 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.usecase.GetCheckInGuestFeedUseCase
 import com.hhp227.concafe.domain.usecase.GetCheckInMapCafePageUseCase
 import com.hhp227.concafe.domain.usecase.ObserveCurrentUserUseCase
-import com.hhp227.concafe.presentation.main.checkin.CheckInLocationProvider
-import com.hhp227.concafe.presentation.main.checkin.CheckInLocationResult
+import com.hhp227.concafe.domain.usecase.ResolveCurrentRegionKeyUseCase
 import com.hhp227.concafe.presentation.main.explore.ExploreUiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -26,7 +25,7 @@ class MapViewModel(
     private val getCheckInMapCafePageUseCase: GetCheckInMapCafePageUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val cafeDetailEventPublisher: CafeDetailEventPublisher,
-    private val checkInLocationProvider: CheckInLocationProvider
+    private val resolveCurrentRegionKeyUseCase: ResolveCurrentRegionKeyUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MapUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -87,18 +86,16 @@ class MapViewModel(
         jobs[TaskKey.DETECT_CITY] = viewModelScope.launch {
             if (_uiState.value.userCityKey != null) return@launch
 
-            when (val result = checkInLocationProvider.getCurrentLocation()) {
-                is CheckInLocationResult.Success -> {
-                    val cityKey = cityKeyFromCoordinates(
-                        lat = result.location.latitude,
-                        lng = result.location.longitude
-                    )
+            when (val result = resolveCurrentRegionKeyUseCase.invoke()) {
+                is AppResult.Success -> {
+                    val cityKey = result.data
+
                     _uiState.update { it.copy(userCityKey = cityKey) }
                     if (cityKey != null && _uiState.value.selectedRegion == ExploreUiState.RegionFilter.ALL) {
                         loadMapCafesForRegion(cityKey)
                     }
                 }
-                is CheckInLocationResult.Failure -> Unit
+                is AppResult.Failure -> Unit
             }
         }
     }
@@ -213,17 +210,5 @@ class MapViewModel(
         OBSERVE_SESSION,
         OBSERVE_CAFE_DETAIL_EVENT,
         DETECT_CITY
-    }
-
-    private fun cityKeyFromCoordinates(lat: Double, lng: Double): String? {
-        return when {
-            lat in 37.4..37.7 && lng in 126.7..127.2 -> "seoul"
-            lat in 35.0..35.4 && lng in 128.8..129.3 -> "busan"
-            lat in 35.7..36.0 && lng in 128.4..128.8 -> "daegu"
-            lat in 35.35..35.60 && lng in 139.50..139.75 -> "etc"
-            lat in 35.5..35.9 && lng in 139.3..139.9 -> "tokyo"
-            lat in 34.5..34.9 && lng in 135.3..135.7 -> "osaka"
-            else -> null
-        }
     }
 }

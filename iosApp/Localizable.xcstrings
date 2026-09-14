@@ -8141,6 +8141,9 @@
         }
       }
     },
+    "checkin_location_mobile_only" : {
+
+    },
     "checkin_location_permission_desc" : {
       "localizations" : {
         "en" : {

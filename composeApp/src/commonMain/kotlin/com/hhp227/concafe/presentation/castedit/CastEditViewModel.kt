@@ -90,6 +90,7 @@ class CastEditViewModel(
                     add(uploaded)
                 }
             }
+
             when (
                 val result = upsertCastUseCase.invoke(
                     CastUpsert(
@@ -138,11 +139,11 @@ class CastEditViewModel(
                 infoMessage = null
             )
         }
-
         viewModelScope.launch {
             when (val result = getCastDetailUseCase.invoke(targetCastId)) {
                 is AppResult.Success -> {
                     val detail = result.data.detail
+
                     if (hasPendingLocalEdits) {
                         _uiState.update { state ->
                             state.copy(isLoading = false)
@@ -209,6 +210,7 @@ class CastEditViewModel(
                 if (imageUrl.isBlank()) return
                 val galleryImages = _uiState.value.galleryImages
                 val galleryMaxCount = _uiState.value.galleryMaxCount
+
                 if (galleryImages.size >= galleryMaxCount) {
                     _uiState.update { it.copy(infoMessage = "갤러리 사진은 최대 ${galleryMaxCount}장까지 등록할 수 있습니다.") }
                 } else {
@@ -224,9 +226,11 @@ class CastEditViewModel(
             is CastEditAction.RemoveGalleryImage -> {
                 val index = action.index
                 val galleryImages = _uiState.value.galleryImages
+
                 if (index in galleryImages.indices) {
                     hasPendingLocalEdits = true
                     val removedImageUrl = galleryImages[index]
+
                     if (removedImageUrl.startsWith("http://") || removedImageUrl.startsWith("https://")) {
                         pendingDeletedGalleryImageUrls.add(removedImageUrl)
                     }

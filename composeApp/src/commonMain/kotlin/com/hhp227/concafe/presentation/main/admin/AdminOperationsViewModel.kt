@@ -116,6 +116,7 @@ class AdminOperationsViewModel(
 
                 _uiState.update { state ->
                     val pendingCount = registrationClaims.size + ownerClaims.size
+
                     state.copy(
                         pendingCafeRegistrationClaims = registrationClaims,
                         pendingCafeOwnerClaims = ownerClaims,
@@ -133,8 +134,10 @@ class AdminOperationsViewModel(
 
     private fun showCachedPendingRequests() {
         val snapshot = AdminPendingCache.snapshot ?: return
+
         _uiState.update { state ->
             val pendingCount = snapshot.registrationClaims.size + snapshot.ownerClaims.size
+
             state.copy(
                 totalUsersCount = snapshot.totalUsersCount,
                 activeCafesCount = snapshot.activeCafesCount,
@@ -162,6 +165,7 @@ class AdminOperationsViewModel(
     private fun loadMoreInquiries() {
         val state = _uiState.value
         val cursor = state.inquiryNextCursor
+
         if (cursor == null || !state.canLoadMoreInquiries || state.isLoadingMoreInquiries) {
             return
         }
@@ -171,6 +175,7 @@ class AdminOperationsViewModel(
     private fun loadMoreReports() {
         val state = _uiState.value
         val cursor = state.reportNextCursor
+
         if (cursor == null || !state.canLoadMoreReports || state.isLoadingMoreReports) return
         loadReportPage(cursor = cursor, append = true)
     }
@@ -193,6 +198,7 @@ class AdminOperationsViewModel(
                     val sortedItems = result.data.items.sortedByDescending { inquiry ->
                         inquiry.createdAt
                     }
+
                     _uiState.update { state ->
                         state.copy(
                             inquiries = if (append) {
@@ -228,6 +234,7 @@ class AdminOperationsViewModel(
             when (val result = getAdminReportPageUseCase.invoke(cursor = cursor, pageSize = ADMIN_REPORT_PAGE_SIZE)) {
                 is AppResult.Success -> {
                     val sortedItems = result.data.items.sortedByDescending { it.createdAt }
+
                     _uiState.update { state ->
                         state.copy(
                             reports = if (append) state.reports + sortedItems else sortedItems,
@@ -275,7 +282,6 @@ class AdminOperationsViewModel(
         jobs[TaskKey.CLAIM_POLLING] = viewModelScope.launch {
             while (isActive) {
                 delay(ADMIN_CLAIM_POLLING_INTERVAL_MILLIS)
-
                 if (isActive) {
                     refreshPendingClaimsOnly()
                 }

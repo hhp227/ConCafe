@@ -10,6 +10,10 @@ import com.rickclephas.kmp.nativecoroutines.NativeCoroutines
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): User
 
+    suspend fun signInWithGoogle(): User
+
+    suspend fun signInWithKakao(): User
+
     suspend fun signInWithGoogleIdToken(idToken: String): User
 
     suspend fun signInWithAppleIdToken(idToken: String): User
@@ -37,6 +41,16 @@ interface AuthRepository {
     ): User
 
     suspend fun signOut()
+
+    suspend fun requestPhoneVerificationCode(phoneNumber: String)
+
+    suspend fun verifyPhoneVerificationCode(code: String)
+
+    suspend fun linkPhoneCredential(code: String)
+
+    suspend fun linkEmailCredential(email: String, password: String)
+
+    suspend fun discardIncompleteSignUp()
 
     suspend fun requestPasswordReset(email: String)
 

@@ -69,6 +69,7 @@ class HomeViewModel(
                 val nearbyCafePage = (nearbyCafePageResult as? AppResult.Success)?.data
                 val cafeEventPage = (cafeEventsResult as? AppResult.Success)?.data
                 val birthdayCastPage = (birthdayCastsResult as? AppResult.Success)?.data
+
                 state.copy(
                     isLoading = false,
                     errorMessage = null,
@@ -185,6 +186,7 @@ class HomeViewModel(
     private fun loadMoreCafeEvents() {
         val currentState = _uiState.value
         val cursor = currentState.cafeEventCursor
+
         if (currentState.isLoadingMoreCafeEvents || !currentState.canLoadMoreCafeEvents || cursor == null) return
         loadHomeCafeEventPage(cursor = cursor, append = true)
     }
@@ -225,6 +227,7 @@ class HomeViewModel(
     private fun loadMorePopularCasts() {
         val currentState = _uiState.value
         val cursor = currentState.popularCastCursor
+
         if (currentState.isLoadingMorePopularCasts || !currentState.canLoadMorePopularCasts || cursor == null) return
         loadPopularCastPage(cursor = cursor, append = true)
     }
@@ -255,6 +258,7 @@ class HomeViewModel(
     private fun loadMoreNearbyCafes() {
         val currentState = _uiState.value
         val cursor = currentState.nearbyCafeCursor
+
         if (currentState.isLoadingMoreNearbyCafes || !currentState.canLoadMoreNearbyCafes || cursor == null) return
         loadNearbyCafePage(cursor = cursor, append = true)
     }
@@ -416,6 +420,7 @@ class HomeViewModel(
             BannerLinkTargetType.EVENT_DETAIL -> {
                 val cafeId = banner.cafeId
                 val eventId = banner.targetValue.trim()
+
                 if (!cafeId.isNullOrBlank() && eventId.isNotBlank()) {
                     _event.emit(HomeEvent.NavigateToCafeEvent(cafeId, eventId))
                 }
@@ -423,6 +428,7 @@ class HomeViewModel(
             BannerLinkTargetType.CAFE_DETAIL,
             BannerLinkTargetType.NOTICE -> {
                 val cafeId = banner.cafeId ?: banner.targetValue.takeIf { banner.targetType == BannerLinkTargetType.CAFE_DETAIL }
+
                 if (!cafeId.isNullOrBlank()) {
                     requireSignedIn {
                         _event.emit(HomeEvent.NavigateToCafe(cafeId))

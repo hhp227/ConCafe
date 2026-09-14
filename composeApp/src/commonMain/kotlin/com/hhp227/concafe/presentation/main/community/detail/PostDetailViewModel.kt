@@ -108,6 +108,7 @@ class PostDetailViewModel(
             when (val result = getCommunityCommentPageUseCase(postId, null, COMMENT_PAGE_SIZE)) {
                 is AppResult.Success -> {
                     val page = result.data
+
                     _uiState.update { state ->
                         state.copy(
                             comments = page.items.filterNot { comment ->
@@ -133,6 +134,7 @@ class PostDetailViewModel(
             when (val result = getCommunityCommentPageUseCase(postId, cursor, COMMENT_PAGE_SIZE)) {
                 is AppResult.Success -> {
                     val page = result.data
+
                     _uiState.update { state ->
                         state.copy(
                             comments = page.items.filterNot { comment ->
@@ -152,6 +154,7 @@ class PostDetailViewModel(
     private fun toggleLike() {
         val wasLiked = _uiState.value.isLiked
         val currentCount = _uiState.value.likeCount
+
         _uiState.update { state ->
             state.copy(
                 isLiked = !wasLiked,
@@ -187,6 +190,7 @@ class PostDetailViewModel(
 
     private fun sendComment() {
         val text = _uiState.value.commentText.trim()
+
         if (text.isBlank()) return
         _uiState.update { it.copy(isSendingComment = true) }
         jobs[JobKey.SEND_COMMENT]?.cancel()
@@ -211,6 +215,7 @@ class PostDetailViewModel(
 
     private fun confirmEditComment(content: String) {
         val commentId = _uiState.value.editingCommentId ?: return
+
         if (content.isBlank()) return
         _uiState.update { it.copy(isUpdatingComment = true) }
         jobs[JobKey.UPDATE_COMMENT]?.cancel()
@@ -257,6 +262,7 @@ class PostDetailViewModel(
     private fun submitReport() {
         val reportType = _uiState.value.selectedReportType ?: return
         val reportingCommentId = _uiState.value.reportingCommentId
+
         _uiState.update { it.copy(isSubmittingReport = true) }
         jobs[JobKey.SUBMIT_REPORT]?.cancel()
         jobs[JobKey.SUBMIT_REPORT] = viewModelScope.launch {

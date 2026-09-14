@@ -35,7 +35,6 @@ class NotificationViewModel(
 
     private fun loadNotifications() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
         viewModelScope.launch {
             when (val result = getNotificationFeedUseCase.invoke()) {
                 is AppResult.Success -> {

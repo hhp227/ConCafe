@@ -18,19 +18,15 @@ import com.hhp227.concafe.domain.common.AppResult
 import com.hhp227.concafe.domain.model.UserRole
 import com.hhp227.concafe.domain.usecase.CompleteSignUpForCurrentUserUseCase
 import com.hhp227.concafe.domain.usecase.SignInUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithKakaoIdTokenUseCase
-import com.hhp227.concafe.domain.usecase.SignInWithGoogleIdTokenUseCase
-import com.hhp227.concafe.domain.usecase.UpdateUserProfileUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithGoogleUseCase
+import com.hhp227.concafe.domain.usecase.SignInWithKakaoUseCase
 import org.jetbrains.compose.resources.getString
 
 class SignInViewModel(
     private val signInUseCase: SignInUseCase,
-    private val signInWithGoogleIdTokenUseCase: SignInWithGoogleIdTokenUseCase,
-    private val signInWithKakaoIdTokenUseCase: SignInWithKakaoIdTokenUseCase,
-    private val completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val googleIdTokenProvider: GoogleIdTokenProvider,
-    private val kakaoIdTokenProvider: KakaoIdTokenProvider
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val signInWithKakaoUseCase: SignInWithKakaoUseCase,
+    private val completeSignUpForCurrentUserUseCase: CompleteSignUpForCurrentUserUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignInUiState.empty())
     val uiState = _uiState.asStateFlow()
@@ -95,45 +91,34 @@ class SignInViewModel(
                 viewModelScope.launch {
                     when (action.provider) {
                         SignInProvider.GOOGLE -> {
-                            runCatching { googleIdTokenProvider.getGoogleIdToken() }
-                                .onFailure {
-                                    _uiState.update { state ->
-                                        state.copy(
+                            when (val result = signInWithGoogleUseCase.invoke()) {
+                                is AppResult.Success -> {
+                                    if (ensureVisitorAccountCompleted(
+                                            email = result.data.email,
+                                            nickname = result.data.nickname,
+                                            signupCompleted = result.data.signupCompleted
+                                        )
+                                    ) {
+                                        _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                                        _event.emit(SignInEvent.SignedIn)
+                                    } else {
+                                        _uiState.update {
+                                            it.copy(
+                                                isLoading = false,
+                                                errorMessage = getString(Res.string.signin_error_google_failed)
+                                            )
+                                        }
+                                    }
+                                }
+                                is AppResult.Failure -> {
+                                    _uiState.update {
+                                        it.copy(
                                             isLoading = false,
                                             errorMessage = getString(Res.string.signin_error_google_failed)
                                         )
                                     }
                                 }
-                                .onSuccess { idToken ->
-                                    when (val result = signInWithGoogleIdTokenUseCase.invoke(idToken)) {
-                                        is AppResult.Success -> {
-                                            if (ensureVisitorAccountCompleted(
-                                                    email = result.data.email,
-                                                    nickname = result.data.nickname,
-                                                    signupCompleted = result.data.signupCompleted
-                                                )
-                                            ) {
-                                                _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                                                _event.emit(SignInEvent.SignedIn)
-                                            } else {
-                                                _uiState.update {
-                                                    it.copy(
-                                                        isLoading = false,
-                                                        errorMessage = getString(Res.string.signin_error_google_failed)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        is AppResult.Failure -> {
-                                            _uiState.update {
-                                                it.copy(
-                                                    isLoading = false,
-                                                    errorMessage = getString(Res.string.signin_error_google_failed)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                            }
                         }
                         SignInProvider.APPLE -> {
                             _uiState.update {
@@ -144,60 +129,36 @@ class SignInViewModel(
                             }
                         }
                         SignInProvider.KAKAO -> {
-                            runCatching { kakaoIdTokenProvider.getKakaoAuthPayload() }
-                                .onFailure {
-                                    _uiState.update { state ->
-                                        state.copy(
+                            when (val result = signInWithKakaoUseCase.invoke()) {
+                                is AppResult.Success -> {
+                                    if (ensureVisitorAccountCompleted(
+                                            email = result.data.email,
+                                            nickname = result.data.nickname.ifBlank {
+                                                getString(Res.string.signin_default_kakao_nickname)
+                                            },
+                                            signupCompleted = result.data.signupCompleted
+                                        )
+                                    ) {
+                                        _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                                        _event.emit(SignInEvent.SignedIn)
+                                    } else {
+                                        _uiState.update {
+                                            it.copy(
+                                                isLoading = false,
+                                                errorMessage = getString(Res.string.signin_error_kakao_failed)
+                                            )
+                                        }
+                                    }
+                                }
+                                is AppResult.Failure -> {
+                                    _uiState.update {
+                                        it.copy(
                                             isLoading = false,
                                             errorMessage = getString(Res.string.signin_error_kakao_failed)
                                         )
                                     }
                                 }
-                                .onSuccess { payload ->
-                                    val email = payload.email?.trim()
-                                    val nickname = payload.nickname?.trim()
-                                    when (
-                                        val kakaoSignInResult = signInWithKakaoIdTokenUseCase.invoke(
-                                            idToken = payload.idToken,
-                                            email = email,
-                                            nickname = nickname
-                                        )
-                                    ) {
-                                        is AppResult.Success -> {
-                                            val resolvedNickname = nickname.orEmpty().ifBlank { kakaoSignInResult.data.nickname }
-                                            if (resolvedNickname.isNotBlank()) {
-                                                updateUserProfileUseCase.invoke(
-                                                    nickname = resolvedNickname,
-                                                    profileImage = null
-                                                )
-                                            }
-                                            if (ensureVisitorAccountCompleted(
-                                                    email = email.orEmpty().ifBlank { kakaoSignInResult.data.email },
-                                                    nickname = resolvedNickname.ifBlank { getString(Res.string.signin_default_kakao_nickname) },
-                                                    signupCompleted = kakaoSignInResult.data.signupCompleted
-                                                )
-                                            ) {
-                                                _uiState.update { it.copy(isLoading = false, errorMessage = null) }
-                                                _event.emit(SignInEvent.SignedIn)
-                                            } else {
-                                                _uiState.update {
-                                                    it.copy(
-                                                        isLoading = false,
-                                                        errorMessage = getString(Res.string.signin_error_kakao_failed)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        is AppResult.Failure -> {
-                                            _uiState.update {
-                                                it.copy(
-                                                    isLoading = false,
-                                                    errorMessage = getString(Res.string.signin_error_kakao_failed)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                            }
                         }
                     }
                 }

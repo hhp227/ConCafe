@@ -45,19 +45,23 @@ class ResetPasswordViewModel(
             viewModelScope.launch {
                 val result = requestPasswordResetUseCase.invoke(email)
 
-                if (result is AppResult.Success) {
-                    _uiState.value = ResetPasswordUiState.empty()
-                    _event.emit(ResetPasswordEvent.ShowMessage("비밀번호 재설정 메일을 발송했습니다."))
-                } else if (result is AppResult.Failure) {
-                    _uiState.update {
-                        it.copy(isSubmitting = false)
+                when (result) {
+                    is AppResult.Success -> {
+                        _uiState.value = ResetPasswordUiState.empty()
+                        _event.emit(ResetPasswordEvent.ShowMessage("비밀번호 재설정 메일을 발송했습니다."))
                     }
-                    _event.emit(ResetPasswordEvent.ShowMessage(mapFailureMessage(result)))
-                } else {
-                    _uiState.update {
-                        it.copy(isSubmitting = false)
+                    is AppResult.Failure -> {
+                        _uiState.update {
+                            it.copy(isSubmitting = false)
+                        }
+                        _event.emit(ResetPasswordEvent.ShowMessage(mapFailureMessage(result)))
                     }
-                    _event.emit(ResetPasswordEvent.ShowMessage("재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."))
+                    else -> {
+                        _uiState.update {
+                            it.copy(isSubmitting = false)
+                        }
+                        _event.emit(ResetPasswordEvent.ShowMessage("재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."))
+                    }
                 }
             }
         } else {

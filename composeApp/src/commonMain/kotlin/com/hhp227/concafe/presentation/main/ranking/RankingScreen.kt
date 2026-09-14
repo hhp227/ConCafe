@@ -469,6 +469,7 @@ fun RankingEntryCard(
                 contentAlignment = Alignment.Center
             ) {
                 val resolvedImageUrl = item.imageUrl?.trim().orEmpty()
+
                 if (resolvedImageUrl.isNotBlank()) {
                     CompatImageDisplay(
                         imageUrl = resolvedImageUrl,

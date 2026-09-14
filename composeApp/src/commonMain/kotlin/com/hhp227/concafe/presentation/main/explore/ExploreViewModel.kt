@@ -142,6 +142,7 @@ class ExploreViewModel(
     private fun loadMoreCafes() {
         val state = _uiState.value
         val cursor = state.cafesNextCursor
+
         if (state.isLoadingMoreCafes || !state.canLoadMoreCafes || cursor == null) return
         loadCafePage(cursor, append = true)
     }
@@ -152,6 +153,7 @@ class ExploreViewModel(
             _uiState.update { it.copy(isLoadingMoreMaids = append) }
             if (append) delay(PAGINATION_DELAY_MILLIS)
             val state = _uiState.value
+
             when (
                 val result = getExploreCastPageUseCase.invoke(
                     query = state.query,
@@ -188,6 +190,7 @@ class ExploreViewModel(
     private fun loadMoreMaids() {
         val state = _uiState.value
         val cursor = state.maidsNextCursor
+
         if (state.isLoadingMoreMaids || !state.canLoadMoreMaids || cursor == null) return
         loadMaidPage(cursor, append = true)
     }
@@ -233,6 +236,7 @@ class ExploreViewModel(
                     matchesCastFilters(state, maid, cafeMatches)
                 }
             }.sortedCasts(state)
+
             state.copy(cafes = nextCafes, maids = nextMaids)
         }
     }
@@ -259,6 +263,7 @@ class ExploreViewModel(
                         else -> null
                     }
                 }.sortedCasts(state)
+
                 state.copy(maids = nextMaids)
             }
         }

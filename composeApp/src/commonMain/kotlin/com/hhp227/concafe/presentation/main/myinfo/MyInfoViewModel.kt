@@ -256,6 +256,7 @@ class MyInfoViewModel(
     private fun removeFavoriteCafe(cafeId: String) {
         _uiState.update { state ->
             val hadFavorite = state.favorites.any { item -> item.id == cafeId }
+
             if (!hadFavorite) {
                 state
             } else {
@@ -286,6 +287,7 @@ class MyInfoViewModel(
                             "badge-concafe-master" -> badgesCount >= 10
                             else -> badge.unlocked
                         }
+
                         badge.copy(unlocked = isUnlocked)
                     }
                 )
@@ -302,6 +304,7 @@ class MyInfoViewModel(
                         items = result.data.favorites,
                         maxCount = result.data.favorites.size
                     )
+
                     _uiState.update { state ->
                         state.copy(
                             summary = result.data.summary,
@@ -354,6 +357,7 @@ class MyInfoViewModel(
                 summary = state.summary,
                 followedMaids = followedMaids
             )
+
             state.copy(
                 castDetail = state.castDetail?.takeIf { detail -> detail.cast.id == cast.id }?.copy(cast = cast)
                     ?: state.castDetail,
@@ -450,8 +454,9 @@ class MyInfoViewModel(
         }
     }
 
+    // observeSession() emits the current session immediately and loads from there; a separate
+    // initial load would only race it and get cancelled mid-request.
     init {
-        loadMyInfo()
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()

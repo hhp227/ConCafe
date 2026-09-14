@@ -561,7 +561,7 @@ final class MyInfoViewModel: ObservableObject {
         self.userEventPublisher = userEventPublisher
         self.scheduleManagementEventPublisher = scheduleManagementEventPublisher
 
-        loadMyInfo()
+        // observeSession()이 현재 세션을 즉시 방출하며 로드하므로 별도 초기 로드는 경쟁만 유발한다.
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()
