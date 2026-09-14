@@ -454,8 +454,9 @@ class MyInfoViewModel(
         }
     }
 
+    // observeSession() emits the current session immediately and loads from there; a separate
+    // initial load would only race it and get cancelled mid-request.
     init {
-        loadMyInfo()
         observeSession()
         observeCafeDetailEvent()
         observeCastEvent()

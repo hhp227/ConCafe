@@ -11,6 +11,8 @@ import com.hhp227.concafe.domain.model.CafeMenuGoodsSection
 import com.hhp227.concafe.domain.model.CafeMenuGoodsUpsert
 import com.hhp227.concafe.domain.model.CafeRegistrationClaim
 import com.hhp227.concafe.domain.model.CafeSort
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 class CachedCafeRemoteDataSource(
     private val upstream: CafeRemoteDataSource,
@@ -52,10 +54,20 @@ class CachedCafeRemoteDataSource(
             upstream.fetchCafeMenuGoods(cafeId)
         }
 
-    override suspend fun fetchCafeById(cafeId: String): Cafe? = cache.cacheFirst(cafeByIdKey(cafeId)) {
-        upstream.fetchCafeById(cafeId) ?: CachedRemoteNull
-    }.let { value ->
-        if (value === CachedRemoteNull) null else value as Cafe
+    // The remote swallows request failures into null, so a miss is not proof the cafe is gone;
+    // only real cafes are memoized and a miss is retried on the next load.
+    override suspend fun fetchCafeById(cafeId: String): Cafe? {
+        val key = cafeByIdKey(cafeId)
+        val cachedCafe = cache.get(key) as? Cafe
+
+        if (cachedCafe != null) {
+            return cachedCafe
+        }
+        val cafe = upstream.fetchCafeById(cafeId) ?: return null
+
+        currentCoroutineContext().ensureActive()
+        cache.put(key, cafe)
+        return cafe
     }
 
     override suspend fun fetchAllCafes(): List<Cafe> = cache.cacheFirst(cacheKey(CAFE_CACHE_PREFIX, "all")) {
