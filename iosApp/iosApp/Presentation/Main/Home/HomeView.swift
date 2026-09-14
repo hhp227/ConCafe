@@ -108,33 +108,34 @@ private struct HomeContentView: View {
             }
             .background(ConCafeColors.background)
         } else {
-            // 배경을 ZStack 자식으로 두면 ignoresSafeArea가 정렬 경계를 화면 최상단까지 넓혀
-            // 스켈레톤 배너가 상단 크롬 아래로 밀려 가려진다. 배경은 background 수정자로만 처리한다.
-            // topLeading 정렬: 카드 행이 화면보다 넓어도 왼쪽 16pt에서 시작해
-            // 오른쪽만 잘리게 한다 (Compose LazyRow와 동일한 보임새).
-            homeSkeleton
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(ConCafeColors.background.ignoresSafeArea())
+            // 콘텐츠와 같은 ScrollView 컨테이너에 그려 세이프 에어리어/내비게이션 바 배치를 동일하게 맞춘다.
+            // 폭은 UIScreen이 아니라 실제 컨테이너 폭을 쓴다 (Compose BoxWithConstraints와 동일).
+            GeometryReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    homeSkeleton(containerWidth: proxy.size.width)
+                }
+                .disabled(true)
+            }
+            .background(ConCafeColors.background)
         }
     }
 
-    private var homeSkeleton: some View {
-        let containerWidth = UIScreen.main.bounds.width
+    private func homeSkeleton(containerWidth: CGFloat) -> some View {
         let contentLayout = uiState.contentLayout
-        let bannerWidth = max(containerWidth - contentLayout.horizontalPadding * 2, 0)
         let bannerHeight = homeBannerHeight(containerWidth: containerWidth, contentLayout: contentLayout)
 
-        // 배너는 실제 배너와 같은 화면폭 기반 고정 크기로 만든다.
-        // 가변폭(maxWidth: .infinity) 체인은 카드 행이 화면보다 넓을 때 렌더가 깨진다.
         return VStack(alignment: .leading, spacing: 24) {
             ShimmerBox(cornerRadius: contentLayout.cornerRadius(legacy: bannerSkeletonCornerRadius))
-                .frame(width: bannerWidth, height: bannerHeight)
+                .frame(maxWidth: .infinity)
+                .frame(height: bannerHeight)
                 .padding(.horizontal, contentLayout.horizontalPadding)
             ForEach(0..<2, id: \.self) { _ in
                 VStack(alignment: .leading, spacing: 10) {
                     ShimmerBox()
                         .frame(width: 140, height: 18)
                         .padding(.horizontal, 16)
+                    // 카드 행은 Compose LazyRow처럼 왼쪽부터 채우고 화면을 넘는 오른쪽만 잘라낸다.
+                    // 행 단위로 잘라야 VStack 폭이 컨테이너를 넘지 않아 배너의 가변폭이 유지된다.
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(0..<3, id: \.self) { _ in
                             VStack(alignment: .leading, spacing: 0) {
@@ -150,6 +151,8 @@ private struct HomeContentView: View {
                         }
                     }
                     .padding(.horizontal, 16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .clipped()
                 }
             }
             VStack(alignment: .leading, spacing: 12) {
@@ -164,9 +167,9 @@ private struct HomeContentView: View {
             }
             .padding(.horizontal, 16)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, contentLayout.topPadding(legacy: feedTopPadding))
         .padding(.bottom, 16)
-        .clipped()
     }
 
     private var communitySection: some View {
