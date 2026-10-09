@@ -23,6 +23,11 @@ export {
   syncKrCrawledConCafeData,
   syncJpCrawledConCafeData,
 } from "./crawling.js";
+export {
+  applyScheduleImport,
+  extractScheduleImage,
+} from "./scheduleImport.js";
+export {extractCafeEventImage} from "./eventImport.js";
 
 function db() {
   return getFirestore();
@@ -1790,6 +1795,7 @@ async function syncOwnerCreatedCastScheduleNotification(
   const cafeId = asNonBlankString(afterData.cafeId);
   const scheduleDate = asNonBlankString(afterData.date);
   const createdBy = asNonBlankString(afterData.createdBy);
+  const requestBatchId = asNonBlankString(afterData.requestBatchId);
 
   if (castId == null || cafeId == null || scheduleDate == null || createdBy == null) {
     return;
@@ -1816,12 +1822,19 @@ async function syncOwnerCreatedCastScheduleNotification(
     : "";
   const createdAt = new Date().toISOString();
 
+  const notificationId = requestBatchId == null ?
+    `cast_schedule_assigned_${scheduleId}_${linkedUserId}` :
+    `cast_schedule_assigned_batch_${requestBatchId}_${linkedUserId}`;
+  const notificationBody = requestBatchId == null ?
+    `${scheduleDate}${timeLabel} 스케줄이 등록되었어요.` :
+    "새 스케줄이 등록되었어요.";
+
   await createUserNotification(
     linkedUserId,
-    `cast_schedule_assigned_${scheduleId}_${linkedUserId}`,
+    notificationId,
     "CAST_SCHEDULE_ASSIGNED",
     `${cafeName} 스케줄 등록`,
-    `${scheduleDate}${timeLabel} 스케줄이 등록되었어요.`,
+    notificationBody,
     castId,
     createdAt
   );

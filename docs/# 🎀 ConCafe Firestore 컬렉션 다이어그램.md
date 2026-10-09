@@ -84,6 +84,9 @@ cafes/{cafeId}/casts/{castId}
 ├─ followerCount
 ├─ rating
 ├─ popularityScore
+├─ rosterStatus: ACTIVE | INACTIVE (없으면 ACTIVE, 관리자 출근표 등록에서 분리한 "현재 없는 캐스트"는 INACTIVE)
+├─ inactiveAt / inactiveBy / inactiveReason / inactiveImportId (INACTIVE로 분리된 시점·주체·사유·출근표 초안)
+├─ reactivatedAt / reactivatedImportId (복원 시점)
 ├─ createdAt
 └─ updatedAt
 

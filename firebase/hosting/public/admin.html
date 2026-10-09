@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>콘카 관리자</title>
+    <meta
+      name="description"
+      content="카페 등록, 출근표 이미지 분석, 현재 없는 캐스트 관리를 위한 관리자 페이지입니다."
+    />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f1f3;
+        --surface: rgba(255, 255, 255, 0.94);
+        --surface-soft: #fdf8fa;
+        --line: #e7d9df;
+        --line-strong: #cfb8c2;
+        --text: #23161c;
+        --muted: #6d5d64;
+        --accent: #ef6797;
+        --accent-soft: #ffd7e5;
+        --success: #1f8b5f;
+        --warning: #9a6700;
+        --danger: #c4415f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(255, 215, 229, 0.72), transparent 34%),
+          linear-gradient(180deg, #fff8fb 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .topbar .nav-link {
+        font-size: 14px;
+        color: var(--muted);
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: transparent;
+        border: 0;
+      }
+
+      .topbar .nav-link:hover,
+      .topbar .nav-link:focus-visible {
+        background: var(--surface-soft);
+        color: #da4e84;
+      }
+
+      .container {
+        max-width: 1180px;
+      }
+
+      .page {
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 0 40px;
+      }
+
+      .hero,
+      .page-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .hero {
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      }
+
+      .page-grid {
+        grid-template-columns: minmax(0, 0.98fr) minmax(360px, 1.02fr);
+        margin-top: 20px;
+      }
+
+      .download-strip {
+        margin: 18px 0 20px;
+        padding: 20px 24px;
+      }
+
+      .download-strip-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .download-strip-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .store-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .store-links a,
+      .desktop-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .store-links img {
+        height: 52px;
+        width: auto;
+        display: block;
+      }
+
+      .desktop-link {
+        height: 52px;
+        padding: 0 18px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .surface {
+        background: var(--surface);
+        border: 1px solid rgba(207, 184, 194, 0.82);
+        border-radius: 8px;
+        box-shadow: 0 18px 44px rgba(75, 41, 53, 0.08);
+      }
+
+      .hero-copy,
+      .hero-meta,
+      .section {
+        padding: 24px;
+      }
+
+      .eyebrow,
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+
+      .eyebrow {
+        gap: 8px;
+        padding: 7px 12px;
+        background: var(--accent-soft);
+        color: #5d2740;
+        font-size: 13px;
+      }
+
+      h1 {
+        margin: 16px 0 10px;
+        font-size: clamp(30px, 4vw, 44px);
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 23px;
+      }
+
+      p,
+      .helper,
+      .empty {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stat-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: 8px;
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+      }
+
+      .stat-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .section + .section {
+        margin-top: 16px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .nav-row,
+      .button-row,
+      .chip-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .nav-link,
+      .button {
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .nav-link {
+        padding: 11px 14px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+      }
+
+      .nav-link.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: #5b2238;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .compact-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 14px;
+      }
+
+      .form-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 16px;
+      }
+
+      .form-panel + .form-panel {
+        margin-top: 14px;
+      }
+
+      .form-panel-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+
+      .operator-cafe-card {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .operator-cafe-name {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .admin-cafe-controls {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.wide {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        padding: 13px 14px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(239, 103, 151, 0.14);
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .button {
+        border: 0;
+        cursor: pointer;
+        padding: 13px 18px;
+      }
+
+      .button-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .button-secondary {
+        background: var(--accent-soft);
+        color: #4f2536;
+      }
+
+      .button-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--line-strong);
+      }
+
+      .button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .status-banner {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .status-banner.info {
+        background: #fff7dd;
+        color: var(--warning);
+        border-color: #efd89a;
+      }
+
+      .status-banner.success {
+        background: #ebfff6;
+        color: var(--success);
+        border-color: #b8e7d1;
+      }
+
+      .status-banner.error {
+        background: #fff0f3;
+        color: var(--danger);
+        border-color: #f1b7c4;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .list-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 14px;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .item-main {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+
+      .item-image {
+        width: 72px;
+        height: 72px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex: 0 0 72px;
+        background: #f1e8ec;
+        border: 1px solid var(--line);
+      }
+
+      .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .item-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8c7480;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .item-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        background: #f4e3ea;
+        color: #6a3147;
+        font-size: 12px;
+      }
+
+      .chip.neutral {
+        background: #f0eef1;
+        color: #655a62;
+      }
+
+      .chip.success {
+        background: #e6f8ef;
+        color: #247950;
+      }
+
+      .chip.warning {
+        background: #fff2d6;
+        color: #946200;
+      }
+
+      .weekday-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .weekday-chip {
+        min-width: 0;
+        height: 36px;
+        padding: 0 6px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .weekday-chip.off {
+        background: #f0eef1;
+        border-color: #d8c9d1;
+        color: #655a62;
+      }
+
+      .schedule-list {
+        gap: 10px;
+      }
+
+      .schedule-card {
+        padding: 14px;
+      }
+
+      .schedule-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .schedule-summary {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .weekday-chip.work {
+        background: #ffe2ec;
+        border-color: #ef6797;
+        color: #9d2759;
+      }
+
+      .weekday-chip.vacation {
+        background: #fff2d6;
+        border-color: #efcf7d;
+        color: #946200;
+      }
+
+      .small {
+        font-size: 12px;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .empty {
+        padding-top: 18px;
+      }
+
+      /* ── Topbar right group ── */
+      .topbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+      /* ── Auth widget ── */
+      .auth-widget { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+      /* ── Auth modal ── */
+      .auth-modal {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(35, 22, 28, 0.48); backdrop-filter: blur(4px);
+        opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      }
+      .auth-modal.is-open { opacity: 1; pointer-events: auto; }
+      .auth-modal-box {
+        position: relative; background: #fff; border-radius: 20px;
+        padding: 32px 28px; width: calc(100% - 32px); max-width: 360px;
+        box-shadow: 0 8px 40px rgba(74, 54, 69, 0.22);
+        transform: translateY(16px); transition: transform 0.2s;
+      }
+      .auth-modal.is-open .auth-modal-box { transform: translateY(0); }
+      .auth-modal-close {
+        position: absolute; top: 14px; right: 14px;
+        background: none; border: none; cursor: pointer;
+        font-size: 16px; color: #a07a8f; line-height: 1; padding: 4px;
+      }
+      .auth-modal-close:hover { color: #3d2c38; }
+      .auth-modal-title { font-size: 20px; font-weight: 800; color: #23161c; margin: 0 0 20px; }
+      .auth-modal-form { display: flex; flex-direction: column; gap: 12px; }
+      .auth-modal-field { display: flex; flex-direction: column; gap: 5px; }
+      .auth-modal-field label { font-size: 12px; font-weight: 700; color: #6d5d64; }
+      .auth-modal-field input {
+        padding: 10px 14px; border-radius: 12px;
+        border: 1px solid #e7d9df; background: #fff8fb;
+        font: inherit; font-size: 14px; color: #23161c; outline: none;
+      }
+      .auth-modal-field input:focus { border-color: #ef6797; }
+      .auth-modal-error { font-size: 12px; color: #c4415f; margin: 0; }
+      .auth-modal-submit {
+        margin-top: 4px; padding: 12px; border-radius: 14px;
+        background: linear-gradient(135deg, #ef6797, #da4e84);
+        color: #fff; border: none; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      }
+      .auth-modal-submit:hover { background: linear-gradient(135deg, #da4e84, #c73d73); }
+      .auth-modal-divider {
+        display: flex; align-items: center; gap: 10px;
+        margin: 16px 0; color: #a07a8f; font-size: 12px;
+      }
+      .auth-modal-divider::before, .auth-modal-divider::after {
+        content: ""; flex: 1; height: 1px; background: #e7d9df;
+      }
+      .auth-modal-google {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; padding: 11px; border-radius: 14px;
+        border: 1px solid #e7d9df; background: #fff;
+        font: inherit; font-size: 13px; font-weight: 700; color: #3d2c38; cursor: pointer;
+      }
+      .auth-modal-google:hover { background: #fdf8fa; border-color: #cfb8c2; }
+      .auth-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 20px;
+        border: 1px solid rgba(239, 103, 151, 0.5);
+        background: #fff1f7; color: #9d2759;
+        font: inherit; font-size: 13px; font-weight: 700;
+        cursor: pointer; white-space: nowrap;
+      }
+      .auth-btn:hover { background: #ffe4ef; }
+      .auth-btn.signout {
+        background: transparent; border-color: rgba(207, 184, 194, 0.5);
+        color: #6d5d64; font-weight: 400; font-size: 12px; padding: 6px 12px;
+      }
+      .auth-user-info { display: flex; align-items: center; gap: 6px; }
+      .auth-user-photo {
+        width: 28px; height: 28px; border-radius: 50%;
+        object-fit: cover; border: 1.5px solid rgba(239, 103, 151, 0.4); flex-shrink: 0;
+      }
+      .auth-user-name {
+        font-size: 13px; font-weight: 700; color: #23161c;
+        max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
+      .import-dropzone {
+        display: grid;
+        place-items: center;
+        gap: 12px;
+        min-height: 180px;
+        padding: 20px;
+        border: 2px dashed var(--line-strong);
+        border-radius: 8px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+
+      .import-dropzone.is-dragover,
+      .import-dropzone:hover {
+        border-color: var(--accent);
+        background: #fff1f7;
+      }
+
+      .import-dropzone img {
+        max-width: 100%;
+        max-height: 420px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+
+      .import-summary {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .import-summary h3 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .import-summary ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .import-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 160px)) minmax(0, 1fr);
+        gap: 14px;
+        align-items: end;
+        margin-top: 16px;
+      }
+
+      .import-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 400;
+        padding-bottom: 12px;
+      }
+
+      .import-check input {
+        width: auto;
+      }
+
+      .import-table-wrap {
+        margin-top: 16px;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .import-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .import-table th,
+      .import-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      .import-table th {
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .import-table tr.is-day-start td {
+        border-top: 2px solid var(--line-strong);
+      }
+
+      .import-table tr.is-skipped td {
+        opacity: 0.5;
+      }
+
+      .import-table select,
+      .import-table input {
+        padding: 8px 10px;
+      }
+
+      .import-table input.import-time {
+        width: 80px;
+      }
+
+      .import-table input.is-invalid {
+        border-color: var(--danger);
+      }
+
+      .import-date {
+        white-space: nowrap;
+        font-weight: 700;
+      }
+
+      .import-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .import-badge.ok {
+        background: #ebfff6;
+        color: var(--success);
+      }
+
+      .import-badge.check {
+        background: #fff7dd;
+        color: var(--warning);
+      }
+
+      .import-badge.none {
+        background: #fff0f3;
+        color: var(--danger);
+      }
+
+      .import-note {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .inline-field {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .inline-field input {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .inline-field .button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .location-map {
+        height: 260px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+
+      .nav-link.active-page {
+        background: var(--accent-soft);
+        color: #5b2238;
+      }
+
+      .import-absent-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .import-absent-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 14px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .import-absent-item input {
+        width: auto;
+      }
+
+      .import-absent-item.is-checked {
+        border-color: var(--danger);
+        background: #fff0f3;
+      }
+
+      .event-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .event-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .event-form textarea {
+        min-height: 260px;
+      }
+
+      .event-counter {
+        justify-self: end;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .chip-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 14px;
+        font-weight: 400;
+        cursor: pointer;
+      }
+
+      .chip-check input {
+        width: auto;
+      }
+
+      .chip-check.is-checked {
+        border-color: var(--accent);
+        background: #fff1f7;
+      }
+
+      .event-item-image {
+        width: 72px;
+        height: 72px;
+        flex: 0 0 72px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        background: #f1e8ec;
+      }
+
+      @media (max-width: 960px) {
+        .hero,
+        .page-grid,
+        .event-layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding-top: 12px;
+        }
+
+        .hero-copy,
+        .hero-meta,
+        .section {
+          padding: 18px;
+        }
+
+        .field-grid,
+        .compact-grid,
+        .import-options,
+        .stat-list {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .weekday-row {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        h1 {
+          font-size: 30px;
+        }
+
+        .download-strip {
+          padding: 18px;
+        }
+
+        .download-strip-head {
+          display: grid;
+        }
+      }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links" aria-label="관리자 페이지 메뉴">
+              <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+              <a class="nav-link active-page" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+    <div class="page">
+      <section class="hero">
+        <div class="surface hero-copy">
+          <div class="eyebrow">관리자 전용</div>
+          <h1>관리자 페이지</h1>
+          <p>
+            카페를 등록하고, 출근표·이벤트 이미지를 AI로 분석해 스케줄과 이벤트를 등록하며, 현재 없는 캐스트를 관리합니다.
+          </p>
+          <div class="status-banner info" id="authStatus">관리자 세션을 확인하는 중입니다.</div>
+        </div>
+
+        <aside class="surface hero-meta">
+          <div class="stat-list">
+            <div class="stat">
+              <span class="stat-label">전체 카페</span>
+              <strong class="stat-value" id="cafeCount">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">선택된 카페</span>
+              <strong class="stat-value" id="selectedCafeLabel">없음</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">등록 캐스트</span>
+              <strong class="stat-value" id="castCount">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat-label">현재 없는 캐스트</span>
+              <strong class="stat-value" id="inactiveCount">0</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <div class="page-grid">
+        <div>
+          <section class="surface section">
+            <div class="section-header">
+              <div>
+                <h2>카페 등록</h2>
+                <p>등록한 카페는 승인된 상태로 앱에 바로 노출됩니다.</p>
+              </div>
+            </div>
+            <form id="cafeForm" novalidate>
+              <div class="field-grid">
+                <div class="field wide">
+                  <label for="cafeName">카페 이름</label>
+                  <input id="cafeName" type="text" maxlength="60" placeholder="예: 슈가레이스 메이드카페" required />
+                </div>
+                <div class="field">
+                  <label for="cafeConceptType">컨셉</label>
+                  <select id="cafeConceptType"></select>
+                </div>
+                <div class="field">
+                  <label for="cafePhoneNumber">전화번호</label>
+                  <input id="cafePhoneNumber" type="tel" maxlength="30" placeholder="선택 입력" />
+                </div>
+                <div class="field">
+                  <label for="cafeCountry">국가</label>
+                  <select id="cafeCountry">
+                    <option value="KR">한국</option>
+                    <option value="JP">일본</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cafeCity">도시</label>
+                  <select id="cafeCity"></select>
+                </div>
+                <div class="field wide">
+                  <label for="cafeAddress">주소</label>
+                  <div class="inline-field">
+                    <input id="cafeAddress" type="text" maxlength="200" placeholder="예: 서울 마포구 와우산로 00" required />
+                    <button class="button button-secondary" id="cafeGeocodeButton" type="button">위치 찾기</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="cafeLatitude">위도</label>
+                  <input id="cafeLatitude" type="text" inputmode="decimal" placeholder="37.5563" />
+                </div>
+                <div class="field">
+                  <label for="cafeLongitude">경도</label>
+                  <input id="cafeLongitude" type="text" inputmode="decimal" placeholder="126.9220" />
+                </div>
+                <div class="field wide">
+                  <div class="location-map" id="cafeLocationMap" hidden></div>
+                  <p class="helper" id="cafeLocationHelper">주소를 입력하고 위치 찾기를 누르세요. 지도에서 핀을 끌어 위치를 조정할 수 있습니다.</p>
+                </div>
+                <div class="field wide">
+                  <label for="cafeBusinessHours">영업시간</label>
+                  <div class="inline-field">
+                    <input id="cafeOpenTime" type="text" inputmode="numeric" maxlength="5" placeholder="17:00" />
+                    <input id="cafeCloseTime" type="text" inputmode="numeric" maxlength="5" placeholder="23:00" />
+                    <button class="button button-ghost" id="cafeFillHoursButton" type="button">매일 같은 시간으로 채우기</button>
+                  </div>
+                  <textarea id="cafeBusinessHours" placeholder="월 17:00-23:00&#10;화 17:00-23:00&#10;..."></textarea>
+                  <p class="helper">한 줄에 한 요일씩 "월 17:00-23:00" 형식으로 입력하세요. 휴무일은 "수 휴무"처럼 적습니다.</p>
+                </div>
+                <div class="field wide">
+                  <label for="cafeThumbnailImage">대표 이미지 URL</label>
+                  <input id="cafeThumbnailImage" type="url" placeholder="https://... (선택 입력)" />
+                </div>
+                <div class="field wide">
+                  <label for="cafeDesc">소개</label>
+                  <textarea id="cafeDesc" maxlength="1000" placeholder="카페 소개 (선택 입력)"></textarea>
+                </div>
+              </div>
+              <div class="button-row" style="margin-top: 18px;">
+                <button class="button button-primary" id="cafeSubmitButton" type="submit">카페 등록</button>
+                <button class="button button-ghost" id="cafeResetButton" type="button">입력 초기화</button>
+              </div>
+            </form>
+            <div class="status-banner info" id="cafeFormStatus" style="display: none;"></div>
+          </section>
+        </div>
+
+        <div>
+          <section class="surface section">
+            <div class="section-header">
+              <div>
+                <h2>카페 선택</h2>
+                <p>출근표 등록과 현재 없는 캐스트 관리에 사용할 카페를 고릅니다.</p>
+              </div>
+            </div>
+            <div class="admin-cafe-controls">
+              <div class="field">
+                <label for="cafeSearch">카페 검색</label>
+                <input id="cafeSearch" type="search" placeholder="카페 이름 또는 지역으로 검색" />
+              </div>
+              <div class="field">
+                <label for="cafeSelect">카페 목록</label>
+                <select id="cafeSelect">
+                  <option value="">카페를 선택하세요</option>
+                </select>
+              </div>
+            </div>
+            <div class="status-banner info" id="cafeStatus">로그인 후 카페 목록을 불러옵니다.</div>
+          </section>
+
+          <section class="surface section">
+            <div class="section-header">
+              <div>
+                <h2>현재 없는 캐스트</h2>
+                <p>출근표에 더 이상 나오지 않아 분리한 캐스트입니다. 이후 일괄 삭제할 예정이며, 다시 출근하면 복원하세요.</p>
+              </div>
+              <button class="button button-secondary" id="refreshInactiveButton" type="button">새로고침</button>
+            </div>
+            <div class="list" id="inactiveList"></div>
+            <p class="empty" id="inactiveEmptyState">카페를 선택하세요.</p>
+            <div class="status-banner info" id="inactiveStatus" style="display: none;"></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="surface section" id="scheduleImportSection" style="margin-top: 20px;">
+        <div class="section-header">
+          <div>
+            <h2>출근표 이미지로 스케줄 등록</h2>
+            <p>선택한 카페의 출근표 이미지를 AI가 분석해 캐스트별 스케줄 초안을 만듭니다. 검토 후 저장해야 반영됩니다.</p>
+          </div>
+        </div>
+        <label class="import-dropzone" id="importDropzone" for="importFileInput">
+          <input id="importFileInput" type="file" accept="image/*" hidden />
+          <img id="importPreview" alt="출근표 미리보기" hidden />
+          <span id="importDropzoneText">이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.</span>
+        </label>
+        <div class="button-row" style="margin-top: 14px;">
+          <button class="button button-primary" id="importAnalyzeButton" type="button" disabled>분석하기</button>
+          <button class="button button-ghost" id="importResetButton" type="button">초기화</button>
+        </div>
+        <div class="status-banner info" id="importStatus" style="display: none;"></div>
+        <div id="importReview" hidden>
+          <div class="import-summary" id="importSummary"></div>
+          <div class="import-options">
+            <div class="field">
+              <label for="importDefaultStartTime">기본 시작 시간</label>
+              <input id="importDefaultStartTime" type="text" inputmode="numeric" maxlength="5" placeholder="14:00" />
+            </div>
+            <div class="field">
+              <label for="importDefaultEndTime">기본 종료 시간</label>
+              <input id="importDefaultEndTime" type="text" inputmode="numeric" maxlength="5" placeholder="22:00" />
+            </div>
+            <label class="import-check">
+              <input id="importReplaceExisting" type="checkbox" />
+              출근표 기간 중 출근표에 없는 기존 근무는 휴무로 변경
+            </label>
+          </div>
+          <p class="helper" style="margin-top: 8px;">시간을 비워 두면 기존 스케줄 시간, 없으면 기본 시간이 적용됩니다. 자정은 24:00, 새벽 퇴근은 02:00처럼 입력하세요. 캐스트 연결을 바꾸면 같은 이름의 다른 날짜에도 함께 적용됩니다.</p>
+          <div class="button-row" style="margin-top: 12px;">
+            <button class="button button-secondary" id="importAllNewButton" type="button">미등록 이름 모두 새 캐스트로 등록</button>
+            <button class="button button-ghost" id="importAllSkipButton" type="button">미등록 이름 모두 건너뛰기</button>
+          </div>
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>출근표 이름</th>
+                  <th>캐스트 연결</th>
+                  <th>시작</th>
+                  <th>종료</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody id="importTableBody"></tbody>
+            </table>
+          </div>
+          <div class="form-panel" style="margin-top: 16px;">
+            <h3 class="form-panel-title">출근표에 없는 캐스트</h3>
+            <p class="helper">체크한 캐스트는 저장할 때 '현재 없는 캐스트'로 분리됩니다. 바로 삭제되지는 않으며 언제든 복원할 수 있습니다.</p>
+            <div class="button-row" style="margin-top: 10px;">
+              <button class="button button-ghost" id="importAbsentSelectAll" type="button">전체 선택</button>
+              <button class="button button-ghost" id="importAbsentClear" type="button">전체 해제</button>
+            </div>
+            <div class="import-absent-list" id="importAbsentList"></div>
+            <p class="helper" id="importReactivateNote" style="margin-top: 10px;"></p>
+          </div>
+          <div class="button-row" style="margin-top: 16px;">
+            <button class="button button-primary" id="importApplyButton" type="button">스케줄 저장</button>
+          </div>
+        </div>
+      </section>
+      <section class="surface section" id="eventSection" style="margin-top: 20px;">
+        <div class="section-header">
+          <div>
+            <h2>카페 이벤트 등록</h2>
+            <p>이벤트 이미지를 올리면 AI가 제목·본문·기간·참여 캐스트를 채웁니다. 검토 후 등록하면 앱의 카페 이벤트에 이미지와 함께 게시되고, 카페를 즐겨찾기한 사용자에게 알림이 갑니다.</p>
+          </div>
+        </div>
+        <div class="event-layout">
+          <div>
+            <label class="import-dropzone" id="eventDropzone" for="eventFileInput">
+              <input id="eventFileInput" type="file" accept="image/*" hidden />
+              <img id="eventPreview" alt="이벤트 이미지 미리보기" hidden />
+              <span id="eventDropzoneText">이벤트 이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.</span>
+            </label>
+            <div class="button-row" style="margin-top: 14px;">
+              <button class="button button-primary" id="eventAnalyzeButton" type="button" disabled>AI로 분석하기</button>
+              <button class="button button-ghost" id="eventResetButton" type="button">초기화</button>
+            </div>
+          </div>
+          <form class="event-form" id="eventForm" novalidate>
+            <div class="field">
+              <label for="eventTitle">제목</label>
+              <input id="eventTitle" type="text" maxlength="100" placeholder="예: 레이 생탄 이벤트" />
+            </div>
+            <div class="field">
+              <label for="eventContent">본문</label>
+              <textarea id="eventContent" maxlength="2000" placeholder="이벤트 안내 문구"></textarea>
+              <span class="event-counter" id="eventContentCounter">0 / 2000</span>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="eventStartDate">시작일</label>
+                <input id="eventStartDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="eventEndDate">종료일</label>
+                <input id="eventEndDate" type="date" />
+              </div>
+            </div>
+            <div class="field">
+              <label>참여 캐스트</label>
+              <div class="import-absent-list" id="eventParticipantList" style="margin-top: 0;"></div>
+              <p class="helper" id="eventUnmatchedNote"></p>
+            </div>
+            <label class="import-check" style="padding-bottom: 0;">
+              <input id="eventHasLive" type="checkbox" />
+              라이브 공연이 있는 이벤트
+            </label>
+            <div class="button-row">
+              <button class="button button-primary" id="eventSubmitButton" type="submit">이벤트 등록</button>
+            </div>
+          </form>
+        </div>
+        <div class="status-banner info" id="eventStatus" style="display: none;"></div>
+        <h3 class="form-panel-title" style="margin-top: 24px;">등록된 이벤트</h3>
+        <div class="list" id="eventList"></div>
+        <p class="empty" id="eventEmptyState">카페를 선택하세요.</p>
+      </section>
+    </div>
+      <footer class="footer">
+        <span>© 2026 콘카(ConCafe)</span>
+        <span><a href="/privacy">개인정보처리방침</a></span>
+      </footer>
+      </main>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="로그인">
+      <div class="auth-modal-box">
+        <button class="auth-modal-close" id="authModalClose" type="button" aria-label="닫기">✕</button>
+        <h2 class="auth-modal-title">로그인</h2>
+        <form class="auth-modal-form" id="emailLoginForm" novalidate>
+          <div class="auth-modal-field">
+            <label for="loginEmail">이메일</label>
+            <input type="email" id="loginEmail" placeholder="이메일 주소" autocomplete="email" />
+          </div>
+          <div class="auth-modal-field">
+            <label for="loginPassword">비밀번호</label>
+            <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" />
+          </div>
+          <p class="auth-modal-error" id="emailLoginError" style="display:none;"></p>
+          <button class="auth-modal-submit" type="submit">로그인</button>
+        </form>
+        <div class="auth-modal-divider"><span>또는</span></div>
+        <button class="auth-modal-google" id="googleSignInModalBtn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google로 로그인
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const firebaseConfig = {
+          apiKey: "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI",
+          authDomain: "concafe-5f7fd.firebaseapp.com",
+          projectId: "concafe-5f7fd",
+          storageBucket: "concafe-5f7fd.firebasestorage.app",
+          messagingSenderId: "387905493709",
+          appId: "1:387905493709:web:admin-page",
+        };
+
+        const FUNCTIONS_BASE_URL = "https://us-central1-concafe-5f7fd.cloudfunctions.net";
+        const CAST_ROSTER_STATUS_INACTIVE = "INACTIVE";
+        const CONCEPT_TYPES = [
+          ["MAID", "메이드"], ["BUTLER", "집사"], ["IDOL", "아이돌"], ["DEVIL", "악마"], ["DOLL", "인형"],
+          ["COSPLAY", "코스프레"], ["NAMJANG", "남장"], ["YOKAI", "요괴"], ["CAT", "고양이"], ["OTHER", "기타"],
+        ];
+        const CITIES = {
+          KR: [["Seoul", "서울"], ["Busan", "부산"], ["Daegu", "대구"], ["Etc", "기타"]],
+          JP: [["Tokyo", "도쿄"], ["Osaka", "오사카"], ["Yokohama", "요코하마"], ["Etc", "기타"]],
+        };
+        const COUNTRY_CENTERS = { KR: { lat: 37.5665, lng: 126.978 }, JP: { lat: 35.6812, lng: 139.7671 } };
+        const BUSINESS_DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+        const INACTIVE_REASON_LABELS = { NOT_IN_SCHEDULE_IMAGE: "출근표에 없음" };
+        const IMPORT_MAX_IMAGE_BYTES = 4.5 * 1024 * 1024;
+        const IMPORT_MAX_IMAGE_EDGE = 3000;
+        const IMPORT_SUPPORTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+        const IMPORT_WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+        const IMPORT_ERROR_MESSAGES = {
+          missing_auth: "로그인 정보가 없습니다. 다시 로그인하세요.",
+          invalid_auth: "로그인이 만료되었습니다. 다시 로그인하세요.",
+          forbidden: "이 카페를 관리할 권한이 없습니다.",
+          cafe_not_found: "카페를 찾을 수 없습니다.",
+          invalid_image_url: "업로드한 이미지 경로가 올바르지 않습니다.",
+          image_not_found: "업로드한 이미지를 찾을 수 없습니다.",
+          unsupported_image_type: "JPG, PNG, GIF, WEBP 이미지만 분석할 수 있습니다.",
+          image_too_large: "이미지가 너무 큽니다 (최대 5MB).",
+          not_schedule_image: "출근표 이미지로 인식되지 않았습니다.",
+          not_event_image: "이벤트 안내 이미지로 인식되지 않았습니다. 출근표는 위의 출근표 등록을 사용하세요.",
+          no_schedule_days: "분석 가능한 날짜가 없습니다. 날짜가 보이는 출근표인지 확인하세요.",
+          extraction_refused: "이미지 분석이 거절되었습니다. 다른 이미지로 시도하세요.",
+          extraction_truncated: "출근표가 너무 길어 분석이 중간에 끊겼습니다. 이미지를 나눠서 올려주세요.",
+          extraction_invalid: "분석 결과를 읽지 못했습니다. 다시 시도하세요.",
+          extraction_busy: "분석 요청이 많습니다. 잠시 후 다시 시도하세요.",
+          extraction_timeout: "분석 시간이 초과되었습니다. 다시 시도하세요.",
+          extraction_failed: "이미지 분석에 실패했습니다. 잠시 후 다시 시도하세요.",
+          import_not_found: "분석 결과가 만료되었거나 없습니다. 다시 분석하세요.",
+          import_already_applied: "이미 저장한 분석 결과입니다. 새로 분석하세요.",
+          entry_date_out_of_import: "출근표 기간 밖의 날짜가 포함되어 있습니다.",
+          cast_not_found: "연결한 캐스트를 찾을 수 없습니다. 다시 분석하세요.",
+          invalid_entries: "저장할 스케줄 형식이 올바르지 않습니다.",
+          invalid_default_time: "기본 시작/종료 시간을 확인하세요.",
+          invalid_inactive_casts: "현재 없는 캐스트 선택이 올바르지 않습니다.",
+          inactive_cast_in_schedule: "출근표에 있는 캐스트는 현재 없는 캐스트로 분리할 수 없습니다.",
+        };
+
+        const state = {
+          user: null,
+          isAdmin: false,
+          cafes: [],
+          filteredCafes: [],
+          selectedCafeId: "",
+          castCount: 0,
+          inactiveCasts: [],
+          cafeSaving: false,
+          locationMap: null,
+          locationMarker: null,
+          importImage: null,
+          importDraft: null,
+          importRows: [],
+          importInactiveIds: {},
+          importBusy: false,
+          casts: [],
+          events: [],
+          eventImage: null,
+          eventImageUrl: "",
+          eventParticipantIds: {},
+          eventUnmatchedNames: [],
+          eventBusy: false,
+          pasteTarget: "schedule",
+        };
+
+        const el = {};
+        [
+          "authStatus", "cafeCount", "selectedCafeLabel", "castCount", "inactiveCount",
+          "cafeForm", "cafeName", "cafeConceptType", "cafePhoneNumber", "cafeCountry", "cafeCity", "cafeAddress",
+          "cafeGeocodeButton", "cafeLatitude", "cafeLongitude", "cafeLocationMap", "cafeLocationHelper",
+          "cafeOpenTime", "cafeCloseTime", "cafeFillHoursButton", "cafeBusinessHours", "cafeThumbnailImage", "cafeDesc",
+          "cafeSubmitButton", "cafeResetButton", "cafeFormStatus",
+          "cafeSearch", "cafeSelect", "cafeStatus",
+          "refreshInactiveButton", "inactiveList", "inactiveEmptyState", "inactiveStatus",
+          "scheduleImportSection", "importDropzone", "importFileInput", "importPreview", "importDropzoneText",
+          "importAnalyzeButton", "importResetButton", "importStatus", "importReview", "importSummary",
+          "importDefaultStartTime", "importDefaultEndTime", "importReplaceExisting", "importAllNewButton", "importAllSkipButton",
+          "importTableBody", "importAbsentSelectAll", "importAbsentClear", "importAbsentList", "importReactivateNote",
+          "importApplyButton",
+          "eventSection", "eventDropzone", "eventFileInput", "eventPreview", "eventDropzoneText", "eventAnalyzeButton",
+          "eventResetButton", "eventForm", "eventTitle", "eventContent", "eventContentCounter", "eventStartDate", "eventEndDate",
+          "eventParticipantList", "eventUnmatchedNote", "eventHasLive", "eventSubmitButton", "eventStatus", "eventList", "eventEmptyState",
+        ].forEach(function (id) {
+          el[id] = document.getElementById(id);
+        });
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = app.auth();
+        const db = app.firestore();
+        const storage = app.storage();
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function setBanner(target, type, message) {
+          target.style.display = "";
+          target.className = "status-banner " + type;
+          target.textContent = message;
+        }
+
+        function normalizeText(value, fallback) {
+          return typeof value === "string" && value.trim() ? value.trim() : fallback;
+        }
+
+        function normalizeName(value) {
+          return String(value || "").normalize("NFKC").toLowerCase().replace(/[\s\p{P}\p{S}]/gu, "");
+        }
+
+        function nowIso() {
+          return new Date().toISOString();
+        }
+
+        function isReady() {
+          return !!state.user && state.isAdmin;
+        }
+
+        function getSelectedCafe() {
+          return state.cafes.find(function (cafe) { return cafe.id === state.selectedCafeId; }) || null;
+        }
+
+        function updateSummary() {
+          const cafe = getSelectedCafe();
+          el.cafeCount.textContent = String(state.cafes.length);
+          el.selectedCafeLabel.textContent = cafe ? cafe.name : "없음";
+          el.castCount.textContent = String(state.castCount);
+          el.inactiveCount.textContent = String(state.inactiveCasts.length);
+        }
+
+        function updateAvailability() {
+          const ready = isReady();
+          el.cafeSubmitButton.disabled = !ready || state.cafeSaving;
+          el.cafeSearch.disabled = !ready;
+          el.cafeSelect.disabled = !ready;
+          el.refreshInactiveButton.disabled = !ready || !state.selectedCafeId;
+          el.importAnalyzeButton.disabled = !ready || !state.selectedCafeId || !state.importImage || state.importBusy;
+          el.importApplyButton.disabled = !ready || !state.importDraft || state.importBusy;
+          el.importResetButton.disabled = state.importBusy;
+          el.eventAnalyzeButton.disabled = !ready || !state.selectedCafeId || !state.eventImage || state.eventBusy;
+          el.eventSubmitButton.disabled = !ready || !state.selectedCafeId || state.eventBusy;
+          el.eventResetButton.disabled = state.eventBusy;
+        }
+
+        // ---------- 카페 목록 ----------
+
+        function renderCafeOptions() {
+          const currentValue = state.selectedCafeId;
+          el.cafeSelect.innerHTML = '<option value="">카페를 선택하세요</option>' +
+            state.filteredCafes.map(function (cafe) {
+              return '<option value="' + escapeHtml(cafe.id) + '">' + escapeHtml(cafe.name) +
+                (cafe.regionLabel ? " · " + escapeHtml(cafe.regionLabel) : "") + "</option>";
+            }).join("");
+          el.cafeSelect.value = state.filteredCafes.some(function (cafe) { return cafe.id === currentValue; }) ? currentValue : "";
+        }
+
+        function filterCafes() {
+          const keyword = el.cafeSearch.value.trim().toLowerCase();
+          state.filteredCafes = !keyword ? state.cafes.slice() : state.cafes.filter(function (cafe) {
+            return (cafe.name + " " + cafe.regionLabel).toLowerCase().indexOf(keyword) >= 0;
+          });
+          renderCafeOptions();
+        }
+
+        async function loadCafes() {
+          setBanner(el.cafeStatus, "info", "카페 목록을 불러오는 중입니다.");
+          try {
+            const snapshot = await db.collection("cafes").get();
+            state.cafes = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              const region = data.region || {};
+              return {
+                id: doc.id,
+                name: normalizeText(data.name, "이름 없는 카페"),
+                regionLabel: [region.city, region.address].filter(function (value) {
+                  return typeof value === "string" && value.trim();
+                }).join(" "),
+              };
+            }).sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+            filterCafes();
+            updateSummary();
+            setBanner(el.cafeStatus, "success", "카페 " + state.cafes.length + "곳을 불러왔습니다.");
+          } catch (error) {
+            setBanner(el.cafeStatus, "error", "카페 목록을 불러오지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        async function selectCafe(cafeId) {
+          state.selectedCafeId = cafeId;
+          el.cafeSelect.value = cafeId;
+          resetScheduleImport();
+          resetEventForm();
+          updateSummary();
+          await Promise.all([loadCafeCasts(), loadCafeEvents()]);
+        }
+
+        // ---------- 현재 없는 캐스트 ----------
+
+        function renderInactiveCasts() {
+          if (!state.selectedCafeId) {
+            el.inactiveList.innerHTML = "";
+            el.inactiveEmptyState.style.display = "";
+            el.inactiveEmptyState.textContent = "카페를 선택하세요.";
+            return;
+          }
+          if (!state.inactiveCasts.length) {
+            el.inactiveList.innerHTML = "";
+            el.inactiveEmptyState.style.display = "";
+            el.inactiveEmptyState.textContent = "현재 없는 캐스트가 없습니다.";
+            return;
+          }
+          el.inactiveEmptyState.style.display = "none";
+          el.inactiveList.innerHTML = state.inactiveCasts.map(function (cast) {
+            const inactiveDate = cast.inactiveAt ? cast.inactiveAt.slice(0, 10) : "";
+            return '<article class="list-item"><div class="item-head"><div>' +
+              '<h3 class="item-title">' + escapeHtml(cast.name) + "</h3>" +
+              '<div class="chip-row" style="margin-top:8px;">' +
+              '<span class="chip warning">' + escapeHtml(INACTIVE_REASON_LABELS[cast.inactiveReason] || "분리됨") + "</span>" +
+              (inactiveDate ? '<span class="chip neutral">' + escapeHtml(inactiveDate) + " 분리</span>" : "") +
+              (cast.linkedUserId ? '<span class="chip">연결된 계정 있음</span>' : "") +
+              "</div></div>" +
+              '<button class="button button-secondary" type="button" data-restore-cast-id="' + escapeHtml(cast.id) + '">복원</button>' +
+              "</div></article>";
+          }).join("");
+        }
+
+        async function loadCafeCasts() {
+          state.castCount = 0;
+          state.casts = [];
+          state.inactiveCasts = [];
+          renderInactiveCasts();
+          updateSummary();
+          updateAvailability();
+          if (!isReady() || !state.selectedCafeId) {
+            return;
+          }
+          const cafeId = state.selectedCafeId;
+          try {
+            const snapshot = await db.collection("cafes").doc(cafeId).collection("casts").get();
+            if (cafeId !== state.selectedCafeId) {
+              return;
+            }
+            const casts = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                name: normalizeText(data.name, "이름 없음"),
+                rosterStatus: normalizeText(data.rosterStatus, ""),
+                inactiveAt: normalizeText(data.inactiveAt, ""),
+                inactiveReason: normalizeText(data.inactiveReason, ""),
+                linkedUserId: normalizeText(data.linkedUserId, ""),
+              };
+            });
+            state.castCount = casts.length;
+            state.casts = casts.slice().sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+            state.inactiveCasts = casts.filter(function (cast) {
+              return cast.rosterStatus === CAST_ROSTER_STATUS_INACTIVE;
+            }).sort(function (a, b) {
+              return a.name.localeCompare(b.name, "ko");
+            });
+            el.inactiveStatus.style.display = "none";
+          } catch (error) {
+            setBanner(el.inactiveStatus, "error", "캐스트 목록을 불러오지 못했습니다.");
+            console.error(error);
+          }
+          renderInactiveCasts();
+          renderEventParticipants();
+          updateSummary();
+          updateAvailability();
+        }
+
+        async function restoreInactiveCast(castId) {
+          const cast = state.inactiveCasts.find(function (item) { return item.id === castId; });
+          if (!cast || !isReady()) {
+            return;
+          }
+          try {
+            const now = nowIso();
+            await db.collection("cafes").doc(state.selectedCafeId).collection("casts").doc(castId).update({
+              rosterStatus: "ACTIVE",
+              reactivatedAt: now,
+              updatedAt: now,
+            });
+            setBanner(el.inactiveStatus, "success", cast.name + " 캐스트를 복원했습니다.");
+            await loadCafeCasts();
+          } catch (error) {
+            setBanner(el.inactiveStatus, "error", "캐스트를 복원하지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        // ---------- 카페 등록 ----------
+
+        function renderCityOptions() {
+          const cities = CITIES[el.cafeCountry.value] || [];
+          el.cafeCity.innerHTML = cities.map(function (city) {
+            return '<option value="' + city[0] + '">' + escapeHtml(city[1]) + " (" + city[0] + ")</option>";
+          }).join("");
+        }
+
+        function isValidClockTime(value) {
+          return /^([01]\d|2[0-4]):[0-5]\d$/.test(value);
+        }
+
+        function fillBusinessHours() {
+          const open = el.cafeOpenTime.value.trim();
+          const close = el.cafeCloseTime.value.trim();
+          if (!isValidClockTime(open) || !isValidClockTime(close)) {
+            setBanner(el.cafeFormStatus, "error", "영업 시작/종료 시간을 HH:MM 형식으로 입력하세요.");
+            return;
+          }
+          el.cafeFormStatus.style.display = "none";
+          el.cafeBusinessHours.value = BUSINESS_DAY_LABELS.map(function (day) {
+            return day + " " + open + "-" + close;
+          }).join("\n");
+        }
+
+        function getMapsApiKey() {
+          return typeof window.CONCAFE_GOOGLE_MAPS_API_KEY === "string" ? window.CONCAFE_GOOGLE_MAPS_API_KEY.trim() : "";
+        }
+
+        function loadGoogleMaps() {
+          return new Promise(function (resolve, reject) {
+            if (window.google && window.google.maps) {
+              resolve();
+              return;
+            }
+            const apiKey = getMapsApiKey();
+            if (!apiKey) {
+              reject(new Error("missing_maps_key"));
+              return;
+            }
+            const callbackName = "__concafeAdminInitMap";
+            window[callbackName] = function () {
+              resolve();
+              delete window[callbackName];
+            };
+            const script = document.createElement("script");
+            script.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(apiKey) + "&language=ko&callback=" + callbackName;
+            script.async = true;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        function readLocationInputs() {
+          const lat = Number(el.cafeLatitude.value.trim());
+          const lng = Number(el.cafeLongitude.value.trim());
+          if (!el.cafeLatitude.value.trim() || !el.cafeLongitude.value.trim() || !isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+            return null;
+          }
+          return { lat: lat, lng: lng };
+        }
+
+        function writeLocationInputs(position) {
+          el.cafeLatitude.value = position.lat.toFixed(6);
+          el.cafeLongitude.value = position.lng.toFixed(6);
+        }
+
+        async function showLocationOnMap(position) {
+          await loadGoogleMaps();
+          el.cafeLocationMap.hidden = false;
+          if (!state.locationMap) {
+            state.locationMap = new window.google.maps.Map(el.cafeLocationMap, {
+              center: position,
+              zoom: 17,
+              disableDefaultUI: true,
+              zoomControl: true,
+              clickableIcons: false,
+            });
+            state.locationMarker = new window.google.maps.Marker({ position: position, map: state.locationMap, draggable: true });
+            state.locationMarker.addListener("dragend", function () {
+              const moved = state.locationMarker.getPosition();
+              writeLocationInputs({ lat: moved.lat(), lng: moved.lng() });
+            });
+          } else {
+            state.locationMap.setCenter(position);
+            state.locationMarker.setPosition(position);
+          }
+        }
+
+        async function handleGeocode() {
+          const address = el.cafeAddress.value.trim();
+          if (!address) {
+            setBanner(el.cafeFormStatus, "error", "주소를 먼저 입력하세요.");
+            return;
+          }
+          el.cafeGeocodeButton.disabled = true;
+          el.cafeLocationHelper.textContent = "주소로 위치를 찾는 중입니다.";
+          try {
+            await loadGoogleMaps();
+            const geocoder = new window.google.maps.Geocoder();
+            const response = await geocoder.geocode({ address: address, region: el.cafeCountry.value.toLowerCase() });
+            const result = response.results && response.results[0];
+            if (!result) {
+              throw new Error("no_result");
+            }
+            const position = { lat: result.geometry.location.lat(), lng: result.geometry.location.lng() };
+            writeLocationInputs(position);
+            await showLocationOnMap(position);
+            el.cafeLocationHelper.textContent = "찾은 위치: " + result.formatted_address + " · 핀을 끌어 정확한 위치로 조정하세요.";
+            el.cafeFormStatus.style.display = "none";
+          } catch (error) {
+            el.cafeLocationHelper.textContent = "위치를 찾지 못했습니다. 주소를 바꿔 다시 시도하거나 위도/경도를 직접 입력하세요.";
+            console.error(error);
+          } finally {
+            el.cafeGeocodeButton.disabled = false;
+          }
+        }
+
+        function handleLocationInputChange() {
+          const position = readLocationInputs();
+          if (position && state.locationMap) {
+            state.locationMap.setCenter(position);
+            state.locationMarker.setPosition(position);
+          }
+        }
+
+        function resetCafeForm() {
+          el.cafeForm.reset();
+          el.cafeConceptType.value = "MAID";
+          el.cafeCountry.value = "KR";
+          renderCityOptions();
+          el.cafeLocationMap.hidden = true;
+          el.cafeLocationHelper.textContent = "주소를 입력하고 위치 찾기를 누르세요. 지도에서 핀을 끌어 위치를 조정할 수 있습니다.";
+        }
+
+        async function handleCafeSubmit(event) {
+          event.preventDefault();
+          if (!isReady() || state.cafeSaving) {
+            return;
+          }
+          const name = el.cafeName.value.trim();
+          const address = el.cafeAddress.value.trim();
+          const position = readLocationInputs();
+          const thumbnailImage = el.cafeThumbnailImage.value.trim();
+          if (!name) {
+            setBanner(el.cafeFormStatus, "error", "카페 이름을 입력하세요.");
+            return;
+          }
+          if (!address) {
+            setBanner(el.cafeFormStatus, "error", "주소를 입력하세요.");
+            return;
+          }
+          if (!position) {
+            setBanner(el.cafeFormStatus, "error", "위치 찾기로 좌표를 채우거나 위도/경도를 직접 입력하세요.");
+            return;
+          }
+          if (thumbnailImage && !/^https:\/\//.test(thumbnailImage)) {
+            setBanner(el.cafeFormStatus, "error", "대표 이미지 URL은 https://로 시작해야 합니다.");
+            return;
+          }
+          const duplicate = state.cafes.find(function (cafe) { return normalizeName(cafe.name) === normalizeName(name); });
+          if (duplicate && !window.confirm("같은 이름의 카페(" + duplicate.name + ")가 이미 있습니다. 그래도 등록할까요?")) {
+            return;
+          }
+
+          state.cafeSaving = true;
+          updateAvailability();
+          setBanner(el.cafeFormStatus, "info", "카페를 등록하는 중입니다.");
+          try {
+            const now = nowIso();
+            const cafeId = "cafe-" + Date.now();
+            await db.collection("cafes").doc(cafeId).set({
+              name: name,
+              desc: el.cafeDesc.value.trim(),
+              thumbnailImage: thumbnailImage || null,
+              conceptType: el.cafeConceptType.value,
+              businessHours: el.cafeBusinessHours.value.trim(),
+              phoneNumber: el.cafePhoneNumber.value.trim(),
+              approved: true,
+              ownerIds: [],
+              region: {
+                country: el.cafeCountry.value,
+                city: el.cafeCity.value,
+                address: address,
+                location: new firebase.firestore.GeoPoint(position.lat, position.lng),
+              },
+              ratingAvg: 0,
+              reviewCount: 0,
+              favoriteCount: 0,
+              createdVia: "ADMIN_WEB",
+              createdBy: state.user.uid,
+              createdAt: now,
+              updatedAt: now,
+            });
+            resetCafeForm();
+            setBanner(el.cafeFormStatus, "success", name + " 카페를 등록했습니다. 카페 선택에서 자동으로 선택했습니다.");
+            await loadCafes();
+            await selectCafe(cafeId);
+          } catch (error) {
+            setBanner(el.cafeFormStatus, "error", "카페 등록에 실패했습니다. 관리자 권한을 확인하세요.");
+            console.error(error);
+          } finally {
+            state.cafeSaving = false;
+            updateAvailability();
+          }
+        }
+
+        // ---------- 출근표 이미지로 스케줄 등록 ----------
+
+        function isValidImportTime(value) {
+          return /^([01]\d|2[0-4]):[0-5]\d$/.test(value) && !(value.indexOf("24:") === 0 && value !== "24:00");
+        }
+
+        function formatImportDate(dateKey) {
+          const parts = dateKey.split("-").map(Number);
+          const weekday = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])).getUTCDay();
+          return parts[1] + "/" + parts[2] + " (" + IMPORT_WEEKDAY_LABELS[weekday] + ")";
+        }
+
+        function setImportStatus(type, message) {
+          setBanner(el.importStatus, type, message);
+        }
+
+        function resetScheduleImport() {
+          state.importImage = null;
+          state.importDraft = null;
+          state.importRows = [];
+          state.importInactiveIds = {};
+          el.importFileInput.value = "";
+          el.importPreview.hidden = true;
+          el.importPreview.removeAttribute("src");
+          el.importDropzoneText.textContent = "이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.";
+          el.importStatus.style.display = "none";
+          el.importReplaceExisting.checked = false;
+          renderImportReview();
+          updateAvailability();
+        }
+
+        function loadImageElement(file) {
+          return new Promise(function (resolve, reject) {
+            const url = URL.createObjectURL(file);
+            const image = new Image();
+            image.onload = function () { resolve({ image: image, url: url }); };
+            image.onerror = function () {
+              URL.revokeObjectURL(url);
+              reject(new Error("image_decode_failed"));
+            };
+            image.src = url;
+          });
+        }
+
+        function canvasToBlob(canvas, quality) {
+          return new Promise(function (resolve) {
+            canvas.toBlob(resolve, "image/jpeg", quality);
+          });
+        }
+
+        // 분석 모델 이미지 입력 한도(5MB)를 넘거나 지원하지 않는 형식이면 JPEG로 다시 인코딩한다
+        async function prepareImportImage(file) {
+          const loaded = await loadImageElement(file);
+          const image = loaded.image;
+          const longEdge = Math.max(image.naturalWidth, image.naturalHeight);
+          const needsResize = longEdge > IMPORT_MAX_IMAGE_EDGE;
+          if (IMPORT_SUPPORTED_TYPES.indexOf(file.type) >= 0 && file.size <= IMPORT_MAX_IMAGE_BYTES && !needsResize) {
+            return { blob: file, contentType: file.type, previewUrl: loaded.url };
+          }
+          let scale = needsResize ? IMPORT_MAX_IMAGE_EDGE / longEdge : 1;
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(image.naturalWidth * scale);
+            canvas.height = Math.round(image.naturalHeight * scale);
+            const context = canvas.getContext("2d");
+            context.fillStyle = "#fff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const blob = await canvasToBlob(canvas, 0.9);
+            if (blob && blob.size <= IMPORT_MAX_IMAGE_BYTES) {
+              return { blob: blob, contentType: "image/jpeg", previewUrl: loaded.url };
+            }
+            scale *= 0.8;
+          }
+          throw new Error("image_too_large");
+        }
+
+        async function selectImportFile(file) {
+          if (!file || !/^image\//.test(file.type)) {
+            setImportStatus("error", "이미지 파일만 올릴 수 있습니다.");
+            return;
+          }
+          if (state.importBusy) {
+            return;
+          }
+          resetScheduleImport();
+          try {
+            const prepared = await prepareImportImage(file);
+            state.importImage = prepared;
+            el.importPreview.src = prepared.previewUrl;
+            el.importPreview.hidden = false;
+            el.importDropzoneText.textContent = file.name + " · 다른 이미지로 바꾸려면 클릭하세요.";
+            setImportStatus("info", state.selectedCafeId ? "분석하기를 누르면 출근표를 읽습니다." : "카페를 먼저 선택하세요.");
+          } catch (error) {
+            setImportStatus("error", error.message === "image_too_large" ? "이미지가 너무 커서 줄이지 못했습니다." : "이미지를 읽지 못했습니다. JPG나 PNG로 저장해 다시 올려주세요.");
+            console.error(error);
+          }
+          updateAvailability();
+        }
+
+        async function callScheduleImportFunction(name, body) {
+          const idToken = await state.user.getIdToken();
+          const response = await fetch(FUNCTIONS_BASE_URL + "/" + name, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + idToken,
+            },
+            body: JSON.stringify(body),
+          });
+          let payload = {};
+          try {
+            payload = await response.json();
+          } catch (error) {
+            payload = {};
+          }
+          if (!response.ok) {
+            const failure = new Error(payload.error || "http_" + response.status);
+            failure.code = payload.error || "";
+            throw failure;
+          }
+          return payload;
+        }
+
+        function describeImportError(error) {
+          return IMPORT_ERROR_MESSAGES[error && error.code] || "요청에 실패했습니다. 잠시 후 다시 시도하세요.";
+        }
+
+        async function handleImportAnalyze() {
+          if (!state.importImage || !isReady() || !state.selectedCafeId || state.importBusy) {
+            return;
+          }
+          const cafeId = state.selectedCafeId;
+          state.importBusy = true;
+          state.importDraft = null;
+          state.importRows = [];
+          state.importInactiveIds = {};
+          renderImportReview();
+          updateAvailability();
+          const startedAt = Date.now();
+          let timer = null;
+          try {
+            setImportStatus("info", "이미지를 업로드하는 중입니다.");
+            const extension = state.importImage.contentType.split("/")[1].replace("jpeg", "jpg");
+            const objectPath = "scheduleImports/" + cafeId + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + extension;
+            const ref = storage.ref(objectPath);
+            await ref.put(state.importImage.blob, { contentType: state.importImage.contentType });
+            const imageUrl = await ref.getDownloadURL();
+
+            timer = setInterval(function () {
+              setImportStatus("info", "출근표를 분석하는 중입니다… " + Math.round((Date.now() - startedAt) / 1000) + "초 (보통 20~40초 걸립니다)");
+            }, 1000);
+            setImportStatus("info", "출근표를 분석하는 중입니다… (보통 20~40초 걸립니다)");
+            const draft = await callScheduleImportFunction("extractScheduleImage", { cafeId: cafeId, imageUrl: imageUrl });
+            if (cafeId !== state.selectedCafeId) {
+              return;
+            }
+            state.importDraft = draft;
+            state.importRows = (draft.entries || []).map(function (entry) {
+              return {
+                entryId: entry.entryId,
+                date: entry.date,
+                castName: entry.castName,
+                matchType: entry.matchType,
+                matchedCastId: entry.castId,
+                matchedCastName: entry.matchedCastName,
+                existingStartTime: entry.existingStartTime,
+                existingEndTime: entry.existingEndTime,
+                selection: entry.castId ? "cast:" + entry.castId : "skip",
+                startTime: entry.startTime || "",
+                endTime: entry.endTime || "",
+              };
+            });
+            el.importDefaultStartTime.value = draft.defaultStartTime || "";
+            el.importDefaultEndTime.value = draft.defaultEndTime || "";
+            renderImportReview();
+            const needCheck = state.importRows.filter(function (row) { return row.matchType !== "EXACT"; }).length;
+            setImportStatus(
+              "success",
+              "분석이 끝났습니다. " + state.importRows.length + "건을 찾았습니다" +
+                (needCheck ? " (확인 필요 " + needCheck + "건)" : "") + ". 아래 표를 검토한 뒤 저장하세요."
+            );
+          } catch (error) {
+            setImportStatus("error", error && error.code ? describeImportError(error) : "이미지 업로드 또는 분석 요청에 실패했습니다.");
+            console.error(error);
+          } finally {
+            if (timer) {
+              clearInterval(timer);
+            }
+            state.importBusy = false;
+            updateAvailability();
+          }
+        }
+
+        function getScheduledCastIds() {
+          const ids = {};
+          state.importRows.forEach(function (row) {
+            if (row.selection.indexOf("cast:") === 0) {
+              ids[row.selection.slice(5)] = true;
+            }
+          });
+          return ids;
+        }
+
+        function getAbsentCasts() {
+          const scheduled = getScheduledCastIds();
+          return ((state.importDraft && state.importDraft.casts) || []).filter(function (cast) {
+            return !cast.inactive && !scheduled[cast.id];
+          }).sort(function (a, b) {
+            return a.name.localeCompare(b.name, "ko");
+          });
+        }
+
+        function renderImportAbsent() {
+          const absent = getAbsentCasts();
+          const absentIds = {};
+          absent.forEach(function (cast) { absentIds[cast.id] = true; });
+          Object.keys(state.importInactiveIds).forEach(function (castId) {
+            if (!absentIds[castId]) {
+              delete state.importInactiveIds[castId];
+            }
+          });
+          el.importAbsentList.innerHTML = absent.length ? absent.map(function (cast) {
+            const checked = !!state.importInactiveIds[cast.id];
+            return '<label class="import-absent-item' + (checked ? " is-checked" : "") + '">' +
+              '<input type="checkbox" data-absent-cast-id="' + escapeHtml(cast.id) + '"' + (checked ? " checked" : "") + " />" +
+              escapeHtml(cast.name) + "</label>";
+          }).join("") : '<p class="helper">등록된 캐스트가 모두 출근표에 있습니다.</p>';
+
+          const scheduled = getScheduledCastIds();
+          const returning = ((state.importDraft && state.importDraft.casts) || []).filter(function (cast) {
+            return cast.inactive && scheduled[cast.id];
+          });
+          el.importReactivateNote.textContent = returning.length
+            ? "현재 없는 캐스트였던 " + returning.map(function (cast) { return cast.name; }).join(", ") + "은(는) 출근표에 있어 저장 시 복원됩니다."
+            : "";
+        }
+
+        function renderImportReview() {
+          const draft = state.importDraft;
+          if (!draft) {
+            el.importReview.hidden = true;
+            el.importSummary.innerHTML = "";
+            el.importTableBody.innerHTML = "";
+            el.importAbsentList.innerHTML = "";
+            el.importReactivateNote.textContent = "";
+            return;
+          }
+          el.importReview.hidden = false;
+
+          const closedDays = (draft.days || []).filter(function (day) { return day.isClosed; });
+          const dayNotes = (draft.days || []).filter(function (day) { return day.notes && day.notes.length; });
+          const warnings = (draft.warnings || []).map(function (warning) {
+            const parts = warning.split(":");
+            if (parts[0] === "date_out_of_range") return parts[1] + " 날짜는 등록 가능 기간 밖이라 제외했습니다.";
+            if (parts[0] === "weekday_mismatch") return formatImportDate(parts[1]) + " 요일이 출근표 표기와 다릅니다. 날짜를 확인하세요.";
+            if (parts[0] === "invalid_time") return formatImportDate(parts[1]) + " 시간(" + parts.slice(2).join(":") + ")을 읽지 못해 비워 두었습니다.";
+            return warning;
+          });
+          const counts = { EXACT: 0, PARTIAL: 0, NONE: 0 };
+          state.importRows.forEach(function (row) { counts[row.matchType] = (counts[row.matchType] || 0) + 1; });
+          const newNames = {};
+          state.importRows.forEach(function (row) {
+            if (row.selection === "new") {
+              newNames[row.castName] = true;
+            }
+          });
+
+          let summary = "<h3>" + escapeHtml(draft.title || "출근표") + " · " + escapeHtml(formatImportDate(draft.periodStart)) + " ~ " + escapeHtml(formatImportDate(draft.periodEnd)) + "</h3>";
+          summary += "<p>총 " + state.importRows.length + "건 · 자동 연결 " + counts.EXACT + " · 확인 필요 " + counts.PARTIAL + " · 미등록 이름 " + counts.NONE +
+            " · 새로 등록할 캐스트 " + Object.keys(newNames).length + "명</p>";
+          const items = [];
+          closedDays.forEach(function (day) { items.push(formatImportDate(day.date) + " 휴무"); });
+          dayNotes.forEach(function (day) { items.push(formatImportDate(day.date) + ": " + day.notes.join(", ")); });
+          (draft.notes || []).forEach(function (note) { items.push(note); });
+          warnings.forEach(function (warning) { items.push("⚠ " + warning); });
+          if (items.length) {
+            summary += "<ul>" + items.map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; }).join("") + "</ul>";
+          }
+          el.importSummary.innerHTML = summary;
+
+          const castOptions = (draft.casts || []).slice().sort(function (a, b) {
+            return a.name.localeCompare(b.name, "ko");
+          });
+          let previousDate = "";
+          el.importTableBody.innerHTML = state.importRows.map(function (row) {
+            const isDayStart = row.date !== previousDate;
+            previousDate = row.date;
+            const options = ['<option value="skip"' + (row.selection === "skip" ? " selected" : "") + ">건너뛰기</option>",
+              '<option value="new"' + (row.selection === "new" ? " selected" : "") + ">새 캐스트로 등록: " + escapeHtml(row.castName) + "</option>"]
+              .concat(castOptions.map(function (cast) {
+                const value = "cast:" + cast.id;
+                return '<option value="' + escapeHtml(value) + '"' + (row.selection === value ? " selected" : "") + ">" +
+                  escapeHtml(cast.name) + (cast.inactive ? " (현재 없음)" : "") + "</option>";
+              })).join("");
+            let badge = '<span class="import-badge ok">자동 연결</span>';
+            if (row.selection === "new") {
+              badge = '<span class="import-badge check">새 캐스트</span>';
+            } else if (row.matchType === "PARTIAL") {
+              badge = '<span class="import-badge check">확인 필요</span><span class="import-note">"' + escapeHtml(row.matchedCastName) + '"(으)로 추정</span>';
+            } else if (row.matchType === "NONE") {
+              badge = '<span class="import-badge none">미등록</span>';
+            }
+            if (row.existingStartTime && row.selection === "cast:" + row.matchedCastId) {
+              badge += '<span class="import-note">기존 ' + escapeHtml(row.existingStartTime) + "~" + escapeHtml(row.existingEndTime || "") + " 덮어씀</span>";
+            }
+            return '<tr class="' + (isDayStart ? "is-day-start" : "") + (row.selection === "skip" ? " is-skipped" : "") + '">' +
+              '<td class="import-date">' + (isDayStart ? escapeHtml(formatImportDate(row.date)) : "") + "</td>" +
+              "<td>" + escapeHtml(row.castName) + "</td>" +
+              '<td><select data-entry-id="' + escapeHtml(row.entryId) + '" data-field="selection">' + options + "</select></td>" +
+              '<td><input class="import-time" type="text" inputmode="numeric" maxlength="5" placeholder="기본" data-entry-id="' + escapeHtml(row.entryId) + '" data-field="startTime" value="' + escapeHtml(row.startTime) + '" /></td>' +
+              '<td><input class="import-time" type="text" inputmode="numeric" maxlength="5" placeholder="기본" data-entry-id="' + escapeHtml(row.entryId) + '" data-field="endTime" value="' + escapeHtml(row.endTime) + '" /></td>' +
+              "<td>" + badge + "</td>" +
+              "</tr>";
+          }).join("");
+          renderImportAbsent();
+        }
+
+        function findImportRow(entryId) {
+          return state.importRows.find(function (row) { return row.entryId === entryId; }) || null;
+        }
+
+        function handleImportTableChange(event) {
+          const target = event.target;
+          const row = findImportRow(target.getAttribute("data-entry-id"));
+          if (!row) {
+            return;
+          }
+          const field = target.getAttribute("data-field");
+          if (field === "selection") {
+            // 같은 이름은 출근표 전체에서 같은 캐스트이므로 함께 바꾼다
+            state.importRows.forEach(function (item) {
+              if (item.castName === row.castName) {
+                item.selection = target.value;
+              }
+            });
+            renderImportReview();
+            return;
+          }
+          row[field] = target.value.trim();
+          target.classList.toggle("is-invalid", !!row[field] && !isValidImportTime(row[field]));
+        }
+
+        function setUnmatchedSelection(selection) {
+          state.importRows.forEach(function (row) {
+            if (row.matchType === "NONE") {
+              row.selection = selection;
+            }
+          });
+          renderImportReview();
+        }
+
+        function setAllAbsent(checked) {
+          state.importInactiveIds = {};
+          if (checked) {
+            getAbsentCasts().forEach(function (cast) { state.importInactiveIds[cast.id] = true; });
+          }
+          renderImportAbsent();
+        }
+
+        async function handleImportApply() {
+          const draft = state.importDraft;
+          if (!draft || !isReady() || state.importBusy) {
+            return;
+          }
+          const defaultStartTime = el.importDefaultStartTime.value.trim();
+          const defaultEndTime = el.importDefaultEndTime.value.trim();
+          if (!isValidImportTime(defaultStartTime) || !isValidImportTime(defaultEndTime)) {
+            setImportStatus("error", "기본 시작/종료 시간을 HH:MM 형식으로 입력하세요.");
+            return;
+          }
+          const selectedRows = state.importRows.filter(function (row) { return row.selection !== "skip"; });
+          if (!selectedRows.length) {
+            setImportStatus("error", "저장할 스케줄이 없습니다. 캐스트를 연결하세요.");
+            return;
+          }
+          const invalidRow = selectedRows.find(function (row) {
+            return (!!row.startTime !== !!row.endTime) ||
+              (row.startTime && !isValidImportTime(row.startTime)) ||
+              (row.endTime && !isValidImportTime(row.endTime));
+          });
+          if (invalidRow) {
+            setImportStatus("error", formatImportDate(invalidRow.date) + " " + invalidRow.castName + "의 시간을 확인하세요. 시작과 종료를 모두 HH:MM으로 입력하거나 둘 다 비워 두세요.");
+            return;
+          }
+          const seen = {};
+          const duplicate = selectedRows.find(function (row) {
+            const key = row.date + "|" + (row.selection === "new" ? "new:" + row.castName : row.selection);
+            if (seen[key]) {
+              return true;
+            }
+            seen[key] = true;
+            return false;
+          });
+          if (duplicate) {
+            setImportStatus("error", formatImportDate(duplicate.date) + "에 같은 캐스트가 두 번 연결되어 있습니다. 하나를 건너뛰기로 바꾸세요.");
+            return;
+          }
+
+          const replaceExisting = el.importReplaceExisting.checked;
+          const inactiveCastIds = Object.keys(state.importInactiveIds);
+          const confirmations = [];
+          if (replaceExisting) {
+            confirmations.push("출근표 기간 중 출근표에 없는 기존 근무를 모두 휴무로 바꿉니다.");
+          }
+          if (inactiveCastIds.length) {
+            confirmations.push("캐스트 " + inactiveCastIds.length + "명을 '현재 없는 캐스트'로 분리합니다.");
+          }
+          if (confirmations.length && !window.confirm(confirmations.join("\n") + "\n계속할까요?")) {
+            return;
+          }
+
+          state.importBusy = true;
+          updateAvailability();
+          setImportStatus("info", "스케줄을 저장하는 중입니다.");
+          try {
+            const result = await callScheduleImportFunction("applyScheduleImport", {
+              cafeId: state.selectedCafeId,
+              importId: draft.importId,
+              replaceExisting: replaceExisting,
+              defaultStartTime: defaultStartTime,
+              defaultEndTime: defaultEndTime,
+              inactiveCastIds: inactiveCastIds,
+              entries: selectedRows.map(function (row) {
+                return {
+                  date: row.date,
+                  castId: row.selection.indexOf("cast:") === 0 ? row.selection.slice(5) : null,
+                  newCastName: row.selection === "new" ? row.castName : null,
+                  startTime: row.startTime || null,
+                  endTime: row.endTime || null,
+                };
+              }),
+            });
+            const createdNames = (result.createdCasts || []).map(function (cast) { return cast.name; });
+            state.importDraft = null;
+            state.importRows = [];
+            state.importInactiveIds = {};
+            renderImportReview();
+            setImportStatus(
+              "success",
+              "스케줄 " + result.upsertedScheduleCount + "건을 저장했습니다." +
+                (result.clearedScheduleCount ? " 기존 근무 " + result.clearedScheduleCount + "건을 휴무로 바꿨습니다." : "") +
+                (createdNames.length ? " 새 캐스트 " + createdNames.length + "명: " + createdNames.join(", ") + "." : "") +
+                (result.inactivatedCastCount ? " 현재 없는 캐스트로 분리 " + result.inactivatedCastCount + "명." : "") +
+                (result.reactivatedCastCount ? " 복원 " + result.reactivatedCastCount + "명." : "")
+            );
+            await loadCafeCasts();
+          } catch (error) {
+            setImportStatus("error", describeImportError(error));
+            console.error(error);
+          } finally {
+            state.importBusy = false;
+            updateAvailability();
+          }
+        }
+
+        // ---------- 카페 이벤트 등록 ----------
+
+        function setEventStatus(type, message) {
+          setBanner(el.eventStatus, type, message);
+        }
+
+        function updateEventCounter() {
+          el.eventContentCounter.textContent = el.eventContent.value.length + " / 2000";
+        }
+
+        function renderEventParticipants() {
+          if (!state.casts.length) {
+            el.eventParticipantList.innerHTML = '<p class="helper">' + (state.selectedCafeId ? "등록된 캐스트가 없습니다." : "카페를 선택하세요.") + "</p>";
+          } else {
+            el.eventParticipantList.innerHTML = state.casts.map(function (cast) {
+              const checked = !!state.eventParticipantIds[cast.id];
+              const inactive = cast.rosterStatus === CAST_ROSTER_STATUS_INACTIVE;
+              return '<label class="chip-check' + (checked ? " is-checked" : "") + '">' +
+                '<input type="checkbox" data-participant-cast-id="' + escapeHtml(cast.id) + '"' + (checked ? " checked" : "") + " />" +
+                escapeHtml(cast.name) + (inactive ? " (현재 없음)" : "") + "</label>";
+            }).join("");
+          }
+          el.eventUnmatchedNote.textContent = state.eventUnmatchedNames.length
+            ? "이미지에 있지만 등록되지 않은 이름: " + state.eventUnmatchedNames.join(", ") + " (캐스트로 등록한 뒤 선택할 수 있습니다)"
+            : "";
+        }
+
+        function resetEventForm() {
+          state.eventImage = null;
+          state.eventImageUrl = "";
+          state.eventParticipantIds = {};
+          state.eventUnmatchedNames = [];
+          el.eventForm.reset();
+          el.eventFileInput.value = "";
+          el.eventPreview.hidden = true;
+          el.eventPreview.removeAttribute("src");
+          el.eventDropzoneText.textContent = "이벤트 이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.";
+          el.eventStatus.style.display = "none";
+          updateEventCounter();
+          renderEventParticipants();
+          updateAvailability();
+        }
+
+        async function selectEventFile(file) {
+          if (!file || !/^image\//.test(file.type)) {
+            setEventStatus("error", "이미지 파일만 올릴 수 있습니다.");
+            return;
+          }
+          if (state.eventBusy) {
+            return;
+          }
+          try {
+            const prepared = await prepareImportImage(file);
+            state.eventImage = prepared;
+            state.eventImageUrl = "";
+            el.eventPreview.src = prepared.previewUrl;
+            el.eventPreview.hidden = false;
+            el.eventDropzoneText.textContent = file.name + " · 다른 이미지로 바꾸려면 클릭하세요.";
+            setEventStatus("info", state.selectedCafeId ? "AI로 분석하기를 누르면 문구를 채웁니다. 직접 입력해도 됩니다." : "카페를 먼저 선택하세요.");
+          } catch (error) {
+            setEventStatus("error", "이미지를 읽지 못했습니다. JPG나 PNG로 저장해 다시 올려주세요.");
+            console.error(error);
+          }
+          updateAvailability();
+        }
+
+        // 같은 이미지는 한 번만 올리고, 앱과 같은 events 폴더 아래 카페별 경로에 둔다
+        async function uploadEventImage(cafeId) {
+          if (state.eventImageUrl) {
+            return state.eventImageUrl;
+          }
+          const extension = state.eventImage.contentType.split("/")[1].replace("jpeg", "jpg");
+          const objectPath = "events/" + cafeId + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + extension;
+          const ref = storage.ref(objectPath);
+          await ref.put(state.eventImage.blob, { contentType: state.eventImage.contentType });
+          state.eventImageUrl = await ref.getDownloadURL();
+          return state.eventImageUrl;
+        }
+
+        function eventDateToInput(value) {
+          return /^\d{4}\.\d{2}\.\d{2}$/.test(value || "") ? value.replace(/\./g, "-") : "";
+        }
+
+        async function handleEventAnalyze() {
+          if (!state.eventImage || !isReady() || !state.selectedCafeId || state.eventBusy) {
+            return;
+          }
+          const cafeId = state.selectedCafeId;
+          state.eventBusy = true;
+          updateAvailability();
+          try {
+            setEventStatus("info", "이미지를 업로드하는 중입니다.");
+            const imageUrl = await uploadEventImage(cafeId);
+            setEventStatus("info", "AI가 이벤트 이미지를 분석하는 중입니다… (보통 10~20초 걸립니다)");
+            const draft = await callScheduleImportFunction("extractCafeEventImage", { cafeId: cafeId, imageUrl: imageUrl });
+            if (cafeId !== state.selectedCafeId) {
+              return;
+            }
+            el.eventTitle.value = draft.title || "";
+            el.eventContent.value = draft.content || "";
+            el.eventStartDate.value = eventDateToInput(draft.startDate);
+            el.eventEndDate.value = eventDateToInput(draft.endDate);
+            el.eventHasLive.checked = draft.hasLivePerformance === true;
+            state.eventParticipantIds = {};
+            state.eventUnmatchedNames = [];
+            (draft.participants || []).forEach(function (participant) {
+              if (participant.castId) {
+                state.eventParticipantIds[participant.castId] = true;
+              } else {
+                state.eventUnmatchedNames.push(participant.name);
+              }
+            });
+            updateEventCounter();
+            renderEventParticipants();
+            const guesses = (draft.participants || []).filter(function (participant) { return participant.matchType === "PARTIAL"; });
+            setEventStatus(
+              "success",
+              "분석이 끝났습니다. 내용을 확인하고 이벤트 등록을 누르세요." +
+                (guesses.length ? " 이름이 비슷해 추정으로 선택한 캐스트: " + guesses.map(function (p) { return p.name + "→" + p.matchedCastName; }).join(", ") + "." : "") +
+                ((draft.warnings || []).length ? " 날짜를 읽지 못한 부분이 있어 기간을 확인하세요." : "")
+            );
+          } catch (error) {
+            setEventStatus("error", error && error.code ? describeImportError(error) : "이미지 업로드 또는 분석 요청에 실패했습니다.");
+            console.error(error);
+          } finally {
+            state.eventBusy = false;
+            updateAvailability();
+          }
+        }
+
+        function todayDateKey() {
+          const now = new Date();
+          return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+        }
+
+        async function handleEventSubmit(event) {
+          event.preventDefault();
+          if (!isReady() || !state.selectedCafeId || state.eventBusy) {
+            return;
+          }
+          const title = el.eventTitle.value.trim();
+          const content = el.eventContent.value.trim();
+          const startDate = el.eventStartDate.value;
+          const endDate = el.eventEndDate.value;
+          if (!state.eventImage) {
+            setEventStatus("error", "이벤트 이미지를 올려주세요.");
+            return;
+          }
+          if (!title || title.length > 100) {
+            setEventStatus("error", "제목을 1~100자로 입력하세요.");
+            return;
+          }
+          if (!content || content.length > 2000) {
+            setEventStatus("error", "본문을 1~2000자로 입력하세요.");
+            return;
+          }
+          if (!!startDate !== !!endDate) {
+            setEventStatus("error", "시작일과 종료일을 모두 입력하거나 둘 다 비워 두세요.");
+            return;
+          }
+          if (startDate && startDate > endDate) {
+            setEventStatus("error", "종료일이 시작일보다 빠릅니다.");
+            return;
+          }
+          const cafe = getSelectedCafe();
+          if (!window.confirm((cafe ? cafe.name : "선택한 카페") + "에 이벤트를 등록합니다. 카페를 즐겨찾기한 사용자에게 알림이 발송됩니다. 계속할까요?")) {
+            return;
+          }
+
+          const cafeId = state.selectedCafeId;
+          state.eventBusy = true;
+          updateAvailability();
+          setEventStatus("info", "이벤트를 등록하는 중입니다.");
+          try {
+            const imageUrl = await uploadEventImage(cafeId);
+            // 앱의 이벤트 관리 화면과 같은 형식으로 저장한다 (기간 미정이면 앱과 같은 안내 문구를 넣는다)
+            const noPeriod = "게시 일정 선택 필요";
+            await db.collection("cafes").doc(cafeId).collection("events").doc("event-management-" + Date.now()).set({
+              title: title,
+              content: content,
+              imageUrl: imageUrl,
+              startDate: startDate ? startDate.replace(/-/g, ".") : noPeriod,
+              endDate: endDate ? endDate.replace(/-/g, ".") : noPeriod,
+              statusLabel: startDate && startDate <= todayDateKey() ? "진행 중" : "진행 예정",
+              isDimmed: false,
+              participantCastIds: Object.keys(state.eventParticipantIds),
+              hasLivePerformance: el.eventHasLive.checked,
+            });
+            resetEventForm();
+            setEventStatus("success", "\"" + title + "\" 이벤트를 등록했습니다.");
+            await loadCafeEvents();
+          } catch (error) {
+            setEventStatus("error", "이벤트 등록에 실패했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.eventBusy = false;
+            updateAvailability();
+          }
+        }
+
+        function renderCafeEvents() {
+          if (!state.selectedCafeId) {
+            el.eventList.innerHTML = "";
+            el.eventEmptyState.style.display = "";
+            el.eventEmptyState.textContent = "카페를 선택하세요.";
+            return;
+          }
+          if (!state.events.length) {
+            el.eventList.innerHTML = "";
+            el.eventEmptyState.style.display = "";
+            el.eventEmptyState.textContent = "등록된 이벤트가 없습니다.";
+            return;
+          }
+          el.eventEmptyState.style.display = "none";
+          el.eventList.innerHTML = state.events.slice(0, 5).map(function (item) {
+            const image = item.imageUrl
+              ? '<img class="event-item-image" src="' + escapeHtml(item.imageUrl) + '" alt="" loading="lazy" />'
+              : '<div class="event-item-image"></div>';
+            const period = /^\d{4}\./.test(item.startDate) ? item.startDate + (item.endDate && item.endDate !== item.startDate ? " ~ " + item.endDate : "") : "기간 미정";
+            return '<article class="list-item"><div class="item-main">' + image +
+              '<div><h3 class="item-title">' + escapeHtml(item.title) + "</h3>" +
+              '<div class="chip-row" style="margin-top:8px;"><span class="chip">' + escapeHtml(item.statusLabel) + "</span>" +
+              '<span class="chip neutral">' + escapeHtml(period) + "</span>" +
+              (item.hasLivePerformance ? '<span class="chip success">라이브</span>' : "") +
+              "</div></div></div></article>";
+          }).join("");
+        }
+
+        async function loadCafeEvents() {
+          state.events = [];
+          renderCafeEvents();
+          if (!isReady() || !state.selectedCafeId) {
+            return;
+          }
+          const cafeId = state.selectedCafeId;
+          try {
+            const snapshot = await db.collection("cafes").doc(cafeId).collection("events").get();
+            if (cafeId !== state.selectedCafeId) {
+              return;
+            }
+            state.events = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                title: normalizeText(data.title, "제목 없음"),
+                imageUrl: normalizeText(data.imageUrl, ""),
+                startDate: normalizeText(data.startDate, ""),
+                endDate: normalizeText(data.endDate, ""),
+                statusLabel: normalizeText(data.statusLabel, "진행 예정"),
+                hasLivePerformance: data.hasLivePerformance === true,
+              };
+            }).sort(function (a, b) {
+              return b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id);
+            });
+          } catch (error) {
+            console.error(error);
+          }
+          renderCafeEvents();
+        }
+
+        // ---------- 세션 ----------
+
+        function clearSession() {
+          state.user = null;
+          state.isAdmin = false;
+          state.cafes = [];
+          state.filteredCafes = [];
+          state.selectedCafeId = "";
+          renderCafeOptions();
+          resetScheduleImport();
+          resetEventForm();
+          loadCafeCasts();
+          loadCafeEvents();
+        }
+
+        async function handleAuthUser(user) {
+          if (!user) {
+            clearSession();
+            setBanner(el.authStatus, "info", "로그인이 필요합니다. 우측 상단의 로그인 버튼을 눌러주세요.");
+            setBanner(el.cafeStatus, "info", "로그인 후 카페 목록을 불러옵니다.");
+            return;
+          }
+          setBanner(el.authStatus, "info", "권한을 확인하는 중입니다.");
+          try {
+            const doc = await db.collection("users").doc(user.uid).get();
+            const role = doc.exists ? doc.get("role") : "";
+            if (role !== "ADMIN") {
+              clearSession();
+              setBanner(el.authStatus, "error", "관리자 계정만 사용할 수 있습니다. (현재 계정: " + (user.email || user.uid) + ")");
+              setBanner(el.cafeStatus, "error", "관리자 권한이 없습니다.");
+              return;
+            }
+            state.user = user;
+            state.isAdmin = true;
+            setBanner(el.authStatus, "success", "관리자 권한으로 접속했습니다. (" + (user.email || user.uid) + ")");
+            updateAvailability();
+            await loadCafes();
+          } catch (error) {
+            clearSession();
+            setBanner(el.authStatus, "error", "권한을 확인하지 못했습니다.");
+            console.error(error);
+          }
+        }
+
+        function boot() {
+          const googleProvider = new firebase.auth.GoogleAuthProvider();
+          const authUserInfo = document.getElementById("authUserInfo");
+          const authUserPhoto = document.getElementById("authUserPhoto");
+          const authUserName = document.getElementById("authUserName");
+          const signInBtn = document.getElementById("signInBtn");
+          const signOutBtn = document.getElementById("signOutBtn");
+          const authModal = document.getElementById("authModal");
+          const authModalClose = document.getElementById("authModalClose");
+          const emailLoginForm = document.getElementById("emailLoginForm");
+          const emailLoginError = document.getElementById("emailLoginError");
+          const googleSignInModalBtn = document.getElementById("googleSignInModalBtn");
+
+          function openAuthModal() { authModal.classList.add("is-open"); }
+          function closeAuthModal() {
+            authModal.classList.remove("is-open");
+            emailLoginError.style.display = "none";
+            emailLoginForm.reset();
+          }
+
+          auth.onAuthStateChanged(function (user) {
+            if (user) {
+              authUserPhoto.src = user.photoURL || "";
+              authUserPhoto.style.display = user.photoURL ? "" : "none";
+              authUserName.textContent = user.displayName || user.email || "사용자";
+              authUserInfo.style.display = "flex";
+              signInBtn.style.display = "none";
+              closeAuthModal();
+            } else {
+              authUserInfo.style.display = "none";
+              signInBtn.style.display = "";
+            }
+            handleAuthUser(user);
+          });
+
+          signInBtn.addEventListener("click", openAuthModal);
+          authModalClose.addEventListener("click", closeAuthModal);
+          authModal.addEventListener("click", function (e) { if (e.target === authModal) closeAuthModal(); });
+          document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAuthModal(); });
+          emailLoginForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            emailLoginError.style.display = "none";
+            auth.signInWithEmailAndPassword(email, password).catch(function (err) {
+              emailLoginError.textContent = err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
+                ? "이메일 또는 비밀번호가 올바르지 않습니다."
+                : "로그인에 실패했습니다: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+          googleSignInModalBtn.addEventListener("click", function () {
+            auth.signInWithPopup(googleProvider).catch(function (err) {
+              emailLoginError.textContent = "Google 로그인 실패: " + err.message;
+              emailLoginError.style.display = "block";
+            });
+          });
+          signOutBtn.addEventListener("click", function () {
+            auth.signOut().then(function () { window.location.reload(); });
+          });
+
+          el.cafeConceptType.innerHTML = CONCEPT_TYPES.map(function (type) {
+            return '<option value="' + type[0] + '">' + escapeHtml(type[1]) + " (" + type[0] + ")</option>";
+          }).join("");
+          resetCafeForm();
+          el.cafeCountry.addEventListener("change", renderCityOptions);
+          el.cafeGeocodeButton.addEventListener("click", handleGeocode);
+          el.cafeLatitude.addEventListener("change", handleLocationInputChange);
+          el.cafeLongitude.addEventListener("change", handleLocationInputChange);
+          el.cafeFillHoursButton.addEventListener("click", fillBusinessHours);
+          el.cafeForm.addEventListener("submit", handleCafeSubmit);
+          el.cafeResetButton.addEventListener("click", function () {
+            resetCafeForm();
+            el.cafeFormStatus.style.display = "none";
+          });
+
+          el.cafeSearch.addEventListener("input", filterCafes);
+          el.cafeSelect.addEventListener("change", function () { selectCafe(el.cafeSelect.value); });
+          el.refreshInactiveButton.addEventListener("click", loadCafeCasts);
+          el.inactiveList.addEventListener("click", function (e) {
+            const button = e.target.closest("[data-restore-cast-id]");
+            if (button) {
+              restoreInactiveCast(button.getAttribute("data-restore-cast-id"));
+            }
+          });
+
+          el.importFileInput.addEventListener("change", function () {
+            selectImportFile(el.importFileInput.files && el.importFileInput.files[0]);
+          });
+          el.importDropzone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            el.importDropzone.classList.add("is-dragover");
+          });
+          el.importDropzone.addEventListener("dragleave", function () {
+            el.importDropzone.classList.remove("is-dragover");
+          });
+          el.importDropzone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            el.importDropzone.classList.remove("is-dragover");
+            selectImportFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+          });
+          document.addEventListener("paste", function (e) {
+            if (!isReady() || !e.clipboardData) {
+              return;
+            }
+            const item = Array.prototype.find.call(e.clipboardData.items, function (candidate) {
+              return candidate.kind === "file" && /^image\//.test(candidate.type);
+            });
+            if (item) {
+              e.preventDefault();
+              if (state.pasteTarget === "event") {
+                selectEventFile(item.getAsFile());
+              } else {
+                selectImportFile(item.getAsFile());
+              }
+            }
+          });
+          // 붙여넣기는 마지막으로 마우스를 올리거나 누른 섹션으로 보낸다
+          [["schedule", el.scheduleImportSection], ["event", el.eventSection]].forEach(function (pair) {
+            ["pointerenter", "pointerdown", "focusin"].forEach(function (type) {
+              pair[1].addEventListener(type, function () { state.pasteTarget = pair[0]; });
+            });
+          });
+          el.eventFileInput.addEventListener("change", function () {
+            selectEventFile(el.eventFileInput.files && el.eventFileInput.files[0]);
+          });
+          el.eventDropzone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            el.eventDropzone.classList.add("is-dragover");
+          });
+          el.eventDropzone.addEventListener("dragleave", function () {
+            el.eventDropzone.classList.remove("is-dragover");
+          });
+          el.eventDropzone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            el.eventDropzone.classList.remove("is-dragover");
+            selectEventFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+          });
+          el.eventAnalyzeButton.addEventListener("click", handleEventAnalyze);
+          el.eventResetButton.addEventListener("click", resetEventForm);
+          el.eventForm.addEventListener("submit", handleEventSubmit);
+          el.eventContent.addEventListener("input", updateEventCounter);
+          el.eventParticipantList.addEventListener("change", function (e) {
+            const castId = e.target.getAttribute("data-participant-cast-id");
+            if (!castId) {
+              return;
+            }
+            if (e.target.checked) {
+              state.eventParticipantIds[castId] = true;
+            } else {
+              delete state.eventParticipantIds[castId];
+            }
+            e.target.closest(".chip-check").classList.toggle("is-checked", e.target.checked);
+          });
+          renderEventParticipants();
+          el.importAnalyzeButton.addEventListener("click", handleImportAnalyze);
+          el.importResetButton.addEventListener("click", resetScheduleImport);
+          el.importApplyButton.addEventListener("click", handleImportApply);
+          el.importAllNewButton.addEventListener("click", function () { setUnmatchedSelection("new"); });
+          el.importAllSkipButton.addEventListener("click", function () { setUnmatchedSelection("skip"); });
+          el.importAbsentSelectAll.addEventListener("click", function () { setAllAbsent(true); });
+          el.importAbsentClear.addEventListener("click", function () { setAllAbsent(false); });
+          el.importAbsentList.addEventListener("change", function (e) {
+            const castId = e.target.getAttribute("data-absent-cast-id");
+            if (!castId) {
+              return;
+            }
+            if (e.target.checked) {
+              state.importInactiveIds[castId] = true;
+            } else {
+              delete state.importInactiveIds[castId];
+            }
+            e.target.closest(".import-absent-item").classList.toggle("is-checked", e.target.checked);
+          });
+          el.importTableBody.addEventListener("change", handleImportTableChange);
+          el.importTableBody.addEventListener("input", function (e) {
+            if (e.target.getAttribute("data-field") !== "selection") {
+              handleImportTableChange(e);
+            }
+          });
+          updateAvailability();
+        }
+
+        boot();
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>
