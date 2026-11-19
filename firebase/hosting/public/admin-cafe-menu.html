@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>메뉴/굿즈 등록 · 콘카 관리자</title>
+    <meta name="description" content="카페 메뉴와 굿즈를 등록하고 수정하는 관리자 페이지입니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="관리자 페이지 메뉴">
+              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page form-page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/admin">카페 관리</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/admin">카페</a><span class="breadcrumb-sep">›</span><span id="breadcrumbPage">메뉴/굿즈 등록</span>
+          </nav>
+
+          <section class="surface section">
+            <div class="cafe-mini" style="margin: 0;">
+              <div class="cafe-mini-thumb" id="cafeThumb"></div>
+              <div>
+                <h1 id="cafeTitle">메뉴/굿즈 등록</h1>
+                <p id="cafeSub">카페 메뉴와 굿즈를 등록합니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface section" style="margin-top: 20px;">
+            <div class="section-header">
+              <div>
+                <h2 id="formTitle">메뉴/굿즈 등록</h2>
+                <p id="formIntro">등록하면 앱의 카페 메뉴 탭에 바로 보입니다.</p>
+              </div>
+            </div>
+            <form class="edit-form" id="menuForm" novalidate>
+              <div class="field">
+                <label>분류</label>
+                <div class="segmented" id="menuCategory" role="radiogroup" aria-label="분류"></div>
+                <p class="helper small" id="menuCategoryHelp"></p>
+              </div>
+              <div class="field">
+                <label>사진</label>
+                <div id="menuImageEditor"></div>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="menuName">이름</label>
+                  <input id="menuName" type="text" maxlength="60" placeholder="예: 딸기 메이드 파르페" required />
+                </div>
+                <div class="field">
+                  <label for="menuPrice">가격 (원)</label>
+                  <input id="menuPrice" type="text" inputmode="numeric" maxlength="9" placeholder="예: 12000" required />
+                </div>
+                <div class="field wide" id="menuDescField">
+                  <label for="menuDesc">설명</label>
+                  <textarea id="menuDesc" maxlength="300" placeholder="재료나 특징을 적어주세요. (선택 입력)" style="min-height: 100px;"></textarea>
+                </div>
+              </div>
+              <label class="import-check" style="padding-bottom: 0;">
+                <input id="menuAvailable" type="checkbox" checked />
+                <span id="menuAvailableLabel">판매 중</span>
+              </label>
+              <div class="edit-form-actions">
+                <button class="button button-primary" id="menuSubmitButton" type="submit" disabled>등록</button>
+                <a class="button button-ghost" id="menuCancelLink" href="/admin">취소</a>
+                <button class="button button-danger" id="menuDeleteButton" type="button" hidden>삭제</button>
+              </div>
+            </form>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const db = A.db;
+        const escapeHtml = A.escapeHtml;
+        const setBanner = A.setBanner;
+
+        // 앱과 같이 재고가 있다고 표시한 굿즈의 기본 재고 수량
+        const DEFAULT_GOODS_STOCK = 50;
+
+        const params = new URLSearchParams(window.location.search);
+        const cafeId = A.getCafeIdFromUrl();
+        const editType = (params.get("type") || "").trim();
+        const editItemId = (params.get("itemId") || "").trim();
+        const isEditMode = !!editItemId && (editType === "menu" || editType === "goods");
+
+        const state = {
+          user: null,
+          cafe: null,
+          item: null,
+          category: "drink",
+          saving: false,
+          done: false,
+        };
+
+        const el = {};
+        [
+          "breadcrumbPage", "formTitle", "formIntro", "menuForm", "menuCategory", "menuCategoryHelp",
+          "menuImageEditor", "menuName", "menuPrice", "menuDescField", "menuDesc", "menuAvailable", "menuAvailableLabel",
+          "menuSubmitButton", "menuCancelLink", "menuDeleteButton",
+        ].forEach(function (id) {
+          el[id] = document.getElementById(id);
+        });
+
+        const imageEditor = A.createImageEditor({
+          container: el.menuImageEditor,
+          max: 1,
+          addLabel: "사진 추가",
+          onError: function (message) { setBanner("menuStatus", "error", message); },
+        });
+
+        function isReady() {
+          return !!state.user && !!state.cafe && (!isEditMode || !!state.item);
+        }
+
+        function isGoods() {
+          return state.category === "goods";
+        }
+
+        function updateAvailability() {
+          const locked = !isReady() || state.saving || state.done;
+          el.menuSubmitButton.disabled = locked;
+          el.menuDeleteButton.disabled = locked;
+          imageEditor.setDisabled(state.saving || state.done);
+        }
+
+        // ---------- 분류 ----------
+
+        function renderCategory() {
+          el.menuCategory.innerHTML = A.MENU_CATEGORIES.map(function (category) {
+            const active = category[0] === state.category;
+            return '<button type="button" role="radio" aria-checked="' + active + '" class="' + (active ? "is-active" : "") +
+              '" data-category="' + category[0] + '">' + escapeHtml(category[1]) + "</button>";
+          }).join("");
+          el.menuDescField.hidden = isGoods();
+          el.menuAvailableLabel.textContent = isGoods() ? "재고 있음" : "판매 중";
+          el.menuCategoryHelp.textContent = isGoods()
+            ? "굿즈는 앱의 굿즈 목록에 표시되며 설명 없이 이름·가격·사진·재고만 보입니다."
+            : "음료·음식·디저트는 앱의 메뉴 목록에 분류별로 표시됩니다.";
+          if (isEditMode && state.item && (state.item.type === "goods") !== isGoods()) {
+            el.menuCategoryHelp.textContent += " 저장하면 " + (isGoods() ? "메뉴에서 굿즈로" : "굿즈에서 메뉴로") + " 옮겨집니다.";
+          }
+        }
+
+        // ---------- 수정할 항목 불러오기 ----------
+
+        async function loadItem() {
+          const collection = editType === "goods" ? "goods" : "menus";
+          const doc = await db.collection("cafes").doc(cafeId).collection(collection).doc(editItemId).get();
+          if (!doc.exists) {
+            return null;
+          }
+          const data = doc.data() || {};
+          const image = A.normalizeText(data.image, "") || A.normalizeText(data.imageUrl, "") || A.normalizeText(data.thumbnailImage, "");
+          const stock = typeof data.stock === "number" ? data.stock : 0;
+          return {
+            type: editType,
+            id: doc.id,
+            name: A.normalizeText(data.name, ""),
+            price: typeof data.price === "number" ? data.price : 0,
+            desc: A.normalizeText(data.desc, "") || A.normalizeText(data.description, ""),
+            image: image,
+            category: editType === "goods" ? "goods" : A.normalizeText(data.category, "drink").toLowerCase(),
+            available: editType === "goods" ? stock > 0 : data.isAvailable !== false,
+            stock: stock,
+          };
+        }
+
+        function fillForm(item) {
+          state.category = A.MENU_CATEGORIES.some(function (category) { return category[0] === item.category; }) ? item.category : "drink";
+          el.menuName.value = item.name;
+          el.menuPrice.value = String(item.price);
+          el.menuDesc.value = item.desc;
+          el.menuAvailable.checked = item.available;
+          imageEditor.setUrls(item.image ? [item.image] : []);
+          renderCategory();
+        }
+
+        // ---------- 저장 / 삭제 ----------
+
+        function backToList() {
+          window.location.href = A.cafeDetailUrl(cafeId, "menus");
+        }
+
+        async function handleSubmit(event) {
+          event.preventDefault();
+          if (!isReady() || state.saving || state.done) {
+            return;
+          }
+          const name = el.menuName.value.trim();
+          const priceText = el.menuPrice.value.trim();
+          if (!name) {
+            setBanner("menuStatus", "error", "이름을 입력하세요.");
+            return;
+          }
+          if (!/^\d+$/.test(priceText)) {
+            setBanner("menuStatus", "error", "가격은 숫자만 입력하세요.");
+            return;
+          }
+
+          const goods = isGoods();
+          const collection = goods ? "goods" : "menus";
+          const itemId = isEditMode ? state.item.id : (goods ? "goods-" : "menu-") + Date.now();
+          state.saving = true;
+          updateAvailability();
+          try {
+            setBanner("menuStatus", "loading", "사진을 올리는 중입니다.");
+            const imageUrls = await imageEditor.upload("cafe-items", cafeId);
+            const image = imageUrls[0] || null;
+            setBanner("menuStatus", "loading", "저장하는 중입니다.");
+            // 앱(upsertCafeMenuGoods)이 저장하는 필드와 같게 맞춘다
+            const data = goods
+              ? {
+                name: name,
+                price: Number(priceText),
+                image: image,
+                stock: el.menuAvailable.checked
+                  ? (state.item && state.item.type === "goods" && state.item.stock > 0 ? state.item.stock : DEFAULT_GOODS_STOCK)
+                  : 0,
+              }
+              : {
+                name: name,
+                price: Number(priceText),
+                desc: el.menuDesc.value.trim(),
+                image: image,
+                category: state.category,
+                isAvailable: el.menuAvailable.checked,
+              };
+            const cafeRef = db.collection("cafes").doc(cafeId);
+            await cafeRef.collection(collection).doc(itemId).set(data, { merge: true });
+            // 메뉴 ↔ 굿즈로 분류를 바꾸면 앱과 같이 이전 컬렉션의 문서는 지운다
+            if (isEditMode && state.item.type !== (goods ? "goods" : "menu")) {
+              await cafeRef.collection(state.item.type === "goods" ? "goods" : "menus").doc(itemId).delete();
+            }
+            if (isEditMode && state.item.image && state.item.image !== image) {
+              A.deleteStorageImages([state.item.image]);
+            }
+            state.done = true;
+            window.ConcafeToast.flash("success", "\"" + name + "\"을(를) " + (isEditMode ? "수정" : "등록") + "했습니다.");
+            backToList();
+          } catch (error) {
+            setBanner("menuStatus", "error", "저장하지 못했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.saving = false;
+            updateAvailability();
+          }
+        }
+
+        async function handleDelete() {
+          const item = state.item;
+          if (!isEditMode || !item || state.saving || state.done) {
+            return;
+          }
+          if (!window.confirm("'" + item.name + "'을(를) 삭제합니다. 앱의 카페 메뉴에서도 사라지며 되돌릴 수 없습니다. 계속할까요?")) {
+            return;
+          }
+          state.saving = true;
+          updateAvailability();
+          try {
+            await db.collection("cafes").doc(cafeId).collection(item.type === "goods" ? "goods" : "menus").doc(item.id).delete();
+            if (item.image) {
+              A.deleteStorageImages([item.image]);
+            }
+            state.done = true;
+            window.ConcafeToast.flash("success", "\"" + item.name + "\"을(를) 삭제했습니다.");
+            backToList();
+          } catch (error) {
+            setBanner("menuStatus", "error", "삭제하지 못했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.saving = false;
+            updateAvailability();
+          }
+        }
+
+        // ---------- 세션 ----------
+
+        async function handleSession(session) {
+          if (!session.isAdmin) {
+            state.user = null;
+            state.cafe = null;
+            updateAvailability();
+            return;
+          }
+          state.user = session.user;
+          if (!cafeId) {
+            setBanner("cafeStatus", "error", "카페 ID가 없습니다. 카페 목록에서 다시 선택하세요.");
+            return;
+          }
+          try {
+            state.cafe = await A.fetchCafe(cafeId);
+            if (!state.cafe) {
+              setBanner("cafeStatus", "error", "카페를 찾을 수 없습니다. 삭제되었거나 잘못된 주소입니다.");
+              return;
+            }
+            A.renderCafeMini(state.cafe);
+            A.hideBanner("cafeStatus");
+            if (isEditMode) {
+              state.item = await loadItem();
+              if (!state.item) {
+                setBanner("cafeStatus", "error", "수정할 항목을 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.");
+              } else {
+                fillForm(state.item);
+              }
+            }
+          } catch (error) {
+            setBanner("cafeStatus", "error", "정보를 불러오지 못했습니다.");
+            console.error(error);
+          }
+          updateAvailability();
+        }
+
+        // ---------- 이벤트 연결 ----------
+
+        if (isEditMode) {
+          document.title = document.title.replace("메뉴/굿즈 등록", "메뉴/굿즈 수정");
+          el.breadcrumbPage.textContent = "메뉴/굿즈 수정";
+          el.formTitle.textContent = "메뉴/굿즈 수정";
+          el.formIntro.textContent = "수정 완료를 누르면 앱에 바로 반영됩니다.";
+          el.menuSubmitButton.textContent = "수정 완료";
+          el.menuDeleteButton.hidden = false;
+        }
+        if (cafeId) {
+          el.menuCancelLink.href = A.cafeDetailUrl(cafeId, "menus");
+        }
+        renderCategory();
+        el.menuCategory.addEventListener("click", function (e) {
+          const button = e.target.closest("[data-category]");
+          if (button && !state.saving && !state.done) {
+            state.category = button.getAttribute("data-category");
+            renderCategory();
+          }
+        });
+        el.menuPrice.addEventListener("input", function () {
+          const digits = el.menuPrice.value.replace(/\D/g, "");
+          if (digits !== el.menuPrice.value) {
+            el.menuPrice.value = digits;
+          }
+        });
+        el.menuForm.addEventListener("submit", handleSubmit);
+        el.menuDeleteButton.addEventListener("click", handleDelete);
+
+        updateAvailability();
+        A.initAdminSession(handleSession);
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

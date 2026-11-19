@@ -715,6 +715,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="/assets/js/toast.js"></script>
   </head>
   <body>
     <div class="page-shell">
@@ -727,9 +728,10 @@
             </span>
           </a>
           <div class="topbar-right">
-            <nav class="nav-links" aria-label="조회 페이지 메뉴">
-              <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+            <nav class="nav-links app-nav" aria-label="조회 페이지 메뉴">
+              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
               <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/cafes">카페 목록</a>
               <a class="nav-link" href="/map">메이드 카페 지도</a>
               <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
             </nav>
@@ -754,7 +756,6 @@
           <p>
             카페를 선택하면 저장된 캐스트와 스케줄을 바로 확인할 수 있습니다.
           </p>
-          <div class="status-banner" id="pageStatus">카페 목록을 불러오는 중입니다.</div>
         </div>
 
         <aside class="surface hero-meta">
@@ -917,7 +918,6 @@
         };
 
         const el = {
-          pageStatus: document.getElementById("pageStatus"),
           cafeCount: document.getElementById("cafeCount"),
           selectedCafeLabel: document.getElementById("selectedCafeLabel"),
           castCount: document.getElementById("castCount"),
@@ -949,14 +949,18 @@
             .replace(/'/g, "&#39;");
         }
 
+        // 상태 알림은 화면에 고정하지 않고 토스트로 잠깐 보여준다 (assets/js/toast.js)
+        // 빈 문자열이면 닫고, "…중입니다"는 작업이 끝날 때까지, 실패 문구는 오류로 보여준다
         function setStatus(message) {
           if (!message) {
-            el.pageStatus.style.display = "none";
-            el.pageStatus.textContent = "";
+            window.ConcafeToast.dismiss("pageStatus");
             return;
           }
-          el.pageStatus.style.display = "";
-          el.pageStatus.textContent = message;
+          const type = /중입니다/.test(message) ? "loading"
+            : /못했습니다|실패/.test(message) ? "error"
+            : /했습니다/.test(message) ? "success"
+            : "info";
+          window.ConcafeToast.show(type, message, { key: "pageStatus" });
         }
 
         function normalizeRegionLabel(region) {
@@ -1671,9 +1675,17 @@
               return a.name.localeCompare(b.name, "ko");
             });
             state.filteredCafes = state.cafes.slice();
+            // 카페 목록 페이지 등에서 /schedule?cafeId=... 로 들어오면 그 카페를 바로 선택한다
+            const requestedCafeId = new URLSearchParams(window.location.search).get("cafeId");
+            if (requestedCafeId && state.cafes.some(function (cafe) { return cafe.id === requestedCafeId; })) {
+              state.selectedCafeId = requestedCafeId;
+            }
             renderCafeOptions();
             updateSummary();
             setStatus("");
+            if (state.selectedCafeId) {
+              loadSelectedCafeData();
+            }
           } catch (error) {
             setStatus("카페 목록을 불러오지 못했습니다.");
             console.error(error);

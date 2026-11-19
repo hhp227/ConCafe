@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>카페 등록 · 콘카 관리자</title>
+    <meta name="description" content="관리자가 새 카페를 등록하는 페이지입니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="관리자 페이지 메뉴">
+              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page form-page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/admin">카페 관리</a><span class="breadcrumb-sep">›</span><span>카페 등록</span>
+          </nav>
+
+          <section class="surface section">
+            <div class="section-header">
+              <div>
+                <h2>카페 등록</h2>
+                <p>등록한 카페는 승인된 상태로 앱에 바로 노출됩니다. 등록이 끝나면 카페 상세 화면으로 이동합니다.</p>
+              </div>
+            </div>
+            <form id="cafeForm" novalidate>
+              <div class="field-grid">
+                <div class="field wide">
+                  <label for="cafeName">카페 이름</label>
+                  <input id="cafeName" type="text" maxlength="60" placeholder="예: 슈가레이스 메이드카페" required />
+                </div>
+                <div class="field">
+                  <label for="cafeConceptType">컨셉</label>
+                  <select id="cafeConceptType"></select>
+                </div>
+                <div class="field">
+                  <label for="cafePhoneNumber">전화번호</label>
+                  <input id="cafePhoneNumber" type="tel" maxlength="30" placeholder="선택 입력" />
+                </div>
+                <div class="field">
+                  <label for="cafeCountry">국가</label>
+                  <select id="cafeCountry">
+                    <option value="KR">한국</option>
+                    <option value="JP">일본</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cafeCity">도시</label>
+                  <select id="cafeCity"></select>
+                </div>
+                <div class="field wide">
+                  <label for="cafeAddress">주소</label>
+                  <div class="inline-field">
+                    <input id="cafeAddress" type="text" maxlength="200" placeholder="예: 서울 마포구 와우산로 00" required />
+                    <button class="button button-secondary" id="cafeGeocodeButton" type="button">위치 찾기</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="cafeLatitude">위도</label>
+                  <input id="cafeLatitude" type="text" inputmode="decimal" placeholder="37.5563" />
+                </div>
+                <div class="field">
+                  <label for="cafeLongitude">경도</label>
+                  <input id="cafeLongitude" type="text" inputmode="decimal" placeholder="126.9220" />
+                </div>
+                <div class="field wide">
+                  <div class="location-map" id="cafeLocationMap" hidden></div>
+                  <p class="helper" id="cafeLocationHelper">주소를 입력하고 위치 찾기를 누르세요. 지도에서 핀을 끌어 위치를 조정할 수 있습니다.</p>
+                </div>
+                <div class="field wide">
+                  <label for="cafeBusinessHours">영업시간</label>
+                  <div class="inline-field">
+                    <input id="cafeOpenTime" type="text" inputmode="numeric" maxlength="5" placeholder="17:00" />
+                    <input id="cafeCloseTime" type="text" inputmode="numeric" maxlength="5" placeholder="23:00" />
+                    <button class="button button-ghost" id="cafeFillHoursButton" type="button">매일 같은 시간으로 채우기</button>
+                  </div>
+                  <textarea id="cafeBusinessHours" placeholder="월 17:00-23:00&#10;화 17:00-23:00&#10;..."></textarea>
+                  <p class="helper">한 줄에 한 요일씩 "월 17:00-23:00" 형식으로 입력하세요. 휴무일은 "수 휴무"처럼 적습니다.</p>
+                </div>
+                <div class="field wide">
+                  <label>대표 이미지</label>
+                  <div id="cafeThumbEditor"></div>
+                </div>
+                <div class="field wide">
+                  <label>추가 이미지 (최대 3장)</label>
+                  <div id="cafeGalleryEditor"></div>
+                </div>
+                <div class="field wide">
+                  <label for="cafeDesc">소개</label>
+                  <textarea id="cafeDesc" maxlength="1000" placeholder="카페 소개 (선택 입력)"></textarea>
+                </div>
+              </div>
+              <div class="button-row" style="margin-top: 18px;">
+                <button class="button button-primary" id="cafeSubmitButton" type="submit" disabled>카페 등록</button>
+                <button class="button button-ghost" id="cafeResetButton" type="button">입력 초기화</button>
+                <a class="button button-ghost" href="/admin">취소</a>
+              </div>
+            </form>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const state = { user: null, saving: false };
+        const el = {};
+        [
+          "cafeForm", "cafeName", "cafeConceptType", "cafePhoneNumber", "cafeCountry", "cafeCity", "cafeAddress",
+          "cafeGeocodeButton", "cafeLatitude", "cafeLongitude", "cafeLocationMap", "cafeLocationHelper",
+          "cafeOpenTime", "cafeCloseTime", "cafeFillHoursButton", "cafeBusinessHours", "cafeThumbEditor", "cafeGalleryEditor", "cafeDesc",
+          "cafeSubmitButton", "cafeResetButton", ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+        function showError(message) {
+          A.setBanner("cafeFormStatus", "error", message);
+        }
+
+        const thumbEditor = A.createImageEditor({ container: el.cafeThumbEditor, max: 1, addLabel: "대표 이미지", onError: showError });
+        const galleryEditor = A.createImageEditor({ container: el.cafeGalleryEditor, max: 3, addLabel: "이미지 추가", onError: showError });
+        const locationPicker = A.createLocationPicker({
+          address: el.cafeAddress,
+          lat: el.cafeLatitude,
+          lng: el.cafeLongitude,
+          country: el.cafeCountry,
+          map: el.cafeLocationMap,
+          helper: el.cafeLocationHelper,
+          button: el.cafeGeocodeButton,
+          onError: showError,
+        });
+
+        function updateAvailability() {
+          el.cafeSubmitButton.disabled = !state.user || state.saving;
+        }
+
+        function fillBusinessHours() {
+          const open = el.cafeOpenTime.value.trim();
+          const close = el.cafeCloseTime.value.trim();
+          if (!A.isValidClockTime(open) || !A.isValidClockTime(close)) {
+            showError("영업 시작/종료 시간을 HH:MM 형식으로 입력하세요.");
+            return;
+          }
+          A.hideBanner("cafeFormStatus");
+          el.cafeBusinessHours.value = A.everyDayBusinessHours(open, close);
+        }
+
+        function resetCafeForm() {
+          el.cafeForm.reset();
+          el.cafeConceptType.value = "MAID";
+          el.cafeCountry.value = "KR";
+          A.renderCityOptions(el.cafeCity, "KR", "");
+          locationPicker.reset();
+          thumbEditor.setUrls([]);
+          galleryEditor.setUrls([]);
+        }
+
+        async function findDuplicateCafe(name) {
+          const snapshot = await A.db.collection("cafes").get();
+          const target = A.normalizeName(name);
+          const duplicate = snapshot.docs.map(A.toCafe).find(function (cafe) { return A.normalizeName(cafe.name) === target; });
+          return duplicate || null;
+        }
+
+        async function handleCafeSubmit(event) {
+          event.preventDefault();
+          if (!state.user || state.saving) {
+            return;
+          }
+          const name = el.cafeName.value.trim();
+          const address = el.cafeAddress.value.trim();
+          const position = locationPicker.read();
+          if (!name) {
+            A.setBanner("cafeFormStatus", "error", "카페 이름을 입력하세요.");
+            return;
+          }
+          if (!address) {
+            A.setBanner("cafeFormStatus", "error", "주소를 입력하세요.");
+            return;
+          }
+          if (!position) {
+            A.setBanner("cafeFormStatus", "error", "위치 찾기로 좌표를 채우거나 위도/경도를 직접 입력하세요.");
+            return;
+          }
+
+          state.saving = true;
+          thumbEditor.setDisabled(true);
+          galleryEditor.setDisabled(true);
+          updateAvailability();
+          try {
+            A.setBanner("cafeFormStatus", "loading", "같은 이름의 카페가 있는지 확인하는 중입니다.");
+            const duplicate = await findDuplicateCafe(name);
+            if (duplicate && !window.confirm("같은 이름의 카페(" + duplicate.name + ")가 이미 있습니다. 그래도 등록할까요?")) {
+              A.hideBanner("cafeFormStatus");
+              state.saving = false;
+              thumbEditor.setDisabled(false);
+              galleryEditor.setDisabled(false);
+              updateAvailability();
+              return;
+            }
+            const cafeId = "cafe-" + Date.now();
+            let images = A.buildCafeImageFields(null, []);
+            if (thumbEditor.count() || galleryEditor.count()) {
+              A.setBanner("cafeFormStatus", "loading", "이미지를 올리는 중입니다.");
+              const thumbUrls = await thumbEditor.upload("cafes/representative", cafeId);
+              const galleryUrls = await galleryEditor.upload("cafes/gallery", cafeId);
+              images = A.buildCafeImageFields(thumbUrls[0] || null, galleryUrls);
+            }
+            A.setBanner("cafeFormStatus", "loading", "카페를 등록하는 중입니다.");
+            const now = A.nowIso();
+            await A.db.collection("cafes").doc(cafeId).set({
+              name: name,
+              desc: el.cafeDesc.value.trim(),
+              thumbnailImage: images.thumbnailImage,
+              galleryImages: images.galleryImages,
+              conceptType: el.cafeConceptType.value,
+              businessHours: el.cafeBusinessHours.value.trim(),
+              phoneNumber: el.cafePhoneNumber.value.trim(),
+              approved: true,
+              ownerIds: [],
+              region: {
+                country: el.cafeCountry.value,
+                city: el.cafeCity.value,
+                address: address,
+                location: new firebase.firestore.GeoPoint(position.lat, position.lng),
+              },
+              ratingAvg: 0,
+              reviewCount: 0,
+              favoriteCount: 0,
+              createdVia: "ADMIN_WEB",
+              createdBy: state.user.uid,
+              createdAt: now,
+              updatedAt: now,
+            });
+            A.hideBanner("cafeFormStatus");
+            // 이동하는 동안 다시 제출되지 않도록 saving 상태를 유지한다
+            window.location.href = A.cafeDetailUrl(cafeId) + "&created=1";
+            return;
+          } catch (error) {
+            A.setBanner("cafeFormStatus", "error", "카페 등록에 실패했습니다. 관리자 권한을 확인하세요.");
+            console.error(error);
+          }
+          state.saving = false;
+          thumbEditor.setDisabled(false);
+          galleryEditor.setDisabled(false);
+          updateAvailability();
+        }
+
+        A.renderConceptOptions(el.cafeConceptType);
+        resetCafeForm();
+        el.cafeCountry.addEventListener("change", function () {
+          A.renderCityOptions(el.cafeCity, el.cafeCountry.value, "");
+        });
+        el.cafeFillHoursButton.addEventListener("click", fillBusinessHours);
+        el.cafeForm.addEventListener("submit", handleCafeSubmit);
+        el.cafeResetButton.addEventListener("click", function () {
+          resetCafeForm();
+          A.hideBanner("cafeFormStatus");
+        });
+
+        A.initAdminSession(function (session) {
+          state.user = session.isAdmin ? session.user : null;
+          updateAvailability();
+        });
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

@@ -855,9 +855,10 @@
             </span>
       </a>
       <div class="topbar-right">
-        <nav class="nav-links" aria-label="운영 페이지 메뉴">
-          <a class="nav-link" href="/registration">캐스트 스케줄 등록</a>
+        <nav class="nav-links app-nav" aria-label="운영 페이지 메뉴">
+          <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
           <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+          <a class="nav-link" href="/cafes">카페 목록</a>
           <a class="nav-link" href="/map">메이드 카페 지도</a>
           <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
         </nav>
@@ -1855,8 +1856,33 @@
           return a.name.localeCompare(b.name, "ko");
         });
       state.activeCafeId = state.cafes[0] ? state.cafes[0].id : "";
-      await applyNearestDistrictFromUserLocation();
+      // 카페 목록 페이지 등에서 /map?cafeId=... 로 들어오면 내 위치 대신 그 카페를 기준으로 보여준다
+      const requestedCafe = getRequestedCafe();
+      if (requestedCafe) {
+        state.activeDistrict = "전체";
+        state.activeCafeId = requestedCafe.id;
+        el.mapHeaderCaption.textContent = requestedCafe.name + " 위치를 보여줍니다.";
+      } else {
+        await applyNearestDistrictFromUserLocation();
+      }
       syncRegionFilter();
+    }
+
+    function getRequestedCafe() {
+      const cafeId = new URLSearchParams(window.location.search).get("cafeId");
+      return cafeId ? getCafeById(cafeId) : null;
+    }
+
+    function focusRequestedCafe() {
+      const cafe = getRequestedCafe();
+      if (!cafe) {
+        return;
+      }
+      selectCafe(cafe.id, true);
+      if (map && infoWindow) {
+        openInfoWindow(cafe);
+      }
+      openDetailPanel(cafe);
     }
 
     function loadGoogleMaps(apiKey) {
@@ -1918,6 +1944,7 @@
       syncMapTypeFilter();
       syncUI();
       fitMapToCafes(getFilteredCafes());
+      focusRequestedCafe();
     }
 
     function openDetailPanel(cafe) {
@@ -2135,6 +2162,7 @@
           const apiKey = getApiKey();
           if (!apiKey) {
             setMapOverlay("error");
+            focusRequestedCafe();
             return;
           }
 

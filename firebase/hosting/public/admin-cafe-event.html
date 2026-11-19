@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>카페 이벤트 등록 · 콘카 관리자</title>
+    <meta name="description" content="이벤트 이미지를 AI로 분석해 카페 이벤트를 게시하는 관리자 페이지입니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="관리자 페이지 메뉴">
+              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/admin">카페 관리</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/admin">카페</a><span class="breadcrumb-sep">›</span><span>카페 이벤트 등록</span>
+          </nav>
+
+          <section class="surface section">
+            <div class="cafe-mini" style="margin: 0;">
+              <div class="cafe-mini-thumb" id="cafeThumb"></div>
+              <div>
+                <h1 id="cafeTitle">카페 이벤트 등록</h1>
+                <p id="cafeSub">이벤트 이미지를 AI로 분석해 이벤트를 게시합니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <div style="margin-top: 20px;">
+        <section class="surface section" id="eventSection">
+          <div class="section-header">
+            <div>
+              <h2>카페 이벤트 등록</h2>
+              <p>이벤트 이미지를 올리면 AI가 제목·본문·기간·참여 캐스트를 채웁니다. 검토 후 등록하면 앱의 카페 이벤트에 이미지와 함께 게시되고, 카페를 즐겨찾기한 사용자에게 알림이 갑니다.</p>
+            </div>
+          </div>
+          <div class="event-layout">
+            <div>
+              <label class="import-dropzone" id="eventDropzone" for="eventFileInput">
+                <input id="eventFileInput" type="file" accept="image/*" hidden />
+                <img id="eventPreview" alt="이벤트 이미지 미리보기" hidden />
+                <span id="eventDropzoneText">이벤트 이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.</span>
+              </label>
+              <div class="button-row" style="margin-top: 14px;">
+                <button class="button button-primary" id="eventAnalyzeButton" type="button" disabled>AI로 분석하기</button>
+                <button class="button button-ghost" id="eventResetButton" type="button">초기화</button>
+              </div>
+            </div>
+            <form class="event-form" id="eventForm" novalidate>
+              <div class="field">
+                <label for="eventTitle">제목</label>
+                <input id="eventTitle" type="text" maxlength="100" placeholder="예: 레이 생탄 이벤트" />
+              </div>
+              <div class="field">
+                <label for="eventContent">본문</label>
+                <textarea id="eventContent" maxlength="2000" placeholder="이벤트 안내 문구"></textarea>
+                <span class="event-counter" id="eventContentCounter">0 / 2000</span>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="eventStartDate">시작일</label>
+                  <input id="eventStartDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="eventEndDate">종료일</label>
+                  <input id="eventEndDate" type="date" />
+                </div>
+              </div>
+              <div class="field">
+                <label>참여 캐스트</label>
+                <div class="import-absent-list" id="eventParticipantList" style="margin-top: 0;"></div>
+                <p class="helper" id="eventUnmatchedNote"></p>
+              </div>
+              <label class="import-check" style="padding-bottom: 0;">
+                <input id="eventHasLive" type="checkbox" />
+                라이브 공연이 있는 이벤트
+              </label>
+              <div class="button-row">
+                <button class="button button-primary" id="eventSubmitButton" type="submit">이벤트 등록</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+          </div>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const db = A.db;
+        const escapeHtml = A.escapeHtml;
+        const setBanner = A.setBanner;
+
+        const cafeId = A.getCafeIdFromUrl();
+
+        const state = {
+          user: null,
+          cafe: null,
+          casts: [],
+          eventImage: null,
+          eventImageUrl: "",
+          eventParticipantIds: {},
+          eventUnmatchedNames: [],
+          eventBusy: false,
+          eventDone: false,
+        };
+
+        const el = {};
+        [
+          "eventDropzone", "eventFileInput", "eventPreview", "eventDropzoneText", "eventAnalyzeButton",
+          "eventResetButton", "eventForm", "eventTitle", "eventContent", "eventContentCounter", "eventStartDate", "eventEndDate",
+          "eventParticipantList", "eventUnmatchedNote", "eventHasLive", "eventSubmitButton", ].forEach(function (id) {
+          el[id] = document.getElementById(id);
+        });
+
+        function isReady() {
+          return !!state.user && !!state.cafe;
+        }
+
+        function updateAvailability() {
+          const ready = isReady();
+          const locked = state.eventBusy || state.eventDone;
+          el.eventAnalyzeButton.disabled = !ready || !state.eventImage || locked;
+          el.eventSubmitButton.disabled = !ready || locked;
+          el.eventResetButton.disabled = locked;
+        }
+
+        // ---------- 카페 이벤트 등록 ----------
+
+        function setEventStatus(type, message) {
+          setBanner("eventStatus", type, message);
+        }
+
+        function updateEventCounter() {
+          el.eventContentCounter.textContent = el.eventContent.value.length + " / 2000";
+        }
+
+        function renderEventParticipants() {
+          if (!state.casts.length) {
+            el.eventParticipantList.innerHTML = '<p class="helper">' + (isReady() ? "등록된 캐스트가 없습니다." : "캐스트를 불러오는 중입니다.") + "</p>";
+          } else {
+            el.eventParticipantList.innerHTML = state.casts.map(function (cast) {
+              const checked = !!state.eventParticipantIds[cast.id];
+              const inactive = cast.inactive;
+              return '<label class="chip-check' + (checked ? " is-checked" : "") + '">' +
+                '<input type="checkbox" data-participant-cast-id="' + escapeHtml(cast.id) + '"' + (checked ? " checked" : "") + " />" +
+                escapeHtml(cast.name) + (inactive ? " (현재 없음)" : "") + "</label>";
+            }).join("");
+          }
+          el.eventUnmatchedNote.textContent = state.eventUnmatchedNames.length
+            ? "이미지에 있지만 등록되지 않은 이름: " + state.eventUnmatchedNames.join(", ") + " (캐스트로 등록한 뒤 선택할 수 있습니다)"
+            : "";
+        }
+
+        function resetEventForm() {
+          state.eventImage = null;
+          state.eventImageUrl = "";
+          state.eventParticipantIds = {};
+          state.eventUnmatchedNames = [];
+          el.eventForm.reset();
+          el.eventFileInput.value = "";
+          el.eventPreview.hidden = true;
+          el.eventPreview.removeAttribute("src");
+          el.eventDropzoneText.textContent = "이벤트 이미지를 끌어다 놓거나, 클릭해서 선택하거나, Ctrl+V로 붙여넣으세요.";
+          A.hideBanner("eventStatus");
+          updateEventCounter();
+          renderEventParticipants();
+          updateAvailability();
+        }
+
+        async function selectEventFile(file) {
+          if (!file || !/^image\//.test(file.type)) {
+            setEventStatus("error", "이미지 파일만 올릴 수 있습니다.");
+            return;
+          }
+          if (state.eventBusy) {
+            return;
+          }
+          try {
+            const prepared = await A.prepareImage(file);
+            state.eventImage = prepared;
+            state.eventImageUrl = "";
+            el.eventPreview.src = prepared.previewUrl;
+            el.eventPreview.hidden = false;
+            el.eventDropzoneText.textContent = file.name + " · 다른 이미지로 바꾸려면 클릭하세요.";
+            setEventStatus("info", "AI로 분석하기를 누르면 문구를 채웁니다. 직접 입력해도 됩니다.");
+          } catch (error) {
+            setEventStatus("error", "이미지를 읽지 못했습니다. JPG나 PNG로 저장해 다시 올려주세요.");
+            console.error(error);
+          }
+          updateAvailability();
+        }
+
+        // 같은 이미지는 한 번만 올리고, 앱과 같은 events 폴더 아래 카페별 경로에 둔다
+        async function uploadEventImage() {
+          if (!state.eventImageUrl) {
+            state.eventImageUrl = await A.uploadImage("events", cafeId, state.eventImage);
+          }
+          return state.eventImageUrl;
+        }
+
+        function eventDateToInput(value) {
+          return /^\d{4}\.\d{2}\.\d{2}$/.test(value || "") ? value.replace(/\./g, "-") : "";
+        }
+
+        async function handleEventAnalyze() {
+          if (!state.eventImage || !isReady() || state.eventBusy) {
+            return;
+          }
+          state.eventBusy = true;
+          updateAvailability();
+          try {
+            setEventStatus("loading", "이미지를 업로드하는 중입니다.");
+            const imageUrl = await uploadEventImage();
+            setEventStatus("loading", "AI가 이벤트 이미지를 분석하는 중입니다… (보통 10~20초 걸립니다)");
+            const draft = await A.callFunction(state.user, "extractCafeEventImage", { cafeId: cafeId, imageUrl: imageUrl });
+            el.eventTitle.value = draft.title || "";
+            el.eventContent.value = draft.content || "";
+            el.eventStartDate.value = eventDateToInput(draft.startDate);
+            el.eventEndDate.value = eventDateToInput(draft.endDate);
+            el.eventHasLive.checked = draft.hasLivePerformance === true;
+            state.eventParticipantIds = {};
+            state.eventUnmatchedNames = [];
+            (draft.participants || []).forEach(function (participant) {
+              if (participant.castId) {
+                state.eventParticipantIds[participant.castId] = true;
+              } else {
+                state.eventUnmatchedNames.push(participant.name);
+              }
+            });
+            updateEventCounter();
+            renderEventParticipants();
+            const guesses = (draft.participants || []).filter(function (participant) { return participant.matchType === "PARTIAL"; });
+            setEventStatus(
+              "success",
+              "분석이 끝났습니다. 내용을 확인하고 이벤트 등록을 누르세요." +
+                (guesses.length ? " 이름이 비슷해 추정으로 선택한 캐스트: " + guesses.map(function (p) { return p.name + "→" + p.matchedCastName; }).join(", ") + "." : "") +
+                ((draft.warnings || []).length ? " 날짜를 읽지 못한 부분이 있어 기간을 확인하세요." : "")
+            );
+          } catch (error) {
+            setEventStatus("error", error && error.code ? A.describeError(error) : "이미지 업로드 또는 분석 요청에 실패했습니다.");
+            console.error(error);
+          } finally {
+            state.eventBusy = false;
+            updateAvailability();
+          }
+        }
+
+        function todayDateKey() {
+          const now = new Date();
+          return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+        }
+
+        async function handleEventSubmit(event) {
+          event.preventDefault();
+          if (!isReady() || state.eventBusy) {
+            return;
+          }
+          const title = el.eventTitle.value.trim();
+          const content = el.eventContent.value.trim();
+          const startDate = el.eventStartDate.value;
+          const endDate = el.eventEndDate.value;
+          if (!state.eventImage) {
+            setEventStatus("error", "이벤트 이미지를 올려주세요.");
+            return;
+          }
+          if (!title || title.length > 100) {
+            setEventStatus("error", "제목을 1~100자로 입력하세요.");
+            return;
+          }
+          if (!content || content.length > 2000) {
+            setEventStatus("error", "본문을 1~2000자로 입력하세요.");
+            return;
+          }
+          if (!!startDate !== !!endDate) {
+            setEventStatus("error", "시작일과 종료일을 모두 입력하거나 둘 다 비워 두세요.");
+            return;
+          }
+          if (startDate && startDate > endDate) {
+            setEventStatus("error", "종료일이 시작일보다 빠릅니다.");
+            return;
+          }
+          if (!window.confirm(state.cafe.name + "에 이벤트를 등록합니다. 카페를 즐겨찾기한 사용자에게 알림이 발송됩니다. 계속할까요?")) {
+            return;
+          }
+
+          state.eventBusy = true;
+          updateAvailability();
+          setEventStatus("loading", "이벤트를 등록하는 중입니다.");
+          try {
+            const imageUrl = await uploadEventImage();
+            // 앱의 이벤트 관리 화면과 같은 형식으로 저장한다 (기간 미정이면 앱과 같은 안내 문구를 넣는다)
+            const noPeriod = "게시 일정 선택 필요";
+            await db.collection("cafes").doc(cafeId).collection("events").doc("event-management-" + Date.now()).set({
+              title: title,
+              content: content,
+              imageUrl: imageUrl,
+              startDate: startDate ? startDate.replace(/-/g, ".") : noPeriod,
+              endDate: endDate ? endDate.replace(/-/g, ".") : noPeriod,
+              statusLabel: startDate && startDate <= todayDateKey() ? "진행 중" : "진행 예정",
+              isDimmed: false,
+              participantCastIds: Object.keys(state.eventParticipantIds),
+              hasLivePerformance: el.eventHasLive.checked,
+            });
+            // 이동하는 동안 다시 등록되지 않도록 버튼을 잠근 채로 카페 이벤트 목록으로 간다
+            state.eventDone = true;
+            window.ConcafeToast.flash("success", "\"" + title + "\" 이벤트를 등록했습니다.");
+            window.location.href = A.cafeDetailUrl(cafeId, "events");
+          } catch (error) {
+            setEventStatus("error", "이벤트 등록에 실패했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.eventBusy = false;
+            updateAvailability();
+          }
+        }
+
+
+        // ---------- 세션 ----------
+
+        async function handleSession(session) {
+          if (!session.isAdmin) {
+            state.user = null;
+            state.cafe = null;
+            state.casts = [];
+            resetEventForm();
+            updateAvailability();
+            return;
+          }
+          state.user = session.user;
+          if (!cafeId) {
+            setBanner("cafeStatus", "error", "카페 ID가 없습니다. 카페 목록에서 다시 선택하세요.");
+            return;
+          }
+          try {
+            state.cafe = await A.fetchCafe(cafeId);
+            if (!state.cafe) {
+              setBanner("cafeStatus", "error", "카페를 찾을 수 없습니다. 삭제되었거나 잘못된 주소입니다.");
+              return;
+            }
+            A.renderCafeMini(state.cafe);
+            A.hideBanner("cafeStatus");
+            state.casts = await A.fetchCasts(cafeId);
+            renderEventParticipants();
+          } catch (error) {
+            setBanner("cafeStatus", "error", "카페 정보를 불러오지 못했습니다.");
+            console.error(error);
+          }
+          updateAvailability();
+        }
+
+        // ---------- 이벤트 연결 ----------
+
+        A.bindDropzone(el.eventDropzone, el.eventFileInput, selectEventFile);
+        A.bindImagePaste(isReady, selectEventFile);
+        el.eventAnalyzeButton.addEventListener("click", handleEventAnalyze);
+        el.eventResetButton.addEventListener("click", resetEventForm);
+        el.eventForm.addEventListener("submit", handleEventSubmit);
+        el.eventContent.addEventListener("input", updateEventCounter);
+        el.eventParticipantList.addEventListener("change", function (e) {
+          const castId = e.target.getAttribute("data-participant-cast-id");
+          if (!castId) {
+            return;
+          }
+          if (e.target.checked) {
+            state.eventParticipantIds[castId] = true;
+          } else {
+            delete state.eventParticipantIds[castId];
+          }
+          e.target.closest(".chip-check").classList.toggle("is-checked", e.target.checked);
+        });
+
+        renderEventParticipants();
+        updateAvailability();
+        A.initAdminSession(handleSession);
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

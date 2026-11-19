@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>카페 상세 · 콘카 관리자</title>
+    <meta name="description" content="카페의 캐스트와 이벤트를 관리하고, 출근표 스케줄·카페 이벤트 등록으로 이동하는 관리자 페이지입니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="관리자 페이지 메뉴">
+              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
+              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/admin">카페 관리</a><span class="breadcrumb-sep">›</span><span id="breadcrumbCafeName">카페 상세</span>
+          </nav>
+
+          <section class="hero">
+            <div class="surface hero-copy" id="cafeSurface">
+              <div id="cafeView">
+                <div class="detail-toolbar">
+                  <button class="button button-secondary" id="cafeEditButton" type="button" disabled>카페 정보 수정</button>
+                </div>
+                <div class="cafe-detail-head">
+                  <div class="cafe-detail-thumb" id="cafeThumb"></div>
+                  <div>
+                    <div class="chip-row" id="cafeChips"></div>
+                    <h1 id="cafeTitle">카페 상세</h1>
+                    <dl class="cafe-info-list" id="cafeInfo"></dl>
+                    <div class="cafe-gallery-strip" id="cafeGalleryStrip"></div>
+                  </div>
+                </div>
+              </div>
+
+              <form class="edit-form" id="cafeEditForm" novalidate hidden>
+                <div class="section-header" style="margin-bottom: 0;">
+                  <div>
+                    <h2>카페 정보 수정</h2>
+                    <p>수정 완료를 누르면 앱에 바로 반영됩니다.</p>
+                  </div>
+                </div>
+                <div class="field-grid">
+                  <div class="field wide">
+                    <label>대표 이미지</label>
+                    <div id="editCafeThumbEditor"></div>
+                  </div>
+                  <div class="field wide">
+                    <label>추가 이미지 (최대 3장)</label>
+                    <div id="editCafeGalleryEditor"></div>
+                  </div>
+                  <div class="field wide">
+                    <label for="editCafeName">카페 이름</label>
+                    <input id="editCafeName" type="text" maxlength="60" required />
+                  </div>
+                  <div class="field">
+                    <label for="editCafeConceptType">컨셉</label>
+                    <select id="editCafeConceptType"></select>
+                  </div>
+                  <div class="field">
+                    <label for="editCafePhoneNumber">전화번호</label>
+                    <input id="editCafePhoneNumber" type="tel" maxlength="30" placeholder="선택 입력" />
+                  </div>
+                  <div class="field">
+                    <label for="editCafeCountry">국가</label>
+                    <select id="editCafeCountry">
+                      <option value="KR">한국</option>
+                      <option value="JP">일본</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="editCafeCity">도시</label>
+                    <select id="editCafeCity"></select>
+                  </div>
+                  <div class="field wide">
+                    <label for="editCafeAddress">주소</label>
+                    <div class="inline-field">
+                      <input id="editCafeAddress" type="text" maxlength="200" required />
+                      <button class="button button-secondary" id="editCafeGeocodeButton" type="button">위치 찾기</button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="editCafeLatitude">위도</label>
+                    <input id="editCafeLatitude" type="text" inputmode="decimal" />
+                  </div>
+                  <div class="field">
+                    <label for="editCafeLongitude">경도</label>
+                    <input id="editCafeLongitude" type="text" inputmode="decimal" />
+                  </div>
+                  <div class="field wide">
+                    <div class="location-map" id="editCafeLocationMap" hidden></div>
+                    <p class="helper" id="editCafeLocationHelper"></p>
+                  </div>
+                  <div class="field wide">
+                    <label for="editCafeBusinessHours">영업시간</label>
+                    <div class="inline-field">
+                      <input id="editCafeOpenTime" type="text" inputmode="numeric" maxlength="5" placeholder="17:00" />
+                      <input id="editCafeCloseTime" type="text" inputmode="numeric" maxlength="5" placeholder="23:00" />
+                      <button class="button button-ghost" id="editCafeFillHoursButton" type="button">매일 같은 시간으로 채우기</button>
+                    </div>
+                    <textarea id="editCafeBusinessHours" placeholder="월 17:00-23:00&#10;화 17:00-23:00&#10;..."></textarea>
+                    <p class="helper">한 줄에 한 요일씩 "월 17:00-23:00" 형식으로 입력하세요. 휴무일은 "수 휴무"처럼 적습니다.</p>
+                  </div>
+                  <div class="field wide">
+                    <label for="editCafeDesc">소개</label>
+                    <textarea id="editCafeDesc" maxlength="1000"></textarea>
+                  </div>
+                  <label class="import-check field wide" style="padding-bottom: 0;">
+                    <input id="editCafeApproved" type="checkbox" />
+                    승인됨 (체크를 해제하면 앱에 노출되지 않습니다)
+                  </label>
+                </div>
+                <div class="edit-form-actions">
+                  <button class="button button-primary" id="cafeEditSubmitButton" type="submit">수정 완료</button>
+                  <button class="button button-ghost" id="cafeEditCancelButton" type="button">취소</button>
+                </div>
+              </form>
+
+            </div>
+
+            <aside class="surface hero-meta">
+              <div class="action-grid">
+                <a class="action-card" id="scheduleActionLink" href="#" aria-disabled="true">
+                  <strong>캐스트 스케줄 등록</strong>
+                  <span>출근표 이미지를 AI로 분석해 스케줄을 등록합니다.</span>
+                </a>
+                <a class="action-card" id="eventActionLink" href="#" aria-disabled="true">
+                  <strong>카페 이벤트 등록</strong>
+                  <span>이벤트 이미지를 AI로 분석해 이벤트를 게시합니다.</span>
+                </a>
+              </div>
+              <div class="stat-list">
+                <div class="stat">
+                  <span class="stat-label">등록 캐스트</span>
+                  <strong class="stat-value" id="castCount">0</strong>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">현재 없는 캐스트</span>
+                  <strong class="stat-value" id="inactiveCount">0</strong>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">등록 이벤트</span>
+                  <strong class="stat-value" id="eventCount">0</strong>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">카페 ID</span>
+                  <strong class="stat-value mono small" id="cafeIdLabel">-</strong>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <div class="tab-bar" role="tablist" aria-label="카페 관리 메뉴">
+            <button class="tab-button is-active" type="button" role="tab" id="tabCasts" data-tab="casts" aria-controls="panelCasts" aria-selected="true">캐스트</button>
+            <button class="tab-button" type="button" role="tab" id="tabEvents" data-tab="events" aria-controls="panelEvents" aria-selected="false">카페 이벤트</button>
+            <button class="tab-button" type="button" role="tab" id="tabMenus" data-tab="menus" aria-controls="panelMenus" aria-selected="false">메뉴/굿즈</button>
+          </div>
+
+          <!-- ── 캐스트 탭 ── -->
+          <div class="tab-panel" id="panelCasts" role="tabpanel" aria-labelledby="tabCasts">
+            <section class="surface section">
+              <div class="section-header">
+                <div>
+                  <h2>캐스트 목록</h2>
+                  <p>'현재 없음'은 출근표에 더 이상 나오지 않아 분리한 캐스트입니다. 다시 출근하면 복원하세요.</p>
+                </div>
+                <button class="button button-primary" id="addCastButton" type="button" disabled>+ 캐스트 추가</button>
+              </div>
+              <div class="cast-toolbar">
+                <div class="filter-chips" id="castFilter">
+                  <button class="filter-chip is-active" type="button" data-filter="all">전체 <span id="filterAllCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="active">활동 중 <span id="filterActiveCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="inactive">현재 없음 <span id="filterInactiveCount">0</span></button>
+                </div>
+                <button class="button button-ghost" id="refreshCastsButton" type="button" disabled>새로고침</button>
+              </div>
+              <div class="cast-grid" id="castGrid"></div>
+              <p class="empty" id="castEmptyState">캐스트를 불러오는 중입니다.</p>
+            </section>
+          </div>
+
+          <!-- ── 카페 이벤트 탭 ── -->
+          <div class="tab-panel" id="panelEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
+            <section class="surface section">
+              <div class="section-header">
+                <div>
+                  <h2>카페 이벤트</h2>
+                  <p>앱의 카페 이벤트와 같은 순서(시작일 최신순)로 보여줍니다. 카드를 누르면 내용을 볼 수 있습니다.</p>
+                </div>
+                <a class="button button-primary" id="eventAddLink" href="#" aria-disabled="true">+ 이벤트 등록</a>
+              </div>
+              <div class="event-card-grid" id="eventGrid"></div>
+              <p class="empty" id="eventEmptyState">이벤트를 불러오는 중입니다.</p>
+            </section>
+          </div>
+
+          <!-- ── 메뉴/굿즈 탭 ── -->
+          <div class="tab-panel" id="panelMenus" role="tabpanel" aria-labelledby="tabMenus" hidden>
+            <section class="surface section">
+              <div class="section-header">
+                <div>
+                  <h2>메뉴 / 굿즈</h2>
+                  <p>앱의 카페 메뉴 탭에 보이는 목록입니다. 항목을 누르면 수정하거나 삭제할 수 있습니다.</p>
+                </div>
+                <a class="button button-primary" id="menuAddLink" href="#" aria-disabled="true">+ 메뉴/굿즈 등록</a>
+              </div>
+              <div class="cast-toolbar">
+                <div class="filter-chips" id="menuFilter">
+                  <button class="filter-chip is-active" type="button" data-filter="all">전체 <span id="menuFilterAllCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="drink">음료 <span id="menuFilterDrinkCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="food">음식 <span id="menuFilterFoodCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="dessert">디저트 <span id="menuFilterDessertCount">0</span></button>
+                  <button class="filter-chip" type="button" data-filter="goods">굿즈 <span id="menuFilterGoodsCount">0</span></button>
+                </div>
+              </div>
+              <div id="menuList"></div>
+              <p class="empty" id="menuEmptyState">메뉴를 불러오는 중입니다.</p>
+            </section>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <!-- 캐스트 추가 모달 -->
+    <div class="admin-modal" id="castModal" role="dialog" aria-modal="true" aria-labelledby="castModalTitle" hidden>
+      <div class="admin-modal-box">
+        <button class="admin-modal-close" type="button" data-close-modal aria-label="닫기">✕</button>
+        <h2 id="castModalTitle">캐스트 추가</h2>
+        <form id="castForm" novalidate>
+          <div class="field-grid">
+            <div class="field wide">
+              <label>프로필 사진</label>
+              <div class="photo-picker">
+                <div class="photo-picker-preview" id="castPhotoPreview">사진 없음</div>
+                <div class="button-row">
+                  <label class="button button-secondary" for="castPhotoInput" style="cursor: pointer;">사진 선택</label>
+                  <input id="castPhotoInput" type="file" accept="image/*" hidden />
+                  <button class="button button-ghost" id="castPhotoClear" type="button">사진 빼기</button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="castName">이름</label>
+              <input id="castName" type="text" maxlength="30" placeholder="예: 레이" required />
+            </div>
+            <div class="field">
+              <label for="castConceptRole">역할</label>
+              <select id="castConceptRole"></select>
+            </div>
+            <div class="field">
+              <label for="castBirthday">생일</label>
+              <input id="castBirthday" type="date" />
+            </div>
+            <div class="field wide">
+              <label for="castDesc">소개</label>
+              <textarea id="castDesc" maxlength="500" placeholder="캐스트 소개 (선택 입력)" style="min-height: 90px;"></textarea>
+            </div>
+          </div>
+          <div class="button-row" style="margin-top: 18px;">
+            <button class="button button-primary" id="castSubmitButton" type="submit">캐스트 추가</button>
+            <button class="button button-ghost" type="button" data-close-modal>취소</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 이벤트 상세 모달 -->
+    <div class="admin-modal" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" hidden>
+      <div class="admin-modal-box" style="max-width: 640px;">
+        <button class="admin-modal-close" type="button" data-close-modal aria-label="닫기">✕</button>
+        <h2 id="eventModalTitle"></h2>
+        <div id="eventModalBody"></div>
+      </div>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const db = A.db;
+        const escapeHtml = A.escapeHtml;
+        const normalizeText = A.normalizeText;
+        const setBanner = A.setBanner;
+
+        const INACTIVE_REASON_LABELS = { NOT_IN_SCHEDULE_IMAGE: "출근표에 없음" };
+        const TABS = ["casts", "events", "menus"];
+        const CALENDAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>';
+
+        const params = new URLSearchParams(window.location.search);
+        const cafeId = A.getCafeIdFromUrl();
+
+        const state = {
+          user: null,
+          cafe: null,
+          casts: [],
+          castsLoaded: false,
+          castFilter: "all",
+          castPhoto: null,
+          castSaving: false,
+          busyCastIds: {},
+          events: [],
+          eventsLoaded: false,
+          menus: [],
+          goods: [],
+          menusLoaded: false,
+          menuFilter: "all",
+          cafeEditing: false,
+          cafeSaving: false,
+        };
+
+        const el = {};
+        [
+          "breadcrumbCafeName", "cafeThumb", "cafeChips", "cafeTitle", "cafeInfo", "cafeSurface", "cafeView", "cafeEditButton", "cafeGalleryStrip", "cafeEditForm", "editCafeThumbEditor", "editCafeGalleryEditor",
+          "editCafeName", "editCafeConceptType", "editCafePhoneNumber", "editCafeCountry", "editCafeCity", "editCafeAddress",
+          "editCafeGeocodeButton", "editCafeLatitude", "editCafeLongitude", "editCafeLocationMap", "editCafeLocationHelper",
+          "editCafeOpenTime", "editCafeCloseTime", "editCafeFillHoursButton", "editCafeBusinessHours", "editCafeDesc",
+          "editCafeApproved", "cafeEditSubmitButton", "cafeEditCancelButton",
+          "scheduleActionLink", "eventActionLink", "castCount", "inactiveCount", "eventCount", "cafeIdLabel",
+          "tabCasts", "tabEvents", "panelCasts", "panelEvents",
+          "addCastButton", "castFilter", "filterAllCount", "filterActiveCount", "filterInactiveCount",
+          "refreshCastsButton", "castGrid", "castEmptyState",
+          "eventAddLink", "eventGrid", "eventEmptyState",
+          "tabMenus", "panelMenus", "menuAddLink", "menuFilter", "menuFilterAllCount", "menuFilterDrinkCount",
+          "menuFilterFoodCount", "menuFilterDessertCount", "menuFilterGoodsCount", "menuList", "menuEmptyState",
+          "castModal", "castForm", "castPhotoPreview", "castPhotoInput", "castPhotoClear", "castName",
+          "castConceptRole", "castBirthday", "castDesc", "castSubmitButton",
+          "eventModal", "eventModalTitle", "eventModalBody",
+        ].forEach(function (id) {
+          el[id] = document.getElementById(id);
+        });
+
+        function isReady() {
+          return !!state.user && !!state.cafe;
+        }
+
+        function updateAvailability() {
+          const ready = isReady();
+          el.addCastButton.disabled = !ready;
+          el.refreshCastsButton.disabled = !ready;
+          [el.scheduleActionLink, el.eventActionLink, el.eventAddLink, el.menuAddLink].forEach(function (link) {
+            link.setAttribute("aria-disabled", ready ? "false" : "true");
+          });
+          el.castSubmitButton.disabled = !ready || state.castSaving;
+          el.cafeEditButton.disabled = !ready || state.cafeEditing;
+          el.cafeEditSubmitButton.disabled = !ready || state.cafeSaving;
+          el.cafeEditCancelButton.disabled = state.cafeSaving;
+        }
+
+        function updateSummary() {
+          const inactive = state.casts.filter(function (cast) { return cast.inactive; }).length;
+          el.castCount.textContent = String(state.casts.length);
+          el.inactiveCount.textContent = String(inactive);
+          el.eventCount.textContent = String(state.events.length);
+          el.filterAllCount.textContent = String(state.casts.length);
+          el.filterActiveCount.textContent = String(state.casts.length - inactive);
+          el.filterInactiveCount.textContent = String(inactive);
+        }
+
+        // ---------- 탭 ----------
+
+        function showTab(tab, updateHash) {
+          if (TABS.indexOf(tab) < 0) {
+            tab = "casts";
+          }
+          [["casts", el.tabCasts, el.panelCasts], ["events", el.tabEvents, el.panelEvents], ["menus", el.tabMenus, el.panelMenus]].forEach(function (item) {
+            const active = item[0] === tab;
+            item[1].classList.toggle("is-active", active);
+            item[1].setAttribute("aria-selected", active ? "true" : "false");
+            item[2].hidden = !active;
+          });
+          if (updateHash) {
+            history.replaceState(null, "", window.location.pathname + window.location.search + "#" + tab);
+          }
+        }
+
+        // ---------- 카페 정보 ----------
+
+        function renderCafe() {
+          const cafe = state.cafe;
+          el.cafeIdLabel.textContent = cafeId || "-";
+          if (!cafe) {
+            el.cafeThumb.innerHTML = "";
+            el.cafeChips.innerHTML = "";
+            el.cafeInfo.innerHTML = "";
+            el.cafeGalleryStrip.innerHTML = "";
+            return;
+          }
+          document.title = cafe.name + " · 콘카 관리자";
+          el.breadcrumbCafeName.textContent = cafe.name;
+          el.cafeTitle.textContent = cafe.name;
+          el.cafeThumb.innerHTML = A.cafeThumbHtml(cafe);
+          const concept = A.conceptLabel(cafe.conceptType);
+          el.cafeChips.innerHTML =
+            (concept ? '<span class="chip">' + escapeHtml(concept) + "</span>" : "") +
+            (cafe.approved ? '<span class="chip success">승인됨</span>' : '<span class="chip warning">미승인</span>');
+          const rows = [
+            ["지역", [A.COUNTRY_LABELS[cafe.country] || cafe.country, A.cityLabel(cafe.country, cafe.city)].filter(Boolean).join(" · ")],
+            ["주소", cafe.address],
+            ["전화번호", cafe.phoneNumber],
+            ["영업시간", cafe.businessHours],
+            ["소개", cafe.desc],
+          ].filter(function (row) { return row[1]; });
+          el.cafeInfo.innerHTML = rows.map(function (row) {
+            return "<dt>" + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd>";
+          }).join("");
+          el.cafeGalleryStrip.innerHTML = cafe.galleryImages.filter(function (url) {
+            return url !== cafe.thumbnailImage;
+          }).map(function (url) {
+            return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" />';
+          }).join("");
+          el.scheduleActionLink.href = A.cafeSubPageUrl("schedule", cafeId);
+          el.eventActionLink.href = A.cafeSubPageUrl("event", cafeId);
+          el.eventAddLink.href = A.cafeSubPageUrl("event", cafeId);
+          el.menuAddLink.href = A.menuItemUrl(cafeId);
+        }
+
+        async function loadCafe() {
+          if (!cafeId) {
+            setBanner("cafeStatus", "error", "카페 ID가 없습니다. 카페 목록에서 다시 선택하세요.");
+            return false;
+          }
+          try {
+            state.cafe = await A.fetchCafe(cafeId);
+            if (!state.cafe) {
+              setBanner("cafeStatus", "error", "카페를 찾을 수 없습니다. 삭제되었거나 잘못된 주소입니다.");
+              return false;
+            }
+            renderCafe();
+            if (params.get("created") === "1") {
+              setBanner("cafeStatus", "success", state.cafe.name + " 카페를 등록했습니다. 캐스트를 추가하거나 출근표·이벤트를 등록하세요.");
+              params.delete("created");
+              history.replaceState(null, "", window.location.pathname + "?" + params.toString() + window.location.hash);
+            } else {
+              A.hideBanner("cafeStatus");
+            }
+            return true;
+          } catch (error) {
+            setBanner("cafeStatus", "error", "카페 정보를 불러오지 못했습니다.");
+            console.error(error);
+            return false;
+          }
+        }
+
+        // ---------- 카페 정보 수정 (같은 화면에서 입력폼으로 전환) ----------
+
+        const thumbEditor = A.createImageEditor({
+          container: el.editCafeThumbEditor,
+          max: 1,
+          addLabel: "대표 이미지",
+          onError: function (message) { setBanner("cafeEditStatus", "error", message); },
+        });
+        const galleryEditor = A.createImageEditor({
+          container: el.editCafeGalleryEditor,
+          max: 3,
+          addLabel: "이미지 추가",
+          onError: function (message) { setBanner("cafeEditStatus", "error", message); },
+        });
+        const locationPicker = A.createLocationPicker({
+          address: el.editCafeAddress,
+          lat: el.editCafeLatitude,
+          lng: el.editCafeLongitude,
+          country: el.editCafeCountry,
+          map: el.editCafeLocationMap,
+          helper: el.editCafeLocationHelper,
+          button: el.editCafeGeocodeButton,
+          onError: function (message) { setBanner("cafeEditStatus", "error", message); },
+        });
+
+        function setCafeEditing(editing) {
+          state.cafeEditing = editing;
+          el.cafeView.hidden = editing;
+          el.cafeEditForm.hidden = !editing;
+          el.cafeSurface.classList.toggle("is-editing", editing);
+          updateAvailability();
+        }
+
+        function startCafeEdit() {
+          const cafe = state.cafe;
+          if (!cafe || state.cafeEditing) {
+            return;
+          }
+          el.editCafeName.value = cafe.name;
+          el.editCafeConceptType.value = cafe.conceptType || "OTHER";
+          el.editCafePhoneNumber.value = cafe.phoneNumber;
+          el.editCafeCountry.value = A.CITIES[cafe.country] ? cafe.country : "KR";
+          A.renderCityOptions(el.editCafeCity, el.editCafeCountry.value, cafe.city);
+          el.editCafeAddress.value = cafe.address;
+          el.editCafeOpenTime.value = "";
+          el.editCafeCloseTime.value = "";
+          el.editCafeBusinessHours.value = cafe.businessHours;
+          el.editCafeDesc.value = cafe.desc;
+          el.editCafeApproved.checked = cafe.approved;
+          thumbEditor.setUrls(cafe.thumbnailImage ? [cafe.thumbnailImage] : []);
+          galleryEditor.setUrls(cafe.galleryImages.filter(function (url) { return url !== cafe.thumbnailImage; }));
+          A.hideBanner("cafeEditStatus");
+          setCafeEditing(true);
+          locationPicker.set(cafe.lat != null && cafe.lng != null ? { lat: cafe.lat, lng: cafe.lng } : null);
+          el.cafeSurface.scrollIntoView({ behavior: "smooth", block: "start" });
+          el.editCafeName.focus({ preventScroll: true });
+        }
+
+        function cancelCafeEdit() {
+          if (state.cafeSaving) {
+            return;
+          }
+          setCafeEditing(false);
+        }
+
+        function fillEditBusinessHours() {
+          const open = el.editCafeOpenTime.value.trim();
+          const close = el.editCafeCloseTime.value.trim();
+          if (!A.isValidClockTime(open) || !A.isValidClockTime(close)) {
+            setBanner("cafeEditStatus", "error", "영업 시작/종료 시간을 HH:MM 형식으로 입력하세요.");
+            return;
+          }
+          A.hideBanner("cafeEditStatus");
+          el.editCafeBusinessHours.value = A.everyDayBusinessHours(open, close);
+        }
+
+        async function handleCafeEditSubmit(event) {
+          event.preventDefault();
+          const cafe = state.cafe;
+          if (!isReady() || state.cafeSaving) {
+            return;
+          }
+          const name = el.editCafeName.value.trim();
+          const address = el.editCafeAddress.value.trim();
+          const position = locationPicker.read();
+          if (!name) {
+            setBanner("cafeEditStatus", "error", "카페 이름을 입력하세요.");
+            return;
+          }
+          if (!address) {
+            setBanner("cafeEditStatus", "error", "주소를 입력하세요.");
+            return;
+          }
+          if (!position) {
+            setBanner("cafeEditStatus", "error", "위치 찾기로 좌표를 채우거나 위도/경도를 직접 입력하세요.");
+            return;
+          }
+          if (cafe.approved && !el.editCafeApproved.checked &&
+            !window.confirm("승인을 해제하면 앱에서 이 카페가 보이지 않게 됩니다. 계속할까요?")) {
+            return;
+          }
+
+          state.cafeSaving = true;
+          thumbEditor.setDisabled(true);
+          galleryEditor.setDisabled(true);
+          updateAvailability();
+          try {
+            setBanner("cafeEditStatus", "loading", "이미지를 올리는 중입니다.");
+            const thumbUrls = await thumbEditor.upload("cafes/representative", cafeId);
+            const galleryUrls = await galleryEditor.upload("cafes/gallery", cafeId);
+            const images = A.buildCafeImageFields(thumbUrls[0] || null, galleryUrls);
+            setBanner("cafeEditStatus", "loading", "카페 정보를 저장하는 중입니다.");
+            await db.collection("cafes").doc(cafeId).update({
+              name: name,
+              desc: el.editCafeDesc.value.trim(),
+              conceptType: el.editCafeConceptType.value,
+              phoneNumber: el.editCafePhoneNumber.value.trim(),
+              businessHours: el.editCafeBusinessHours.value.trim(),
+              thumbnailImage: images.thumbnailImage,
+              galleryImages: images.galleryImages,
+              approved: el.editCafeApproved.checked,
+              region: {
+                country: el.editCafeCountry.value,
+                city: el.editCafeCity.value,
+                address: address,
+                location: new firebase.firestore.GeoPoint(position.lat, position.lng),
+              },
+              updatedAt: A.nowIso(),
+            });
+            // 이번 수정으로 빠진 이미지는 Storage에서도 지운다
+            const before = [cafe.thumbnailImage].concat(cafe.galleryImages);
+            const after = images.galleryImages.concat([images.thumbnailImage]);
+            A.deleteStorageImages(before.filter(function (url) { return url && after.indexOf(url) < 0; }));
+
+            state.cafe = await A.fetchCafe(cafeId);
+            renderCafe();
+            state.cafeSaving = false;
+            setCafeEditing(false);
+            setBanner("cafeStatus", "success", "카페 정보를 수정했습니다.");
+          } catch (error) {
+            setBanner("cafeEditStatus", "error", "카페 정보를 저장하지 못했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.cafeSaving = false;
+            thumbEditor.setDisabled(false);
+            galleryEditor.setDisabled(false);
+            updateAvailability();
+          }
+        }
+
+        // ---------- 캐스트 ----------
+
+        function renderCasts() {
+          const filtered = state.casts.filter(function (cast) {
+            if (state.castFilter === "active") return !cast.inactive;
+            if (state.castFilter === "inactive") return cast.inactive;
+            return true;
+          });
+          if (!filtered.length) {
+            el.castGrid.innerHTML = "";
+            el.castEmptyState.style.display = "";
+            el.castEmptyState.textContent = !state.castsLoaded
+              ? (isReady() ? "캐스트를 불러오는 중입니다." : "카페 정보를 불러오면 표시됩니다.")
+              : state.castFilter === "inactive" ? "현재 없는 캐스트가 없습니다."
+              : state.casts.length ? "해당하는 캐스트가 없습니다."
+              : "등록된 캐스트가 없습니다. 캐스트 추가 또는 출근표 등록으로 추가하세요.";
+            return;
+          }
+          el.castEmptyState.style.display = "none";
+          el.castGrid.innerHTML = filtered.map(function (cast) {
+            const busy = !!state.busyCastIds[cast.id];
+            const photo = cast.profileImage
+              ? '<img src="' + escapeHtml(cast.profileImage) + '" alt="" loading="lazy" />'
+              : escapeHtml(cast.name.slice(0, 1));
+            const chips = [];
+            if (cast.inactive) {
+              chips.push('<span class="chip warning">현재 없음' +
+                (INACTIVE_REASON_LABELS[cast.inactiveReason] ? " · " + escapeHtml(INACTIVE_REASON_LABELS[cast.inactiveReason]) : "") + "</span>");
+            }
+            if (cast.linkedUserId) {
+              chips.push('<span class="chip success">계정 연결</span>');
+            }
+            const desc = A.castDescText(cast);
+            return '<article class="cast-card' + (cast.inactive ? " is-inactive" : "") + '">' +
+              '<a class="cast-card-link" href="' + escapeHtml(A.castDetailUrl(cafeId, cast.id)) + '">' +
+              '<div class="cast-card-photo">' + photo + "</div>" +
+              '<div class="cast-card-body">' +
+              '<h3 class="cast-card-name" title="' + escapeHtml(cast.name) + '">' + escapeHtml(cast.name) + "</h3>" +
+              '<p class="cast-card-desc">' + escapeHtml(desc || "소개 없음") + "</p>" +
+              (chips.length ? '<div class="chip-row" style="gap:6px;">' + chips.join("") + "</div>" : "") +
+              "</div></a>" +
+              '<div class="cast-card-actions">' +
+              (cast.inactive
+                ? '<button class="button button-secondary" type="button" data-restore-cast-id="' + escapeHtml(cast.id) + '"' + (busy ? " disabled" : "") + ">복원</button>"
+                : "") +
+              '<button class="button button-danger" type="button" data-delete-cast-id="' + escapeHtml(cast.id) + '"' + (busy ? " disabled" : "") + ">삭제</button>" +
+              "</div></article>";
+          }).join("");
+        }
+
+        async function loadCasts() {
+          if (!isReady()) {
+            renderCasts();
+            return;
+          }
+          try {
+            state.casts = await A.fetchCasts(cafeId);
+            state.castsLoaded = true;
+          } catch (error) {
+            setBanner("castStatus", "error", "캐스트 목록을 불러오지 못했습니다.");
+            console.error(error);
+          }
+          renderCasts();
+          updateSummary();
+        }
+
+        function setCastBusy(castId, busy) {
+          if (busy) {
+            state.busyCastIds[castId] = true;
+          } else {
+            delete state.busyCastIds[castId];
+          }
+          renderCasts();
+        }
+
+        async function restoreCast(castId) {
+          const cast = state.casts.find(function (item) { return item.id === castId; });
+          if (!cast || !isReady()) {
+            return;
+          }
+          setCastBusy(castId, true);
+          try {
+            const now = A.nowIso();
+            await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).update({
+              rosterStatus: "ACTIVE",
+              reactivatedAt: now,
+              updatedAt: now,
+            });
+            setBanner("castStatus", "success", cast.name + " 캐스트를 복원했습니다.");
+            setCastBusy(castId, false);
+            await loadCasts();
+          } catch (error) {
+            setBanner("castStatus", "error", "캐스트를 복원하지 못했습니다.");
+            console.error(error);
+            setCastBusy(castId, false);
+          }
+        }
+
+        // 캐스트 문서를 지우면 서버 트리거가 프로필·갤러리 이미지와 castDirectory 항목을 정리한다
+        async function deleteCast(castId) {
+          const cast = state.casts.find(function (item) { return item.id === castId; });
+          if (!cast || !isReady()) {
+            return;
+          }
+          const message = "'" + cast.name + "' 캐스트를 삭제합니다." +
+            (cast.linkedUserId ? "\n이 캐스트는 사용자 계정과 연결되어 있습니다. 삭제하면 연결도 끊어집니다." : "") +
+            "\n프로필과 갤러리 이미지도 함께 지워지며 되돌릴 수 없습니다. 계속할까요?";
+          if (!window.confirm(message)) {
+            return;
+          }
+          setCastBusy(castId, true);
+          try {
+            await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).delete();
+            setBanner("castStatus", "success", cast.name + " 캐스트를 삭제했습니다.");
+            setCastBusy(castId, false);
+            await loadCasts();
+          } catch (error) {
+            setBanner("castStatus", "error", "캐스트를 삭제하지 못했습니다. 관리자 권한을 확인하세요.");
+            console.error(error);
+            setCastBusy(castId, false);
+          }
+        }
+
+        // ---------- 캐스트 추가 ----------
+
+        function defaultConceptRole() {
+          const role = (state.cafe && state.cafe.conceptType || "").toLowerCase();
+          return A.CAST_CONCEPT_ROLES.some(function (item) { return item[0] === role; }) ? role : "maid";
+        }
+
+        function renderCastPhoto() {
+          el.castPhotoPreview.innerHTML = state.castPhoto
+            ? '<img src="' + escapeHtml(state.castPhoto.previewUrl) + '" alt="" />'
+            : "사진 없음";
+        }
+
+        function openModal(modal) {
+          modal.hidden = false;
+          const focusable = modal.querySelector("input:not([hidden]), textarea, select, button");
+          if (focusable) {
+            focusable.focus();
+          }
+        }
+
+        function closeModal(modal) {
+          if (modal === el.castModal && state.castSaving) {
+            return;
+          }
+          modal.hidden = true;
+        }
+
+        function openCastModal() {
+          if (!isReady()) {
+            return;
+          }
+          el.castForm.reset();
+          el.castConceptRole.value = defaultConceptRole();
+          state.castPhoto = null;
+          renderCastPhoto();
+          A.hideBanner("castFormStatus");
+          openModal(el.castModal);
+          el.castName.focus();
+        }
+
+        async function selectCastPhoto(file) {
+          if (!file || !/^image\//.test(file.type)) {
+            setBanner("castFormStatus", "error", "이미지 파일만 올릴 수 있습니다.");
+            return;
+          }
+          try {
+            state.castPhoto = await A.prepareImage(file);
+            renderCastPhoto();
+            A.hideBanner("castFormStatus");
+          } catch (error) {
+            setBanner("castFormStatus", "error", "이미지를 읽지 못했습니다. JPG나 PNG로 저장해 다시 올려주세요.");
+            console.error(error);
+          }
+        }
+
+        async function handleCastSubmit(event) {
+          event.preventDefault();
+          if (!isReady() || state.castSaving) {
+            return;
+          }
+          const name = el.castName.value.trim();
+          if (!name) {
+            setBanner("castFormStatus", "error", "이름을 입력하세요.");
+            return;
+          }
+          const sameName = state.casts.find(function (cast) { return A.normalizeName(cast.name) === A.normalizeName(name); });
+          if (sameName && !window.confirm("같은 이름의 캐스트(" + sameName.name + (sameName.inactive ? ", 현재 없음" : "") + ")가 이미 있습니다. 그래도 추가할까요?")) {
+            return;
+          }
+
+          state.castSaving = true;
+          updateAvailability();
+          try {
+            let profileImage = null;
+            if (state.castPhoto) {
+              setBanner("castFormStatus", "loading", "프로필 사진을 올리는 중입니다.");
+              profileImage = await A.uploadImage("casts/profile", cafeId, state.castPhoto);
+            }
+            setBanner("castFormStatus", "loading", "캐스트를 추가하는 중입니다.");
+            const birthday = el.castBirthday.value || null;
+            const now = A.nowIso();
+            // 앱(CastEdit)·출근표 등록과 같은 필드 구성으로 저장한다
+            await db.collection("cafes").doc(cafeId).collection("casts").doc("cast-" + Date.now()).set({
+              name: name,
+              linkedUserId: null,
+              profileImage: profileImage,
+              desc: el.castDesc.value.trim(),
+              birthday: birthday,
+              birthdayKey: birthday ? birthday.slice(5) : null,
+              conceptRole: el.castConceptRole.value,
+              followerCount: 0,
+              rating: 0,
+              visitCertificationCount: 0,
+              galleryImages: [],
+              createdVia: "ADMIN_WEB",
+              createdBy: state.user.uid,
+              createdAt: now,
+              updatedAt: now,
+            });
+            state.castSaving = false;
+            closeModal(el.castModal);
+            setBanner("castStatus", "success", name + " 캐스트를 추가했습니다.");
+            state.castFilter = "all";
+            syncFilterChips();
+            await loadCasts();
+          } catch (error) {
+            setBanner("castFormStatus", "error", "캐스트를 추가하지 못했습니다. 잠시 후 다시 시도하세요.");
+            console.error(error);
+          } finally {
+            state.castSaving = false;
+            updateAvailability();
+          }
+        }
+
+        function syncFilterChips() {
+          Array.prototype.forEach.call(el.castFilter.querySelectorAll("[data-filter]"), function (chip) {
+            chip.classList.toggle("is-active", chip.getAttribute("data-filter") === state.castFilter);
+          });
+        }
+
+        // ---------- 카페 이벤트 (앱과 같은 카드 목록) ----------
+
+        function todayDotKey() {
+          const now = new Date();
+          return now.getFullYear() + "." + String(now.getMonth() + 1).padStart(2, "0") + "." + String(now.getDate()).padStart(2, "0");
+        }
+
+        function hasPeriod(item) {
+          return /^\d{4}\.\d{2}\.\d{2}$/.test(item.startDate) && /^\d{4}\.\d{2}\.\d{2}$/.test(item.endDate);
+        }
+
+        // 저장된 statusLabel은 등록 시점 값이라 기간이 있으면 오늘 기준으로 다시 계산한다
+        function eventStatus(item) {
+          if (!hasPeriod(item)) {
+            return { label: item.statusLabel || "진행 예정", ended: false };
+          }
+          const today = todayDotKey();
+          if (today > item.endDate) return { label: "종료", ended: true };
+          if (today >= item.startDate) return { label: "진행 중", ended: false };
+          return { label: "진행 예정", ended: false };
+        }
+
+        function periodText(item) {
+          return hasPeriod(item) ? item.startDate + " - " + item.endDate : "기간 미정";
+        }
+
+        function renderEvents() {
+          if (!state.events.length) {
+            el.eventGrid.innerHTML = "";
+            el.eventEmptyState.style.display = "";
+            el.eventEmptyState.textContent = !state.eventsLoaded
+              ? (isReady() ? "이벤트를 불러오는 중입니다." : "카페 정보를 불러오면 표시됩니다.")
+              : "등록된 이벤트가 없습니다.";
+            return;
+          }
+          el.eventEmptyState.style.display = "none";
+          el.eventGrid.innerHTML = state.events.map(function (item) {
+            const status = eventStatus(item);
+            return '<button class="event-card' + (status.ended ? " is-ended" : "") + '" type="button" data-event-id="' + escapeHtml(item.id) + '">' +
+              '<div class="event-card-image">' +
+              (item.imageUrl ? '<img src="' + escapeHtml(item.imageUrl) + '" alt="" loading="lazy" />' : "") +
+              '<span class="event-card-status">' + escapeHtml(status.label) + "</span>" +
+              "</div>" +
+              '<div class="event-card-text">' +
+              '<p class="event-card-title">' + escapeHtml(item.title) + "</p>" +
+              '<span class="event-card-period">' + CALENDAR_ICON + escapeHtml(periodText(item)) + "</span>" +
+              "</div></button>";
+          }).join("");
+        }
+
+        async function loadEvents() {
+          if (!isReady()) {
+            renderEvents();
+            return;
+          }
+          try {
+            const snapshot = await db.collection("cafes").doc(cafeId).collection("events").get();
+            state.events = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                title: normalizeText(data.title, "제목 없음"),
+                content: normalizeText(data.content, ""),
+                imageUrl: normalizeText(data.imageUrl, ""),
+                startDate: normalizeText(data.startDate, ""),
+                endDate: normalizeText(data.endDate, ""),
+                statusLabel: normalizeText(data.statusLabel, "진행 예정"),
+                participantCastIds: Array.isArray(data.participantCastIds) ? data.participantCastIds : [],
+                hasLivePerformance: data.hasLivePerformance === true,
+                likeCount: typeof data.likeCount === "number" ? data.likeCount : 0,
+              };
+            }).sort(function (a, b) {
+              // 앱과 같이 시작일 최신순
+              return b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id);
+            });
+            state.eventsLoaded = true;
+          } catch (error) {
+            console.error(error);
+            el.eventEmptyState.textContent = "이벤트를 불러오지 못했습니다.";
+          }
+          renderEvents();
+          updateSummary();
+        }
+
+        function openEventModal(eventId) {
+          const item = state.events.find(function (candidate) { return candidate.id === eventId; });
+          if (!item) {
+            return;
+          }
+          const status = eventStatus(item);
+          const castNames = item.participantCastIds.map(function (castId) {
+            const cast = state.casts.find(function (candidate) { return candidate.id === castId; });
+            return cast ? cast.name : null;
+          }).filter(Boolean);
+          el.eventModalTitle.textContent = item.title;
+          el.eventModalBody.innerHTML =
+            (item.imageUrl ? '<img class="event-detail-image" src="' + escapeHtml(item.imageUrl) + '" alt="" />' : "") +
+            '<div class="chip-row" style="margin-top: 14px;">' +
+            '<span class="chip">' + escapeHtml(status.label) + "</span>" +
+            '<span class="chip neutral">' + escapeHtml(periodText(item)) + "</span>" +
+            (item.hasLivePerformance ? '<span class="chip success">라이브</span>' : "") +
+            '<span class="chip neutral">좋아요 ' + item.likeCount + "</span>" +
+            "</div>" +
+            (castNames.length ? '<p class="helper" style="margin-top: 10px;">참여 캐스트: ' + escapeHtml(castNames.join(", ")) + "</p>" : "") +
+            '<p class="event-detail-content">' + escapeHtml(item.content || "본문이 없습니다.") + "</p>";
+          openModal(el.eventModal);
+        }
+
+        // ---------- 메뉴 / 굿즈 (앱의 카페 메뉴 탭과 같은 구성) ----------
+
+        function menuThumb(item) {
+          return item.image
+            ? '<img src="' + escapeHtml(item.image) + '" alt="" loading="lazy" />'
+            : escapeHtml(item.name.slice(0, 1));
+        }
+
+        function menuCardHtml(item) {
+          return '<a class="menu-card' + (item.available ? "" : " is-unavailable") + '" href="' + escapeHtml(A.menuItemUrl(cafeId, item.type, item.id)) + '">' +
+            '<div class="menu-card-image">' + menuThumb(item) + "</div>" +
+            '<div class="menu-card-body">' +
+            '<p class="menu-card-name" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + "</p>" +
+            '<span class="menu-card-price">' + escapeHtml(A.formatPrice(item.price)) + "</span>" +
+            (item.desc ? '<p class="menu-card-desc">' + escapeHtml(item.desc) + "</p>" : "") +
+            (item.available ? "" : '<span class="stock-badge out" style="justify-self: start;">판매 중지</span>') +
+            "</div></a>";
+        }
+
+        function goodsCardHtml(item) {
+          return '<a class="goods-card' + (item.available ? "" : " is-unavailable") + '" href="' + escapeHtml(A.menuItemUrl(cafeId, item.type, item.id)) + '">' +
+            '<div class="goods-card-image">' + menuThumb(item) +
+            '<span class="stock-badge' + (item.available ? "" : " out") + '">' + (item.available ? "재고있음" : "품절") + "</span>" +
+            "</div>" +
+            '<div class="goods-card-body">' +
+            '<p class="menu-card-name" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + "</p>" +
+            '<span class="menu-card-price">' + escapeHtml(A.formatPrice(item.price)) + "</span>" +
+            "</div></a>";
+        }
+
+        function renderMenus() {
+          const counts = { drink: 0, food: 0, dessert: 0 };
+          state.menus.forEach(function (item) { counts[item.category] = (counts[item.category] || 0) + 1; });
+          el.menuFilterAllCount.textContent = String(state.menus.length + state.goods.length);
+          el.menuFilterDrinkCount.textContent = String(counts.drink || 0);
+          el.menuFilterFoodCount.textContent = String(counts.food || 0);
+          el.menuFilterDessertCount.textContent = String(counts.dessert || 0);
+          el.menuFilterGoodsCount.textContent = String(state.goods.length);
+
+          const groups = [];
+          // 앱에 없는 분류로 저장된 메뉴도 빠지지 않도록 마지막에 따로 모은다
+          const known = ["drink", "food", "dessert"];
+          known.concat(state.menus.map(function (item) { return item.category; }).filter(function (category, index, list) {
+            return known.indexOf(category) < 0 && list.indexOf(category) === index;
+          })).forEach(function (category) {
+            if (state.menuFilter !== "all" && state.menuFilter !== category) {
+              return;
+            }
+            const items = state.menus.filter(function (item) { return item.category === category; });
+            if (items.length) {
+              groups.push('<div class="menu-group"><h3 class="menu-group-title">' + escapeHtml(A.menuCategoryLabel(category)) +
+                ' <span class="count">' + items.length + "</span></h3>" +
+                '<div class="menu-grid">' + items.map(menuCardHtml).join("") + "</div></div>");
+            }
+          });
+          if ((state.menuFilter === "all" || state.menuFilter === "goods") && state.goods.length) {
+            groups.push('<div class="menu-group"><h3 class="menu-group-title">굿즈 <span class="count">' + state.goods.length + "</span></h3>" +
+              '<div class="goods-grid">' + state.goods.map(goodsCardHtml).join("") + "</div></div>");
+          }
+          el.menuList.innerHTML = groups.join("");
+          el.menuEmptyState.style.display = groups.length ? "none" : "";
+          if (!groups.length) {
+            el.menuEmptyState.textContent = !state.menusLoaded
+              ? (isReady() ? "메뉴를 불러오는 중입니다." : "카페 정보를 불러오면 표시됩니다.")
+              : (state.menus.length || state.goods.length) ? "해당하는 항목이 없습니다."
+              : "등록된 메뉴와 굿즈가 없습니다. 메뉴/굿즈 등록으로 추가하세요.";
+          }
+        }
+
+        async function loadMenus() {
+          if (!isReady()) {
+            renderMenus();
+            return;
+          }
+          try {
+            const result = await A.fetchMenuItems(cafeId);
+            state.menus = result.menus;
+            state.goods = result.goods;
+            state.menusLoaded = true;
+          } catch (error) {
+            console.error(error);
+            el.menuEmptyState.textContent = "메뉴를 불러오지 못했습니다.";
+          }
+          renderMenus();
+        }
+
+        // ---------- 세션 ----------
+
+        function clearSession() {
+          setCafeEditing(false);
+          state.user = null;
+          state.cafe = null;
+          state.casts = [];
+          state.castsLoaded = false;
+          state.events = [];
+          state.eventsLoaded = false;
+          state.menus = [];
+          state.goods = [];
+          state.menusLoaded = false;
+          renderMenus();
+          renderCafe();
+          renderCasts();
+          renderEvents();
+          updateSummary();
+          updateAvailability();
+        }
+
+        async function handleSession(session) {
+          if (!session.isAdmin) {
+            clearSession();
+            return;
+          }
+          state.user = session.user;
+          if (await loadCafe()) {
+            updateAvailability();
+            await loadCasts();
+            await loadEvents();
+            await loadMenus();
+          }
+        }
+
+        // ---------- 이벤트 연결 ----------
+
+        el.cafeIdLabel.textContent = cafeId || "-";
+        el.castConceptRole.innerHTML = A.CAST_CONCEPT_ROLES.map(function (role) {
+          return '<option value="' + role[0] + '">' + escapeHtml(role[1]) + "</option>";
+        }).join("");
+        showTab((window.location.hash || "").replace("#", ""), false);
+        [el.tabCasts, el.tabEvents, el.tabMenus].forEach(function (button) {
+          button.addEventListener("click", function () { showTab(button.getAttribute("data-tab"), true); });
+        });
+        window.addEventListener("hashchange", function () {
+          showTab((window.location.hash || "").replace("#", ""), false);
+        });
+
+        el.menuFilter.addEventListener("click", function (e) {
+          const chip = e.target.closest("[data-filter]");
+          if (chip) {
+            state.menuFilter = chip.getAttribute("data-filter");
+            Array.prototype.forEach.call(el.menuFilter.querySelectorAll("[data-filter]"), function (item) {
+              item.classList.toggle("is-active", item === chip);
+            });
+            renderMenus();
+          }
+        });
+        el.castFilter.addEventListener("click", function (e) {
+          const chip = e.target.closest("[data-filter]");
+          if (chip) {
+            state.castFilter = chip.getAttribute("data-filter");
+            syncFilterChips();
+            renderCasts();
+          }
+        });
+        el.refreshCastsButton.addEventListener("click", function () {
+          A.hideBanner("castStatus");
+          loadCasts();
+        });
+        el.castGrid.addEventListener("click", function (e) {
+          const restore = e.target.closest("[data-restore-cast-id]");
+          if (restore) {
+            restoreCast(restore.getAttribute("data-restore-cast-id"));
+            return;
+          }
+          const remove = e.target.closest("[data-delete-cast-id]");
+          if (remove) {
+            deleteCast(remove.getAttribute("data-delete-cast-id"));
+          }
+        });
+
+        A.renderConceptOptions(el.editCafeConceptType);
+        el.cafeEditButton.addEventListener("click", startCafeEdit);
+        el.cafeEditCancelButton.addEventListener("click", cancelCafeEdit);
+        el.cafeEditForm.addEventListener("submit", handleCafeEditSubmit);
+        el.editCafeFillHoursButton.addEventListener("click", fillEditBusinessHours);
+        el.editCafeCountry.addEventListener("change", function () {
+          A.renderCityOptions(el.editCafeCity, el.editCafeCountry.value, "");
+        });
+        // 수정 중에 페이지를 벗어나면 입력한 내용이 사라지므로 한 번 묻는다
+        window.addEventListener("beforeunload", function (e) {
+          if (state.cafeEditing) {
+            e.preventDefault();
+            e.returnValue = "";
+          }
+        });
+
+        el.addCastButton.addEventListener("click", openCastModal);
+        el.castForm.addEventListener("submit", handleCastSubmit);
+        el.castPhotoInput.addEventListener("change", function () {
+          selectCastPhoto(el.castPhotoInput.files && el.castPhotoInput.files[0]);
+          el.castPhotoInput.value = "";
+        });
+        el.castPhotoClear.addEventListener("click", function () {
+          state.castPhoto = null;
+          renderCastPhoto();
+        });
+
+        el.eventGrid.addEventListener("click", function (e) {
+          const card = e.target.closest("[data-event-id]");
+          if (card) {
+            openEventModal(card.getAttribute("data-event-id"));
+          }
+        });
+
+        [el.castModal, el.eventModal].forEach(function (modal) {
+          modal.addEventListener("click", function (e) {
+            if (e.target === modal || e.target.closest("[data-close-modal]")) {
+              closeModal(modal);
+            }
+          });
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            closeModal(el.castModal);
+            closeModal(el.eventModal);
+          }
+        });
+
+        renderCasts();
+        renderEvents();
+        renderMenus();
+        updateAvailability();
+        A.initAdminSession(handleSession);
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

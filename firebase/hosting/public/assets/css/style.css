@@ -717,3 +717,15 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── 운영 메뉴(카페 목록·지도·스케줄·관리자) 헤더: 모든 페이지에서 같은 굵기와 선택 표시 ── */
+.app-nav .nav-link {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* 페이지마다 따로 둔 .topbar .nav-link 배경 설정보다 우선하도록 선택자를 구체적으로 쓴다 */
+.topbar .app-nav .nav-link.active-page {
+  background: #ffd7e5;
+  color: #5b2238;
+}
