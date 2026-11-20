@@ -112,8 +112,9 @@
     return found ? found[1] : (city || "");
   }
 
+  // 카페 관리(정보 수정 등)는 카페 상세(/cafe)에 합쳤다. 관리자 하위 화면에서 돌아갈 때도 이곳으로 간다
   function cafeDetailUrl(cafeId, tab) {
-    return "/admin-cafe?id=" + encodeURIComponent(cafeId) + (tab ? "#" + tab : "");
+    return "/cafe?id=" + encodeURIComponent(cafeId) + (tab ? "#" + tab : "");
   }
 
   // page: "schedule"(출근표 스케줄 등록) | "event"(카페 이벤트 등록) | "menu"(메뉴/굿즈 등록·수정)
@@ -200,6 +201,7 @@
       lat: region.location && typeof region.location.latitude === "number" ? region.location.latitude : null,
       lng: region.location && typeof region.location.longitude === "number" ? region.location.longitude : null,
       galleryImages: toStringArray(data.galleryImages),
+      ownerIds: toStringArray(data.ownerIds),
       createdAt: normalizeText(data.createdAt, ""),
     };
   }
@@ -248,8 +250,14 @@
     return found ? found[1] : role;
   }
 
+  // 공개 캐스트 상세 (cast.html)
+  function castPageUrl(cafeId, castId) {
+    return "/cast?cafeId=" + encodeURIComponent(cafeId) + "&castId=" + encodeURIComponent(castId);
+  }
+
+  // 캐스트 관리(수정·복원·삭제)는 캐스트 상세(/cast)에 합쳤다. 관리자 화면의 캐스트 카드도 같은 곳으로 간다
   function castDetailUrl(cafeId, castId) {
-    return "/admin-cast?cafeId=" + encodeURIComponent(cafeId) + "&castId=" + encodeURIComponent(castId);
+    return castPageUrl(cafeId, castId);
   }
 
   async function fetchCafe(cafeId) {
@@ -818,6 +826,87 @@
     widget = initAuthWidget(checkAdmin);
   }
 
+  // 로그인한 사용자의 role과 운영 카페 목록. 비로그인이면 role은 빈 문자열이다
+  async function fetchUserAccess(user) {
+    if (!user) {
+      return { role: "", isAdmin: false, ownedCafeIds: [] };
+    }
+    const doc = await db.collection("users").doc(user.uid).get();
+    const data = doc.exists ? doc.data() || {} : {};
+    const role = typeof data.role === "string" ? data.role : "";
+    return { role: role, isAdmin: role === "ADMIN", ownedCafeIds: toStringArray(data.ownedCafeIds) };
+  }
+
+  // access(fetchUserAccess 결과)로 이 카페를 운영할 수 있는지 (관리자, 또는 카페 ownerIds·사용자 ownedCafeIds로 연결된 카페 운영자)
+  function canManageCafeWith(access, user, cafe) {
+    if (!user || !cafe || !access) {
+      return false;
+    }
+    if (access.isAdmin) {
+      return true;
+    }
+    return access.role === "CAFE_OWNER" &&
+      (access.ownedCafeIds.indexOf(cafe.id) >= 0 || (cafe.ownerIds || []).indexOf(user.uid) >= 0);
+  }
+
+  // 화면 표시용 판단이며 실제 쓰기 권한은 Firestore 규칙(canManageCafe)이 확인한다
+  async function canManageCafe(user, cafe) {
+    if (!user || !cafe) {
+      return false;
+    }
+    return canManageCafeWith(await fetchUserAccess(user), user, cafe);
+  }
+
+  // 카페 운영 화면(캐스트 등록·스케줄 등록)용: cafeId 카페를 불러오고 로그인 상태가 바뀔 때마다
+  // onChange({ user, cafe, canManage })를 부른다. 로그인이 필요하거나 권한이 없으면 토스트로 알린다.
+  function initCafeOperatorSession(cafeId, onChange) {
+    const AUTH_KEY = "authStatus";
+    let widget = null;
+    let checkSeq = 0;
+    const cafePromise = cafeId
+      ? fetchCafe(cafeId).catch(function (error) { console.error(error); return null; })
+      : Promise.resolve(null);
+
+    async function check(user) {
+      const seq = ++checkSeq;
+      const cafe = await cafePromise;
+      if (seq !== checkSeq) return;
+      if (!cafe) {
+        setBanner(AUTH_KEY, "error", cafeId ? "카페를 찾을 수 없습니다. 카페 목록에서 다시 선택하세요." : "카페 정보가 없습니다. 카페 목록에서 카페를 선택하세요.");
+        onChange({ user: user, cafe: null, canManage: false });
+        return;
+      }
+      if (!user) {
+        setBanner(AUTH_KEY, "info", "카페 운영자 계정으로 로그인하세요.", {
+          duration: 8000,
+          action: { label: "로그인", onClick: function () { widget.openLogin(); } },
+        });
+        onChange({ user: null, cafe: cafe, canManage: false });
+        return;
+      }
+      setBanner(AUTH_KEY, "loading", "권한을 확인하는 중입니다.");
+      let allowed = false;
+      try {
+        allowed = await canManageCafe(user, cafe);
+      } catch (error) {
+        console.error(error);
+        if (seq !== checkSeq) return;
+        setBanner(AUTH_KEY, "error", "권한을 확인하지 못했습니다.");
+        onChange({ user: user, cafe: cafe, canManage: false });
+        return;
+      }
+      if (seq !== checkSeq) return;
+      if (allowed) {
+        hideBanner(AUTH_KEY);
+      } else {
+        setBanner(AUTH_KEY, "error", "이 카페의 운영자만 사용할 수 있습니다. (현재 계정: " + (user.email || user.uid) + ")");
+      }
+      onChange({ user: user, cafe: cafe, canManage: allowed });
+    }
+
+    widget = initAuthWidget(check);
+  }
+
   window.ConcafeAdmin = {
     app: app,
     auth: auth,
@@ -841,6 +930,7 @@
     castDescText: castDescText,
     castRoleLabel: castRoleLabel,
     castDetailUrl: castDetailUrl,
+    castPageUrl: castPageUrl,
     isValidClockTime: isValidClockTime,
     everyDayBusinessHours: everyDayBusinessHours,
     renderConceptOptions: renderConceptOptions,
@@ -869,5 +959,9 @@
     describeError: describeError,
     initAuthWidget: initAuthWidget,
     initAdminSession: initAdminSession,
+    canManageCafe: canManageCafe,
+    canManageCafeWith: canManageCafeWith,
+    fetchUserAccess: fetchUserAccess,
+    initCafeOperatorSession: initCafeOperatorSession,
   };
 })();

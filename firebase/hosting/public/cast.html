@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>캐스트 · 콘카</title>
+    <meta name="description" content="콘카에 등록된 캐스트의 프로필, 출근 스케줄, 참여 이벤트를 확인할 수 있습니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/cafes">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/cafes">카페 목록</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/cafes">카페</a><span class="breadcrumb-sep">›</span><span id="breadcrumbCastName">캐스트</span>
+          </nav>
+
+          <section class="hero">
+            <div class="surface hero-copy" id="castSurface">
+              <div id="castView">
+                <div class="detail-toolbar">
+                  <button class="button button-secondary" id="castEditButton" type="button" data-role-only="operator" hidden>캐스트 정보 수정</button>
+                </div>
+                <div class="cast-profile">
+                  <div class="cast-profile-photo" id="castPhoto"></div>
+                  <div>
+                    <div class="chip-row" id="castChips"></div>
+                    <h1 id="castName">캐스트</h1>
+                    <dl class="cafe-info-list" id="castInfo"></dl>
+                    <div class="cafe-gallery-strip" id="castGallery"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 관리자·이 카페의 운영자만: 같은 자리에서 입력 폼으로 바뀐다 -->
+              <form class="edit-form" id="castEditForm" novalidate hidden>
+                <div class="section-header" style="margin-bottom: 0;">
+                  <div>
+                    <h2>캐스트 정보 수정</h2>
+                    <p>수정 완료를 누르면 앱에 바로 반영됩니다.</p>
+                  </div>
+                </div>
+                <div class="field-grid">
+                  <div class="field wide">
+                    <label>프로필 사진</label>
+                    <div id="editCastPhotoEditor"></div>
+                  </div>
+                  <div class="field">
+                    <label for="editCastName">이름</label>
+                    <input id="editCastName" type="text" maxlength="30" required />
+                  </div>
+                  <div class="field">
+                    <label for="editCastConceptRole">역할</label>
+                    <select id="editCastConceptRole"></select>
+                  </div>
+                  <div class="field">
+                    <label for="editCastBirthday">생일</label>
+                    <input id="editCastBirthday" type="date" />
+                  </div>
+                  <div class="field wide">
+                    <label for="editCastDesc">소개</label>
+                    <textarea id="editCastDesc" maxlength="500" style="min-height: 100px;"></textarea>
+                  </div>
+                  <div class="field wide">
+                    <label>갤러리 (최대 3장)</label>
+                    <div id="editCastGalleryEditor"></div>
+                  </div>
+                </div>
+                <div class="edit-form-actions">
+                  <button class="button button-primary" id="castEditSubmitButton" type="submit">수정 완료</button>
+                  <button class="button button-ghost" id="castEditCancelButton" type="button">취소</button>
+                </div>
+              </form>
+            </div>
+
+            <aside class="surface hero-meta">
+              <div class="action-grid single">
+                <a class="action-card" id="registerScheduleLink" href="/registration" data-role-only="operator" hidden>
+                  <strong>캐스트 스케줄 등록</strong>
+                  <span>이 카페 캐스트의 근무·휴무·휴가를 등록합니다.</span>
+                </a>
+                <a class="action-card" id="cafeLink" href="/cafes">
+                  <strong id="cafeLinkTitle">카페 보기</strong>
+                  <span>소속 카페의 정보와 다른 캐스트를 확인합니다.</span>
+                </a>
+              </div>
+              <div class="stat-list">
+                <div class="stat">
+                  <span class="stat-label">이번 달 출근</span>
+                  <strong class="stat-value" id="monthWorkCount">-</strong>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">팔로워</span>
+                  <strong class="stat-value" id="followerCount">0</strong>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">방문 인증</span>
+                  <strong class="stat-value" id="visitCount">0</strong>
+                </div>
+              </div>
+              <div class="aside-actions" data-role-only="operator" hidden>
+                <button class="button button-secondary" id="castRestoreButton" type="button" hidden>현재 없음 → 복원</button>
+                <button class="button button-danger" id="castDeleteButton" type="button">캐스트 삭제</button>
+              </div>
+            </aside>
+          </section>
+
+          <section class="surface section" style="margin-top: 20px;">
+            <div class="section-header">
+              <div>
+                <h2>출근 스케줄</h2>
+                <p>주간·월간으로 이 캐스트의 출근 일정을 확인하고, 이미지나 엑셀로 저장할 수 있습니다.</p>
+              </div>
+            </div>
+            <div id="scheduleView"></div>
+          </section>
+
+          <section class="surface section" style="margin-top: 20px;">
+            <div class="section-header">
+              <div>
+                <h2>참여 이벤트</h2>
+                <p>이 캐스트가 참여하는 카페 이벤트입니다.</p>
+              </div>
+            </div>
+            <div class="event-card-grid" id="eventGrid"></div>
+            <p class="empty" id="eventEmptyState">이벤트를 불러오는 중입니다.</p>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/cafe-schedule.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const db = A.db;
+        const escapeHtml = A.escapeHtml;
+        const normalizeText = A.normalizeText;
+        const CALENDAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>';
+        const params = new URLSearchParams(window.location.search);
+        const cafeId = (params.get("cafeId") || "").trim();
+        const castId = (params.get("castId") || "").trim();
+
+        const INACTIVE_REASON_LABELS = { NOT_IN_SCHEDULE_IMAGE: "출근표에 없음" };
+        const CREATED_VIA_LABELS = { ADMIN_WEB: "관리자 웹", TEMP_WEB: "운영자 웹", SCHEDULE_IMAGE_IMPORT: "출근표 이미지 등록" };
+
+        const state = {
+          user: null,
+          cafe: null,
+          cast: null,
+          missing: false,
+          events: [],
+          eventsLoaded: false,
+          canManage: false,
+          otherCastNames: [],
+          editing: false,
+          saving: false,
+          busy: false,
+        };
+        const el = {};
+        [
+          "breadcrumbCafeLink", "breadcrumbCastName", "castPhoto", "castChips", "castName", "castInfo", "castGallery",
+          "castSurface", "castView", "castEditButton", "castEditForm", "editCastPhotoEditor", "editCastName", "editCastConceptRole",
+          "editCastBirthday", "editCastDesc", "editCastGalleryEditor", "castEditSubmitButton", "castEditCancelButton",
+          "castRestoreButton", "castDeleteButton", "registerScheduleLink", "cafeLink", "cafeLinkTitle", "monthWorkCount", "followerCount", "visitCount",
+          "scheduleView", "eventGrid", "eventEmptyState",
+        ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+        function cafeUrl(tab) {
+          return "/cafe?id=" + encodeURIComponent(cafeId) + (tab ? "#" + tab : "");
+        }
+
+        // ---------- 프로필 ----------
+
+        function renderProfile() {
+          const cafe = state.cafe;
+          const cast = state.cast;
+          if (!cast) {
+            el.castName.textContent = state.missing ? "캐스트를 찾을 수 없습니다" : "캐스트";
+            el.breadcrumbCastName.textContent = el.castName.textContent;
+            return;
+          }
+          document.title = cast.name + " · " + cafe.name + " · 콘카";
+          el.breadcrumbCafeLink.textContent = cafe.name;
+          el.breadcrumbCafeLink.href = cafeUrl();
+          el.breadcrumbCastName.textContent = cast.name;
+          el.castName.textContent = cast.name;
+          el.castPhoto.innerHTML = cast.profileImage
+            ? '<img src="' + escapeHtml(cast.profileImage) + '" alt="" />'
+            : escapeHtml(cast.name.slice(0, 1));
+          const role = cast.conceptRole ? A.castRoleLabel(cast.conceptRole) : "";
+          el.castChips.innerHTML = (role ? '<span class="chip">' + escapeHtml(role) + "</span>" : "") +
+            (cast.inactive
+              ? '<span class="chip warning">현재 출근하지 않음' +
+                (state.canManage && INACTIVE_REASON_LABELS[cast.inactiveReason] ? " · " + escapeHtml(INACTIVE_REASON_LABELS[cast.inactiveReason]) : "") + "</span>"
+              : "") +
+            (state.canManage && cast.linkedUserId ? '<span class="chip">계정 연결됨</span>' : "");
+          const birthday = /^\d{4}-\d{2}-\d{2}$/.test(cast.birthday)
+            ? Number(cast.birthday.slice(5, 7)) + "월 " + Number(cast.birthday.slice(8, 10)) + "일"
+            : cast.birthday;
+          const formatDate = function (iso) { return /^\d{4}-\d{2}-\d{2}/.test(iso || "") ? iso.slice(0, 10) : ""; };
+          // 등록 경로·날짜는 관리자와 운영자에게만 보여준다
+          const rows = [
+            ["소속", cafe.name],
+            ["생일", birthday],
+            ["소개", A.castDescText(cast)],
+          ].concat(state.canManage ? [
+            ["현재 없음 처리일", cast.inactive ? formatDate(cast.inactiveAt) : ""],
+            ["등록 경로", CREATED_VIA_LABELS[cast.createdVia] || cast.createdVia],
+            ["등록일", formatDate(cast.createdAt)],
+            ["최근 수정일", formatDate(cast.updatedAt)],
+          ] : []).filter(function (row) { return row[1]; });
+          el.castInfo.innerHTML = rows.map(function (row) {
+            return "<dt>" + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd>";
+          }).join("");
+          el.castGallery.innerHTML = cast.galleryImages.filter(function (url) {
+            return url !== cast.profileImage;
+          }).map(function (url) {
+            return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" />';
+          }).join("");
+          el.followerCount.textContent = String(cast.followerCount);
+          el.visitCount.textContent = String(cast.visitCertificationCount);
+          el.cafeLink.href = cafeUrl("casts");
+          el.cafeLinkTitle.textContent = cafe.name + " 보기";
+          el.castRestoreButton.hidden = !cast.inactive;
+          el.registerScheduleLink.href = "/registration?cafeId=" + encodeURIComponent(cafeId);
+        }
+
+        // ---------- 수정 / 복원 / 삭제 (관리자·이 카페의 운영자) ----------
+
+        function updateAvailability() {
+          const ready = state.canManage && !!state.cast;
+          const locked = state.saving || state.busy;
+          el.castEditButton.disabled = !ready || state.editing || locked;
+          el.castEditSubmitButton.disabled = !ready || locked;
+          el.castEditCancelButton.disabled = state.saving;
+          el.castDeleteButton.disabled = !ready || state.editing || locked;
+          el.castRestoreButton.disabled = !ready || state.editing || locked;
+        }
+
+        function editError(message) {
+          window.ConcafeToast.show("error", message, { key: "castEdit" });
+        }
+
+        const photoEditor = A.createImageEditor({
+          container: el.editCastPhotoEditor,
+          max: 1,
+          shape: "portrait",
+          addLabel: "프로필 사진",
+          onError: editError,
+        });
+        const galleryEditor = A.createImageEditor({
+          container: el.editCastGalleryEditor,
+          max: 3,
+          shape: "portrait",
+          addLabel: "사진 추가",
+          onError: editError,
+        });
+
+        function setEditing(editing) {
+          state.editing = editing;
+          el.castView.hidden = editing;
+          el.castEditForm.hidden = !editing;
+          el.castSurface.classList.toggle("is-editing", editing);
+          updateAvailability();
+        }
+
+        function startEdit() {
+          const cast = state.cast;
+          if (!cast || state.editing || !state.canManage) {
+            return;
+          }
+          el.editCastName.value = cast.name;
+          const knownRole = A.CAST_CONCEPT_ROLES.some(function (role) { return role[0] === cast.conceptRole; });
+          if (cast.conceptRole && !knownRole && !el.editCastConceptRole.querySelector('option[value="' + cast.conceptRole.replace(/"/g, "") + '"]')) {
+            el.editCastConceptRole.insertAdjacentHTML("beforeend", '<option value="' + escapeHtml(cast.conceptRole) + '">' + escapeHtml(cast.conceptRole) + "</option>");
+          }
+          el.editCastConceptRole.value = cast.conceptRole || "maid";
+          el.editCastBirthday.value = /^\d{4}-\d{2}-\d{2}$/.test(cast.birthday) ? cast.birthday : "";
+          el.editCastDesc.value = A.castDescText(cast);
+          photoEditor.setUrls(cast.profileImage ? [cast.profileImage] : []);
+          galleryEditor.setUrls(cast.galleryImages);
+          setEditing(true);
+          el.castSurface.scrollIntoView({ behavior: "smooth", block: "start" });
+          el.editCastName.focus({ preventScroll: true });
+        }
+
+        function cancelEdit() {
+          if (!state.saving) {
+            setEditing(false);
+          }
+        }
+
+        async function reloadCast() {
+          const doc = await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).get();
+          if (doc.exists) {
+            state.cast = A.toCast(doc);
+          }
+          renderProfile();
+        }
+
+        async function handleEditSubmit(event) {
+          event.preventDefault();
+          const cast = state.cast;
+          if (!state.canManage || !cast || state.saving) {
+            return;
+          }
+          const name = el.editCastName.value.trim();
+          if (!name) {
+            editError("이름을 입력하세요.");
+            return;
+          }
+          if (A.normalizeName(name) !== A.normalizeName(cast.name)) {
+            const sameName = state.otherCastNames.find(function (other) { return A.normalizeName(other) === A.normalizeName(name); });
+            if (sameName && !window.confirm("같은 이름의 캐스트(" + sameName + ")가 이미 있습니다. 그래도 저장할까요?")) {
+              return;
+            }
+          }
+
+          state.saving = true;
+          photoEditor.setDisabled(true);
+          galleryEditor.setDisabled(true);
+          updateAvailability();
+          try {
+            window.ConcafeToast.show("loading", "사진을 올리는 중입니다.", { key: "castEdit" });
+            const photoUrls = await photoEditor.upload("casts/profile", cafeId);
+            const galleryUrls = await galleryEditor.upload("casts/gallery", cafeId);
+            const birthday = el.editCastBirthday.value || null;
+            window.ConcafeToast.show("loading", "캐스트 정보를 저장하는 중입니다.", { key: "castEdit" });
+            // 앱(CastEdit)이 저장하는 필드만 바꾸고 팔로워·평점·계정 연결 등은 그대로 둔다
+            await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).update({
+              name: name,
+              conceptRole: el.editCastConceptRole.value,
+              birthday: birthday,
+              birthdayKey: birthday ? birthday.slice(5) : null,
+              desc: el.editCastDesc.value.trim(),
+              profileImage: photoUrls[0] || null,
+              galleryImages: galleryUrls,
+              updatedAt: A.nowIso(),
+            });
+            // 이번 수정으로 빠진 사진은 앱과 같이 Storage에서도 지운다
+            const before = [cast.profileImage].concat(cast.galleryImages);
+            const after = photoUrls.concat(galleryUrls);
+            A.deleteStorageImages(before.filter(function (url) { return url && after.indexOf(url) < 0; }));
+
+            await reloadCast();
+            state.saving = false;
+            setEditing(false);
+            window.ConcafeToast.show("success", "캐스트 정보를 수정했습니다.", { key: "castEdit" });
+          } catch (error) {
+            console.error(error);
+            editError("캐스트 정보를 저장하지 못했습니다. 잠시 후 다시 시도하세요.");
+          } finally {
+            state.saving = false;
+            photoEditor.setDisabled(false);
+            galleryEditor.setDisabled(false);
+            updateAvailability();
+          }
+        }
+
+        async function restoreCast() {
+          if (!state.canManage || !state.cast || !state.cast.inactive) {
+            return;
+          }
+          state.busy = true;
+          updateAvailability();
+          try {
+            const now = A.nowIso();
+            await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).update({
+              rosterStatus: "ACTIVE",
+              reactivatedAt: now,
+              updatedAt: now,
+            });
+            await reloadCast();
+            window.ConcafeToast.show("success", state.cast.name + " 캐스트를 복원했습니다.", { key: "castEdit" });
+          } catch (error) {
+            console.error(error);
+            editError("캐스트를 복원하지 못했습니다.");
+          } finally {
+            state.busy = false;
+            updateAvailability();
+          }
+        }
+
+        // 캐스트 문서를 지우면 서버 트리거가 프로필·갤러리 이미지와 castDirectory 항목을 정리한다
+        async function deleteCast() {
+          const cast = state.cast;
+          if (!state.canManage || !cast) {
+            return;
+          }
+          const message = "'" + cast.name + "' 캐스트를 삭제합니다." +
+            (cast.linkedUserId ? "\n이 캐스트는 사용자 계정과 연결되어 있습니다. 삭제하면 연결도 끊어집니다." : "") +
+            "\n프로필과 갤러리 이미지도 함께 지워지며 되돌릴 수 없습니다. 계속할까요?";
+          if (!window.confirm(message)) {
+            return;
+          }
+          state.busy = true;
+          updateAvailability();
+          try {
+            await db.collection("cafes").doc(cafeId).collection("casts").doc(castId).delete();
+            window.ConcafeToast.flash("success", cast.name + " 캐스트를 삭제했습니다.");
+            window.location.href = cafeUrl("casts");
+          } catch (error) {
+            console.error(error);
+            editError("캐스트를 삭제하지 못했습니다. 권한을 확인하세요.");
+            state.busy = false;
+            updateAvailability();
+          }
+        }
+
+        // ---------- 참여 이벤트 ----------
+
+        function todayDotKey() {
+          const now = new Date();
+          return now.getFullYear() + "." + String(now.getMonth() + 1).padStart(2, "0") + "." + String(now.getDate()).padStart(2, "0");
+        }
+
+        function hasPeriod(item) {
+          return /^\d{4}\.\d{2}\.\d{2}$/.test(item.startDate) && /^\d{4}\.\d{2}\.\d{2}$/.test(item.endDate);
+        }
+
+        function eventStatus(item) {
+          if (!hasPeriod(item)) {
+            return { label: item.statusLabel || "진행 예정", ended: false };
+          }
+          const today = todayDotKey();
+          if (today > item.endDate) return { label: "종료", ended: true };
+          if (today >= item.startDate) return { label: "진행 중", ended: false };
+          return { label: "진행 예정", ended: false };
+        }
+
+        function renderEvents() {
+          if (!state.events.length) {
+            el.eventGrid.innerHTML = "";
+            el.eventEmptyState.style.display = "";
+            el.eventEmptyState.textContent = state.missing ? "캐스트 정보를 찾을 수 없습니다."
+              : state.eventsLoaded ? "참여하는 이벤트가 없습니다." : "이벤트를 불러오는 중입니다.";
+            return;
+          }
+          el.eventEmptyState.style.display = "none";
+          el.eventGrid.innerHTML = state.events.map(function (item) {
+            const status = eventStatus(item);
+            return '<a class="event-card' + (status.ended ? " is-ended" : "") + '" href="' + escapeHtml(cafeUrl("events")) + '">' +
+              '<div class="event-card-image">' +
+              (item.imageUrl ? '<img src="' + escapeHtml(item.imageUrl) + '" alt="" loading="lazy" />' : "") +
+              '<span class="event-card-status">' + escapeHtml(status.label) + "</span>" +
+              "</div>" +
+              '<div class="event-card-text">' +
+              '<p class="event-card-title">' + escapeHtml(item.title) + "</p>" +
+              '<span class="event-card-period">' + CALENDAR_ICON + escapeHtml(hasPeriod(item) ? item.startDate + " - " + item.endDate : "기간 미정") + "</span>" +
+              "</div></a>";
+          }).join("");
+        }
+
+        async function loadEvents() {
+          try {
+            const snapshot = await db.collection("cafes").doc(cafeId).collection("events")
+              .where("participantCastIds", "array-contains", castId).get();
+            state.events = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return {
+                id: doc.id,
+                title: normalizeText(data.title, "제목 없음"),
+                imageUrl: normalizeText(data.imageUrl, ""),
+                startDate: normalizeText(data.startDate, ""),
+                endDate: normalizeText(data.endDate, ""),
+                statusLabel: normalizeText(data.statusLabel, "진행 예정"),
+              };
+            }).sort(function (a, b) {
+              return b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id);
+            });
+            state.eventsLoaded = true;
+          } catch (error) {
+            console.error(error);
+            el.eventEmptyState.textContent = "이벤트를 불러오지 못했습니다.";
+            return;
+          }
+          renderEvents();
+        }
+
+        // ---------- 불러오기 ----------
+
+        // 이번 달 출근 일수는 처음 보이는 주간 화면과 별개로 계산한다
+        function countMonthWork(schedules) {
+          const prefix = new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0");
+          const days = {};
+          schedules.forEach(function (item) {
+            if (item.status === "WORK" && item.date.indexOf(prefix) === 0) days[item.date] = true;
+          });
+          return Object.keys(days).length;
+        }
+
+        const schedule = window.ConcafeSchedule.create({ mount: el.scheduleView, cafeId: cafeId, castId: castId });
+
+        // 보는 사람에 따라 버튼을 나눈다: 관리자는 '캐스트 관리', 이 카페의 운영자(와 관리자)는 '캐스트 스케줄 등록'
+        const loadPromise = (async function () {
+          if (!cafeId || !castId) return null;
+          const results = await Promise.all([A.fetchCafe(cafeId), db.collection("cafes").doc(cafeId).collection("casts").doc(castId).get()]);
+          return { cafe: results[0], cast: results[1].exists ? A.toCast(results[1]) : null };
+        })().catch(function (error) {
+          console.error(error);
+          return { error: error };
+        });
+        let currentUser = null;
+        let started = false;
+
+        function showMissing(message) {
+          state.missing = true;
+          window.ConcafeToast.show("error", message);
+          renderProfile();
+          renderEvents();
+          schedule.fail();
+        }
+
+        async function handleUser(user) {
+          currentUser = user;
+          const result = await loadPromise;
+          let access = null;
+          try {
+            access = await A.fetchUserAccess(user);
+          } catch (error) {
+            console.error(error);
+          }
+          if (user !== currentUser) return;
+          const cafe = result && result.cafe;
+          const isAdmin = !!(access && access.isAdmin);
+          const canManage = A.canManageCafeWith(access, user, cafe);
+          state.user = user;
+          state.canManage = canManage;
+          if (!canManage && state.editing) {
+            setEditing(false);
+          }
+          updateAvailability();
+          document.querySelectorAll("[data-role-only]").forEach(function (item) {
+            item.hidden = !(item.getAttribute("data-role-only") === "admin" ? isAdmin : canManage);
+          });
+          if (started) {
+            renderProfile();
+            return;
+          }
+          started = true;
+          if (!result || result.error) {
+            showMissing(result ? "캐스트 정보를 불러오지 못했습니다. 잠시 후 다시 시도하세요." : "캐스트 정보가 없습니다. 카페 목록에서 다시 선택하세요.");
+            return;
+          }
+          // 미승인 카페의 캐스트는 운영자·관리자에게만 보여준다
+          if (!cafe || !result.cast || (!cafe.approved && !canManage)) {
+            showMissing("캐스트를 찾을 수 없습니다. 카페 목록에서 다시 선택하세요.");
+            return;
+          }
+          state.cafe = cafe;
+          state.cast = result.cast;
+          renderProfile();
+          // 캐스트를 불러온 뒤에야 수정·삭제 버튼을 켤 수 있다
+          updateAvailability();
+          schedule.load(cafe, [result.cast]);
+          if (canManage) {
+            // 이름 중복 확인용 (실패해도 수정에는 지장 없음)
+            A.fetchCasts(cafeId).then(function (casts) {
+              state.otherCastNames = casts.filter(function (item) { return item.id !== castId; }).map(function (item) { return item.name; });
+            }).catch(function () {});
+          }
+          db.collection("castSchedules").where("castId", "==", castId).get().then(function (snapshot) {
+            el.monthWorkCount.textContent = countMonthWork(snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              return { cafeId: data.cafeId, date: normalizeText(data.date, ""), status: normalizeText(data.status, "") };
+            }).filter(function (item) { return item.cafeId === cafeId; })) + "일";
+          }).catch(function (error) { console.error(error); });
+          loadEvents();
+        }
+
+        el.editCastConceptRole.innerHTML = A.CAST_CONCEPT_ROLES.map(function (role) {
+          return '<option value="' + role[0] + '">' + escapeHtml(role[1]) + "</option>";
+        }).join("");
+        el.castEditButton.addEventListener("click", startEdit);
+        el.castEditCancelButton.addEventListener("click", cancelEdit);
+        el.castEditForm.addEventListener("submit", handleEditSubmit);
+        el.castRestoreButton.addEventListener("click", restoreCast);
+        el.castDeleteButton.addEventListener("click", deleteCast);
+        window.addEventListener("beforeunload", function (e) {
+          if (state.editing) {
+            e.preventDefault();
+            e.returnValue = "";
+          }
+        });
+
+        renderProfile();
+        renderEvents();
+        updateAvailability();
+        A.initAuthWidget(handleUser);
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

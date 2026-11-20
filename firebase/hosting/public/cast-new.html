@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>캐스트 등록 · 콘카</title>
+    <meta name="description" content="카페 운영자가 카페의 캐스트를 등록하는 페이지입니다." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/cafes">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">메이드 카페 지도</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page form-page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/cafes">카페 목록</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/cafes">카페</a><span class="breadcrumb-sep">›</span><span>캐스트 등록</span>
+          </nav>
+
+          <section class="surface section">
+            <div class="cafe-mini" style="margin: 0;">
+              <div class="cafe-mini-thumb" id="cafeThumb"></div>
+              <div>
+                <h1 id="cafeTitle">캐스트 등록</h1>
+                <p id="cafeSub">카페 운영자만 캐스트를 등록할 수 있습니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface section" style="margin-top: 20px;">
+            <div class="section-header">
+              <div>
+                <h2>캐스트 정보</h2>
+                <p>저장하면 앱과 카페 상세의 캐스트 목록에 바로 나타납니다.</p>
+              </div>
+            </div>
+            <form id="castForm" novalidate>
+              <div class="field-grid">
+                <div class="field wide">
+                  <label>프로필 사진</label>
+                  <div class="photo-picker">
+                    <div class="photo-picker-preview" id="castPhotoPreview">사진 없음</div>
+                    <div class="button-row">
+                      <label class="button button-secondary" for="castPhotoInput" style="cursor: pointer;">사진 선택</label>
+                      <input id="castPhotoInput" type="file" accept="image/*" hidden />
+                      <button class="button button-ghost" id="castPhotoClear" type="button" hidden>사진 빼기</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="castName">이름</label>
+                  <input id="castName" type="text" maxlength="40" placeholder="예: 리나" required />
+                </div>
+                <div class="field">
+                  <label for="castConceptRole">역할</label>
+                  <select id="castConceptRole"></select>
+                </div>
+                <div class="field">
+                  <label for="castBirthday">생일</label>
+                  <input id="castBirthday" type="date" />
+                </div>
+                <div class="field wide">
+                  <label for="castDesc">소개</label>
+                  <textarea id="castDesc" maxlength="500" placeholder="캐스트 소개 (선택 입력)" style="min-height: 110px;"></textarea>
+                </div>
+              </div>
+              <div class="edit-form-actions">
+                <button class="button button-primary" id="castSubmitButton" type="submit" disabled>캐스트 등록</button>
+                <a class="button button-ghost" id="cancelLink" href="/cafes">취소</a>
+              </div>
+            </form>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const escapeHtml = A.escapeHtml;
+        const cafeId = (new URLSearchParams(window.location.search).get("cafeId") || "").trim();
+
+        const state = { user: null, cafe: null, canManage: false, casts: [], photo: null, saving: false };
+        const el = {};
+        [
+          "breadcrumbCafeLink", "cafeThumb", "cafeTitle", "cafeSub", "castForm", "castPhotoPreview", "castPhotoInput",
+          "castPhotoClear", "castName", "castConceptRole", "castBirthday", "castDesc", "castSubmitButton", "cancelLink",
+        ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+        function cafeUrl(tab) {
+          return "/cafe?id=" + encodeURIComponent(cafeId) + (tab ? "#" + tab : "");
+        }
+
+        function updateAvailability() {
+          el.castSubmitButton.disabled = !state.canManage || state.saving;
+        }
+
+        function renderCafe() {
+          const cafe = state.cafe;
+          if (!cafe) {
+            return;
+          }
+          document.title = "캐스트 등록 · " + cafe.name + " · 콘카";
+          el.cafeThumb.innerHTML = A.cafeThumbHtml(cafe);
+          el.cafeTitle.textContent = "캐스트 등록";
+          el.cafeSub.textContent = [cafe.name, cafe.address].filter(Boolean).join(" · ");
+          el.breadcrumbCafeLink.textContent = cafe.name;
+          el.breadcrumbCafeLink.href = cafeUrl();
+          el.cancelLink.href = cafeUrl("casts");
+        }
+
+        function renderPhoto() {
+          el.castPhotoPreview.innerHTML = state.photo
+            ? '<img src="' + escapeHtml(state.photo.previewUrl) + '" alt="" />'
+            : "사진 없음";
+          el.castPhotoClear.hidden = !state.photo;
+        }
+
+        async function selectPhoto(file) {
+          if (!file || !/^image\//.test(file.type)) {
+            window.ConcafeToast.show("error", "이미지 파일만 올릴 수 있습니다.");
+            return;
+          }
+          try {
+            state.photo = await A.prepareImage(file);
+            renderPhoto();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "이미지를 읽지 못했습니다. JPG나 PNG로 저장해 다시 올려주세요.");
+          }
+        }
+
+        async function handleSubmit(event) {
+          event.preventDefault();
+          if (!state.canManage || state.saving) {
+            return;
+          }
+          const name = el.castName.value.trim();
+          if (!name) {
+            window.ConcafeToast.show("error", "이름을 입력하세요.", { key: "castForm" });
+            el.castName.focus();
+            return;
+          }
+          const sameName = state.casts.find(function (cast) { return A.normalizeName(cast.name) === A.normalizeName(name); });
+          if (sameName && !window.confirm("같은 이름의 캐스트(" + sameName.name + (sameName.inactive ? ", 현재 없음" : "") + ")가 이미 있습니다. 그래도 등록할까요?")) {
+            return;
+          }
+
+          state.saving = true;
+          updateAvailability();
+          try {
+            let profileImage = null;
+            if (state.photo) {
+              window.ConcafeToast.show("loading", "프로필 사진을 올리는 중입니다.", { key: "castForm" });
+              profileImage = await A.uploadImage("casts/profile", cafeId, state.photo);
+            }
+            window.ConcafeToast.show("loading", "캐스트를 등록하는 중입니다.", { key: "castForm" });
+            const birthday = el.castBirthday.value || null;
+            const now = A.nowIso();
+            // 앱(CastEdit)·관리자 페이지와 같은 필드 구성으로 저장한다
+            await A.db.collection("cafes").doc(cafeId).collection("casts").doc("cast-" + Date.now()).set({
+              name: name,
+              linkedUserId: null,
+              profileImage: profileImage,
+              desc: el.castDesc.value.trim(),
+              birthday: birthday,
+              birthdayKey: birthday ? birthday.slice(5) : null,
+              conceptRole: el.castConceptRole.value,
+              followerCount: 0,
+              rating: 0,
+              visitCertificationCount: 0,
+              galleryImages: [],
+              createdVia: "TEMP_WEB",
+              source: "TEMP_WEB",
+              createdBy: state.user.uid,
+              createdAt: now,
+              updatedAt: now,
+            });
+            window.ConcafeToast.show("success", name + " 캐스트를 등록했습니다.", { key: "castForm" });
+            window.location.href = cafeUrl("casts");
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "캐스트를 등록하지 못했습니다. 잠시 후 다시 시도하세요.", { key: "castForm" });
+            state.saving = false;
+            updateAvailability();
+          }
+        }
+
+        el.castConceptRole.innerHTML = A.CAST_CONCEPT_ROLES.map(function (role) {
+          return '<option value="' + role[0] + '">' + escapeHtml(role[1]) + "</option>";
+        }).join("");
+        el.castPhotoInput.addEventListener("change", function () {
+          selectPhoto(el.castPhotoInput.files && el.castPhotoInput.files[0]);
+          el.castPhotoInput.value = "";
+        });
+        el.castPhotoClear.addEventListener("click", function () {
+          state.photo = null;
+          renderPhoto();
+        });
+        el.castForm.addEventListener("submit", handleSubmit);
+        if (cafeId) {
+          el.cancelLink.href = cafeUrl("casts");
+        }
+
+        A.initCafeOperatorSession(cafeId, async function (session) {
+          state.user = session.user;
+          state.cafe = session.cafe;
+          state.canManage = session.canManage;
+          renderCafe();
+          updateAvailability();
+          if (session.canManage) {
+            try {
+              state.casts = await A.fetchCasts(cafeId);
+            } catch (error) {
+              console.error(error);
+            }
+          }
+        });
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

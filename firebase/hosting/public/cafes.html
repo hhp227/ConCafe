@@ -18,7 +18,7 @@
     <div class="page-shell">
       <header class="topbar">
         <div class="topbar-inner">
-          <a class="brand" href="/">
+          <a class="brand" href="/cafes">
             <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
             <span class="brand-title" aria-label="콘셉카페">
               <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
@@ -26,11 +26,8 @@
           </a>
           <div class="topbar-right">
             <nav class="nav-links app-nav" aria-label="주요 메뉴">
-              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
-              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
               <a class="nav-link" href="/cafes">카페 목록</a>
               <a class="nav-link" href="/map">메이드 카페 지도</a>
-              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
             </nav>
             <div class="auth-widget" id="authWidget">
               <div class="auth-user-info" id="authUserInfo" style="display:none;">
@@ -50,7 +47,7 @@
             <div class="surface hero-copy">
               <div class="eyebrow">콘셉트 카페</div>
               <h1>카페 목록</h1>
-              <p>콘카에 등록된 카페를 둘러보세요. 카페를 누르면 영업 정보와 함께 캐스트 스케줄, 지도 위치로 이동할 수 있습니다.</p>
+              <p>콘카에 등록된 카페를 둘러보세요. 카페를 누르면 영업 정보, 캐스트, 이벤트, 메뉴를 볼 수 있는 상세 페이지로 이동합니다.</p>
             </div>
 
             <aside class="surface hero-meta">
@@ -64,7 +61,8 @@
                   <strong class="stat-value" id="filteredCount">0</strong>
                 </div>
               </div>
-              <a class="button button-secondary" href="/map">지도에서 카페 찾기</a>
+              <!-- 관리자는 '카페 등록', 그 밖에는 '지도에서 카페 찾기' -->
+              <a class="button button-secondary" id="heroActionLink" href="/map">지도에서 카페 찾기</a>
             </aside>
           </section>
 
@@ -72,7 +70,7 @@
             <div class="section-header">
               <div>
                 <h2>카페 목록</h2>
-                <p>국가와 도시를 고르고, 이름·주소 검색이나 컨셉으로 좁혀 볼 수 있습니다.</p>
+                <p id="cafeSectionNote">국가와 도시를 고르고, 이름·주소 검색이나 컨셉으로 좁혀 볼 수 있습니다.</p>
               </div>
             </div>
             <div id="cafeFilter"></div>
@@ -87,39 +85,17 @@
       </main>
     </div>
 
-    <!-- 카페 정보 모달 -->
-    <div class="admin-modal" id="cafeModal" role="dialog" aria-modal="true" aria-labelledby="cafeModalTitle" hidden>
-      <div class="admin-modal-box" style="max-width: 600px;">
-        <button class="admin-modal-close" type="button" data-close-modal aria-label="닫기">✕</button>
-        <div class="cafe-detail-head">
-          <div class="cafe-detail-thumb" id="cafeModalThumb"></div>
-          <div>
-            <div class="chip-row" id="cafeModalChips"></div>
-            <h2 id="cafeModalTitle" style="margin: 10px 0 6px;"></h2>
-            <dl class="cafe-info-list" id="cafeModalInfo"></dl>
-          </div>
-        </div>
-        <div class="cafe-gallery-strip" id="cafeModalGallery"></div>
-        <div class="button-row" style="margin-top: 20px;">
-          <a class="button button-primary" id="cafeModalScheduleLink" href="/schedule">캐스트 스케줄 보기</a>
-          <a class="button button-secondary" id="cafeModalMapLink" href="/map">지도에서 보기</a>
-        </div>
-      </div>
-    </div>
-
     <script src="/assets/js/toast.js"></script>
     <script src="/assets/js/admin-common.js"></script>
     <script src="/assets/js/cafe-list-filter.js"></script>
     <script>
       (function () {
         const A = window.ConcafeAdmin;
-        const escapeHtml = A.escapeHtml;
-        const state = { cafes: [], loaded: false };
+        // 관리자로 로그인하면 미승인 카페까지 함께 보여주고 '카페 등록' 버튼을 띄운다 (예전 /admin 카페 관리 목록을 합쳤다)
+        const state = { cafes: [], loaded: false, isAdmin: false, loadSeq: 0 };
         const el = {};
         [
-          "cafeCount", "filteredCount", "cafeFilter", "cafeGrid", "cafeEmptyState",
-          "cafeModal", "cafeModalThumb", "cafeModalChips", "cafeModalTitle", "cafeModalInfo", "cafeModalGallery",
-          "cafeModalScheduleLink", "cafeModalMapLink",
+          "cafeCount", "filteredCount", "cafeFilter", "cafeGrid", "cafeEmptyState", "heroActionLink", "cafeSectionNote",
         ].forEach(function (id) { el[id] = document.getElementById(id); });
 
         const filter = window.ConcafeCafeList.createFilter({
@@ -131,7 +107,6 @@
           onChange: renderCafeGrid,
         });
 
-        // 관리자 카페 목록과 같은 카드 그리드를 쓴다 (승인된 카페만 노출)
         function renderCafeGrid() {
           const filtered = filter.apply(state.cafes);
           el.cafeCount.textContent = String(state.cafes.length);
@@ -141,104 +116,82 @@
             el.cafeGrid.innerHTML = "";
             el.cafeEmptyState.style.display = "";
             el.cafeEmptyState.textContent = !state.loaded ? "카페 목록을 불러오는 중입니다."
-              : !state.cafes.length ? "등록된 카페가 없습니다."
+              : !state.cafes.length ? (state.isAdmin ? "등록된 카페가 없습니다. 카페 등록 버튼으로 추가하세요." : "등록된 카페가 없습니다.")
               : filter.emptyMessage();
             return;
           }
           el.cafeEmptyState.style.display = "none";
           el.cafeGrid.innerHTML = filtered.map(function (cafe) {
-            return window.ConcafeCafeList.cardHtml(cafe, { href: "#cafe=" + encodeURIComponent(cafe.id) });
+            return window.ConcafeCafeList.cardHtml(cafe, {
+              href: "/cafe?id=" + encodeURIComponent(cafe.id),
+              extraChipsHtml: cafe.approved ? "" : '<span class="chip warning">미승인</span>',
+            });
           }).join("");
         }
 
-        // ---------- 카페 정보 모달 ----------
-
-        function openCafeModal(cafeId) {
-          const cafe = state.cafes.find(function (item) { return item.id === cafeId; });
-          if (!cafe) {
-            return;
-          }
-          el.cafeModalTitle.textContent = cafe.name;
-          el.cafeModalThumb.innerHTML = A.cafeThumbHtml(cafe);
-          const concept = A.conceptLabel(cafe.conceptType);
-          el.cafeModalChips.innerHTML = concept ? '<span class="chip">' + escapeHtml(concept) + "</span>" : "";
-          const rows = [
-            ["지역", [A.COUNTRY_LABELS[cafe.country] || cafe.country, A.cityLabel(cafe.country, cafe.city)].filter(Boolean).join(" · ")],
-            ["주소", cafe.address],
-            ["전화번호", cafe.phoneNumber],
-            ["영업시간", cafe.businessHours],
-            ["소개", cafe.desc],
-          ].filter(function (row) { return row[1]; });
-          el.cafeModalInfo.innerHTML = rows.map(function (row) {
-            return "<dt>" + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd>";
-          }).join("");
-          el.cafeModalGallery.innerHTML = cafe.galleryImages.filter(function (url) {
-            return url !== cafe.thumbnailImage;
-          }).map(function (url) {
-            return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" />';
-          }).join("");
-          el.cafeModalScheduleLink.href = "/schedule?cafeId=" + encodeURIComponent(cafe.id);
-          el.cafeModalMapLink.href = "/map?cafeId=" + encodeURIComponent(cafe.id);
-          el.cafeModalMapLink.hidden = cafe.lat == null || cafe.lng == null;
-          el.cafeModal.hidden = false;
-          el.cafeModal.querySelector(".admin-modal-close").focus();
-        }
-
-        function closeCafeModal() {
-          if (el.cafeModal.hidden) {
-            return;
-          }
-          el.cafeModal.hidden = true;
-          if (/^#cafe=/.test(window.location.hash)) {
-            history.replaceState(null, "", window.location.pathname + window.location.search);
-          }
-        }
-
-        function syncModalWithHash() {
-          const match = /^#cafe=(.+)$/.exec(window.location.hash);
-          if (match) {
-            openCafeModal(decodeURIComponent(match[1]));
+        function renderRoleUi() {
+          if (state.isAdmin) {
+            el.heroActionLink.textContent = "+ 카페 등록";
+            el.heroActionLink.href = "/admin-cafe-new";
+            el.heroActionLink.className = "button button-primary";
+            el.cafeSectionNote.textContent = "관리자에게는 미승인 카페도 함께 보입니다. 카페를 눌러 상세 정보와 관리 메뉴로 이동하세요.";
           } else {
-            closeCafeModal();
+            el.heroActionLink.textContent = "지도에서 카페 찾기";
+            el.heroActionLink.href = "/map";
+            el.heroActionLink.className = "button button-secondary";
+            el.cafeSectionNote.textContent = "국가와 도시를 고르고, 이름·주소 검색이나 컨셉으로 좁혀 볼 수 있습니다.";
           }
         }
 
         // ---------- 불러오기 ----------
 
         async function loadCafes() {
+          const seq = ++state.loadSeq;
           try {
-            const snapshot = await A.db.collection("cafes").where("approved", "==", true).get();
+            const query = state.isAdmin
+              ? A.db.collection("cafes")
+              : A.db.collection("cafes").where("approved", "==", true);
+            const snapshot = await query.get();
+            if (seq !== state.loadSeq) return;
             state.cafes = snapshot.docs.map(A.toCafe).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
             });
             state.loaded = true;
             filter.setCafes(state.cafes);
           } catch (error) {
+            if (seq !== state.loadSeq) return;
             console.error(error);
             state.loaded = true;
             window.ConcafeToast.show("error", "카페 목록을 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
           }
           renderCafeGrid();
-          syncModalWithHash();
         }
 
-        // ---------- 이벤트 연결 ----------
+        // ---------- 시작 ----------
 
-        window.addEventListener("hashchange", syncModalWithHash);
-        el.cafeModal.addEventListener("click", function (e) {
-          if (e.target === el.cafeModal || e.target.closest("[data-close-modal]")) {
-            closeCafeModal();
-          }
-        });
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") {
-            closeCafeModal();
-          }
-        });
+        // 예전 모달 주소(#cafe=ID)로 들어오면 카페 상세 페이지로 보낸다
+        const legacyHash = /^#cafe=(.+)$/.exec(window.location.hash);
+        if (legacyHash) {
+          window.location.replace("/cafe?id=" + encodeURIComponent(decodeURIComponent(legacyHash[1])));
+          return;
+        }
 
         renderCafeGrid();
-        A.initAuthWidget(null);
-        loadCafes();
+        // 로그인 상태를 확인한 뒤 한 번 불러온다 (관리자면 전체, 아니면 승인된 카페만)
+        A.initAuthWidget(async function (user) {
+          let isAdmin = false;
+          try {
+            isAdmin = (await A.fetchUserAccess(user)).isAdmin;
+          } catch (error) {
+            console.error(error);
+          }
+          if (state.loaded && isAdmin === state.isAdmin) {
+            return;
+          }
+          state.isAdmin = isAdmin;
+          renderRoleUi();
+          loadCafes();
+        });
       })();
     </script>
     <script src="/assets/js/admin-nav.js"></script>

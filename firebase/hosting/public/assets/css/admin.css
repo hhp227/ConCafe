@@ -2076,3 +2076,753 @@ a.cast-card-link:focus-visible .cast-card-name {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+.action-card[hidden] {
+  display: none;
+}
+
+/* ── 카페 상세: 캐스트 스케줄 (cafe-schedule.js) ── */
+.sched-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sched-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sched-nav-button {
+  min-width: 40px;
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sched-period {
+  min-width: 200px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.sched-today {
+  margin-left: 4px;
+}
+
+.sched-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sched-options select {
+  width: auto;
+  min-width: 160px;
+}
+
+.sched-capture {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sched-capture-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.sched-title {
+  margin: 0;
+  font-size: 17px;
+}
+
+.sched-legend {
+  display: flex;
+  gap: 6px;
+}
+
+.sched-legend .sched-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.sched-chip {
+  display: block;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: #5b2238;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sched-chip small {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a4a63;
+}
+
+.sched-chip.guest {
+  background: #e8f0ff;
+  color: #27407a;
+}
+
+.sched-chip.guest small {
+  color: #50689e;
+}
+
+.sched-chips {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.sched-none {
+  color: var(--line-strong);
+  font-size: 13px;
+  text-align: center;
+}
+
+.sched-cell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.sched-cell.is-outside {
+  border-color: transparent;
+  background: transparent;
+}
+
+.sched-cell.is-today {
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.sched-cell-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  font-weight: 800;
+}
+
+.sched-weekday {
+  font-size: 14px;
+}
+
+.sched-date {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sched-cell.is-sat .sched-weekday,
+.sched-cell.is-sat .sched-date {
+  color: #3a64c8;
+}
+
+.sched-cell.is-sun .sched-weekday,
+.sched-cell.is-sun .sched-date {
+  color: #d23c5a;
+}
+
+.sched-cell.is-today .sched-date {
+  color: var(--accent);
+}
+
+.sched-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.sched-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sched-week .sched-cell {
+  min-height: 160px;
+}
+
+.sched-month-head,
+.sched-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sched-month-head {
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.sched-month-head span:nth-child(6) {
+  color: #3a64c8;
+}
+
+.sched-month-head span:nth-child(7) {
+  color: #d23c5a;
+}
+
+.sched-month .sched-cell {
+  min-height: 96px;
+  padding: 6px;
+}
+
+.sched-month .sched-chip {
+  padding: 2px 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sched-month .sched-cell.is-empty .sched-none {
+  display: none;
+}
+
+.sched-empty-note {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.sched-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .sched-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sched-nav {
+    justify-content: space-between;
+  }
+
+  .sched-period {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+  }
+
+  .sched-options {
+    justify-content: space-between;
+  }
+
+  .sched-options select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* 주간은 요일을 세로로 쌓고, 요일 정보는 왼쪽에 둔다 */
+  .sched-week {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sched-week .sched-cell {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-rows: none;
+    align-items: start;
+    min-height: 0;
+  }
+
+  .sched-week .sched-cell-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sched-week .sched-chips {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+
+  .sched-week .sched-none {
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .sched-capture {
+    padding: 10px;
+  }
+
+  .sched-month-head,
+  .sched-month-grid {
+    gap: 3px;
+  }
+
+  .sched-month .sched-cell {
+    min-height: 64px;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .sched-month .sched-count {
+    display: none;
+  }
+
+  .sched-month .sched-chip {
+    padding: 1px 3px;
+    font-size: 10px;
+    border-radius: 4px;
+  }
+
+  .sched-footer .button {
+    flex: 1;
+  }
+}
+
+/* ── 캐스트 스케줄 등록 (registration.html) ── */
+.reg-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+/* 두 칸의 윗선을 맞춘다 (.section 기본 위 여백과 .section + .section 여백이 달라 어긋난다) */
+.reg-layout > .section {
+  margin-top: 0;
+}
+
+/* 등록 폼은 짧아서 저장 버튼 줄을 화면 아래에 붙이지 않는다 (메모 칸을 가리지 않도록) */
+.reg-form .edit-form-actions {
+  position: static;
+  margin: 4px 0 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.reg-form {
+  display: grid;
+  gap: 14px;
+}
+
+.reg-form .field[hidden],
+.reg-form-note[hidden] {
+  display: none;
+}
+
+.reg-form .segmented {
+  display: flex;
+}
+
+.reg-form .segmented button {
+  flex: 1;
+}
+
+.reg-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.reg-form-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.reg-form-note.is-locked {
+  background: #fff4e5;
+  border-color: #f0c98a;
+  color: #8a5a12;
+}
+
+.reg-legend {
+  display: flex;
+  gap: 6px;
+}
+
+.reg-status {
+  display: inline-grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  background: var(--accent-soft);
+  color: #5b2238;
+}
+
+.reg-status small {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.reg-status.off {
+  background: #eeeaec;
+  color: #5f5459;
+}
+
+.reg-status.vacation {
+  background: #fff1c9;
+  color: #7a5a00;
+}
+
+.reg-board-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.reg-board {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.reg-board th,
+.reg-board td {
+  border-bottom: 1px solid var(--line);
+  padding: 4px;
+  text-align: center;
+}
+
+.reg-board tbody tr:last-child th,
+.reg-board tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.reg-board thead th {
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--surface-soft);
+}
+
+.reg-board thead th.is-sat { color: #3a64c8; }
+.reg-board thead th.is-sun { color: #d23c5a; }
+.reg-board thead th.is-today { color: var(--accent); }
+
+.reg-board-date {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.reg-board .reg-board-cast {
+  width: 110px;
+  padding-left: 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reg-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.reg-cell:hover,
+.reg-cell:focus-visible {
+  background: var(--surface-soft);
+  border-color: var(--line-strong);
+}
+
+.reg-cell.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  background: #fff;
+}
+
+.reg-cell.is-official .reg-status {
+  outline: 1px dashed currentColor;
+  outline-offset: 1px;
+}
+
+.reg-empty {
+  color: var(--line-strong);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.reg-board-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.reg-board-foot .helper {
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .reg-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-grid.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.section-actions[hidden] {
+  display: none;
+}
+
+/* 역할별로 숨기는 버튼 (cafe.html의 data-role-only) */
+[data-role-only][hidden] {
+  display: none !important;
+}
+
+/* 캐스트 상세에서는 이벤트 카드가 링크(a)다 */
+a.event-card {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── 캐스트 상세 (cast.html) ── */
+.cast-profile {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.cast-profile h1 {
+  margin: 10px 0 8px;
+}
+
+.cast-profile-photo {
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #fde7ef, #f1e8ec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c7480;
+  font-size: 48px;
+  font-weight: 800;
+}
+
+.cast-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .cast-profile {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .cast-profile-photo {
+    font-size: 32px;
+  }
+}
+
+/* ── 카페 상세: 스케줄 현황 요약 (cafe-schedule.js summaryMount) ── */
+.sched-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.sched-sum-label {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.sched-sum-label span {
+  margin-left: 4px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.sched-people {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sched-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.sched-person:hover,
+a.sched-person:focus-visible {
+  border-color: var(--accent);
+}
+
+.sched-person.guest {
+  background: #f3f7ff;
+  border-color: #d4e0fa;
+}
+
+.sched-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: #8a4a63;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.sched-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sched-person-text {
+  display: grid;
+  line-height: 1.25;
+}
+
+.sched-person-text strong {
+  font-size: 13px;
+}
+
+.sched-person-text small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sched-sum-none {
+  margin: 0;
+}
+
+.sched-sum-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sched-sum-day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sched-sum-day:hover,
+.sched-sum-day:focus-visible {
+  border-color: var(--line-strong);
+  background: #fff;
+}
+
+.sched-sum-day.is-today {
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.sched-sum-day.is-past {
+  opacity: 0.6;
+}
+
+.sched-sum-weekday {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sched-sum-day.is-sat .sched-sum-weekday { color: #3a64c8; }
+.sched-sum-day.is-sun .sched-sum-weekday { color: #d23c5a; }
+
+.sched-sum-date {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sched-sum-count {
+  font-size: 13px;
+  color: #9d2759;
+}
+
+@media (max-width: 860px) {
+  .sched-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

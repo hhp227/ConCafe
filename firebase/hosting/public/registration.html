@@ -3,701 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>콘카 임시 캐스트 등록</title>
-    <meta
-      name="description"
-      content="카페를 선택하고 실제 서비스의 캐스트와 스케줄을 등록하는 페이지입니다."
-    />
+    <title>캐스트 스케줄 등록 · 콘카</title>
+    <meta name="description" content="카페 운영자가 캐스트의 근무·휴무·휴가 스케줄을 등록하는 페이지입니다." />
+    <meta name="robots" content="noindex" />
     <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
     <link rel="stylesheet" href="/assets/css/style.css" />
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f6f1f3;
-        --surface: rgba(255, 255, 255, 0.94);
-        --surface-soft: #fdf8fa;
-        --line: #e7d9df;
-        --line-strong: #cfb8c2;
-        --text: #23161c;
-        --muted: #6d5d64;
-        --accent: #ef6797;
-        --accent-soft: #ffd7e5;
-        --success: #1f8b5f;
-        --warning: #9a6700;
-        --danger: #c4415f;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: "Pretendard", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(255, 215, 229, 0.72), transparent 34%),
-          linear-gradient(180deg, #fff8fb 0%, var(--bg) 100%);
-        color: var(--text);
-      }
-
-      .topbar .nav-link {
-        font-size: 14px;
-        color: var(--muted);
-        padding: 8px 12px;
-        border-radius: 12px;
-        background: transparent;
-        border: 0;
-      }
-
-      .topbar .nav-link:hover,
-      .topbar .nav-link:focus-visible {
-        background: var(--surface-soft);
-        color: #da4e84;
-      }
-
-      .container {
-        max-width: 1180px;
-      }
-
-      .page {
-        width: 100%;
-        margin: 0 auto;
-        padding: 0 0 40px;
-      }
-
-      .hero,
-      .page-grid {
-        display: grid;
-        gap: 20px;
-      }
-
-      .hero {
-        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-      }
-
-      .page-grid {
-        grid-template-columns: minmax(0, 0.98fr) minmax(360px, 1.02fr);
-        margin-top: 20px;
-      }
-
-      .download-strip {
-        margin: 18px 0 20px;
-        padding: 20px 24px;
-      }
-
-      .download-strip-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .download-strip-title {
-        font-size: 20px;
-        font-weight: 700;
-        margin: 0;
-      }
-
-      .store-links {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-
-      .store-links a,
-      .desktop-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .store-links img {
-        height: 52px;
-        width: auto;
-        display: block;
-      }
-
-      .desktop-link {
-        height: 52px;
-        padding: 0 18px;
-        border-radius: 8px;
-        background: var(--accent);
-        color: #fff;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-
-      .surface {
-        background: var(--surface);
-        border: 1px solid rgba(207, 184, 194, 0.82);
-        border-radius: 8px;
-        box-shadow: 0 18px 44px rgba(75, 41, 53, 0.08);
-      }
-
-      .hero-copy,
-      .hero-meta,
-      .section {
-        padding: 24px;
-      }
-
-      .eyebrow,
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        font-weight: 700;
-      }
-
-      .eyebrow {
-        gap: 8px;
-        padding: 7px 12px;
-        background: var(--accent-soft);
-        color: #5d2740;
-        font-size: 13px;
-      }
-
-      h1 {
-        margin: 16px 0 10px;
-        font-size: clamp(30px, 4vw, 44px);
-        line-height: 1.15;
-      }
-
-      h2 {
-        margin: 0 0 8px;
-        font-size: 23px;
-      }
-
-      p,
-      .helper,
-      .empty {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .hero-meta {
-        display: grid;
-        gap: 16px;
-      }
-
-      .stat-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .stat {
-        padding: 14px;
-        border-radius: 8px;
-        background: var(--surface-soft);
-        border: 1px solid var(--line);
-      }
-
-      .stat-label {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .stat-value {
-        font-size: 18px;
-        font-weight: 700;
-      }
-
-      .section + .section {
-        margin-top: 16px;
-      }
-
-      .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .nav-row,
-      .button-row,
-      .chip-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .nav-link,
-      .button {
-        border-radius: 8px;
-        font: inherit;
-        font-weight: 700;
-        text-decoration: none;
-      }
-
-      .nav-link {
-        padding: 11px 14px;
-        border: 1px solid var(--line-strong);
-        color: var(--muted);
-      }
-
-      .nav-link.active {
-        border-color: var(--accent);
-        background: var(--accent-soft);
-        color: #5b2238;
-      }
-
-      .field-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .compact-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 14px;
-      }
-
-      .form-panel {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
-        padding: 16px;
-      }
-
-      .form-panel + .form-panel {
-        margin-top: 14px;
-      }
-
-      .form-panel-title {
-        margin: 0 0 12px;
-        font-size: 16px;
-      }
-
-      .operator-cafe-card {
-        display: grid;
-        gap: 8px;
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
-      }
-
-      .operator-cafe-name {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 800;
-      }
-
-      .admin-cafe-controls {
-        display: grid;
-        gap: 14px;
-      }
-
-      .field {
-        display: grid;
-        gap: 8px;
-      }
-
-      .field.wide {
-        grid-column: 1 / -1;
-      }
-
-      label {
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      input,
-      select,
-      textarea,
-      button {
-        font: inherit;
-      }
-
-      input,
-      select,
-      textarea {
-        width: 100%;
-        border: 1px solid var(--line-strong);
-        border-radius: 8px;
-        background: #fff;
-        color: var(--text);
-        padding: 13px 14px;
-        outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      input:focus,
-      select:focus,
-      textarea:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 4px rgba(239, 103, 151, 0.14);
-      }
-
-      textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-
-      .button {
-        border: 0;
-        cursor: pointer;
-        padding: 13px 18px;
-      }
-
-      .button-primary {
-        background: var(--accent);
-        color: #fff;
-      }
-
-      .button-secondary {
-        background: var(--accent-soft);
-        color: #4f2536;
-      }
-
-      .button-ghost {
-        background: transparent;
-        color: var(--muted);
-        border: 1px solid var(--line-strong);
-      }
-
-      .button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      .status-banner {
-        margin-top: 16px;
-        padding: 14px 16px;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        font-size: 14px;
-        line-height: 1.5;
-      }
-
-      .status-banner.info {
-        background: #fff7dd;
-        color: var(--warning);
-        border-color: #efd89a;
-      }
-
-      .status-banner.success {
-        background: #ebfff6;
-        color: var(--success);
-        border-color: #b8e7d1;
-      }
-
-      .status-banner.error {
-        background: #fff0f3;
-        color: var(--danger);
-        border-color: #f1b7c4;
-      }
-
-      .list {
-        display: grid;
-        gap: 12px;
-      }
-
-      .list-item {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
-        padding: 14px;
-      }
-
-      .item-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        align-items: flex-start;
-      }
-
-      .item-main {
-        display: flex;
-        gap: 14px;
-        align-items: flex-start;
-      }
-
-      .item-image {
-        width: 72px;
-        height: 72px;
-        border-radius: 8px;
-        overflow: hidden;
-        flex: 0 0 72px;
-        background: #f1e8ec;
-        border: 1px solid var(--line);
-      }
-
-      .item-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .item-image-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #8c7480;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .item-title {
-        margin: 0;
-        font-size: 17px;
-        font-weight: 700;
-      }
-
-      .chip {
-        padding: 6px 10px;
-        background: #f4e3ea;
-        color: #6a3147;
-        font-size: 12px;
-      }
-
-      .chip.neutral {
-        background: #f0eef1;
-        color: #655a62;
-      }
-
-      .chip.success {
-        background: #e6f8ef;
-        color: #247950;
-      }
-
-      .chip.warning {
-        background: #fff2d6;
-        color: #946200;
-      }
-
-      .weekday-row {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 6px;
-        margin-top: 12px;
-      }
-
-      .weekday-chip {
-        min-width: 0;
-        height: 36px;
-        padding: 0 6px;
-        border-radius: 8px;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--muted);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 700;
-      }
-
-      .weekday-chip.off {
-        background: #f0eef1;
-        border-color: #d8c9d1;
-        color: #655a62;
-      }
-
-      .schedule-list {
-        gap: 10px;
-      }
-
-      .schedule-card {
-        padding: 14px;
-      }
-
-      .schedule-card-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .schedule-summary {
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      .weekday-chip.work {
-        background: #ffe2ec;
-        border-color: #ef6797;
-        color: #9d2759;
-      }
-
-      .weekday-chip.vacation {
-        background: #fff2d6;
-        border-color: #efcf7d;
-        color: #946200;
-      }
-
-      .small {
-        font-size: 12px;
-      }
-
-      .mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      }
-
-      .empty {
-        padding-top: 18px;
-      }
-
-      /* ── Topbar right group ── */
-      .topbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-
-      /* ── Auth widget ── */
-      .auth-widget { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-      /* ── Auth modal ── */
-      .auth-modal {
-        position: fixed; inset: 0; z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
-        background: rgba(35, 22, 28, 0.48); backdrop-filter: blur(4px);
-        opacity: 0; pointer-events: none; transition: opacity 0.2s;
-      }
-      .auth-modal.is-open { opacity: 1; pointer-events: auto; }
-      .auth-modal-box {
-        position: relative; background: #fff; border-radius: 20px;
-        padding: 32px 28px; width: calc(100% - 32px); max-width: 360px;
-        box-shadow: 0 8px 40px rgba(74, 54, 69, 0.22);
-        transform: translateY(16px); transition: transform 0.2s;
-      }
-      .auth-modal.is-open .auth-modal-box { transform: translateY(0); }
-      .auth-modal-close {
-        position: absolute; top: 14px; right: 14px;
-        background: none; border: none; cursor: pointer;
-        font-size: 16px; color: #a07a8f; line-height: 1; padding: 4px;
-      }
-      .auth-modal-close:hover { color: #3d2c38; }
-      .auth-modal-title { font-size: 20px; font-weight: 800; color: #23161c; margin: 0 0 20px; }
-      .auth-modal-form { display: flex; flex-direction: column; gap: 12px; }
-      .auth-modal-field { display: flex; flex-direction: column; gap: 5px; }
-      .auth-modal-field label { font-size: 12px; font-weight: 700; color: #6d5d64; }
-      .auth-modal-field input {
-        padding: 10px 14px; border-radius: 12px;
-        border: 1px solid #e7d9df; background: #fff8fb;
-        font: inherit; font-size: 14px; color: #23161c; outline: none;
-      }
-      .auth-modal-field input:focus { border-color: #ef6797; }
-      .auth-modal-error { font-size: 12px; color: #c4415f; margin: 0; }
-      .auth-modal-submit {
-        margin-top: 4px; padding: 12px; border-radius: 14px;
-        background: linear-gradient(135deg, #ef6797, #da4e84);
-        color: #fff; border: none; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
-      }
-      .auth-modal-submit:hover { background: linear-gradient(135deg, #da4e84, #c73d73); }
-      .auth-modal-divider {
-        display: flex; align-items: center; gap: 10px;
-        margin: 16px 0; color: #a07a8f; font-size: 12px;
-      }
-      .auth-modal-divider::before, .auth-modal-divider::after {
-        content: ""; flex: 1; height: 1px; background: #e7d9df;
-      }
-      .auth-modal-google {
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        width: 100%; padding: 11px; border-radius: 14px;
-        border: 1px solid #e7d9df; background: #fff;
-        font: inherit; font-size: 13px; font-weight: 700; color: #3d2c38; cursor: pointer;
-      }
-      .auth-modal-google:hover { background: #fdf8fa; border-color: #cfb8c2; }
-      .auth-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 8px 16px; border-radius: 20px;
-        border: 1px solid rgba(239, 103, 151, 0.5);
-        background: #fff1f7; color: #9d2759;
-        font: inherit; font-size: 13px; font-weight: 700;
-        cursor: pointer; white-space: nowrap;
-      }
-      .auth-btn:hover { background: #ffe4ef; }
-      .auth-btn.signout {
-        background: transparent; border-color: rgba(207, 184, 194, 0.5);
-        color: #6d5d64; font-weight: 400; font-size: 12px; padding: 6px 12px;
-      }
-      .auth-user-info { display: flex; align-items: center; gap: 6px; }
-      .auth-user-photo {
-        width: 28px; height: 28px; border-radius: 50%;
-        object-fit: cover; border: 1.5px solid rgba(239, 103, 151, 0.4); flex-shrink: 0;
-      }
-      .auth-user-name {
-        font-size: 13px; font-weight: 700; color: #23161c;
-        max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-
-      @media (max-width: 960px) {
-        .hero,
-        .page-grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      @media (max-width: 640px) {
-        .page {
-          padding-top: 12px;
-        }
-
-        .hero-copy,
-        .hero-meta,
-        .section {
-          padding: 18px;
-        }
-
-        .field-grid,
-        .compact-grid,
-        .stat-list {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .weekday-row {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-
-        h1 {
-          font-size: 30px;
-        }
-
-        .download-strip {
-          padding: 18px;
-        }
-
-        .download-strip-head {
-          display: grid;
-        }
-      }
-      .form-hint {
-        margin: 12px 0 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.5;
-      }
-    </style>
+    <link rel="stylesheet" href="/assets/css/admin.css" />
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-    <script src="/assets/js/toast.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
   </head>
   <body>
     <div class="page-shell">
       <header class="topbar">
         <div class="topbar-inner">
-          <a class="brand" href="/">
+          <a class="brand" href="/cafes">
             <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
             <span class="brand-title" aria-label="콘셉카페">
               <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
             </span>
           </a>
           <div class="topbar-right">
-            <nav class="nav-links app-nav" aria-label="운영 페이지 메뉴">
-              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
-              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
               <a class="nav-link" href="/cafes">카페 목록</a>
               <a class="nav-link" href="/map">메이드 카페 지도</a>
-              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
             </nav>
             <div class="auth-widget" id="authWidget">
               <div class="auth-user-info" id="authUserInfo" style="display:none;">
@@ -712,918 +43,296 @@
       </header>
 
       <main class="container">
-    <div class="page">
-      <section class="hero">
-        <div class="surface hero-copy">
-          <div class="eyebrow">운영자 관리</div>
-          <h1>캐스트, 스케줄 등록</h1>
-          <p>
-            카페 운영자와 관리자만 캐스트와 출근 스케줄을 등록할 수 있습니다.
-          </p>
-        </div>
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/cafes">카페 목록</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/cafes">카페</a><span class="breadcrumb-sep">›</span><span>캐스트 스케줄 등록</span>
+          </nav>
 
-        <aside class="surface hero-meta">
-          <div class="stat-list">
-            <div class="stat">
-              <span class="stat-label">카페 목록</span>
-              <strong class="stat-value" id="cafeCount">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">선택된 카페</span>
-              <strong class="stat-value" id="selectedCafeLabel">없음</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">실제 캐스트</span>
-              <strong class="stat-value" id="castCount">0</strong>
-            </div>
-            <div class="stat">
-              <span class="stat-label">실제 스케줄</span>
-              <strong class="stat-value" id="scheduleCount">0</strong>
-            </div>
-          </div>
-
-        </aside>
-      </section>
-
-      <div class="page-grid">
-        <div>
-          <section class="surface section" id="cafeSection">
-            <div class="section-header">
+          <section class="surface section">
+            <div class="cafe-mini" style="margin: 0;">
+              <div class="cafe-mini-thumb" id="cafeThumb"></div>
               <div>
-                <h2 id="cafeSectionTitle">운영 카페</h2>
-                <p id="cafeSectionDescription">권한이 있는 카페만 표시됩니다.</p>
-              </div>
-            </div>
-            <div class="admin-cafe-controls" id="adminCafeControls">
-              <div class="field">
-                <label for="cafeSearch">카페 검색</label>
-                <input id="cafeSearch" type="search" placeholder="카페 이름 또는 지역으로 검색" />
-              </div>
-              <div class="field">
-                <label for="cafeSelect">카페 목록</label>
-                <select id="cafeSelect">
-                  <option value="">카페를 선택하세요</option>
-                </select>
-              </div>
-            </div>
-            <div class="operator-cafe-card" id="operatorCafeCard" style="display: none;">
-              <p class="helper">현재 관리 대상</p>
-              <h3 class="operator-cafe-name" id="operatorCafeName">운영 카페 없음</h3>
-              <p id="operatorCafeMeta">운영자 권한을 확인한 뒤 자동으로 선택됩니다.</p>
-              <div class="field" id="operatorCafeSwitchField" style="display: none;">
-                <label for="operatorCafeSelect">운영 카페 전환</label>
-                <select id="operatorCafeSelect"></select>
+                <h1 id="cafeTitle">캐스트 스케줄 등록</h1>
+                <p id="cafeSub">카페 운영자만 캐스트 스케줄을 등록할 수 있습니다.</p>
               </div>
             </div>
           </section>
 
-          <section class="surface section">
-            <div class="section-header">
-              <div>
-                <h2>등록</h2>
-                <p>캐스트를 먼저 추가한 뒤 같은 화면에서 스케줄을 바로 입력합니다.</p>
-              </div>
-            </div>
-            <div class="form-panel">
-              <h3 class="form-panel-title">캐스트 정보</h3>
-            <form id="castForm">
-              <div class="field-grid">
-                <div class="field">
-                  <label for="castName">캐스트 이름</label>
-                  <input id="castName" type="text" maxlength="40" placeholder="예: 리나" required />
-                </div>
-                <div class="field">
-                  <label for="castRole">컨셉 / 역할</label>
-                  <input id="castRole" type="text" maxlength="60" placeholder="예: 메이드, 집사, 바텐더" required />
-                </div>
-                <div class="field">
-                  <label for="castBirthday">생일</label>
-                  <input id="castBirthday" type="date" />
-                </div>
-                <div class="field">
-                  <label for="castProfileImage">프로필 이미지 URL</label>
-                  <input id="castProfileImage" type="url" placeholder="https://..." />
-                </div>
-                <div class="field wide">
-                  <label for="castIntroduction">소개</label>
-                  <textarea id="castIntroduction" maxlength="500" placeholder="간단한 소개를 입력하세요"></textarea>
+          <div class="reg-layout">
+            <section class="surface section reg-form-section">
+              <div class="section-header">
+                <div>
+                  <h2>스케줄 입력</h2>
+                  <p>오른쪽 표의 칸을 누르면 그 캐스트와 날짜가 채워집니다.</p>
                 </div>
               </div>
-              <div class="button-row" style="margin-top: 18px;">
-                <button class="button button-primary" id="castSubmitButton" type="submit">캐스트 저장</button>
-                <button class="button button-ghost" type="reset">입력 초기화</button>
-              </div>
-            </form>
-            <p class="form-hint" id="castFormStatus" style="display: none;"></p>
-            </div>
-            <div class="form-panel">
-              <h3 class="form-panel-title">스케줄 정보</h3>
-            <form id="scheduleForm">
-              <div class="compact-grid">
+              <form class="reg-form" id="scheduleForm" novalidate>
                 <div class="field">
-                  <label for="scheduleCast">대상 캐스트</label>
+                  <label for="scheduleCast">캐스트</label>
                   <select id="scheduleCast" required>
                     <option value="">캐스트를 선택하세요</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label for="scheduleDate">근무 날짜</label>
+                  <label for="scheduleDate">날짜</label>
                   <input id="scheduleDate" type="date" required />
                 </div>
                 <div class="field">
-                  <label for="scheduleStatus">상태</label>
-                  <select id="scheduleStatus">
-                    <option value="WORK">근무</option>
-                    <option value="OFF">휴무</option>
-                    <option value="VACATION">휴가</option>
-                  </select>
+                  <label>상태</label>
+                  <div class="segmented" id="scheduleStatus" role="radiogroup" aria-label="상태">
+                    <button class="is-active" type="button" role="radio" aria-checked="true" data-status="WORK">근무</button>
+                    <button type="button" role="radio" aria-checked="false" data-status="OFF">휴무</button>
+                    <button type="button" role="radio" aria-checked="false" data-status="VACATION">휴가</button>
+                  </div>
+                </div>
+                <div class="field" id="timeField">
+                  <label for="scheduleStartTime">근무 시간</label>
+                  <div class="reg-time-row">
+                    <input id="scheduleStartTime" type="time" aria-label="시작 시간" />
+                    <span aria-hidden="true">~</span>
+                    <input id="scheduleEndTime" type="time" aria-label="종료 시간" />
+                  </div>
                 </div>
                 <div class="field">
                   <label for="scheduleMemo">메모</label>
                   <input id="scheduleMemo" type="text" maxlength="100" placeholder="선택 입력" />
                 </div>
-                <div class="field" id="startTimeField">
-                  <label for="scheduleStartTime">시작 시간</label>
-                  <input id="scheduleStartTime" type="time" required />
+                <p class="reg-form-note" id="scheduleFormNote" hidden></p>
+                <div class="edit-form-actions">
+                  <button class="button button-primary" id="scheduleSubmitButton" type="submit" disabled>스케줄 저장</button>
+                  <button class="button button-ghost" id="scheduleResetButton" type="button">초기화</button>
                 </div>
-                <div class="field" id="endTimeField">
-                  <label for="scheduleEndTime">종료 시간</label>
-                  <input id="scheduleEndTime" type="time" required />
+              </form>
+            </section>
+
+            <section class="surface section reg-board-section">
+              <div class="section-header">
+                <div>
+                  <h2>주간 등록 현황</h2>
+                  <p>캐스트별로 등록된 근무·휴무·휴가를 한 주씩 확인합니다.</p>
                 </div>
               </div>
-              <div class="button-row" style="margin-top: 18px;">
-                <button class="button button-primary" id="scheduleSubmitButton" type="submit">스케줄 저장</button>
-                <button class="button button-ghost" type="reset">입력 초기화</button>
+              <div class="sched-toolbar">
+                <div class="sched-nav">
+                  <button class="button button-ghost sched-nav-button" type="button" data-week-move="-1" aria-label="이전 주">‹</button>
+                  <strong class="sched-period" id="weekLabel" aria-live="polite"></strong>
+                  <button class="button button-ghost sched-nav-button" type="button" data-week-move="1" aria-label="다음 주">›</button>
+                  <button class="button button-ghost sched-today" type="button" id="weekTodayButton">이번 주</button>
+                </div>
+                <div class="reg-legend">
+                  <span class="reg-status work">근무</span>
+                  <span class="reg-status off">휴무</span>
+                  <span class="reg-status vacation">휴가</span>
+                </div>
               </div>
-            </form>
-            <p class="form-hint" id="scheduleFormStatus" style="display: none;"></p>
-            </div>
-          </section>
-        </div>
-
-        <div>
-          <section class="surface section">
-            <div class="section-header">
-              <div>
-                <h2>등록된 캐스트</h2>
-                <p>선택한 카페의 실제 캐스트 목록입니다.</p>
+              <div class="reg-board-scroll">
+                <table class="reg-board" id="weekBoard"></table>
               </div>
-              <button class="button button-secondary" id="refreshCastsButton" type="button">새로고침</button>
-            </div>
-            <div class="list" id="castList"></div>
-            <p class="empty" id="castEmptyState">선택한 카페의 캐스트가 아직 없습니다.</p>
-          </section>
-
-          <section class="surface section">
-            <div class="section-header">
-              <div>
-                <h2>등록된 스케줄</h2>
-                <p>선택한 카페의 캐스트별 출근 요일입니다.</p>
+              <p class="empty" id="boardEmptyState">캐스트를 불러오는 중입니다.</p>
+              <div class="reg-board-foot">
+                <span class="helper" id="boardFootNote"></span>
+                <a class="button button-secondary" id="castNewLink" href="/cast-new" hidden>+ 캐스트 등록</a>
               </div>
-              <button class="button button-secondary" id="refreshSchedulesButton" type="button">새로고침</button>
-            </div>
-            <div class="list schedule-list" id="scheduleList"></div>
-            <p class="empty" id="scheduleEmptyState">선택한 카페의 캐스트가 아직 없습니다.</p>
-          </section>
-        </div>
-      </div>
-      <section class="surface download-strip">
-        <div class="download-strip-head">
-          <h2 class="download-strip-title">앱 다운로드</h2>
-          <div class="store-links">
-            <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">
-              <img src="/assets/images/googleplay.png" alt="Google Play에서 다운로드" />
-            </a>
-            <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">
-              <img src="/assets/images/appleappstore.png" alt="App Store에서 다운로드" />
-            </a>
-            <a class="desktop-link" href="/downloads">데스크톱 다운로드</a>
+            </section>
           </div>
         </div>
-      </section>
-    </div>
-      <footer class="footer">
-        <span>© 2026 콘카(ConCafe)</span>
-        <span><a href="/privacy">개인정보처리방침</a></span>
-      </footer>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <span><a href="/privacy">개인정보처리방침</a></span>
+        </footer>
       </main>
     </div>
 
-    <!-- Login Modal -->
-    <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-label="로그인">
-      <div class="auth-modal-box">
-        <button class="auth-modal-close" id="authModalClose" type="button" aria-label="닫기">✕</button>
-        <h2 class="auth-modal-title">로그인</h2>
-        <form class="auth-modal-form" id="emailLoginForm" novalidate>
-          <div class="auth-modal-field">
-            <label for="loginEmail">이메일</label>
-            <input type="email" id="loginEmail" placeholder="이메일 주소" autocomplete="email" />
-          </div>
-          <div class="auth-modal-field">
-            <label for="loginPassword">비밀번호</label>
-            <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password" />
-          </div>
-          <p class="auth-modal-error" id="emailLoginError" style="display:none;"></p>
-          <button class="auth-modal-submit" type="submit">로그인</button>
-        </form>
-        <div class="auth-modal-divider"><span>또는</span></div>
-        <button class="auth-modal-google" id="googleSignInModalBtn" type="button">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Google로 로그인
-        </button>
-      </div>
-    </div>
-
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
     <script>
       (function () {
-        const firebaseConfig = {
-          apiKey: "AIzaSyCAsBqhoAHVR19CC9zTUp7SG9bpvczfzwI",
-          authDomain: "concafe-5f7fd.firebaseapp.com",
-          projectId: "concafe-5f7fd",
-          storageBucket: "concafe-5f7fd.firebasestorage.app",
-          messagingSenderId: "387905493709",
-          appId: "1:387905493709:web:registration-page",
-        };
-
-        const ALLOWED_ROLES = ["CAFE_OWNER", "ADMIN"];
+        const A = window.ConcafeAdmin;
+        const db = A.db;
+        const escapeHtml = A.escapeHtml;
+        const normalizeText = A.normalizeText;
+        const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+        const STATUS_LABELS = { WORK: "근무", OFF: "휴무", VACATION: "휴가" };
+        // 이 페이지에서 만든 스케줄만 여기서 고칠 수 있다. 출근표 분석 등으로 등록된 공식 스케줄은 덮어쓰지 않는다
+        const EDITABLE_SOURCE = "TEMP_WEB";
+        const cafeId = (new URLSearchParams(window.location.search).get("cafeId") || "").trim();
 
         const state = {
           user: null,
-          userRole: "",
-          ownedCafeIds: [],
-          cafes: [],
-          filteredCafes: [],
-          selectedCafeId: "",
+          cafe: null,
+          canManage: false,
           casts: [],
           schedules: [],
+          loaded: false,
+          status: "WORK",
+          weekStart: startOfWeek(new Date()),
+          saving: false,
         };
 
-        const el = {
-          cafeCount: document.getElementById("cafeCount"),
-          selectedCafeLabel: document.getElementById("selectedCafeLabel"),
-          castCount: document.getElementById("castCount"),
-          scheduleCount: document.getElementById("scheduleCount"),
-          cafeSection: document.getElementById("cafeSection"),
-          cafeSectionTitle: document.getElementById("cafeSectionTitle"),
-          cafeSectionDescription: document.getElementById("cafeSectionDescription"),
-          adminCafeControls: document.getElementById("adminCafeControls"),
-          operatorCafeCard: document.getElementById("operatorCafeCard"),
-          operatorCafeName: document.getElementById("operatorCafeName"),
-          operatorCafeMeta: document.getElementById("operatorCafeMeta"),
-          operatorCafeSwitchField: document.getElementById("operatorCafeSwitchField"),
-          operatorCafeSelect: document.getElementById("operatorCafeSelect"),
-          cafeSearch: document.getElementById("cafeSearch"),
-          cafeSelect: document.getElementById("cafeSelect"),
-          castForm: document.getElementById("castForm"),
-          castName: document.getElementById("castName"),
-          castRole: document.getElementById("castRole"),
-          castBirthday: document.getElementById("castBirthday"),
-          castProfileImage: document.getElementById("castProfileImage"),
-          castIntroduction: document.getElementById("castIntroduction"),
-          castFormStatus: document.getElementById("castFormStatus"),
-          castSubmitButton: document.getElementById("castSubmitButton"),
-          castList: document.getElementById("castList"),
-          castEmptyState: document.getElementById("castEmptyState"),
-          refreshCastsButton: document.getElementById("refreshCastsButton"),
-          scheduleForm: document.getElementById("scheduleForm"),
-          scheduleCast: document.getElementById("scheduleCast"),
-          scheduleDate: document.getElementById("scheduleDate"),
-          scheduleStatus: document.getElementById("scheduleStatus"),
-          scheduleMemo: document.getElementById("scheduleMemo"),
-          scheduleStartTime: document.getElementById("scheduleStartTime"),
-          scheduleEndTime: document.getElementById("scheduleEndTime"),
-          startTimeField: document.getElementById("startTimeField"),
-          endTimeField: document.getElementById("endTimeField"),
-          scheduleFormStatus: document.getElementById("scheduleFormStatus"),
-          scheduleSubmitButton: document.getElementById("scheduleSubmitButton"),
-          scheduleList: document.getElementById("scheduleList"),
-          scheduleEmptyState: document.getElementById("scheduleEmptyState"),
-          refreshSchedulesButton: document.getElementById("refreshSchedulesButton"),
-        };
+        const el = {};
+        [
+          "breadcrumbCafeLink", "cafeThumb", "cafeTitle", "cafeSub",
+          "scheduleForm", "scheduleCast", "scheduleDate", "scheduleStatus", "timeField", "scheduleStartTime", "scheduleEndTime",
+          "scheduleMemo", "scheduleFormNote", "scheduleSubmitButton", "scheduleResetButton",
+          "weekLabel", "weekTodayButton", "weekBoard", "boardEmptyState", "boardFootNote", "castNewLink",
+        ].forEach(function (id) { el[id] = document.getElementById(id); });
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth();
-        const db = app.firestore();
-
-        function escapeHtml(value) {
-          return String(value == null ? "" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+        function pad2(value) {
+          return String(value).padStart(2, "0");
         }
 
-        // 상태·결과 알림은 화면에 고정하지 않고 토스트로 잠깐 보여준다 (assets/js/toast.js)
-        // target: 알림 key로 쓸 요소 또는 문자열. "…중입니다" 같은 진행 안내는 작업이 끝날 때까지 로딩 알림으로 둔다
-        function setBanner(target, type, message) {
-          const key = typeof target === "string" ? target : target && target.id;
-          const resolvedType = type === "info" && /중입니다/.test(message) ? "loading" : type;
-          window.ConcafeToast.show(resolvedType, message, { key: key || undefined });
+        function dateKey(date) {
+          return date.getFullYear() + "-" + pad2(date.getMonth() + 1) + "-" + pad2(date.getDate());
         }
 
-        function hideBanner(target) {
-          const key = typeof target === "string" ? target : target && target.id;
-          if (key) {
-            window.ConcafeToast.dismiss(key);
-          }
-        }
-
-        // 폼 안의 안내 문구 (조건이 바뀌면 바로 사라지므로 토스트로 띄우지 않는다)
-        function setHint(target, message) {
-          target.textContent = message || "";
-          target.style.display = message ? "" : "none";
-        }
-
-        function setAuthBanner(type, message) {
-          setBanner("authStatus", type, message);
-        }
-
-        function normalizeRegionLabel(region) {
-          if (!region || typeof region !== "object") {
-            return "";
-          }
-          return [region.prefecture, region.city, region.district]
-            .filter(function (value) {
-              return typeof value === "string" && value.trim();
-            })
-            .map(function (value) {
-              return value.trim();
-            })
-            .join(" ");
-        }
-
-        function normalizeText(value, fallback) {
-          if (typeof value === "string" && value.trim()) {
-            return value.trim();
-          }
-          return fallback;
-        }
-
-        function toStringArray(value) {
-          return Array.isArray(value)
-            ? value.filter(function (item) {
-                return typeof item === "string" && item.trim();
-              }).map(function (item) {
-                return item.trim();
-              })
-            : [];
-        }
-
-        function toBirthdayKey(dateValue) {
-          if (!dateValue || typeof dateValue !== "string" || dateValue.length < 10) {
-            return null;
-          }
-          const month = dateValue.slice(5, 7);
-          const day = dateValue.slice(8, 10);
-          if (!month || !day) {
-            return null;
-          }
-          return month + day;
-        }
-
-        function nowIso() {
-          return new Date().toISOString();
-        }
-
-        function buildCastDocumentId() {
-          return "cast-" + Date.now();
-        }
-
-        function buildScheduleDocumentId(castId, date) {
-          return castId + "_" + date;
-        }
-
-        function startOfCurrentWeek() {
-          const now = new Date();
-          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const day = start.getDay();
-          const diff = day === 0 ? -6 : 1 - day;
-          start.setDate(start.getDate() + diff);
-          start.setHours(0, 0, 0, 0);
+        function startOfWeek(date) {
+          const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
           return start;
         }
 
-        function endOfCurrentWeek() {
-          const end = startOfCurrentWeek();
-          end.setDate(end.getDate() + 6);
-          end.setHours(23, 59, 59, 999);
-          return end;
+        function addDays(date, days) {
+          const next = new Date(date);
+          next.setDate(next.getDate() + days);
+          return next;
         }
 
-        function getSelectedCafe() {
-          return state.cafes.find(function (item) {
-            return item.id === state.selectedCafeId;
-          }) || null;
+        function cafeUrl(tab) {
+          return "/cafe?id=" + encodeURIComponent(cafeId) + (tab ? "#" + tab : "");
         }
 
-        function getSelectedCast() {
-          return state.casts.find(function (item) {
-            return item.id === el.scheduleCast.value;
-          }) || null;
-        }
-
-        function isSessionReady() {
-          return !!state.user && ALLOWED_ROLES.indexOf(state.userRole) >= 0;
-        }
-
-        function isAdmin() {
-          return state.userRole === "ADMIN";
-        }
-
-        function isSelectedCafeManageable() {
-          if (!isSessionReady() || !state.selectedCafeId) {
-            return false;
-          }
-          if (isAdmin()) {
-            return true;
-          }
-          const selectedCafe = getSelectedCafe();
-          return state.ownedCafeIds.indexOf(state.selectedCafeId) >= 0 ||
-            !!(selectedCafe && state.user && selectedCafe.ownerIds.indexOf(state.user.uid) >= 0);
-        }
-
-        function updateSummary() {
-          el.cafeCount.textContent = String(state.cafes.length);
-          el.castCount.textContent = String(state.casts.length);
-          el.scheduleCount.textContent = String(state.schedules.length);
-          const cafe = getSelectedCafe();
-          el.selectedCafeLabel.textContent = cafe ? cafe.name : "없음";
-        }
-
-        function renderCafeAccessView() {
-          const selectedCafe = getSelectedCafe();
-          if (!isSessionReady()) {
-            el.cafeSectionTitle.textContent = "운영 카페";
-            el.cafeSectionDescription.textContent = "로그인 후 권한이 있는 카페를 확인할 수 있습니다.";
-            el.adminCafeControls.style.display = "grid";
-            el.operatorCafeCard.style.display = "none";
-            return;
-          }
-          if (isAdmin()) {
-            el.cafeSectionTitle.textContent = "카페 선택";
-            el.cafeSectionDescription.textContent = "관리자는 전체 카페 중 등록 대상 카페를 선택합니다.";
-            el.adminCafeControls.style.display = "grid";
-            el.operatorCafeCard.style.display = "none";
-            return;
-          }
-
-          el.cafeSectionTitle.textContent = "운영 카페";
-          el.cafeSectionDescription.textContent = "카페 운영자는 본인이 운영 중인 카페만 관리할 수 있습니다.";
-          el.adminCafeControls.style.display = "none";
-          el.operatorCafeCard.style.display = "";
-          el.operatorCafeName.textContent = selectedCafe ? selectedCafe.name : "운영 카페 없음";
-          el.operatorCafeMeta.textContent = selectedCafe
-            ? (selectedCafe.regionLabel || "지역 정보 없음")
-            : "운영자 권한으로 연결된 카페가 없습니다.";
-          el.operatorCafeSwitchField.style.display = state.cafes.length > 1 ? "" : "none";
-          el.operatorCafeSelect.innerHTML = state.cafes.map(function (cafe) {
-            const label = cafe.regionLabel ? cafe.name + " · " + cafe.regionLabel : cafe.name;
-            return '<option value="' + escapeHtml(cafe.id) + '">' + escapeHtml(label) + "</option>";
-          }).join("");
-          el.operatorCafeSelect.value = state.selectedCafeId;
-        }
-
-        function renderCafeOptions() {
-          renderCafeAccessView();
-          const currentValue = state.selectedCafeId;
-          el.cafeSelect.innerHTML =
-            '<option value="">카페를 선택하세요</option>' +
-            state.filteredCafes.map(function (cafe) {
-              const label = cafe.regionLabel ? cafe.name + " · " + cafe.regionLabel : cafe.name;
-              return '<option value="' + escapeHtml(cafe.id) + '">' + escapeHtml(label) + "</option>";
-            }).join("");
-          if (currentValue && state.filteredCafes.some(function (item) { return item.id === currentValue; })) {
-            el.cafeSelect.value = currentValue;
-          }
-          renderCafeAccessView();
-        }
-
-        function filterCafes() {
-          const query = el.cafeSearch.value.trim().toLowerCase();
-          state.filteredCafes = !query
-            ? state.cafes.slice()
-            : state.cafes.filter(function (cafe) {
-                return [cafe.name, cafe.regionLabel].join(" ").toLowerCase().includes(query);
-              });
-          renderCafeOptions();
-        }
-
-        function renderCastOptions() {
-          el.scheduleCast.innerHTML =
-            '<option value="">캐스트를 선택하세요</option>' +
-            state.casts.map(function (cast) {
-              return '<option value="' + escapeHtml(cast.id) + '">' +
-                escapeHtml(cast.name + " · " + cast.conceptRole) + "</option>";
-            }).join("");
-        }
-
-        function renderCastList() {
-          if (!state.casts.length) {
-            el.castList.innerHTML = "";
-            el.castEmptyState.style.display = "block";
-            return;
-          }
-          el.castEmptyState.style.display = "none";
-          el.castList.innerHTML = state.casts.map(function (cast) {
-            const birthday = cast.birthday ? '<span class="chip neutral">생일 ' + escapeHtml(cast.birthday) + "</span>" : "";
-            const linked = cast.linkedUserId ? '<span class="chip warning">연결된 계정 있음</span>' : '<span class="chip success">미연결</span>';
-            const intro = cast.desc ? '<p class="small" style="margin-top:8px;">' + escapeHtml(cast.desc) + "</p>" : "";
-            const image = cast.profileImage
-              ? '<div class="item-image"><img src="' + escapeHtml(cast.profileImage) + '" alt="' + escapeHtml(cast.name) + ' 이미지" loading="lazy" /></div>'
-              : '<div class="item-image"><div class="item-image-placeholder">이미지 없음</div></div>';
-            return '<article class="list-item"><div class="item-head"><div class="item-main">' +
-              image +
-              '<div><h3 class="item-title">' +
-              escapeHtml(cast.name) +
-              '</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">' +
-              escapeHtml(cast.conceptRole) +
-              "</span>" + birthday + linked + "</div>" + intro +
-              '</div></div><span class="chip neutral small">' +
-              escapeHtml(cast.createdVia || "서비스") +
-              "</span></div></article>";
-          }).join("");
-        }
-
-        function renderWeekdayChips(castId) {
-          const labels = ["월", "화", "수", "목", "금", "토", "일"];
-          const dateByDay = {};
-          const weekStart = startOfCurrentWeek();
-          const weekEnd = endOfCurrentWeek();
-          state.schedules.forEach(function (schedule) {
-            if (schedule.castId !== castId || !schedule.date) {
-              return;
-            }
-            const parsed = new Date(schedule.date + "T00:00:00");
-            if (Number.isNaN(parsed.getTime())) {
-              return;
-            }
-            if (parsed < weekStart || parsed > weekEnd) {
-              return;
-            }
-            const jsDay = parsed.getDay();
-            const index = jsDay === 0 ? 6 : jsDay - 1;
-            dateByDay[index] = schedule;
-          });
-
-          return '<div class="weekday-row">' + labels.map(function (label, index) {
-            const schedule = dateByDay[index];
-            if (!schedule) {
-              return '<span class="weekday-chip">' + label + '</span>';
-            }
-            const statusClass = schedule.status === "WORK"
-              ? " work"
-              : schedule.status === "VACATION"
-                ? " vacation"
-                : " off";
-            const title = schedule.status === "WORK" && schedule.startTime && schedule.endTime
-              ? schedule.date + " " + schedule.startTime + " - " + schedule.endTime
-              : schedule.date + " " + (schedule.status === "VACATION" ? "휴가" : "휴무");
-            return '<span class="weekday-chip' + statusClass + '" title="' + escapeHtml(title) + '">' + label + '</span>';
-          }).join("") + '</div>';
-        }
-
-        function renderScheduleList() {
-          if (!state.casts.length) {
-            el.scheduleList.innerHTML = "";
-            el.scheduleEmptyState.style.display = "block";
-            return;
-          }
-          el.scheduleEmptyState.style.display = "none";
-          el.scheduleList.innerHTML = state.casts.map(function (cast) {
-            const weekdays = renderWeekdayChips(cast.id);
-            const workCount = state.schedules.filter(function (schedule) {
-              return schedule.castId === cast.id && schedule.status === "WORK";
-            }).length;
-            return '<article class="list-item schedule-card"><div class="schedule-card-head"><div><h3 class="item-title">' +
-              escapeHtml(cast.name) +
-              '</h3><div class="chip-row" style="margin-top:8px;"><span class="chip">' +
-              escapeHtml(cast.conceptRole) +
-              "</span></div></div>" +
-              '<span class="chip neutral small">등록 ' + workCount + "건</span></div>" +
-              weekdays +
-              '<p class="schedule-summary">이번 주 기준: 분홍색은 근무, 회색은 휴무, 노란색은 휴가입니다.</p>' +
-              "</article>";
-          }).join("");
-        }
-
-        function toggleScheduleTimeFields() {
-          const isWork = el.scheduleStatus.value === "WORK";
-          el.startTimeField.style.display = isWork ? "" : "none";
-          el.endTimeField.style.display = isWork ? "" : "none";
-          el.scheduleStartTime.required = isWork;
-          el.scheduleEndTime.required = isWork;
-        }
-
-        function setInteractionAvailability() {
-          renderCafeAccessView();
-          const enabled = isSelectedCafeManageable();
-          el.castSubmitButton.disabled = !enabled;
-          el.scheduleSubmitButton.disabled = !enabled || !state.casts.length;
-          el.cafeSearch.disabled = !isSessionReady() || !isAdmin();
-          el.cafeSelect.disabled = !isSessionReady() || !isAdmin();
-          el.operatorCafeSelect.disabled = !isSessionReady() || isAdmin() || state.cafes.length < 2;
-          el.refreshCastsButton.disabled = !enabled;
-          el.refreshSchedulesButton.disabled = !enabled;
-
-          if (!isSessionReady()) {
-            setHint(el.castFormStatus, "로그인 후 사용할 수 있습니다.");
-            setHint(el.scheduleFormStatus, "로그인 후 사용할 수 있습니다.");
-          } else if (!state.selectedCafeId) {
-            setHint(el.castFormStatus, isAdmin() ? "카페를 먼저 선택하세요." : "운영 중인 카페가 없습니다.");
-            setHint(el.scheduleFormStatus, isAdmin() ? "카페와 캐스트를 먼저 선택하세요." : "운영 중인 카페가 없습니다.");
-          } else if (!isSelectedCafeManageable()) {
-            setHint(el.castFormStatus, "이 카페를 관리할 권한이 없습니다.");
-            setHint(el.scheduleFormStatus, "이 카페를 관리할 권한이 없습니다.");
-          } else if (!state.casts.length) {
-            setHint(el.castFormStatus, "");
-            setHint(el.scheduleFormStatus, "스케줄 등록 전에 캐스트를 먼저 저장하세요.");
-          } else {
-            setHint(el.castFormStatus, "");
-            setHint(el.scheduleFormStatus, "");
-          }
-        }
-
-        async function resolveSessionRole(user) {
-          const doc = await db.collection("users").doc(user.uid).get();
-          if (!doc.exists) {
-            throw new Error("users 문서가 없습니다.");
-          }
-          const data = doc.data() || {};
-          const role = typeof data.role === "string" ? data.role : "";
-          if (ALLOWED_ROLES.indexOf(role) < 0) {
-            throw new Error("카페 운영자 또는 관리자만 사용할 수 있습니다.");
-          }
-          state.user = user;
-          state.userRole = role;
-          state.ownedCafeIds = toStringArray(data.ownedCafeIds);
-        }
-
-        async function ensureOperatorSession(user) {
-          if (!user) {
-            state.user = null;
-            state.userRole = "";
-            state.ownedCafeIds = [];
-            return;
-          }
-          await resolveSessionRole(user);
-        }
-
-        async function loadCafes() {
-          if (!isSessionReady()) {
-            state.cafes = [];
-            state.filteredCafes = [];
-            state.selectedCafeId = "";
-            renderCafeOptions();
-            updateSummary();
-            hideBanner("cafeStatus");
-            return;
-          }
-
-          setBanner("cafeStatus", "info", "카페 목록을 불러오는 중입니다.");
-          try {
-            state.casts = [];
-            state.schedules = [];
-            renderCastOptions();
-            renderCastList();
-            renderScheduleList();
-            const snapshot = await db.collection("cafes").get();
-            const cafes = snapshot.docs.map(function (doc) {
-              const data = doc.data() || {};
-              const ownerIds = toStringArray(data.ownerIds);
-              return {
-                id: doc.id,
-                name: normalizeText(data.name, "이름 없는 카페"),
-                regionLabel: normalizeRegionLabel(data.region),
-                ownerIds: ownerIds,
-              };
-            }).sort(function (a, b) {
-              return a.name.localeCompare(b.name, "ko");
-            });
-
-            state.cafes = isAdmin()
-              ? cafes
-              : cafes.filter(function (cafe) {
-                  return state.ownedCafeIds.indexOf(cafe.id) >= 0 ||
-                    cafe.ownerIds.indexOf(state.user.uid) >= 0;
-                });
-            state.filteredCafes = state.cafes.slice();
-            if (!isAdmin()) {
-              state.selectedCafeId = state.cafes.length ? state.cafes[0].id : "";
-            } else if (state.selectedCafeId && !state.cafes.some(function (cafe) { return cafe.id === state.selectedCafeId; })) {
-              state.selectedCafeId = "";
-            }
-            renderCafeOptions();
-            updateSummary();
-            setInteractionAvailability();
-            if (!state.cafes.length) {
-              setBanner("cafeStatus", "info", isAdmin() ? "등록된 카페가 없습니다." : "운영 권한이 연결된 카페가 없습니다.");
-              return;
-            }
-            hideBanner("cafeStatus");
-            if (state.selectedCafeId) {
-              await loadCafeData();
-            }
-          } catch (error) {
-            setBanner("cafeStatus", "error", "카페 목록을 불러오지 못했습니다.");
-            console.error(error);
-          }
-        }
-
-        async function loadCafeData() {
-          if (!state.selectedCafeId) {
-            state.casts = [];
-            state.schedules = [];
-            renderCastOptions();
-            renderCastList();
-            renderScheduleList();
-            updateSummary();
-            setInteractionAvailability();
-            return;
-          }
-
-          setBanner("cafeStatus", "info", "선택한 카페의 실제 캐스트와 스케줄을 불러오는 중입니다.");
-          try {
-            const castRef = db.collection("cafes").doc(state.selectedCafeId).collection("casts");
-            const results = await Promise.all([
-              castRef.get(),
-              db.collection("castSchedules").where("cafeId", "==", state.selectedCafeId).get(),
-            ]);
-
-            const castNameById = {};
-            state.casts = results[0].docs.map(function (doc) {
-              const data = doc.data() || {};
-              const castName = normalizeText(data.name, "이름 없음");
-              castNameById[doc.id] = castName;
-              return {
-                id: doc.id,
-                name: castName,
-                conceptRole: normalizeText(data.conceptRole, "역할 없음"),
-                birthday: normalizeText(data.birthday, ""),
-                desc: normalizeText(data.desc, ""),
-                linkedUserId: normalizeText(data.linkedUserId, ""),
-                profileImage: normalizeText(data.profileImage, ""),
-                createdVia: normalizeText(data.createdVia, ""),
-              };
-            }).sort(function (a, b) {
-              return a.name.localeCompare(b.name, "ko");
-            });
-
-            state.schedules = results[1].docs.map(function (doc) {
-              const data = doc.data() || {};
-              return {
-                id: doc.id,
-                cafeId: normalizeText(data.cafeId, ""),
-                castId: normalizeText(data.castId, ""),
-                castName: castNameById[data.castId] || normalizeText(data.castName, "이름 없음"),
-                date: normalizeText(data.date, ""),
-                status: normalizeText(data.status, "OFF"),
-                startTime: normalizeText(data.startTime, ""),
-                endTime: normalizeText(data.endTime, ""),
-                memo: normalizeText(data.memo, ""),
-                createdAt: data.createdAt || "",
-                updatedAt: data.updatedAt || "",
-                createdVia: normalizeText(data.createdVia, ""),
-              };
-            }).sort(function (a, b) {
-              if (String(a.date) === String(b.date)) {
-                return String(a.castName).localeCompare(String(b.castName), "ko");
-              }
-              return String(a.date).localeCompare(String(b.date));
-            });
-
-            renderCastOptions();
-            renderCastList();
-            renderScheduleList();
-            updateSummary();
-            setInteractionAvailability();
-            hideBanner("cafeStatus");
-          } catch (error) {
-            setBanner("cafeStatus", "error", "캐스트 또는 스케줄을 불러오지 못했습니다.");
-            console.error(error);
-          }
-        }
-
-        async function handleCastSubmit(event) {
-          event.preventDefault();
-          if (!isSessionReady()) {
-            setBanner(el.castFormStatus, "error", "로그인 후 다시 시도하세요.");
-            return;
-          }
-          if (!state.selectedCafeId) {
-            setBanner(el.castFormStatus, "error", "카페를 먼저 선택하세요.");
-            return;
-          }
-          if (!isSelectedCafeManageable()) {
-            setBanner(el.castFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
-            return;
-          }
-
-          const name = el.castName.value.trim();
-          const conceptRole = el.castRole.value.trim();
-          const birthday = el.castBirthday.value.trim();
-          const profileImage = el.castProfileImage.value.trim();
-          const introduction = el.castIntroduction.value.trim();
-
-          if (!name || !conceptRole) {
-            setBanner(el.castFormStatus, "error", "캐스트 이름과 역할을 입력하세요.");
-            return;
-          }
-
-          el.castSubmitButton.disabled = true;
-          setBanner(el.castFormStatus, "info", "실제 서비스 캐스트를 등록하는 중입니다.");
-
-          try {
-            const now = nowIso();
-            const docRef = db.collection("cafes").doc(state.selectedCafeId).collection("casts").doc(buildCastDocumentId());
-            await docRef.set({
-              name: name,
-              linkedUserId: null,
-              profileImage: profileImage || null,
-              desc: introduction,
-              birthday: birthday || null,
-              birthdayKey: toBirthdayKey(birthday),
-              conceptRole: conceptRole,
-              followerCount: 0,
-              rating: 0,
-              visitCertificationCount: 0,
-              galleryImages: [],
-              createdVia: "TEMP_WEB",
-              source: "TEMP_WEB",
-              createdBy: state.user.uid,
-              createdAt: now,
-              updatedAt: now,
-            });
-
-            el.castForm.reset();
-            setBanner(el.castFormStatus, "success", "실제 서비스 캐스트를 등록했습니다.");
-            await loadCafeData();
-          } catch (error) {
-            setBanner(el.castFormStatus, "error", "캐스트 등록에 실패했습니다.");
-            console.error(error);
-          } finally {
-            el.castSubmitButton.disabled = false;
-          }
-        }
-
-        function findExistingSchedule(castId, date) {
+        function findSchedule(castId, date) {
           return state.schedules.find(function (item) {
             return item.castId === castId && item.date === date;
           }) || null;
         }
 
-        async function handleScheduleSubmit(event) {
+        // ---------- 카페 / 권한 ----------
+
+        function renderCafe() {
+          const cafe = state.cafe;
+          if (!cafe) {
+            return;
+          }
+          document.title = "캐스트 스케줄 등록 · " + cafe.name + " · 콘카";
+          el.cafeThumb.innerHTML = A.cafeThumbHtml(cafe);
+          el.cafeSub.textContent = [cafe.name, cafe.address].filter(Boolean).join(" · ");
+          el.breadcrumbCafeLink.textContent = cafe.name;
+          el.breadcrumbCafeLink.href = cafeUrl();
+          el.castNewLink.href = "/cast-new?cafeId=" + encodeURIComponent(cafeId);
+        }
+
+        function updateAvailability() {
+          const ready = state.canManage && state.loaded;
+          el.scheduleSubmitButton.disabled = !ready || state.saving || !state.casts.length;
+          el.castNewLink.hidden = !state.canManage;
+          renderFormNote();
+        }
+
+        // ---------- 입력 폼 ----------
+
+        function setStatus(status) {
+          state.status = status;
+          Array.prototype.forEach.call(el.scheduleStatus.querySelectorAll("[data-status]"), function (button) {
+            const active = button.getAttribute("data-status") === status;
+            button.classList.toggle("is-active", active);
+            button.setAttribute("aria-checked", active ? "true" : "false");
+          });
+          el.timeField.hidden = status !== "WORK";
+        }
+
+        function renderCastOptions() {
+          const current = el.scheduleCast.value;
+          el.scheduleCast.innerHTML = '<option value="">캐스트를 선택하세요</option>' + state.casts.map(function (cast) {
+            const role = cast.conceptRole ? A.castRoleLabel(cast.conceptRole) : "";
+            return '<option value="' + escapeHtml(cast.id) + '">' + escapeHtml(cast.name + (role ? " · " + role : "")) + "</option>";
+          }).join("");
+          if (state.casts.some(function (cast) { return cast.id === current; })) {
+            el.scheduleCast.value = current;
+          }
+        }
+
+        // 고른 캐스트·날짜에 이미 스케줄이 있으면 폼에 불러오고 안내한다
+        function syncFormWithExisting() {
+          const existing = el.scheduleCast.value && el.scheduleDate.value
+            ? findSchedule(el.scheduleCast.value, el.scheduleDate.value)
+            : null;
+          if (existing) {
+            setStatus(existing.status in STATUS_LABELS ? existing.status : "OFF");
+            if (existing.startTime) el.scheduleStartTime.value = existing.startTime;
+            if (existing.endTime) el.scheduleEndTime.value = existing.endTime;
+            el.scheduleMemo.value = existing.memo;
+          }
+          renderFormNote();
+          renderBoard();
+        }
+
+        function renderFormNote() {
+          let message = "";
+          let locked = false;
+          if (!state.canManage) {
+            message = "";
+          } else if (state.loaded && !state.casts.length) {
+            message = "등록된 캐스트가 없습니다. 캐스트를 먼저 등록하세요.";
+          } else if (el.scheduleCast.value && el.scheduleDate.value) {
+            const existing = findSchedule(el.scheduleCast.value, el.scheduleDate.value);
+            if (existing && existing.createdVia !== EDITABLE_SOURCE) {
+              message = "출근표 등록 등으로 만든 공식 스케줄이라 여기서는 수정할 수 없습니다.";
+              locked = true;
+            } else if (existing) {
+              message = "이미 등록된 스케줄입니다. 저장하면 내용이 바뀝니다.";
+            }
+          }
+          el.scheduleFormNote.textContent = message;
+          el.scheduleFormNote.hidden = !message;
+          el.scheduleFormNote.classList.toggle("is-locked", locked);
+          if (locked) {
+            el.scheduleSubmitButton.disabled = true;
+          } else {
+            el.scheduleSubmitButton.disabled = !(state.canManage && state.loaded) || state.saving || !state.casts.length;
+          }
+          el.scheduleSubmitButton.textContent = message.indexOf("이미 등록된") === 0 ? "스케줄 수정" : "스케줄 저장";
+        }
+
+        function resetForm() {
+          el.scheduleMemo.value = "";
+          setStatus("WORK");
+          renderFormNote();
+          renderBoard();
+        }
+
+        async function handleSubmit(event) {
           event.preventDefault();
-          if (!isSessionReady()) {
-            setBanner(el.scheduleFormStatus, "error", "로그인 후 다시 시도하세요.");
+          if (!state.canManage || state.saving) {
             return;
           }
-          if (!state.selectedCafeId) {
-            setBanner(el.scheduleFormStatus, "error", "카페를 먼저 선택하세요.");
-            return;
-          }
-          if (!isSelectedCafeManageable()) {
-            setBanner(el.scheduleFormStatus, "error", "이 카페를 관리할 권한이 없습니다.");
-            return;
-          }
-
-          const cast = getSelectedCast();
-          if (!cast) {
-            setBanner(el.scheduleFormStatus, "error", "캐스트를 선택하세요.");
-            return;
-          }
-
-          const date = el.scheduleDate.value.trim();
-          const status = el.scheduleStatus.value;
+          const cast = state.casts.find(function (item) { return item.id === el.scheduleCast.value; });
+          const date = el.scheduleDate.value;
+          const status = state.status;
+          const startTime = el.scheduleStartTime.value;
+          const endTime = el.scheduleEndTime.value;
           const memo = el.scheduleMemo.value.trim();
-          const startTime = el.scheduleStartTime.value.trim();
-          const endTime = el.scheduleEndTime.value.trim();
+          const fail = function (message, field) {
+            window.ConcafeToast.show("error", message, { key: "scheduleForm" });
+            if (field) field.focus();
+          };
+          if (!cast) return fail("캐스트를 선택하세요.", el.scheduleCast);
+          if (!date) return fail("날짜를 선택하세요.", el.scheduleDate);
+          if (status === "WORK" && (!startTime || !endTime)) return fail("근무 시작·종료 시간을 입력하세요.", startTime ? el.scheduleEndTime : el.scheduleStartTime);
 
-          if (!date) {
-            setBanner(el.scheduleFormStatus, "error", "근무 날짜를 선택하세요.");
-            return;
-          }
-          if (status === "WORK" && (!startTime || !endTime)) {
-            setBanner(el.scheduleFormStatus, "error", "근무 상태일 때는 시작 시간과 종료 시간이 필요합니다.");
-            return;
-          }
-
-          const existing = findExistingSchedule(cast.id, date);
-          if (existing && existing.createdVia !== "TEMP_WEB") {
-            setBanner(el.scheduleFormStatus, "error", "같은 날짜에 공식 스케줄이 이미 있어 이 페이지에서는 수정할 수 없습니다.");
-            return;
+          const existing = findSchedule(cast.id, date);
+          if (existing && existing.createdVia !== EDITABLE_SOURCE) {
+            return fail("출근표 등록 등으로 만든 공식 스케줄은 여기서 수정할 수 없습니다.");
           }
 
-          el.scheduleSubmitButton.disabled = true;
-          setBanner(el.scheduleFormStatus, "info", "실제 서비스 스케줄을 저장하는 중입니다.");
-
+          state.saving = true;
+          updateAvailability();
+          window.ConcafeToast.show("loading", "스케줄을 저장하는 중입니다.", { key: "scheduleForm" });
           try {
-            const now = nowIso();
-            const docRef = existing
-              ? db.collection("castSchedules").doc(existing.id)
-              : db.collection("castSchedules").doc(buildScheduleDocumentId(cast.id, date));
-            await docRef.set({
-              cafeId: state.selectedCafeId,
+            const now = A.nowIso();
+            const docId = existing ? existing.id : cast.id + "_" + date;
+            await db.collection("castSchedules").doc(docId).set({
+              cafeId: cafeId,
               castId: cast.id,
               castName: cast.name,
               date: date,
@@ -1631,152 +340,183 @@
               startTime: status === "WORK" ? startTime : null,
               endTime: status === "WORK" ? endTime : null,
               memo: memo || null,
-              createdVia: "TEMP_WEB",
-              source: "TEMP_WEB",
+              createdVia: EDITABLE_SOURCE,
+              source: EDITABLE_SOURCE,
               createdBy: state.user.uid,
               createdAt: existing && existing.createdAt ? existing.createdAt : now,
               updatedAt: now,
-            }, { merge: false });
-
-            el.scheduleForm.reset();
-            el.scheduleStatus.value = "WORK";
-            toggleScheduleTimeFields();
-            setBanner(el.scheduleFormStatus, "success", existing ? "기존 TEMP_WEB 스케줄을 수정했습니다." : "실제 서비스 스케줄을 등록했습니다.");
-            await loadCafeData();
-          } catch (error) {
-            setBanner(el.scheduleFormStatus, "error", "스케줄 저장에 실패했습니다.");
-            console.error(error);
-          } finally {
-            el.scheduleSubmitButton.disabled = false;
-          }
-        }
-
-        async function boot() {
-          var googleProvider = new firebase.auth.GoogleAuthProvider();
-          var authUserInfo = document.getElementById("authUserInfo");
-          var authUserPhoto = document.getElementById("authUserPhoto");
-          var authUserName = document.getElementById("authUserName");
-          var signInBtn = document.getElementById("signInBtn");
-          var signOutBtnEl = document.getElementById("signOutBtn");
-          var authModal = document.getElementById("authModal");
-          var authModalClose = document.getElementById("authModalClose");
-          var emailLoginForm = document.getElementById("emailLoginForm");
-          var emailLoginError = document.getElementById("emailLoginError");
-          var googleSignInModalBtn = document.getElementById("googleSignInModalBtn");
-
-          function openAuthModal() { authModal.classList.add("is-open"); }
-          function closeAuthModal() {
-            authModal.classList.remove("is-open");
-            emailLoginError.style.display = "none";
-            emailLoginForm.reset();
-          }
-
-          // Auth state: widget UI + role check
-          auth.onAuthStateChanged(async function (user) {
-            if (user) {
-              if (authUserPhoto) { authUserPhoto.src = user.photoURL || ""; authUserPhoto.style.display = user.photoURL ? "" : "none"; }
-              if (authUserName) authUserName.textContent = user.displayName || user.email || "사용자";
-              if (authUserInfo) authUserInfo.style.display = "flex";
-              if (signInBtn) signInBtn.style.display = "none";
-              closeAuthModal();
-              setAuthBanner("info", "권한을 확인하는 중입니다.");
-              try {
-                await ensureOperatorSession(user);
-                // 접속 성공은 헤더의 계정 표시로 충분하므로 알림을 띄우지 않는다
-                hideBanner("authStatus");
-                await loadCafes();
-              } catch (error) {
-                state.user = null;
-                state.userRole = "";
-                state.ownedCafeIds = [];
-                state.selectedCafeId = "";
-                state.cafes = [];
-                state.filteredCafes = [];
-                state.casts = [];
-                state.schedules = [];
-                renderCafeOptions();
-                renderCastOptions();
-                renderCastList();
-                renderScheduleList();
-                updateSummary();
-                setAuthBanner("error", error.message || "이 페이지를 사용할 권한이 없습니다.");
-              }
-            } else {
-              state.user = null;
-              state.userRole = "";
-              state.ownedCafeIds = [];
-              state.selectedCafeId = "";
-              state.cafes = [];
-              state.filteredCafes = [];
-              state.casts = [];
-              state.schedules = [];
-              renderCafeOptions();
-              renderCastOptions();
-              renderCastList();
-              renderScheduleList();
-              updateSummary();
-              if (authUserInfo) authUserInfo.style.display = "none";
-              if (signInBtn) signInBtn.style.display = "";
-              window.ConcafeToast.show("info", "로그인이 필요합니다.", {
-                key: "authStatus",
-                duration: 8000,
-                action: { label: "로그인", onClick: openAuthModal },
-              });
+            });
+            window.ConcafeToast.show("success",
+              cast.name + " · " + date + " " + STATUS_LABELS[status] + " 스케줄을 " + (existing ? "수정" : "저장") + "했습니다.",
+              { key: "scheduleForm" });
+            await loadSchedules();
+            // 같은 캐스트의 다음 날을 이어서 입력할 수 있게 날짜만 하루 넘긴다 (시간은 유지)
+            const next = new Date(date + "T00:00:00");
+            next.setDate(next.getDate() + 1);
+            el.scheduleDate.value = dateKey(next);
+            el.scheduleMemo.value = "";
+            if (next >= addDays(state.weekStart, 7)) {
+              state.weekStart = startOfWeek(next);
             }
-            setInteractionAvailability();
-          });
-
-          if (signInBtn) signInBtn.addEventListener("click", openAuthModal);
-          if (authModalClose) authModalClose.addEventListener("click", closeAuthModal);
-          if (authModal) {
-            authModal.addEventListener("click", function (e) { if (e.target === authModal) closeAuthModal(); });
+            syncFormWithExisting();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "스케줄을 저장하지 못했습니다. 잠시 후 다시 시도하세요.", { key: "scheduleForm" });
+          } finally {
+            state.saving = false;
+            updateAvailability();
           }
-          document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAuthModal(); });
-
-          if (emailLoginForm) emailLoginForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            var email = document.getElementById("loginEmail").value.trim();
-            var password = document.getElementById("loginPassword").value;
-            emailLoginError.style.display = "none";
-            auth.signInWithEmailAndPassword(email, password).catch(function (err) {
-              emailLoginError.textContent = err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found"
-                ? "이메일 또는 비밀번호가 올바르지 않습니다."
-                : "로그인에 실패했습니다: " + err.message;
-              emailLoginError.style.display = "block";
-            });
-          });
-          if (googleSignInModalBtn) googleSignInModalBtn.addEventListener("click", function () {
-            auth.signInWithPopup(googleProvider).catch(function (err) {
-              emailLoginError.textContent = "Google 로그인 실패: " + err.message;
-              emailLoginError.style.display = "block";
-            });
-          });
-          if (signOutBtnEl) signOutBtnEl.addEventListener("click", function () {
-            auth.signOut().then(function () { window.location.reload(); });
-          });
-
-          el.cafeSearch.addEventListener("input", filterCafes);
-          el.cafeSelect.addEventListener("change", function () {
-            state.selectedCafeId = el.cafeSelect.value;
-            updateSummary();
-            loadCafeData();
-          });
-          el.operatorCafeSelect.addEventListener("change", function () {
-            state.selectedCafeId = el.operatorCafeSelect.value;
-            updateSummary();
-            renderCafeAccessView();
-            loadCafeData();
-          });
-          el.castForm.addEventListener("submit", handleCastSubmit);
-          el.scheduleForm.addEventListener("submit", handleScheduleSubmit);
-          el.scheduleStatus.addEventListener("change", toggleScheduleTimeFields);
-          el.refreshCastsButton.addEventListener("click", loadCafeData);
-          el.refreshSchedulesButton.addEventListener("click", loadCafeData);
-          toggleScheduleTimeFields();
-          setInteractionAvailability();
         }
 
-        boot();
+        // ---------- 주간 등록 현황 ----------
+
+        function renderBoard() {
+          const days = WEEKDAYS.map(function (_, index) { return addDays(state.weekStart, index); });
+          const end = days[6];
+          el.weekLabel.textContent = (state.weekStart.getMonth() + 1) + "/" + state.weekStart.getDate() + " - " +
+            (end.getMonth() + 1) + "/" + end.getDate();
+
+          if (!state.casts.length) {
+            el.weekBoard.innerHTML = "";
+            el.boardEmptyState.hidden = false;
+            el.boardEmptyState.textContent = !state.canManage ? "운영 권한을 확인하면 표시됩니다."
+              : !state.loaded ? "캐스트를 불러오는 중입니다."
+              : "등록된 캐스트가 없습니다. 캐스트를 먼저 등록하세요.";
+            el.boardFootNote.textContent = "";
+            return;
+          }
+          el.boardEmptyState.hidden = true;
+
+          const todayKey = dateKey(new Date());
+          const selectedCast = el.scheduleCast.value;
+          const selectedDate = el.scheduleDate.value;
+          let filled = 0;
+          const head = "<thead><tr><th scope=\"col\" class=\"reg-board-cast\">캐스트</th>" + days.map(function (date, index) {
+            const key = dateKey(date);
+            const classes = [key === todayKey ? "is-today" : "", index === 5 ? "is-sat" : index === 6 ? "is-sun" : ""].join(" ").trim();
+            return '<th scope="col"' + (classes ? ' class="' + classes + '"' : "") + ">" + WEEKDAYS[index] +
+              '<span class="reg-board-date">' + (date.getMonth() + 1) + "/" + date.getDate() + "</span></th>";
+          }).join("") + "</tr></thead>";
+          const body = "<tbody>" + state.casts.map(function (cast) {
+            return "<tr><th scope=\"row\" class=\"reg-board-cast\">" + escapeHtml(cast.name) + "</th>" + days.map(function (date) {
+              const key = dateKey(date);
+              const item = findSchedule(cast.id, key);
+              if (item) filled += 1;
+              const selected = cast.id === selectedCast && key === selectedDate;
+              const content = item
+                ? '<span class="reg-status ' + item.status.toLowerCase() + '">' + escapeHtml(STATUS_LABELS[item.status] || item.status) +
+                  (item.status === "WORK" && item.startTime ? "<small>" + escapeHtml(item.startTime + (item.endTime ? "-" + item.endTime : "")) + "</small>" : "") +
+                  "</span>"
+                : '<span class="reg-empty">+</span>';
+              return '<td><button class="reg-cell' + (selected ? " is-selected" : "") + (item && item.createdVia !== EDITABLE_SOURCE ? " is-official" : "") +
+                '" type="button" data-cast-id="' + escapeHtml(cast.id) + '" data-date="' + key + '" aria-label="' +
+                escapeHtml(cast.name + " " + key + " " + (item ? STATUS_LABELS[item.status] || item.status : "미등록")) + '">' + content + "</button></td>";
+            }).join("") + "</tr>";
+          }).join("") + "</tbody>";
+          el.weekBoard.innerHTML = head + body;
+          el.boardFootNote.textContent = "이번 표에 등록된 스케줄 " + filled + "건 · 테두리가 점선인 칸은 출근표 등록으로 만든 공식 스케줄입니다.";
+        }
+
+        // ---------- 불러오기 ----------
+
+        async function loadSchedules() {
+          const snapshot = await db.collection("castSchedules").where("cafeId", "==", cafeId).get();
+          state.schedules = snapshot.docs.map(function (doc) {
+            const data = doc.data() || {};
+            return {
+              id: doc.id,
+              castId: normalizeText(data.castId, ""),
+              date: normalizeText(data.date, ""),
+              status: normalizeText(data.status, "OFF"),
+              startTime: normalizeText(data.startTime, ""),
+              endTime: normalizeText(data.endTime, ""),
+              memo: normalizeText(data.memo, ""),
+              createdVia: normalizeText(data.createdVia, ""),
+              createdAt: data.createdAt || "",
+            };
+          });
+        }
+
+        async function loadData() {
+          try {
+            const results = await Promise.all([A.fetchCasts(cafeId), loadSchedules()]);
+            state.casts = results[0].filter(function (cast) { return !cast.inactive; });
+            state.loaded = true;
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "캐스트 또는 스케줄을 불러오지 못했습니다.");
+          }
+          renderCastOptions();
+          updateAvailability();
+          renderBoard();
+        }
+
+        // ---------- 이벤트 연결 ----------
+
+        el.scheduleStatus.addEventListener("click", function (e) {
+          const button = e.target.closest("[data-status]");
+          if (button) {
+            setStatus(button.getAttribute("data-status"));
+          }
+        });
+        el.scheduleCast.addEventListener("change", syncFormWithExisting);
+        el.scheduleDate.addEventListener("change", function () {
+          if (el.scheduleDate.value) {
+            const picked = new Date(el.scheduleDate.value + "T00:00:00");
+            if (!Number.isNaN(picked.getTime())) {
+              state.weekStart = startOfWeek(picked);
+            }
+          }
+          syncFormWithExisting();
+        });
+        el.scheduleForm.addEventListener("submit", handleSubmit);
+        el.scheduleResetButton.addEventListener("click", resetForm);
+        document.querySelectorAll("[data-week-move]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            state.weekStart = addDays(state.weekStart, Number(button.getAttribute("data-week-move")) * 7);
+            renderBoard();
+          });
+        });
+        el.weekTodayButton.addEventListener("click", function () {
+          state.weekStart = startOfWeek(new Date());
+          renderBoard();
+        });
+        el.weekBoard.addEventListener("click", function (e) {
+          const cell = e.target.closest("[data-cast-id]");
+          if (!cell) {
+            return;
+          }
+          el.scheduleCast.value = cell.getAttribute("data-cast-id");
+          el.scheduleDate.value = cell.getAttribute("data-date");
+          if (!findSchedule(el.scheduleCast.value, el.scheduleDate.value)) {
+            el.scheduleMemo.value = "";
+            setStatus("WORK");
+          }
+          syncFormWithExisting();
+          if (window.matchMedia("(max-width: 960px)").matches) {
+            el.scheduleForm.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+
+        el.scheduleDate.value = dateKey(new Date());
+        el.scheduleStartTime.value = "17:00";
+        el.scheduleEndTime.value = "23:00";
+        setStatus("WORK");
+        renderBoard();
+        renderFormNote();
+
+        A.initCafeOperatorSession(cafeId, function (session) {
+          state.user = session.user;
+          state.cafe = session.cafe;
+          state.canManage = session.canManage;
+          renderCafe();
+          updateAvailability();
+          if (session.canManage && !state.loaded) {
+            loadData();
+          } else {
+            renderBoard();
+          }
+        });
       })();
     </script>
     <script src="/assets/js/admin-nav.js"></script>

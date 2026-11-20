@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>메뉴/굿즈 등록 · 콘카 관리자</title>
-    <meta name="description" content="카페 메뉴와 굿즈를 등록하고 수정하는 관리자 페이지입니다." />
+    <title>메뉴/굿즈 등록 · 콘카</title>
+    <meta name="description" content="카페 메뉴와 굿즈를 등록하고 수정하는 카페 운영자·관리자용 페이지입니다." />
     <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
     <link rel="stylesheet" href="/assets/css/style.css" />
     <link rel="stylesheet" href="/assets/css/admin.css" />
@@ -18,19 +18,16 @@
     <div class="page-shell">
       <header class="topbar">
         <div class="topbar-inner">
-          <a class="brand" href="/">
+          <a class="brand" href="/cafes">
             <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
             <span class="brand-title" aria-label="콘셉카페">
               <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
             </span>
           </a>
           <div class="topbar-right">
-            <nav class="nav-links app-nav" aria-label="관리자 페이지 메뉴">
-              <a class="nav-link" href="/registration" data-nav-roles="ADMIN,CAFE_OWNER" style="display: none;">캐스트 스케줄 등록</a>
-              <a class="nav-link" href="/schedule">캐스트 스케줄 조회</a>
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
               <a class="nav-link" href="/cafes">카페 목록</a>
               <a class="nav-link" href="/map">메이드 카페 지도</a>
-              <a class="nav-link" id="adminNavLink" href="/admin" style="display: none;">관리자</a>
             </nav>
             <div class="auth-widget" id="authWidget">
               <div class="auth-user-info" id="authUserInfo" style="display:none;">
@@ -47,7 +44,7 @@
       <main class="container">
         <div class="page form-page">
           <nav class="breadcrumb" aria-label="위치">
-            <a href="/admin">카페 관리</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/admin">카페</a><span class="breadcrumb-sep">›</span><span id="breadcrumbPage">메뉴/굿즈 등록</span>
+            <a href="/cafes">카페 목록</a><span class="breadcrumb-sep">›</span><a id="breadcrumbCafeLink" href="/cafes">카페</a><span class="breadcrumb-sep">›</span><span id="breadcrumbPage">메뉴/굿즈 등록</span>
           </nav>
 
           <section class="surface section">
@@ -97,7 +94,7 @@
               </label>
               <div class="edit-form-actions">
                 <button class="button button-primary" id="menuSubmitButton" type="submit" disabled>등록</button>
-                <a class="button button-ghost" id="menuCancelLink" href="/admin">취소</a>
+                <a class="button button-ghost" id="menuCancelLink" href="/cafes">취소</a>
                 <button class="button button-danger" id="menuDeleteButton" type="button" hidden>삭제</button>
               </div>
             </form>
@@ -386,7 +383,10 @@
         el.menuDeleteButton.addEventListener("click", handleDelete);
 
         updateAvailability();
-        A.initAdminSession(handleSession);
+        // 관리자와 이 카페의 운영자가 쓸 수 있다 (서버 함수 requireCafeManager·Firestore 규칙 canManageCafe와 같은 기준)
+        A.initCafeOperatorSession(cafeId, function (session) {
+          handleSession({ user: session.canManage ? session.user : null, isAdmin: session.canManage });
+        });
       })();
     </script>
     <script src="/assets/js/admin-nav.js"></script>
