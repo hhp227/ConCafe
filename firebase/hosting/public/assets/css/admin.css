@@ -2071,3 +2071,8 @@ a.cast-card-link:focus-visible .cast-card-name {
 .filter-chip.is-empty:not(.is-active) {
   opacity: 0.5;
 }
+
+.filter-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

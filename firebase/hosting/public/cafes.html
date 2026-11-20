@@ -75,17 +75,7 @@
                 <p>국가와 도시를 고르고, 이름·주소 검색이나 컨셉으로 좁혀 볼 수 있습니다.</p>
               </div>
             </div>
-            <div class="region-filter">
-              <div class="filter-chips" id="countryFilter" role="radiogroup" aria-label="국가"></div>
-              <div class="filter-chips sub" id="cityFilter" role="radiogroup" aria-label="도시" hidden></div>
-              <p class="helper small" id="regionFilterNote"></p>
-            </div>
-            <div class="cafe-toolbar">
-              <input id="cafeSearch" type="search" placeholder="카페 이름 또는 주소로 검색" aria-label="카페 검색" />
-              <select id="cafeConceptFilter" aria-label="컨셉 필터">
-                <option value="">모든 컨셉</option>
-              </select>
-            </div>
+            <div id="cafeFilter"></div>
             <div class="cafe-grid" id="cafeGrid"></div>
             <p class="empty" id="cafeEmptyState">카페 목록을 불러오는 중입니다.</p>
           </section>
@@ -119,177 +109,31 @@
 
     <script src="/assets/js/toast.js"></script>
     <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/cafe-list-filter.js"></script>
     <script>
       (function () {
         const A = window.ConcafeAdmin;
         const escapeHtml = A.escapeHtml;
-        const SEARCH_KEY = "concafe.cafes.search";
-
-        const REGION_KEY = "concafe.cafes.region";
-        const COUNTRY_ORDER = ["KR", "JP"];
-
-        // country: "" = 전체, city: "" = 그 나라 전체
-        const state = { cafes: [], loaded: false, country: "", city: "", detectedCountry: "", regionChosen: false };
+        const state = { cafes: [], loaded: false };
         const el = {};
         [
-          "cafeCount", "filteredCount", "cafeSearch", "cafeConceptFilter", "cafeGrid", "cafeEmptyState",
-          "countryFilter", "cityFilter", "regionFilterNote",
+          "cafeCount", "filteredCount", "cafeFilter", "cafeGrid", "cafeEmptyState",
           "cafeModal", "cafeModalThumb", "cafeModalChips", "cafeModalTitle", "cafeModalInfo", "cafeModalGallery",
           "cafeModalScheduleLink", "cafeModalMapLink",
         ].forEach(function (id) { el[id] = document.getElementById(id); });
 
-        function regionText(cafe) {
-          return cafe.address || A.cityLabel(cafe.country, cafe.city) || "지역 정보 없음";
-        }
-
-        // ---------- 국가 / 도시 필터 ----------
-
-        // 접속자의 나라를 브라우저 시간대(우선)와 언어 설정으로 추정한다. 위치 권한은 묻지 않는다
-        function detectVisitorCountry() {
-          let timeZone = "";
-          try {
-            timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-          } catch (error) {
-            timeZone = "";
-          }
-          if (timeZone === "Asia/Seoul") return "KR";
-          if (timeZone === "Asia/Tokyo") return "JP";
-          const languages = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""]);
-          for (const language of languages) {
-            const code = String(language || "").toLowerCase();
-            if (code.indexOf("ko") === 0) return "KR";
-            if (code.indexOf("ja") === 0) return "JP";
-          }
-          return "";
-        }
-
-        function loadSavedRegion() {
-          try {
-            const saved = JSON.parse(sessionStorage.getItem(REGION_KEY) || "null");
-            if (saved && typeof saved.country === "string" && typeof saved.city === "string") {
-              return saved;
-            }
-          } catch (error) {
-            // 저장된 값이 없거나 읽을 수 없으면 접속 위치 기준으로 시작한다
-          }
-          return null;
-        }
-
-        function saveRegion() {
-          try {
-            sessionStorage.setItem(REGION_KEY, JSON.stringify({ country: state.country, city: state.city }));
-          } catch (error) {
-            // 무시
-          }
-        }
-
-        function countryLabel(country) {
-          return A.COUNTRY_LABELS[country] || country;
-        }
-
-        // 나라별 도시 목록: 미리 정한 도시(서울·부산·대구… / 도쿄·오사카·요코하마…) + 데이터에만 있는 도시, '기타'는 맨 뒤
-        function citiesOf(country) {
-          const known = (A.CITIES[country] || []).map(function (city) { return city[0]; });
-          const extra = [];
-          state.cafes.forEach(function (cafe) {
-            if (cafe.country === country && cafe.city && known.indexOf(cafe.city) < 0 && extra.indexOf(cafe.city) < 0) {
-              extra.push(cafe.city);
-            }
-          });
-          const ordered = known.filter(function (city) { return city !== "Etc"; }).concat(extra.sort());
-          return known.indexOf("Etc") >= 0 ? ordered.concat(["Etc"]) : ordered;
-        }
-
-        function countriesInData() {
-          const list = COUNTRY_ORDER.slice();
-          state.cafes.forEach(function (cafe) {
-            if (cafe.country && list.indexOf(cafe.country) < 0) {
-              list.push(cafe.country);
-            }
-          });
-          return list;
-        }
-
-        function chipHtml(attr, value, label, count, active) {
-          return '<button class="filter-chip' + (active ? " is-active" : "") + (count === 0 ? " is-empty" : "") +
-            '" type="button" role="radio" aria-checked="' + active + '" ' + attr + '="' + escapeHtml(value) + '">' +
-            escapeHtml(label) + ' <span class="chip-count">' + count + "</span></button>";
-        }
-
-        function renderRegionFilter() {
-          const countByCountry = {};
-          const countByCity = {};
-          state.cafes.forEach(function (cafe) {
-            countByCountry[cafe.country] = (countByCountry[cafe.country] || 0) + 1;
-            const cityKey = cafe.country + ":" + cafe.city;
-            countByCity[cityKey] = (countByCity[cityKey] || 0) + 1;
-          });
-          el.countryFilter.innerHTML = chipHtml("data-country", "", "전체", state.cafes.length, !state.country) +
-            countriesInData().map(function (country) {
-              return chipHtml("data-country", country, countryLabel(country), countByCountry[country] || 0, state.country === country);
-            }).join("");
-
-          el.cityFilter.hidden = !state.country;
-          if (state.country) {
-            el.cityFilter.innerHTML = chipHtml("data-city", "", countryLabel(state.country) + " 전체", countByCountry[state.country] || 0, !state.city) +
-              citiesOf(state.country).map(function (city) {
-                return chipHtml("data-city", city, A.cityLabel(state.country, city), countByCity[state.country + ":" + city] || 0, state.city === city);
-              }).join("");
-          }
-
-          el.regionFilterNote.textContent = !state.regionChosen && state.detectedCountry && state.country === state.detectedCountry
-            ? "접속한 지역에 맞춰 " + countryLabel(state.country) + " 카페를 먼저 보여줍니다. 다른 나라는 위에서 고를 수 있습니다."
-            : "";
-        }
-
-        function setCountry(country) {
-          state.country = country;
-          state.city = "";
-          state.regionChosen = true;
-          saveRegion();
-          renderRegionFilter();
-          renderCafeGrid();
-        }
-
-        function setCity(city) {
-          state.city = city;
-          state.regionChosen = true;
-          saveRegion();
-          renderRegionFilter();
-          renderCafeGrid();
-        }
-
-        // 저장된 선택 → 접속 위치 → 전체 순으로 시작 필터를 정한다 (해당 나라에 카페가 없으면 전체)
-        function initRegion() {
-          state.detectedCountry = detectVisitorCountry();
-          const saved = loadSavedRegion();
-          const hasCafes = function (country) {
-            return state.cafes.some(function (cafe) { return cafe.country === country; });
-          };
-          if (saved && (!saved.country || hasCafes(saved.country))) {
-            state.country = saved.country;
-            state.city = saved.country ? saved.city : "";
-            state.regionChosen = true;
-          } else if (state.detectedCountry && hasCafes(state.detectedCountry)) {
-            state.country = state.detectedCountry;
-            state.city = "";
-          } else {
-            state.country = "";
-            state.city = "";
-          }
-          renderRegionFilter();
-        }
+        const filter = window.ConcafeCafeList.createFilter({
+          mount: el.cafeFilter,
+          searchPlaceholder: "카페 이름 또는 주소로 검색",
+          searchStorageKey: "concafe.cafes.search",
+          regionStorageKey: "concafe.cafes.region",
+          detectCountry: true,
+          onChange: renderCafeGrid,
+        });
 
         // 관리자 카페 목록과 같은 카드 그리드를 쓴다 (승인된 카페만 노출)
         function renderCafeGrid() {
-          const keyword = el.cafeSearch.value.trim().toLowerCase();
-          const concept = el.cafeConceptFilter.value;
-          const filtered = state.cafes.filter(function (cafe) {
-            if (state.country && cafe.country !== state.country) return false;
-            if (state.city && cafe.city !== state.city) return false;
-            if (concept && cafe.conceptType !== concept) return false;
-            return !keyword || (cafe.name + " " + cafe.regionLabel).toLowerCase().indexOf(keyword) >= 0;
-          });
+          const filtered = filter.apply(state.cafes);
           el.cafeCount.textContent = String(state.cafes.length);
           el.filteredCount.textContent = String(filtered.length);
 
@@ -298,23 +142,12 @@
             el.cafeEmptyState.style.display = "";
             el.cafeEmptyState.textContent = !state.loaded ? "카페 목록을 불러오는 중입니다."
               : !state.cafes.length ? "등록된 카페가 없습니다."
-              : state.city ? A.cityLabel(state.country, state.city) + "에 조건에 맞는 카페가 없습니다."
-              : "검색 결과가 없습니다.";
+              : filter.emptyMessage();
             return;
           }
           el.cafeEmptyState.style.display = "none";
           el.cafeGrid.innerHTML = filtered.map(function (cafe) {
-            const thumb = cafe.thumbnailImage
-              ? '<img src="' + escapeHtml(cafe.thumbnailImage) + '" alt="" loading="lazy" />'
-              : escapeHtml(cafe.name.slice(0, 1));
-            const concept = A.conceptLabel(cafe.conceptType);
-            return '<a class="cafe-card" href="#cafe=' + encodeURIComponent(cafe.id) + '" data-cafe-id="' + escapeHtml(cafe.id) + '">' +
-              '<div class="cafe-card-thumb">' + thumb + "</div>" +
-              '<div class="cafe-card-body">' +
-              '<h3 class="cafe-card-name" title="' + escapeHtml(cafe.name) + '">' + escapeHtml(cafe.name) + "</h3>" +
-              '<p class="cafe-card-region">' + escapeHtml(regionText(cafe)) + "</p>" +
-              '<div class="chip-row">' + (concept ? '<span class="chip">' + escapeHtml(concept) + "</span>" : "") + "</div>" +
-              "</div></a>";
+            return window.ConcafeCafeList.cardHtml(cafe, { href: "#cafe=" + encodeURIComponent(cafe.id) });
           }).join("");
         }
 
@@ -379,7 +212,7 @@
               return a.name.localeCompare(b.name, "ko");
             });
             state.loaded = true;
-            initRegion();
+            filter.setCafes(state.cafes);
           } catch (error) {
             console.error(error);
             state.loaded = true;
@@ -391,35 +224,6 @@
 
         // ---------- 이벤트 연결 ----------
 
-        el.cafeConceptFilter.innerHTML += A.CONCEPT_TYPES.map(function (type) {
-          return '<option value="' + type[0] + '">' + escapeHtml(type[1]) + "</option>";
-        }).join("");
-        try {
-          el.cafeSearch.value = sessionStorage.getItem(SEARCH_KEY) || "";
-        } catch (error) {
-          // 저장소를 쓸 수 없으면 빈 검색어로 시작한다
-        }
-        el.cafeSearch.addEventListener("input", function () {
-          try {
-            sessionStorage.setItem(SEARCH_KEY, el.cafeSearch.value);
-          } catch (error) {
-            // 무시
-          }
-          renderCafeGrid();
-        });
-        el.cafeConceptFilter.addEventListener("change", renderCafeGrid);
-        el.countryFilter.addEventListener("click", function (e) {
-          const chip = e.target.closest("[data-country]");
-          if (chip) {
-            setCountry(chip.getAttribute("data-country"));
-          }
-        });
-        el.cityFilter.addEventListener("click", function (e) {
-          const chip = e.target.closest("[data-city]");
-          if (chip) {
-            setCity(chip.getAttribute("data-city"));
-          }
-        });
         window.addEventListener("hashchange", syncModalWithHash);
         el.cafeModal.addEventListener("click", function (e) {
           if (e.target === el.cafeModal || e.target.closest("[data-close-modal]")) {

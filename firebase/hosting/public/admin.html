@@ -72,15 +72,10 @@
             <div class="section-header">
               <div>
                 <h2>카페 목록</h2>
-                <p>관리할 카페를 선택하세요.</p>
+                <p>국가·도시, 이름·주소 검색, 컨셉으로 좁혀 관리할 카페를 선택하세요.</p>
               </div>
             </div>
-            <div class="cafe-toolbar">
-              <input id="cafeSearch" type="search" placeholder="카페 이름 또는 지역으로 검색" aria-label="카페 검색" disabled />
-              <select id="cafeConceptFilter" aria-label="컨셉 필터" disabled>
-                <option value="">모든 컨셉</option>
-              </select>
-            </div>
+            <div id="cafeFilter"></div>
             <div class="cafe-grid" id="cafeGrid"></div>
             <p class="empty" id="cafeEmptyState">로그인 후 카페 목록을 불러옵니다.</p>
           </section>
@@ -94,26 +89,28 @@
 
     <script src="/assets/js/toast.js"></script>
     <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/cafe-list-filter.js"></script>
     <script>
       (function () {
         const A = window.ConcafeAdmin;
-        const escapeHtml = A.escapeHtml;
-        const SEARCH_KEY = "concafe.admin.cafeSearch";
-
         const state = { ready: false, cafes: [] };
         const el = {};
-        ["cafeCount", "filteredCount", "registerCafeLink", "cafeSearch", "cafeConceptFilter", "cafeGrid", "cafeEmptyState"]
+        ["cafeCount", "filteredCount", "registerCafeLink", "cafeFilter", "cafeGrid", "cafeEmptyState"]
           .forEach(function (id) { el[id] = document.getElementById(id); });
 
+        // 공개 카페 목록(/cafes)과 같은 필터 컴포넌트. 상세 화면에서 돌아왔을 때 선택을 유지한다
+        const filter = window.ConcafeCafeList.createFilter({
+          mount: el.cafeFilter,
+          searchPlaceholder: "카페 이름 또는 지역으로 검색",
+          searchStorageKey: "concafe.admin.cafeSearch",
+          regionStorageKey: "concafe.admin.cafeRegion",
+          detectCountry: false,
+          disabled: true,
+          onChange: renderCafeGrid,
+        });
+
         function renderCafeGrid() {
-          const keyword = el.cafeSearch.value.trim().toLowerCase();
-          const concept = el.cafeConceptFilter.value;
-          const filtered = state.cafes.filter(function (cafe) {
-            if (concept && cafe.conceptType !== concept) {
-              return false;
-            }
-            return !keyword || (cafe.name + " " + cafe.regionLabel).toLowerCase().indexOf(keyword) >= 0;
-          });
+          const filtered = filter.apply(state.cafes);
           el.cafeCount.textContent = String(state.cafes.length);
           el.filteredCount.textContent = String(filtered.length);
 
@@ -126,24 +123,15 @@
           if (!filtered.length) {
             el.cafeGrid.innerHTML = "";
             el.cafeEmptyState.style.display = "";
-            el.cafeEmptyState.textContent = state.cafes.length ? "검색 결과가 없습니다." : "등록된 카페가 없습니다. 카페 등록 버튼으로 추가하세요.";
+            el.cafeEmptyState.textContent = state.cafes.length ? filter.emptyMessage() : "등록된 카페가 없습니다. 카페 등록 버튼으로 추가하세요.";
             return;
           }
           el.cafeEmptyState.style.display = "none";
           el.cafeGrid.innerHTML = filtered.map(function (cafe) {
-            const thumb = cafe.thumbnailImage
-              ? '<img src="' + escapeHtml(cafe.thumbnailImage) + '" alt="" loading="lazy" />'
-              : escapeHtml(cafe.name.slice(0, 1));
-            const concept = A.conceptLabel(cafe.conceptType);
-            return '<a class="cafe-card" href="' + escapeHtml(A.cafeDetailUrl(cafe.id)) + '">' +
-              '<div class="cafe-card-thumb">' + thumb + "</div>" +
-              '<div class="cafe-card-body">' +
-              '<h3 class="cafe-card-name" title="' + escapeHtml(cafe.name) + '">' + escapeHtml(cafe.name) + "</h3>" +
-              '<p class="cafe-card-region">' + escapeHtml(cafe.address || A.cityLabel(cafe.country, cafe.city) || "지역 정보 없음") + "</p>" +
-              '<div class="chip-row">' +
-              (concept ? '<span class="chip">' + escapeHtml(concept) + "</span>" : "") +
-              (cafe.approved ? "" : '<span class="chip warning">미승인</span>') +
-              "</div></div></a>";
+            return window.ConcafeCafeList.cardHtml(cafe, {
+              href: A.cafeDetailUrl(cafe.id),
+              extraChipsHtml: cafe.approved ? "" : '<span class="chip warning">미승인</span>',
+            });
           }).join("");
         }
 
@@ -154,6 +142,7 @@
             state.cafes = snapshot.docs.map(A.toCafe).sort(function (a, b) {
               return a.name.localeCompare(b.name, "ko");
             });
+            filter.setCafes(state.cafes);
             A.hideBanner("cafeStatus");
           } catch (error) {
             A.setBanner("cafeStatus", "error", "카페 목록을 불러오지 못했습니다.");
@@ -164,32 +153,13 @@
 
         function setReady(ready) {
           state.ready = ready;
-          el.cafeSearch.disabled = !ready;
-          el.cafeConceptFilter.disabled = !ready;
+          filter.setEnabled(ready);
           el.registerCafeLink.setAttribute("aria-disabled", ready ? "false" : "true");
           if (!ready) {
             state.cafes = [];
+            filter.setCafes(state.cafes);
           }
         }
-
-        el.cafeConceptFilter.innerHTML += A.CONCEPT_TYPES.map(function (type) {
-          return '<option value="' + type[0] + '">' + escapeHtml(type[1]) + "</option>";
-        }).join("");
-        // 상세 화면에서 돌아왔을 때 검색어를 유지한다
-        try {
-          el.cafeSearch.value = sessionStorage.getItem(SEARCH_KEY) || "";
-        } catch (error) {
-          // 저장소를 쓸 수 없으면 빈 검색어로 시작한다
-        }
-        el.cafeSearch.addEventListener("input", function () {
-          try {
-            sessionStorage.setItem(SEARCH_KEY, el.cafeSearch.value);
-          } catch (error) {
-            // 무시
-          }
-          renderCafeGrid();
-        });
-        el.cafeConceptFilter.addEventListener("change", renderCafeGrid);
 
         A.initAdminSession(function (session) {
           setReady(session.isAdmin);
