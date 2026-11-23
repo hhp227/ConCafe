@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>카페 상세 · 콘카</title>
-    <meta name="description" content="콘카에 등록된 콘셉트 카페의 영업 정보, 캐스트, 이벤트, 메뉴와 굿즈를 확인할 수 있습니다." />
+    <meta name="description" content="콘카에 등록된 콘셉트 카페의 영업 정보, 캐스트, 이벤트, 메뉴와 굿즈, 리뷰를 확인할 수 있습니다." />
     <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
     <link rel="stylesheet" href="/assets/css/style.css" />
     <link rel="stylesheet" href="/assets/css/admin.css" />
@@ -186,6 +186,7 @@
             <button class="tab-button is-active" type="button" role="tab" id="tabCasts" data-tab="casts" aria-controls="panelCasts" aria-selected="true">캐스트</button>
             <button class="tab-button" type="button" role="tab" id="tabEvents" data-tab="events" aria-controls="panelEvents" aria-selected="false">카페 이벤트</button>
             <button class="tab-button" type="button" role="tab" id="tabMenus" data-tab="menus" aria-controls="panelMenus" aria-selected="false">메뉴/굿즈</button>
+            <button class="tab-button" type="button" role="tab" id="tabReviews" data-tab="reviews" aria-controls="panelReviews" aria-selected="false">리뷰</button>
             <button class="tab-button" type="button" role="tab" id="tabSchedule" data-tab="schedule" aria-controls="panelSchedule" aria-selected="false">스케줄</button>
           </div>
 
@@ -258,6 +259,21 @@
             </section>
           </div>
 
+          <!-- ── 리뷰 탭 ── -->
+          <div class="tab-panel" id="panelReviews" role="tabpanel" aria-labelledby="tabReviews" hidden>
+            <section class="surface section">
+              <div class="section-header">
+                <div>
+                  <h2>리뷰</h2>
+                  <p>방문자가 앱에서 남긴 리뷰입니다. 최신순으로 보여줍니다.</p>
+                </div>
+              </div>
+              <div class="review-summary" id="reviewSummary" hidden></div>
+              <div class="review-list" id="reviewList"></div>
+              <p class="empty" id="reviewEmptyState">리뷰를 불러오는 중입니다.</p>
+            </section>
+          </div>
+
           <!-- ── 스케줄 탭 ── -->
           <div class="tab-panel" id="panelSchedule" role="tabpanel" aria-labelledby="tabSchedule" hidden>
             <section class="surface section">
@@ -311,7 +327,7 @@
         const escapeHtml = A.escapeHtml;
         const normalizeText = A.normalizeText;
 
-        const TABS = ["casts", "events", "menus", "schedule"];
+        const TABS = ["casts", "events", "menus", "reviews", "schedule"];
         const CALENDAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>';
         const cafeId = A.getCafeIdFromUrl();
         const CAST_FALLBACK_IMAGE = "/assets/images/maid_logo.png";
@@ -334,6 +350,8 @@
           goods: [],
           menusLoaded: false,
           menuFilter: "all",
+          reviews: [],
+          reviewsLoaded: false,
         };
 
         const el = {};
@@ -350,6 +368,7 @@
           "menuFilter", "menuFilterAllCount", "menuFilterDrinkCount", "menuFilterFoodCount", "menuFilterDessertCount",
           "menuFilterGoodsCount", "menuList", "menuEmptyState",
           "eventModal", "eventModalTitle", "eventModalBody",
+          "tabReviews", "panelReviews", "reviewSummary", "reviewList", "reviewEmptyState",
         ].forEach(function (id) { el[id] = document.getElementById(id); });
 
         function loadingText(what) {
@@ -362,7 +381,7 @@
           if (TABS.indexOf(tab) < 0) {
             tab = "casts";
           }
-          [["casts", el.tabCasts, el.panelCasts], ["events", el.tabEvents, el.panelEvents], ["menus", el.tabMenus, el.panelMenus], ["schedule", el.tabSchedule, el.panelSchedule]].forEach(function (item) {
+          [["casts", el.tabCasts, el.panelCasts], ["events", el.tabEvents, el.panelEvents], ["menus", el.tabMenus, el.panelMenus], ["reviews", el.tabReviews, el.panelReviews], ["schedule", el.tabSchedule, el.panelSchedule]].forEach(function (item) {
             const active = item[0] === tab;
             item[1].classList.toggle("is-active", active);
             item[1].setAttribute("aria-selected", active ? "true" : "false");
@@ -838,11 +857,97 @@
           renderMenus();
         }
 
+        // ---------- 리뷰 ----------
+
+        const REVIEW_MAX_RATING = 5;
+
+        function reviewStars(rating) {
+          const filled = Math.max(0, Math.min(REVIEW_MAX_RATING, Math.round(rating)));
+          return "★".repeat(filled) + "☆".repeat(REVIEW_MAX_RATING - filled);
+        }
+
+        function reviewCastNames(review) {
+          return review.taggedCastIds.map(function (castId) {
+            const cast = state.allCasts.find(function (candidate) { return candidate.id === castId; });
+            return cast ? cast.name : null;
+          }).filter(Boolean);
+        }
+
+        function reviewCardHtml(review) {
+          const castNames = reviewCastNames(review);
+          const images = review.imageUrls.map(function (url) {
+            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener"><img src="' + escapeHtml(url) + '" alt="리뷰 이미지" loading="lazy" /></a>';
+          }).join("");
+          return '<article class="review-card">' +
+            '<div class="review-card-head">' +
+            '<strong class="review-card-name">' + escapeHtml(review.userNickname) + "</strong>" +
+            '<span class="review-card-stars" aria-label="별점 ' + review.rating + '점">' + reviewStars(review.rating) + "</span>" +
+            (review.visitVerified ? '<span class="chip success">방문 인증</span>' : "") +
+            '<span class="review-card-date">' + escapeHtml(review.createdAt.slice(0, 10)) + "</span>" +
+            "</div>" +
+            (review.content ? '<p class="review-card-content">' + escapeHtml(review.content) + "</p>" : "") +
+            (images ? '<div class="review-card-images">' + images + "</div>" : "") +
+            ((castNames.length || review.likeCount) ? '<div class="review-card-meta">' +
+              (castNames.length ? "<span>함께한 캐스트: " + escapeHtml(castNames.join(", ")) + "</span>" : "") +
+              (review.likeCount ? "<span>좋아요 " + review.likeCount + "</span>" : "") +
+              "</div>" : "") +
+            "</article>";
+        }
+
+        function renderReviews() {
+          if (!state.reviews.length) {
+            el.reviewSummary.hidden = true;
+            el.reviewList.innerHTML = "";
+            el.reviewEmptyState.style.display = "";
+            el.reviewEmptyState.textContent = state.reviewsLoaded ? "아직 등록된 리뷰가 없습니다. 앱에서 첫 리뷰를 남겨보세요." : loadingText("리뷰");
+          } else {
+            const average = state.reviews.reduce(function (sum, review) { return sum + review.rating; }, 0) / state.reviews.length;
+            el.reviewSummary.hidden = false;
+            el.reviewSummary.innerHTML =
+              '<strong class="review-summary-score">' + average.toFixed(1) + "</strong>" +
+              '<span class="review-summary-stars">' + reviewStars(average) + "</span>" +
+              '<span class="review-summary-count">리뷰 ' + state.reviews.length + "개</span>";
+            el.reviewEmptyState.style.display = "none";
+            el.reviewList.innerHTML = state.reviews.map(reviewCardHtml).join("");
+          }
+        }
+
+        async function loadReviews() {
+          try {
+            const snapshot = await db.collection("reviews").where("cafeId", "==", cafeId).get();
+            state.reviews = snapshot.docs.map(function (doc) {
+              const data = doc.data() || {};
+              const rating = Number(data.rating);
+              return {
+                id: doc.id,
+                userNickname: normalizeText(data.userNickname, "익명"),
+                rating: isFinite(rating) ? rating : 0,
+                content: normalizeText(data.content, ""),
+                imageUrls: Array.isArray(data.imageUrls) ? data.imageUrls.filter(function (url) { return typeof url === "string" && url; }) : [],
+                taggedCastIds: Array.isArray(data.taggedCastIds) ? data.taggedCastIds : [],
+                likeCount: Number(data.likeCount) || 0,
+                createdAt: normalizeText(data.createdAt, ""),
+                visitVerified: data.visitVerified === true,
+              };
+            }).sort(function (a, b) {
+              // 앱과 같이 작성일 최신순
+              return b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id);
+            });
+            state.reviewsLoaded = true;
+          } catch (error) {
+            console.error(error);
+            el.reviewEmptyState.textContent = "리뷰를 불러오지 못했습니다.";
+            return;
+          }
+          renderReviews();
+        }
+
         function renderAll() {
           renderCafe();
           renderCasts();
           renderEvents();
           renderMenus();
+          renderReviews();
         }
 
         // ---------- 스케줄 / 운영자 ----------
@@ -934,13 +1039,15 @@
             state.cafe = cafe;
             renderAll();
             updateEditAvailability();
-            await Promise.all([loadCasts(), loadEvents(), loadMenus()]);
+            await Promise.all([loadCasts(), loadEvents(), loadMenus(), loadReviews()]);
+            // 리뷰의 함께한 캐스트 이름은 캐스트 목록을 읽은 뒤에 채워진다
+            renderReviews();
           }
         }
 
         // ---------- 이벤트 연결 ----------
 
-        [el.tabCasts, el.tabEvents, el.tabMenus, el.tabSchedule].forEach(function (button) {
+        [el.tabCasts, el.tabEvents, el.tabMenus, el.tabReviews, el.tabSchedule].forEach(function (button) {
           button.addEventListener("click", function () { showTab(button.getAttribute("data-tab"), true); });
         });
         window.addEventListener("hashchange", function () {

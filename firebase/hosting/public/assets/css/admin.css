@@ -2826,3 +2826,118 @@ a.sched-person:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- 카페 상세 리뷰 탭 ---------- */
+
+.review-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-muted);
+}
+
+.review-summary[hidden] {
+  display: none;
+}
+
+.review-summary-score {
+  font-size: 28px;
+  color: var(--text);
+}
+
+.review-summary-stars,
+.review-card-stars {
+  color: var(--primary);
+  letter-spacing: 1px;
+}
+
+.review-summary-count,
+.review-card-date {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.review-list {
+  display: grid;
+  gap: 12px;
+}
+
+.review-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.review-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-card-name {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.review-card-date {
+  margin-left: auto;
+}
+
+.review-card-content {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.review-card-images {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.review-card-images img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.review-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 탭이 5개라 좁은 화면에서는 줄바꿈 대신 가로로 스크롤한다 */
+@media (max-width: 640px) {
+  .tab-bar {
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    padding: 12px 12px;
+    white-space: nowrap;
+  }
+}

@@ -12,7 +12,8 @@
 
   var currentPath = normalizePath(window.location.pathname);
   // 카페 상세와 그 안에서 들어가는 스케줄 조회·등록, 캐스트 등록, 관리자 하위 화면(/admin-*)은 '카페 목록'으로 표시한다
-  if (currentPath.indexOf("/admin") === 0 || ["/cafe", "/cast", "/schedule", "/registration", "/cast-new"].indexOf(currentPath) >= 0) {
+  // 메인(/)은 카페 목록 페이지를 보여준다
+  if (currentPath === "/" || currentPath.indexOf("/admin") === 0 || ["/cafe", "/cast", "/schedule", "/registration", "/cast-new"].indexOf(currentPath) >= 0) {
     currentPath = "/cafes";
   }
   Array.prototype.forEach.call(document.querySelectorAll(".app-nav .nav-link"), function (link) {
