@@ -25,6 +25,58 @@ class CastRepositoryImpl(
     private val cafeRemoteDataSource: CafeRemoteDataSource,
     private val castRemoteDataSource: CastRemoteDataSource
 ) : CastRepository {
+    /** 비활동(INACTIVE) 캐스트를 제외한 카페 캐스트 페이지. 활동 중인 캐스트가 없는 페이지는 건너뛰고 다음 페이지를 조회한다. */
+    private suspend fun fetchActiveCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Cast> {
+        val page = castRemoteDataSource.getCafeCastPageRemote(
+            cafeId = cafeId,
+            cursor = cursor,
+            pageSize = pageSize
+        )
+        val activeCasts = page.items.filter { it.isActive }
+        val canLoadNext = page.hasNext && !page.nextCursor.isNullOrBlank()
+
+        return if (activeCasts.isEmpty() && canLoadNext) {
+            fetchActiveCafeCastPage(cafeId = cafeId, cursor = page.nextCursor, pageSize = pageSize)
+        } else {
+            page.copy(items = activeCasts)
+        }
+    }
+
+    /** 캐스트 프로필 이미지가 없을 때 대체 표시할 소속 카페 썸네일을 채운다. */
+    private suspend fun List<Cast>.withCafeThumbnails(): List<Cast> {
+        val cafeIds = map { cast -> cast.cafeId }
+            .filter { cafeId -> cafeId.isNotBlank() }
+            .distinct()
+        val thumbnailByCafeId = cafeIds.associateWith { cafeId ->
+            runCatching { cafeRemoteDataSource.fetchCafeById(cafeId)?.thumbnailImage }
+                .getOrNull()
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+        }
+
+        return map { cast ->
+            if (cast.cafeThumbnailImage.isNullOrBlank()) {
+                cast.copy(cafeThumbnailImage = thumbnailByCafeId[cast.cafeId])
+            } else {
+                cast
+            }
+        }
+    }
+
+    private suspend fun PagedResult<Cast>.withCafeThumbnails(): PagedResult<Cast> {
+        return copy(items = items.withCafeThumbnails())
+    }
+
+    private fun CastDetail.withCafeThumbnail(): CastDetail {
+        val thumbnail = cafe.thumbnailImage?.trim()?.takeIf { it.isNotEmpty() }
+
+        return if (cast.cafeThumbnailImage.isNullOrBlank() && thumbnail != null) {
+            copy(cast = cast.copy(cafeThumbnailImage = thumbnail))
+        } else {
+            this
+        }
+    }
+
     override suspend fun searchCasts(
         query: String?,
         country: String?,
@@ -98,24 +150,9 @@ class CastRepositoryImpl(
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
         val todayDate = todayDate()
-        var page = castRemoteDataSource.getCafeCastPageRemote(
-            cafeId = cafeId,
-            cursor = cursor,
-            pageSize = pageSize
-        )
-        var source: List<Cast> = page.items.filter { it.isActive }
-        // 비활동(INACTIVE) 캐스트만 담긴 페이지면 다음 페이지를 이어서 조회해 빈 페이지 반환을 방지
-        while (source.isEmpty() && page.hasNext && !page.nextCursor.isNullOrBlank()) {
-            page = castRemoteDataSource.getCafeCastPageRemote(
-                cafeId = cafeId,
-                cursor = page.nextCursor,
-                pageSize = pageSize
-            )
-            source = page.items.filter { it.isActive }
-        }
-        source = source.withCafeThumbnails()
+        val page = fetchActiveCafeCastPage(cafeId = cafeId, cursor = cursor, pageSize = pageSize).withCafeThumbnails()
         val todayScheduleByCastId = castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId, todayDate)
-        val sorted = source
+        val sorted = page.items
             .sortedWith(
                 compareByDescending<Cast> { todayScheduleByCastId.containsKey(it.id) }
                     .thenBy { it.name }
@@ -265,34 +302,6 @@ class CastRepositoryImpl(
 
     override suspend fun getCafeCasts(cafeId: String): List<Cast> {
         return castRemoteDataSource.fetchCafeCasts(cafeId).withCafeThumbnails()
-    }
-
-    /** 캐스트 프로필 이미지가 없을 때 대체 표시할 소속 카페 썸네일을 채운다. */
-    private suspend fun List<Cast>.withCafeThumbnails(): List<Cast> {
-        if (isEmpty()) return this
-        val thumbnailByCafeId = map { cast -> cast.cafeId }
-            .filter { cafeId -> cafeId.isNotBlank() }
-            .distinct()
-            .associateWith { cafeId ->
-                runCatching { cafeRemoteDataSource.fetchCafeById(cafeId)?.thumbnailImage }
-                    .getOrNull()
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
-            }
-        return map { cast ->
-            if (!cast.cafeThumbnailImage.isNullOrBlank()) cast
-            else cast.copy(cafeThumbnailImage = thumbnailByCafeId[cast.cafeId])
-        }
-    }
-
-    private fun CastDetail.withCafeThumbnail(): CastDetail {
-        if (!cast.cafeThumbnailImage.isNullOrBlank()) return this
-        val thumbnail = cafe.thumbnailImage?.trim()?.takeIf { it.isNotEmpty() } ?: return this
-        return copy(cast = cast.copy(cafeThumbnailImage = thumbnail))
-    }
-
-    private suspend fun PagedResult<Cast>.withCafeThumbnails(): PagedResult<Cast> {
-        return copy(items = items.withCafeThumbnails())
     }
 }
 
