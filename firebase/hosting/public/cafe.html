@@ -314,6 +314,7 @@
         const TABS = ["casts", "events", "menus", "schedule"];
         const CALENDAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>';
         const cafeId = A.getCafeIdFromUrl();
+        const CAST_FALLBACK_IMAGE = "/assets/images/maid_logo.png";
 
         const state = {
           cafe: null,
@@ -565,6 +566,7 @@
 
             state.cafe = await A.fetchCafe(cafeId);
             renderCafe();
+            renderCasts();
             state.cafeSaving = false;
             setCafeEditing(false);
             window.ConcafeToast.show("success", "카페 정보를 수정했습니다.", { key: "cafeEdit" });
@@ -605,10 +607,11 @@
             return;
           }
           el.castEmptyState.style.display = "none";
+          // 앱과 같이 프로필 이미지 → 카페 대표 이미지 → 기본 로고 순서로 보여준다
+          const cafeImage = state.cafe ? normalizeText(state.cafe.thumbnailImage, "") : "";
           el.castGrid.innerHTML = visible.map(function (cast) {
-            const photo = cast.profileImage
-              ? '<img src="' + escapeHtml(cast.profileImage) + '" alt="" loading="lazy" />'
-              : escapeHtml(cast.name.slice(0, 1));
+            const photoUrl = normalizeText(cast.profileImage, "") || cafeImage || CAST_FALLBACK_IMAGE;
+            const photo = '<img src="' + escapeHtml(photoUrl) + '" alt="" loading="lazy" />';
             const role = cast.conceptRole ? A.castRoleLabel(cast.conceptRole) : "";
             const desc = A.castDescText(cast);
             return '<article class="cast-card' + (cast.inactive ? " is-inactive" : "") + '">' +
