@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>커뮤니티 · 콘카</title>
+    <meta name="description" content="콘카 커뮤니티에서 콘셉트 카페 이야기와 방문 후기를 나눠 보세요." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/cafes">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">컨셉 카페 지도</a>
+              <a class="nav-link" href="/community">커뮤니티</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <section class="surface section community-head">
+            <div>
+              <div class="eyebrow">커뮤니티</div>
+              <h1>커뮤니티</h1>
+              <p>콘셉트 카페 이야기와 방문 후기를 자유롭게 나눠 보세요. 앱과 같은 게시판입니다.</p>
+            </div>
+            <button class="button button-primary" id="writePostButton" type="button">게시글 작성</button>
+          </section>
+
+          <section class="surface section" style="margin-top: 20px;">
+            <div class="community-list" id="postList"></div>
+            <p class="empty" id="postEmptyState">게시글을 불러오는 중입니다.</p>
+            <div class="community-more">
+              <button class="button button-ghost" id="loadMoreButton" type="button" hidden>더 보기</button>
+            </div>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <div class="footer-links">
+            <a href="/privacy">개인정보처리방침</a>
+            <div class="footer-store">
+              <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">
+                <img src="/assets/images/googleplay.png" alt="Google Play에서 다운로드" width="130" height="40" />
+              </a>
+              <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">
+                <img src="/assets/images/appleappstore.png" alt="App Store에서 다운로드" width="130" height="40" />
+              </a>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/community.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const C = window.ConcafeCommunity;
+        // 앱 커뮤니티 목록(COMMUNITY_PAGE_SIZE)과 같은 한 페이지 크기
+        const PAGE_SIZE = 20;
+        const state = { posts: [], lastDoc: null, hasNext: false, loading: false, loaded: false, user: null };
+        const el = {};
+        ["postList", "postEmptyState", "loadMoreButton", "writePostButton", "signInBtn"].forEach(function (id) {
+          el[id] = document.getElementById(id);
+        });
+
+        function imagesHtml(post) {
+          if (!post.imageUrls.length) {
+            return "";
+          }
+          const rest = post.imageUrls.length - 3;
+          return '<div class="community-card-images">' + post.imageUrls.slice(0, 3).map(function (url, index) {
+            const more = index === 2 && rest > 0 ? '<span class="community-card-more">+' + rest + "</span>" : "";
+            return '<span class="community-card-image"><img src="' + A.escapeHtml(url) + '" alt="" loading="lazy" />' + more + "</span>";
+          }).join("") + "</div>";
+        }
+
+        function postCardHtml(post) {
+          return '<a class="community-card" href="' + C.postUrl(post.id) + '">' +
+            '<div class="community-author">' + C.avatarHtml(post.userNickname) +
+            '<span class="community-author-name">' + A.escapeHtml(C.displayName(post.userNickname)) + "</span>" +
+            '<span class="community-date">' + A.escapeHtml(C.formatDate(post.createdAt)) + "</span></div>" +
+            '<strong class="community-card-title">' + A.escapeHtml(post.title) + "</strong>" +
+            (post.content.trim() ? '<p class="community-card-content">' + A.escapeHtml(post.content) + "</p>" : "") +
+            imagesHtml(post) +
+            '<div class="community-counts"><span>♡ 좋아요 ' + post.likeCount + "</span><span>💬 댓글 " + post.commentCount + "</span></div>" +
+            "</a>";
+        }
+
+        function render() {
+          el.postList.innerHTML = state.posts.map(postCardHtml).join("");
+          el.postEmptyState.hidden = state.posts.length > 0;
+          if (!state.posts.length) {
+            el.postEmptyState.textContent = state.loaded ? "아직 게시글이 없습니다. 첫 번째 게시글을 남겨보세요!" : "게시글을 불러오는 중입니다.";
+          }
+          el.loadMoreButton.hidden = !state.hasNext;
+          el.loadMoreButton.disabled = state.loading;
+          el.loadMoreButton.textContent = state.loading ? "불러오는 중…" : "더 보기";
+        }
+
+        // 앱과 같이 createdAt 내림차순으로 한 페이지씩 불러온다
+        async function loadPage() {
+          if (state.loading) return;
+          state.loading = true;
+          render();
+          try {
+            let query = C.postsRef().orderBy("createdAt", "desc").limit(PAGE_SIZE + 1);
+            if (state.lastDoc) {
+              query = query.startAfter(state.lastDoc);
+            }
+            const snapshot = await query.get();
+            const docs = snapshot.docs.slice(0, PAGE_SIZE);
+            state.posts = state.posts.concat(docs.map(C.toPost));
+            state.lastDoc = docs.length ? docs[docs.length - 1] : state.lastDoc;
+            state.hasNext = snapshot.docs.length > PAGE_SIZE;
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "게시글을 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+          }
+          state.loading = false;
+          state.loaded = true;
+          render();
+        }
+
+        el.loadMoreButton.addEventListener("click", loadPage);
+        el.writePostButton.addEventListener("click", function () {
+          if (state.user) {
+            window.location.href = C.writeUrl();
+          } else {
+            window.ConcafeToast.show("info", "게시글을 쓰려면 로그인하세요.");
+            el.signInBtn.click();
+          }
+        });
+
+        A.initAuthWidget(function (user) {
+          state.user = user;
+        });
+        render();
+        loadPage();
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

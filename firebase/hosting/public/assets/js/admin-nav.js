@@ -16,6 +16,10 @@
   if (currentPath === "/" || currentPath.indexOf("/admin") === 0 || ["/cafe", "/cast", "/schedule", "/registration", "/cast-new"].indexOf(currentPath) >= 0) {
     currentPath = "/cafes";
   }
+  // 게시글 상세·글쓰기는 '커뮤니티'로 표시한다
+  if (["/community-post", "/community-write"].indexOf(currentPath) >= 0) {
+    currentPath = "/community";
+  }
   Array.prototype.forEach.call(document.querySelectorAll(".app-nav .nav-link"), function (link) {
     var active = normalizePath(link.getAttribute("href")) === currentPath;
     link.classList.toggle("active-page", active);

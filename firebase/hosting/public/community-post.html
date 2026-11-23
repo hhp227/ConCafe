@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>게시글 · 콘카 커뮤니티</title>
+    <meta name="description" content="콘카 커뮤니티 게시글과 댓글을 확인할 수 있습니다." />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/cafes">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">컨셉 카페 지도</a>
+              <a class="nav-link" href="/community">커뮤니티</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/community">커뮤니티</a><span class="breadcrumb-sep">›</span><span>게시글</span>
+          </nav>
+
+          <article class="surface section community-post" id="postArticle">
+            <p class="empty" id="postState">게시글을 불러오는 중입니다.</p>
+            <div id="postBody" hidden>
+              <div class="community-post-head">
+                <div class="community-author" id="postAuthor"></div>
+                <div class="community-actions" id="postActions"></div>
+              </div>
+              <h1 class="community-post-title" id="postTitle"></h1>
+              <p class="community-post-content" id="postContent"></p>
+              <div class="community-post-images" id="postImages"></div>
+              <div class="community-post-foot">
+                <button class="community-like" id="likeButton" type="button" aria-pressed="false">♡ 좋아요 0</button>
+                <span class="community-counts" id="commentCountLabel">💬 댓글 0</span>
+              </div>
+            </div>
+          </article>
+
+          <section class="surface section" id="commentSection" style="margin-top: 20px;" hidden>
+            <div class="section-header">
+              <div>
+                <h2 id="commentHeading">댓글</h2>
+              </div>
+            </div>
+            <div class="community-more community-more-top">
+              <button class="button button-ghost" id="olderCommentsButton" type="button" hidden>이전 댓글 더보기</button>
+            </div>
+            <div class="community-comments" id="commentList"></div>
+            <p class="empty" id="commentEmptyState">댓글을 불러오는 중입니다.</p>
+
+            <form class="community-comment-form" id="commentForm" hidden>
+              <textarea id="commentInput" maxlength="500" rows="3" placeholder="댓글을 입력하세요" aria-label="댓글 입력"></textarea>
+              <div class="community-form-foot">
+                <span class="small" id="commentCounter">0 / 500</span>
+                <button class="button button-primary" id="commentSubmitButton" type="submit" disabled>등록</button>
+              </div>
+            </form>
+            <button class="action-card login-nudge" id="commentLoginNudge" type="button" hidden>
+              <strong>로그인하고 댓글 남기기</strong>
+              <span>로그인하면 댓글을 쓰고 좋아요를 누를 수 있습니다.</span>
+            </button>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <div class="footer-links">
+            <a href="/privacy">개인정보처리방침</a>
+            <div class="footer-store">
+              <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">
+                <img src="/assets/images/googleplay.png" alt="Google Play에서 다운로드" width="130" height="40" />
+              </a>
+              <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">
+                <img src="/assets/images/appleappstore.png" alt="App Store에서 다운로드" width="130" height="40" />
+              </a>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <div class="admin-modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle" hidden>
+      <div class="admin-modal-box" style="max-width: 420px;">
+        <button class="admin-modal-close" type="button" data-close-modal aria-label="닫기">✕</button>
+        <h2 id="reportModalTitle">신고 유형 선택</h2>
+        <form id="reportForm">
+          <div class="community-report-options" id="reportOptions"></div>
+          <div class="community-form-foot">
+            <span></span>
+            <button class="button button-primary" id="reportSubmitButton" type="submit" disabled>신고하기</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/community.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const C = window.ConcafeCommunity;
+        const FieldValue = firebase.firestore.FieldValue;
+        // 앱 게시글 상세(COMMENT_PAGE_SIZE)와 같은 댓글 한 페이지 크기
+        const COMMENT_PAGE_SIZE = 20;
+        const postId = (new URLSearchParams(window.location.search).get("id") || "").trim();
+        const state = {
+          post: null,
+          user: null,
+          nickname: "",
+          isAdmin: false,
+          isLiked: false,
+          liking: false,
+          blockedUserIds: [],
+          comments: [],
+          oldestCommentDoc: null,
+          hasOlderComments: false,
+          commentsLoading: false,
+          editingCommentId: "",
+          report: null,
+          authSeq: 0,
+        };
+        const el = {};
+        [
+          "postState", "postBody", "postAuthor", "postActions", "postTitle", "postContent", "postImages",
+          "likeButton", "commentCountLabel", "commentSection", "commentHeading", "olderCommentsButton",
+          "commentList", "commentEmptyState", "commentForm", "commentInput", "commentCounter", "commentSubmitButton",
+          "commentLoginNudge", "reportModal", "reportForm", "reportOptions", "reportSubmitButton", "signInBtn",
+        ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+        const postRef = postId ? C.postsRef().doc(postId) : null;
+
+        function isOwner(userId) {
+          return !!state.user && state.user.uid === userId;
+        }
+
+        function requireLogin(message) {
+          if (state.user) {
+            return true;
+          }
+          window.ConcafeToast.show("info", message);
+          el.signInBtn.click();
+          return false;
+        }
+
+        // 작성자 본인은 수정·삭제, 관리자는 삭제, 다른 로그인 사용자는 신고·차단
+        function actionsHtml(kind, item) {
+          if (!state.user) {
+            return "";
+          }
+          const buttons = [];
+          if (isOwner(item.userId)) {
+            buttons.push(["edit", "수정"]);
+            buttons.push(["delete", "삭제"]);
+          } else {
+            if (state.isAdmin) {
+              buttons.push(["delete", "삭제"]);
+            }
+            buttons.push(["report", "신고"]);
+            buttons.push(["block", "차단"]);
+          }
+          return buttons.map(function (button) {
+            return '<button class="community-action' + (button[0] === "delete" ? " is-danger" : "") + '" type="button" data-' + kind + '-action="' +
+              button[0] + '"' + (kind === "comment" ? ' data-comment-id="' + A.escapeHtml(item.id) + '"' : "") + ">" + button[1] + "</button>";
+          }).join("");
+        }
+
+        function authorHtml(item, withTime) {
+          const edited = item.updatedAt && item.updatedAt !== item.createdAt ? ' <span class="community-edited">(수정됨)</span>' : "";
+          return C.avatarHtml(item.userNickname) +
+            '<span class="community-author-name">' + A.escapeHtml(C.displayName(item.userNickname)) + "</span>" +
+            '<span class="community-date">' + A.escapeHtml(C.formatDate(item.createdAt, withTime)) + edited + "</span>";
+        }
+
+        // ---------- 게시글 ----------
+
+        function renderPost() {
+          const post = state.post;
+          if (!post) {
+            return;
+          }
+          document.title = post.title + " · 콘카 커뮤니티";
+          el.postState.hidden = true;
+          el.postBody.hidden = false;
+          el.commentSection.hidden = false;
+          el.postAuthor.innerHTML = authorHtml(post, true);
+          el.postActions.innerHTML = actionsHtml("post", post);
+          el.postTitle.textContent = post.title;
+          el.postContent.textContent = post.content;
+          el.postImages.innerHTML = post.imageUrls.map(function (url) {
+            return '<a href="' + A.escapeHtml(url) + '" target="_blank" rel="noreferrer"><img src="' + A.escapeHtml(url) + '" alt="" loading="lazy" /></a>';
+          }).join("");
+          el.postImages.hidden = !post.imageUrls.length;
+          el.likeButton.textContent = (state.isLiked ? "♥" : "♡") + " 좋아요 " + post.likeCount;
+          el.likeButton.classList.toggle("is-liked", state.isLiked);
+          el.likeButton.setAttribute("aria-pressed", state.isLiked ? "true" : "false");
+          el.likeButton.disabled = state.liking;
+          el.commentCountLabel.textContent = "💬 댓글 " + post.commentCount;
+          el.commentHeading.textContent = "댓글 " + post.commentCount;
+        }
+
+        function showPostMissing(message) {
+          el.postState.textContent = message;
+          el.postState.hidden = false;
+          el.postBody.hidden = true;
+          el.commentSection.hidden = true;
+        }
+
+        async function loadPost() {
+          if (!postRef) {
+            showPostMissing("게시글 주소가 올바르지 않습니다. 커뮤니티에서 다시 선택하세요.");
+            return false;
+          }
+          try {
+            const doc = await postRef.get();
+            if (!doc.exists) {
+              showPostMissing("게시글을 찾을 수 없습니다. 삭제되었을 수 있습니다.");
+              return false;
+            }
+            state.post = C.toPost(doc);
+            renderPost();
+            return true;
+          } catch (error) {
+            console.error(error);
+            showPostMissing("게시글을 불러오지 못했습니다. 잠시 후 다시 시도하세요.");
+            return false;
+          }
+        }
+
+        async function loadLikeStatus() {
+          state.isLiked = false;
+          if (state.user && postRef) {
+            try {
+              state.isLiked = (await postRef.collection(C.LIKES).doc(state.user.uid).get()).exists;
+            } catch (error) {
+              console.error(error);
+            }
+          }
+          renderPost();
+        }
+
+        // 앱과 같이 likes/{uid} 문서와 게시글 likeCount를 함께 바꾼다
+        async function toggleLike() {
+          if (!requireLogin("좋아요를 누르려면 로그인하세요.") || state.liking || !state.post) {
+            return;
+          }
+          const liked = state.isLiked;
+          const likeRef = postRef.collection(C.LIKES).doc(state.user.uid);
+          const batch = A.db.batch();
+          if (liked) {
+            batch.delete(likeRef);
+            if (state.post.likeCount > 0) {
+              batch.update(postRef, { likeCount: FieldValue.increment(-1) });
+            }
+          } else {
+            batch.set(likeRef, { userId: state.user.uid, createdAt: A.nowIso() });
+            batch.update(postRef, { likeCount: FieldValue.increment(1) });
+          }
+          state.liking = true;
+          renderPost();
+          try {
+            await batch.commit();
+            state.isLiked = !liked;
+            state.post.likeCount = Math.max(0, state.post.likeCount + (liked ? -1 : 1));
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "좋아요를 처리하지 못했습니다.");
+          }
+          state.liking = false;
+          renderPost();
+        }
+
+        async function deletePost() {
+          if (!window.confirm("게시글을 삭제할까요? 삭제한 게시글은 되돌릴 수 없습니다.")) {
+            return;
+          }
+          try {
+            await postRef.delete();
+            window.location.replace("/community");
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "게시글을 삭제하지 못했습니다.");
+          }
+        }
+
+        // ---------- 댓글 ----------
+
+        function visibleComments() {
+          return state.comments.filter(function (comment) {
+            return state.blockedUserIds.indexOf(comment.userId) < 0;
+          });
+        }
+
+        function commentHtml(comment) {
+          const editing = state.editingCommentId === comment.id;
+          const body = editing
+            ? '<form class="community-comment-edit" data-comment-edit="' + A.escapeHtml(comment.id) + '">' +
+              '<textarea maxlength="' + C.COMMENT_MAX_LENGTH + '" rows="3" aria-label="댓글 수정">' + A.escapeHtml(comment.content) + "</textarea>" +
+              '<div class="community-form-foot"><span></span><div class="button-row">' +
+              '<button class="button button-ghost" type="button" data-comment-action="cancel-edit">취소</button>' +
+              '<button class="button button-primary" type="submit">저장</button></div></div></form>'
+            : '<p class="community-comment-content">' + A.escapeHtml(comment.content) + "</p>";
+          return '<div class="community-comment">' +
+            '<div class="community-post-head"><div class="community-author">' + authorHtml(comment, true) + "</div>" +
+            '<div class="community-actions">' + (editing ? "" : actionsHtml("comment", comment)) + "</div></div>" +
+            body + "</div>";
+        }
+
+        function renderComments() {
+          const comments = visibleComments();
+          el.commentList.innerHTML = comments.map(commentHtml).join("");
+          el.commentEmptyState.hidden = comments.length > 0;
+          if (!comments.length) {
+            el.commentEmptyState.textContent = state.commentsLoading ? "댓글을 불러오는 중입니다." : "아직 댓글이 없습니다. 첫 댓글을 남겨보세요.";
+          }
+          el.olderCommentsButton.hidden = !state.hasOlderComments;
+          el.olderCommentsButton.disabled = state.commentsLoading;
+          el.commentForm.hidden = !state.user;
+          el.commentLoginNudge.hidden = !!state.user;
+        }
+
+        // 앱과 같이 최신 댓글부터 한 페이지씩 불러와 오래된 순으로 보여준다
+        async function loadComments(older) {
+          if (state.commentsLoading || !postRef) return;
+          state.commentsLoading = true;
+          renderComments();
+          try {
+            let query = postRef.collection(C.COMMENTS).orderBy("createdAt", "desc").limit(COMMENT_PAGE_SIZE + 1);
+            if (older && state.oldestCommentDoc) {
+              query = query.startAfter(state.oldestCommentDoc);
+            }
+            const snapshot = await query.get();
+            const docs = snapshot.docs.slice(0, COMMENT_PAGE_SIZE);
+            const page = docs.map(C.toComment).reverse();
+            state.comments = older ? page.concat(state.comments) : page;
+            state.oldestCommentDoc = docs.length ? docs[docs.length - 1] : state.oldestCommentDoc;
+            state.hasOlderComments = snapshot.docs.length > COMMENT_PAGE_SIZE;
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "댓글을 불러오지 못했습니다.");
+          }
+          state.commentsLoading = false;
+          renderComments();
+        }
+
+        function updateCommentCounter() {
+          const length = el.commentInput.value.length;
+          el.commentCounter.textContent = length + " / " + C.COMMENT_MAX_LENGTH;
+          el.commentSubmitButton.disabled = !el.commentInput.value.trim();
+        }
+
+        async function sendComment(event) {
+          event.preventDefault();
+          const content = el.commentInput.value.trim();
+          if (!content || !requireLogin("댓글을 쓰려면 로그인하세요.")) {
+            return;
+          }
+          const comment = {
+            id: C.newEntityId("comment"),
+            postId: postId,
+            userId: state.user.uid,
+            userNickname: state.nickname,
+            content: content,
+            createdAt: A.nowIso(),
+          };
+          const batch = A.db.batch();
+          batch.set(postRef.collection(C.COMMENTS).doc(comment.id), {
+            postId: comment.postId,
+            userId: comment.userId,
+            userNickname: comment.userNickname,
+            content: comment.content,
+            createdAt: comment.createdAt,
+          });
+          batch.update(postRef, { commentCount: FieldValue.increment(1) });
+          el.commentSubmitButton.disabled = true;
+          try {
+            await batch.commit();
+            state.comments.push(Object.assign({ updatedAt: "" }, comment));
+            state.post.commentCount += 1;
+            el.commentInput.value = "";
+            renderPost();
+            renderComments();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "댓글을 등록하지 못했습니다.");
+          }
+          updateCommentCounter();
+        }
+
+        async function saveCommentEdit(commentId, content) {
+          const comment = state.comments.find(function (item) { return item.id === commentId; });
+          if (!comment || !content) {
+            return;
+          }
+          const updatedAt = A.nowIso();
+          try {
+            await postRef.collection(C.COMMENTS).doc(commentId).update({ content: content, updatedAt: updatedAt });
+            comment.content = content;
+            comment.updatedAt = updatedAt;
+            state.editingCommentId = "";
+            renderComments();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "댓글을 수정하지 못했습니다.");
+          }
+        }
+
+        async function deleteComment(commentId) {
+          if (!window.confirm("댓글을 삭제할까요?")) {
+            return;
+          }
+          const batch = A.db.batch();
+          batch.delete(postRef.collection(C.COMMENTS).doc(commentId));
+          if (state.post.commentCount > 0) {
+            batch.update(postRef, { commentCount: FieldValue.increment(-1) });
+          }
+          try {
+            await batch.commit();
+            state.comments = state.comments.filter(function (item) { return item.id !== commentId; });
+            state.post.commentCount = Math.max(0, state.post.commentCount - 1);
+            renderPost();
+            renderComments();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "댓글을 삭제하지 못했습니다.");
+          }
+        }
+
+        // ---------- 신고·차단 ----------
+
+        function openReport(targetType, targetId) {
+          state.report = { targetType: targetType, targetId: targetId };
+          el.reportForm.reset();
+          el.reportSubmitButton.disabled = true;
+          el.reportModal.hidden = false;
+        }
+
+        function closeReport() {
+          state.report = null;
+          el.reportModal.hidden = true;
+        }
+
+        // 앱(CreateCommunityPostReportUseCase)과 같은 reports 문서를 만든다
+        async function submitReport(event) {
+          event.preventDefault();
+          const selected = el.reportForm.querySelector("input[name=reportType]:checked");
+          if (!selected || !state.report || !state.user) {
+            return;
+          }
+          const createdAt = A.nowIso();
+          el.reportSubmitButton.disabled = true;
+          try {
+            await A.db.collection("reports").doc(C.newEntityId("report")).set({
+              targetType: state.report.targetType,
+              targetId: state.report.targetId,
+              reporterUserId: state.user.uid,
+              reporterNickname: state.nickname,
+              reportType: selected.value,
+              status: "PENDING",
+              createdAt: createdAt,
+              createdAtLabel: "방금 전",
+            });
+            closeReport();
+            window.ConcafeToast.show("success", "신고가 접수되었습니다.");
+          } catch (error) {
+            console.error(error);
+            el.reportSubmitButton.disabled = false;
+            window.ConcafeToast.show("error", "신고를 접수하지 못했습니다.");
+          }
+        }
+
+        // 앱과 같은 userBlocks/{내uid}_{상대uid} 문서. 차단한 사용자의 댓글은 숨긴다
+        async function blockUser(userId, nickname) {
+          if (!window.confirm(C.displayName(nickname) + "님을 차단할까요? 차단한 사용자의 댓글은 보이지 않습니다.")) {
+            return;
+          }
+          try {
+            await A.db.collection("userBlocks").doc(state.user.uid + "_" + userId).set({
+              blockerUserId: state.user.uid,
+              blockerNickname: state.nickname,
+              blockedUserId: userId,
+              blockedNickname: String(nickname || ""),
+              createdAt: A.nowIso(),
+            });
+            state.blockedUserIds.push(userId);
+            if (state.post && state.post.userId === userId) {
+              window.ConcafeToast.show("success", "차단했습니다. 커뮤니티 목록으로 이동합니다.");
+              window.setTimeout(function () { window.location.href = "/community"; }, 800);
+              return;
+            }
+            window.ConcafeToast.show("success", "차단했습니다.");
+            renderComments();
+          } catch (error) {
+            console.error(error);
+            window.ConcafeToast.show("error", "차단하지 못했습니다.");
+          }
+        }
+
+        // ---------- 이벤트 ----------
+
+        el.likeButton.addEventListener("click", toggleLike);
+        el.olderCommentsButton.addEventListener("click", function () { loadComments(true); });
+        el.commentInput.addEventListener("input", updateCommentCounter);
+        el.commentForm.addEventListener("submit", sendComment);
+        el.commentLoginNudge.addEventListener("click", function () { el.signInBtn.click(); });
+
+        el.postActions.addEventListener("click", function (event) {
+          const button = event.target.closest("[data-post-action]");
+          if (!button || !state.post) return;
+          const action = button.getAttribute("data-post-action");
+          if (action === "edit") {
+            window.location.href = C.writeUrl(postId);
+          } else if (action === "delete") {
+            deletePost();
+          } else if (action === "report") {
+            openReport("COMMUNITY_POST", postId);
+          } else if (action === "block") {
+            blockUser(state.post.userId, state.post.userNickname);
+          }
+        });
+
+        el.commentList.addEventListener("click", function (event) {
+          const button = event.target.closest("[data-comment-action]");
+          if (!button) return;
+          const action = button.getAttribute("data-comment-action");
+          const commentId = button.getAttribute("data-comment-id") || "";
+          const comment = state.comments.find(function (item) { return item.id === commentId; });
+          if (action === "cancel-edit") {
+            state.editingCommentId = "";
+            renderComments();
+          } else if (action === "edit" && comment) {
+            state.editingCommentId = commentId;
+            renderComments();
+            const textarea = el.commentList.querySelector("[data-comment-edit] textarea");
+            if (textarea) textarea.focus();
+          } else if (action === "delete" && comment) {
+            deleteComment(commentId);
+          } else if (action === "report" && comment) {
+            openReport("COMMUNITY_COMMENT", postId + "/" + commentId);
+          } else if (action === "block" && comment) {
+            blockUser(comment.userId, comment.userNickname);
+          }
+        });
+
+        el.commentList.addEventListener("submit", function (event) {
+          const form = event.target.closest("[data-comment-edit]");
+          if (!form) return;
+          event.preventDefault();
+          saveCommentEdit(form.getAttribute("data-comment-edit"), form.querySelector("textarea").value.trim());
+        });
+
+        el.reportOptions.innerHTML = C.REPORT_TYPES.map(function (type) {
+          return '<label class="community-report-option"><input type="radio" name="reportType" value="' + A.escapeHtml(type) + '" /><span>' + A.escapeHtml(type) + "</span></label>";
+        }).join("");
+        el.reportForm.addEventListener("change", function () { el.reportSubmitButton.disabled = false; });
+        el.reportForm.addEventListener("submit", submitReport);
+        el.reportModal.addEventListener("click", function (event) {
+          if (event.target === el.reportModal || event.target.closest("[data-close-modal]")) closeReport();
+        });
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape" && !el.reportModal.hidden) closeReport();
+        });
+
+        // ---------- 시작 ----------
+
+        const postLoaded = loadPost();
+        postLoaded.then(function (loaded) {
+          if (loaded) loadComments(false);
+        });
+
+        A.initAuthWidget(async function (user) {
+          const seq = ++state.authSeq;
+          state.user = user;
+          state.nickname = "";
+          state.isAdmin = false;
+          state.blockedUserIds = [];
+          state.editingCommentId = "";
+          if (user) {
+            const results = await Promise.all([
+              C.fetchNickname(user),
+              A.fetchUserAccess(user).catch(function (error) { console.error(error); return { isAdmin: false }; }),
+              C.fetchBlockedUserIds(user),
+            ]);
+            if (seq !== state.authSeq) return;
+            state.nickname = results[0];
+            state.isAdmin = results[1].isAdmin;
+            state.blockedUserIds = results[2];
+          }
+          if (!(await postLoaded)) return;
+          if (seq !== state.authSeq) return;
+          await loadLikeStatus();
+          renderComments();
+        });
+        updateCommentCounter();
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>

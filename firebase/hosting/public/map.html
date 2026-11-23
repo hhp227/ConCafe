@@ -859,7 +859,8 @@
       <div class="topbar-right">
         <nav class="nav-links app-nav" aria-label="운영 페이지 메뉴">
           <a class="nav-link" href="/cafes">카페 목록</a>
-          <a class="nav-link" href="/map">메이드 카페 지도</a>
+          <a class="nav-link" href="/map">컨셉 카페 지도</a>
+          <a class="nav-link" href="/community">커뮤니티</a>
         </nav>
         <div class="auth-widget" id="authWidget">
           <div class="auth-user-info" id="authUserInfo" style="display:none;">
@@ -874,13 +875,13 @@
   </header>
 
   <main class="map-page">
-    <section class="map-stage" aria-label="메이드 카페 전체 지도">
+    <section class="map-stage" aria-label="컨셉 카페 전체 지도">
       <aside class="map-sidebar" aria-label="지도 검색 및 결과 패널">
         <button class="sidebar-drag-handle" id="sidebarDragHandle" type="button" aria-label="검색 시트 접기 또는 펼치기"></button>
         <section class="toolbar-card" aria-label="지도 검색">
           <div class="toolbar-head">
             <div class="toolbar-title">
-              <strong>메이드 카페 지도</strong>
+              <strong>컨셉 카페 지도</strong>
               <span id="mapHeaderCaption">실제 카페 데이터를 불러오는 중입니다.</span>
             </div>
             <div class="toolbar-badge" id="mapCafeCount">0곳</div>
@@ -1662,9 +1663,9 @@
       if (state.cafes.length === 0) {
         el.mapHeaderCaption.textContent = "표시 가능한 카페 데이터가 없습니다.";
       } else if (visitorCountry !== ALL_FILTER) {
-        el.mapHeaderCaption.textContent = COUNTRY_LABELS[visitorCountry] + " 메이드 카페를 보여줍니다.";
+        el.mapHeaderCaption.textContent = COUNTRY_LABELS[visitorCountry] + " 컨셉 카페를 보여줍니다.";
       } else {
-        el.mapHeaderCaption.textContent = "전체 메이드 카페를 보여줍니다.";
+        el.mapHeaderCaption.textContent = "전체 컨셉 카페를 보여줍니다.";
       }
     }
 

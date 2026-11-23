@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>게시글 작성 · 콘카 커뮤니티</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" href="/assets/images/concafe_logo.png" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="/cafes">
+            <img class="brand-icon" src="/assets/images/concafe_logo.png" alt="콘카 로고" />
+            <span class="brand-title" aria-label="콘셉카페">
+              <span class="brand-main">콘</span><span class="brand-sub">셉</span><span class="brand-main">카</span><span class="brand-sub">페</span>
+            </span>
+          </a>
+          <div class="topbar-right">
+            <nav class="nav-links app-nav" aria-label="주요 메뉴">
+              <a class="nav-link" href="/cafes">카페 목록</a>
+              <a class="nav-link" href="/map">컨셉 카페 지도</a>
+              <a class="nav-link" href="/community">커뮤니티</a>
+            </nav>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-user-info" id="authUserInfo" style="display:none;">
+                <img class="auth-user-photo" id="authUserPhoto" src="" alt="프로필" />
+                <span class="auth-user-name" id="authUserName"></span>
+                <button class="auth-btn signout" id="signOutBtn" type="button">로그아웃</button>
+              </div>
+              <button class="auth-btn" id="signInBtn" type="button">로그인</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <div class="page">
+          <nav class="breadcrumb" aria-label="위치">
+            <a href="/community">커뮤니티</a><span class="breadcrumb-sep">›</span><span id="breadcrumbTitle">게시글 작성</span>
+          </nav>
+
+          <section class="surface section">
+            <div class="section-header">
+              <div>
+                <h1 id="pageTitle">게시글 작성</h1>
+                <p>제목은 100자, 내용은 2,000자까지 쓸 수 있고 사진은 5장까지 올릴 수 있습니다.</p>
+              </div>
+            </div>
+
+            <p class="empty" id="formState">로그인 상태를 확인하는 중입니다.</p>
+            <button class="action-card login-nudge" id="loginNudge" type="button" hidden>
+              <strong>로그인하고 게시글 쓰기</strong>
+              <span>커뮤니티에 글을 쓰려면 먼저 로그인하세요.</span>
+            </button>
+
+            <form class="community-write-form" id="postForm" hidden>
+              <div class="field">
+                <label for="titleInput">제목</label>
+                <input id="titleInput" type="text" maxlength="100" placeholder="제목을 입력하세요" required />
+              </div>
+              <div class="field">
+                <label for="contentInput">내용</label>
+                <textarea id="contentInput" maxlength="2000" rows="10" placeholder="내용을 입력하세요" required></textarea>
+                <span class="small community-counter" id="contentCounter">0 / 2000</span>
+              </div>
+              <div class="field">
+                <label>사진 <span class="small" id="imageCounter">0 / 5</span></label>
+                <div class="community-image-picker" id="imagePicker"></div>
+                <input id="imageInput" type="file" accept="image/*" multiple hidden />
+              </div>
+              <div class="button-row community-write-actions">
+                <a class="button button-ghost" id="cancelLink" href="/community">취소</a>
+                <button class="button button-primary" id="submitButton" type="submit">등록</button>
+              </div>
+            </form>
+          </section>
+        </div>
+        <footer class="footer">
+          <span>© 2026 콘카(ConCafe)</span>
+          <div class="footer-links">
+            <a href="/privacy">개인정보처리방침</a>
+            <div class="footer-store">
+              <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">
+                <img src="/assets/images/googleplay.png" alt="Google Play에서 다운로드" width="130" height="40" />
+              </a>
+              <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">
+                <img src="/assets/images/appleappstore.png" alt="App Store에서 다운로드" width="130" height="40" />
+              </a>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/assets/js/toast.js"></script>
+    <script src="/assets/js/admin-common.js"></script>
+    <script src="/assets/js/community.js"></script>
+    <script>
+      (function () {
+        const A = window.ConcafeAdmin;
+        const C = window.ConcafeCommunity;
+        const editPostId = (new URLSearchParams(window.location.search).get("id") || "").trim();
+        // images: 이미 올린 사진은 { url }, 새로 고른 사진은 { file, previewUrl }
+        const state = { user: null, nickname: "", post: null, images: [], submitting: false, authSeq: 0 };
+        const el = {};
+        [
+          "breadcrumbTitle", "pageTitle", "formState", "loginNudge", "postForm", "titleInput", "contentInput",
+          "contentCounter", "imageCounter", "imagePicker", "imageInput", "cancelLink", "submitButton", "signInBtn",
+        ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+        function showState(message) {
+          el.formState.textContent = message;
+          el.formState.hidden = !message;
+        }
+
+        function renderImages() {
+          const tiles = state.images.map(function (image, index) {
+            const src = image.url || image.previewUrl;
+            return '<div class="community-image-tile"><img src="' + A.escapeHtml(src) + '" alt="" />' +
+              '<button type="button" data-remove-image="' + index + '" aria-label="사진 삭제">✕</button></div>';
+          });
+          if (state.images.length < C.IMAGE_MAX_COUNT) {
+            tiles.push('<button class="community-image-add" type="button" data-add-image>＋<span>사진 추가</span></button>');
+          }
+          el.imagePicker.innerHTML = tiles.join("");
+          el.imageCounter.textContent = state.images.length + " / " + C.IMAGE_MAX_COUNT;
+        }
+
+        function renderCounter() {
+          el.contentCounter.textContent = el.contentInput.value.length + " / " + C.CONTENT_MAX_LENGTH;
+        }
+
+        function renderSubmitting() {
+          el.submitButton.disabled = state.submitting;
+          el.submitButton.textContent = state.submitting ? "저장하는 중…" : (editPostId ? "수정 완료" : "등록");
+        }
+
+        function addFiles(files) {
+          const list = Array.prototype.slice.call(files || []).filter(function (file) {
+            return /^image\//.test(file.type);
+          });
+          const room = C.IMAGE_MAX_COUNT - state.images.length;
+          if (list.length > room) {
+            window.ConcafeToast.show("info", "사진은 최대 " + C.IMAGE_MAX_COUNT + "장까지 올릴 수 있습니다.");
+          }
+          list.slice(0, Math.max(0, room)).forEach(function (file) {
+            state.images.push({ file: file, previewUrl: URL.createObjectURL(file) });
+          });
+          renderImages();
+        }
+
+        async function uploadImages() {
+          const urls = [];
+          for (const image of state.images) {
+            if (image.url) {
+              urls.push(image.url);
+            } else {
+              const prepared = await A.prepareImage(image.file);
+              urls.push(await A.uploadImage("community", state.user.uid, prepared));
+            }
+          }
+          return urls;
+        }
+
+        // 앱(createCommunityPost / updateCommunityPost)과 같은 필드로 저장한다
+        async function submit(event) {
+          event.preventDefault();
+          const title = el.titleInput.value.trim();
+          const content = el.contentInput.value.trim();
+          if (!title) {
+            window.ConcafeToast.show("info", "제목을 입력해주세요.");
+            el.titleInput.focus();
+            return;
+          }
+          if (!content) {
+            window.ConcafeToast.show("info", "내용을 입력해주세요.");
+            el.contentInput.focus();
+            return;
+          }
+          if (!state.user || state.submitting) {
+            return;
+          }
+          state.submitting = true;
+          renderSubmitting();
+          try {
+            const imageUrls = await uploadImages();
+            const now = A.nowIso();
+            let postId = editPostId;
+            if (editPostId) {
+              await C.postsRef().doc(editPostId).update({ title: title, content: content, imageUrls: imageUrls, updatedAt: now });
+            } else {
+              postId = C.newEntityId("post");
+              await C.postsRef().doc(postId).set({
+                userId: state.user.uid,
+                userNickname: state.nickname,
+                title: title,
+                content: content,
+                imageUrls: imageUrls,
+                likeCount: 0,
+                commentCount: 0,
+                viewCount: 0,
+                createdAt: now,
+                updatedAt: now,
+              });
+            }
+            window.location.replace(C.postUrl(postId));
+          } catch (error) {
+            console.error(error);
+            state.submitting = false;
+            renderSubmitting();
+            window.ConcafeToast.show("error", error && error.message === "image_too_large"
+              ? "사진이 너무 큽니다. 다른 사진을 골라주세요."
+              : "게시글을 저장하지 못했습니다. 잠시 후 다시 시도하세요.");
+          }
+        }
+
+        async function loadEditPost(user) {
+          const doc = await C.postsRef().doc(editPostId).get();
+          if (!doc.exists) {
+            return "게시글을 찾을 수 없습니다. 삭제되었을 수 있습니다.";
+          }
+          const post = C.toPost(doc);
+          if (post.userId !== user.uid) {
+            return "내가 쓴 게시글만 수정할 수 있습니다.";
+          }
+          state.post = post;
+          el.titleInput.value = post.title;
+          el.contentInput.value = post.content;
+          state.images = post.imageUrls.map(function (url) { return { url: url }; });
+          return "";
+        }
+
+        // ---------- 이벤트 ----------
+
+        el.contentInput.addEventListener("input", renderCounter);
+        el.postForm.addEventListener("submit", submit);
+        el.loginNudge.addEventListener("click", function () { el.signInBtn.click(); });
+        el.imageInput.addEventListener("change", function () {
+          addFiles(el.imageInput.files);
+          el.imageInput.value = "";
+        });
+        el.imagePicker.addEventListener("click", function (event) {
+          const remove = event.target.closest("[data-remove-image]");
+          if (remove) {
+            const removed = state.images.splice(Number(remove.getAttribute("data-remove-image")), 1)[0];
+            if (removed && removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+            renderImages();
+          } else if (event.target.closest("[data-add-image]")) {
+            el.imageInput.click();
+          }
+        });
+        A.bindImagePaste(function () { return !el.postForm.hidden && state.images.length < C.IMAGE_MAX_COUNT; }, function (file) {
+          addFiles([file]);
+        });
+
+        // ---------- 시작 ----------
+
+        if (editPostId) {
+          document.title = "게시글 수정 · 콘카 커뮤니티";
+          el.breadcrumbTitle.textContent = "게시글 수정";
+          el.pageTitle.textContent = "게시글 수정";
+          el.cancelLink.href = C.postUrl(editPostId);
+        }
+        renderSubmitting();
+        renderImages();
+
+        A.initAuthWidget(async function (user) {
+          const seq = ++state.authSeq;
+          state.user = user;
+          el.postForm.hidden = true;
+          el.loginNudge.hidden = !!user;
+          if (!user) {
+            showState("");
+            return;
+          }
+          showState(editPostId ? "게시글을 불러오는 중입니다." : "");
+          let problem = "";
+          try {
+            state.nickname = await C.fetchNickname(user);
+            if (editPostId && !state.post) {
+              problem = await loadEditPost(user);
+            } else if (state.post && state.post.userId !== user.uid) {
+              problem = "내가 쓴 게시글만 수정할 수 있습니다.";
+            }
+          } catch (error) {
+            console.error(error);
+            problem = "게시글을 불러오지 못했습니다. 잠시 후 다시 시도하세요.";
+          }
+          if (seq !== state.authSeq) return;
+          showState(problem);
+          el.postForm.hidden = !!problem;
+          renderImages();
+          renderCounter();
+        });
+      })();
+    </script>
+    <script src="/assets/js/admin-nav.js"></script>
+  </body>
+</html>
