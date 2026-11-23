@@ -25,6 +25,10 @@ class CastRepositoryImpl(
     private val cafeRemoteDataSource: CafeRemoteDataSource,
     private val castRemoteDataSource: CastRemoteDataSource
 ) : CastRepository {
+    private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
+        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate())
+    }
+
     /** 비활동(INACTIVE) 캐스트를 제외한 카페 캐스트 페이지. 활동 중인 캐스트가 없는 페이지는 건너뛰고 다음 페이지를 조회한다. */
     private suspend fun fetchActiveCafeCastPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<Cast> {
         val page = castRemoteDataSource.getCafeCastPageRemote(
@@ -34,7 +38,6 @@ class CastRepositoryImpl(
         )
         val activeCasts = page.items.filter { it.isActive }
         val canLoadNext = page.hasNext && !page.nextCursor.isNullOrBlank()
-
         return if (activeCasts.isEmpty() && canLoadNext) {
             fetchActiveCafeCastPage(cafeId = cafeId, cursor = page.nextCursor, pageSize = pageSize)
         } else {
@@ -53,7 +56,6 @@ class CastRepositoryImpl(
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }
         }
-
         return map { cast ->
             if (cast.cafeThumbnailImage.isNullOrBlank()) {
                 cast.copy(cafeThumbnailImage = thumbnailByCafeId[cast.cafeId])
@@ -69,7 +71,6 @@ class CastRepositoryImpl(
 
     private fun CastDetail.withCafeThumbnail(): CastDetail {
         val thumbnail = cafe.thumbnailImage?.trim()?.takeIf { it.isNotEmpty() }
-
         return if (cast.cafeThumbnailImage.isNullOrBlank() && thumbnail != null) {
             copy(cast = cast.copy(cafeThumbnailImage = thumbnail))
         } else {
@@ -217,10 +218,6 @@ class CastRepositoryImpl(
 
     override suspend fun deleteGuestCastSchedule(scheduleId: String) {
         castRemoteDataSource.deleteGuestCastScheduleRemote(scheduleId)
-    }
-
-    private suspend fun resolveWorkingCastIds(cafeId: String): Set<String> {
-        return castRemoteDataSource.getWorkingCastIdsByCafeAndDate(cafeId = cafeId, date = todayDate())
     }
 
     override suspend fun isFollowing(userId: String, castId: String): Boolean {

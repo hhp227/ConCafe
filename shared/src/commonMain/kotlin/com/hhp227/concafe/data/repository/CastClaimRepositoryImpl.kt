@@ -69,7 +69,6 @@ class CastClaimRepositoryImpl(
         } else {
             false
         }
-
         return MyCastClaimStatus(
             userId = userId,
             affiliatedCafeId = affiliatedCafeId,
@@ -157,7 +156,6 @@ class CastClaimRepositoryImpl(
         val pagedItems = items.subList(safeStartIndex, endIndex)
         val hasNext = endIndex < items.size
         val nextCursor = if (hasNext) endIndex.toString() else null
-
         return PagedResult(
             items = pagedItems,
             nextCursor = nextCursor,

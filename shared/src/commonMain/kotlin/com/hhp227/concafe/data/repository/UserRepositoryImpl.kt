@@ -57,11 +57,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun updateProfile(userId: String, nickname: String, profileImage: String?) {
-        val existingUser = firestoreSyncDataSource.fetchUser(userId)
-        if (existingUser == null) {
-            throw NoSuchElementException("user not found")
-        }
-
+        val existingUser = firestoreSyncDataSource.fetchUser(userId) ?: throw NoSuchElementException("user not found")
         val normalizedNickname = nickname.trim()
         val normalizedProfileImage = profileImage?.trim()?.ifBlank { null }
 

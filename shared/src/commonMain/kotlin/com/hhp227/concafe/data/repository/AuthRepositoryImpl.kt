@@ -65,7 +65,6 @@ class AuthRepositoryImpl(
         val now = Clock.System.now()
         val shouldReleaseDormant = user.dormant
         val shouldRefreshLastLogin = dormantAccountPolicy.shouldRefreshLastLogin(user.lastLoginAt, now)
-
         return if (shouldReleaseDormant || shouldRefreshLastLogin) {
             val lastLoginAt = now.toString()
 

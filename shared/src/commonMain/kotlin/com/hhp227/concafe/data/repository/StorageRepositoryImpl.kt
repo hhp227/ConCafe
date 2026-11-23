@@ -163,12 +163,9 @@ class StorageRepositoryImpl(
 
     override suspend fun deleteImageByUrl(imageUrl: String) {
         val normalizedUrl = imageUrl.trim()
-        val parsed = parseStorageUrl(normalizedUrl)
-
-        if (parsed == null) {
-            return
-        }
+        val parsed = parseStorageUrl(normalizedUrl) ?: return
         val idToken = tokenProvider.getIdToken()
+
         if (idToken.isNullOrBlank()) {
             throw IllegalStateException("로그인이 필요합니다. Firebase Storage 삭제 토큰이 없습니다.")
         }

@@ -19,11 +19,8 @@ class CafeDashboardRepositoryImpl(
                 throw NoSuchElementException("cafe dashboard not found")
             }
         }
-        val cafe = cafeRemoteDataSource.fetchCafeById(cafeId)
-        if (cafe == null) {
-            throw NoSuchElementException("cafe dashboard not found")
-        }
-
+        val cafe =
+            cafeRemoteDataSource.fetchCafeById(cafeId) ?: throw NoSuchElementException("cafe dashboard not found")
         val todayDate = Clock.System.now()
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
