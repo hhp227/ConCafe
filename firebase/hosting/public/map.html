@@ -257,6 +257,12 @@
       color: var(--muted);
     }
 
+    .filter-selects {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
     .filter-select {
       width: 100%;
       min-height: 46px;
@@ -900,15 +906,15 @@
 
           <div class="filter-row">
             <label class="filter-label" for="regionFilter">지역 필터</label>
-            <select class="filter-select" id="regionFilter" aria-label="지역 필터">
-              <option value="전체">전체</option>
-              <option value="서울">서울</option>
-              <option value="부산">부산</option>
-              <option value="대구">대구</option>
-              <option value="도쿄">도쿄</option>
-              <option value="오사카">오사카</option>
-              <option value="요코하마">요코하마</option>
-            </select>
+            <div class="filter-selects">
+              <select class="filter-select" id="countryFilter" aria-label="국가 필터">
+                <option value="전체">전체 국가</option>
+                <option value="KR">한국</option>
+                <option value="JP">일본</option>
+              </select>
+              <!-- 선택한 국가의 도시만 renderRegionOptions()가 채운다 -->
+              <select class="filter-select" id="regionFilter" aria-label="지역 필터"></select>
+            </div>
           </div>
         </section>
 
@@ -1072,6 +1078,7 @@
       searchButton: document.getElementById("searchButton"),
       resetButton: document.getElementById("resetButton"),
       fitAllButton: document.getElementById("fitAllButton"),
+      countryFilter: document.getElementById("countryFilter"),
       regionFilter: document.getElementById("regionFilter"),
       mapTypeFilter: document.getElementById("mapTypeFilter"),
       list: document.getElementById("sheetList"),
@@ -1107,6 +1114,8 @@
 
     const state = {
       cafes: [],
+      activeCountry: "전체",
+      visitorCountry: "전체",
       activeDistrict: "전체",
       activeCafeId: "",
       appliedKeyword: "",
@@ -1114,6 +1123,14 @@
       mapTypeId: "roadmap",
     };
     const MAP_TYPE_STORAGE_KEY = "concafe.mapTypeId";
+    const ALL_FILTER = "전체";
+    const COUNTRY_LABELS = { KR: "한국", JP: "일본" };
+    const DISTRICTS_BY_COUNTRY = {
+      KR: ["서울", "부산", "대구"],
+      JP: ["도쿄", "오사카", "요코하마"],
+    };
+    // 가장 가까운 카페가 이 거리 안에 있을 때만 위치로 접속 국가를 판단한다 (해외 접속자 오판 방지)
+    const VISITOR_COUNTRY_MAX_DISTANCE_METERS = 500000;
 
     let map = null;
     let infoWindow = null;
@@ -1334,11 +1351,13 @@
       const desc = normalizeText(data.desc);
       const businessHours = normalizeText(data.businessHours);
       const regionLabel = normalizeRegionLabel(region);
+      const district = pickRegionFilter(region);
 
       return {
         id: doc.id,
         name: normalizeText(data.name) || "이름 없는 카페",
-        district: pickRegionFilter(region),
+        district: district,
+        country: resolveCafeCountry(region, district),
         regionLabel: regionLabel,
         address: normalizeText(region.address) || regionLabel || "주소 정보 없음",
         theme: conceptType || "메이드 카페",
@@ -1401,18 +1420,76 @@
       };
     }
 
+    // region.country(KR/JP)가 없는 예전 데이터는 도시 이름으로 국가를 추정한다
+    function resolveCafeCountry(region, district) {
+      const country = normalizeText(region && region.country).toUpperCase();
+      if (COUNTRY_LABELS[country]) {
+        return country;
+      }
+      return Object.keys(DISTRICTS_BY_COUNTRY).find(function (code) {
+        return DISTRICTS_BY_COUNTRY[code].indexOf(district) !== -1;
+      }) || "";
+    }
+
+    // 위치 권한이 없을 때 첫 화면 국가를 브라우저 시간대·언어로 정한다. 한국·일본이 아니면 전체를 보여준다
+    function detectCountryFromBrowser() {
+      let timeZone = "";
+      try {
+        timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      } catch (error) {
+        timeZone = "";
+      }
+      const languages = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""])
+        .map(function (language) { return String(language).toLowerCase(); });
+
+      if (timeZone === "Asia/Seoul") {
+        return "KR";
+      } else if (timeZone === "Asia/Tokyo") {
+        return "JP";
+      } else if (languages[0] && languages[0].indexOf("ko") === 0) {
+        return "KR";
+      } else if (languages[0] && languages[0].indexOf("ja") === 0) {
+        return "JP";
+      } else {
+        return ALL_FILTER;
+      }
+    }
+
+    function hasCafesInCountry(country) {
+      return state.cafes.some(function (cafe) { return cafe.country === country; });
+    }
+
+    function renderRegionOptions() {
+      const districts = state.activeCountry === ALL_FILTER
+        ? DISTRICTS_BY_COUNTRY.KR.concat(DISTRICTS_BY_COUNTRY.JP)
+        : DISTRICTS_BY_COUNTRY[state.activeCountry] || [];
+
+      if (districts.indexOf(state.activeDistrict) === -1) {
+        state.activeDistrict = ALL_FILTER;
+      }
+      el.regionFilter.innerHTML = [ALL_FILTER].concat(districts).map(function (district) {
+        const label = district === ALL_FILTER ? "전체 지역" : district;
+        return '<option value="' + escapeHtml(district) + '">' + escapeHtml(label) + "</option>";
+      }).join("");
+    }
+
     function getFilteredCafes() {
       const keyword = state.appliedKeyword.toLowerCase();
       return state.cafes.filter(function (cafe) {
+        const matchesCountry = state.activeCountry === ALL_FILTER || cafe.country === state.activeCountry;
         const matchesDistrict = state.activeDistrict === "전체" || cafe.district === state.activeDistrict;
         const haystack = [cafe.name, cafe.address, cafe.theme, cafe.district, cafe.regionLabel].join(" ").toLowerCase();
         const matchesKeyword = keyword.length === 0 || haystack.indexOf(keyword) !== -1;
-        return matchesDistrict && matchesKeyword;
+        return matchesCountry && matchesDistrict && matchesKeyword;
       });
     }
 
     function syncRegionFilter() {
+      if (el.countryFilter) {
+        el.countryFilter.value = state.activeCountry;
+      }
       if (el.regionFilter) {
+        renderRegionOptions();
         el.regionFilter.value = state.activeDistrict;
       }
     }
@@ -1495,9 +1572,13 @@
         return;
       }
 
-      el.resultsSubtitle.textContent = state.activeDistrict === "전체"
-        ? "전체 지역 카페를 표시하고 있습니다."
-        : state.activeDistrict + " 지역 카페를 표시하고 있습니다.";
+      if (state.activeDistrict !== ALL_FILTER) {
+        el.resultsSubtitle.textContent = state.activeDistrict + " 지역 카페를 표시하고 있습니다.";
+      } else if (state.activeCountry !== ALL_FILTER) {
+        el.resultsSubtitle.textContent = COUNTRY_LABELS[state.activeCountry] + " 카페를 표시하고 있습니다.";
+      } else {
+        el.resultsSubtitle.textContent = "전체 지역 카페를 표시하고 있습니다.";
+      }
     }
 
     function getCafeById(cafeId) {
@@ -1567,27 +1648,30 @@
       });
     }
 
-    async function applyNearestDistrictFromUserLocation() {
+    // 첫 화면은 접속자 국가(한국·일본)의 카페만 보여준다.
+    // 위치 권한이 있으면 가장 가까운 카페의 국가, 없으면 브라우저 시간대·언어로 정한다
+    async function applyVisitorCountry() {
       const location = await requestBrowserLocation();
+      const nearestCafe = location ? resolveNearestCafe(location) : null;
+      const isNearbyCafe = !!nearestCafe && !!nearestCafe.country &&
+        calculateDistanceMeters(location, { lat: nearestCafe.lat, lng: nearestCafe.lng }) <= VISITOR_COUNTRY_MAX_DISTANCE_METERS;
+      const detectedCountry = isNearbyCafe ? nearestCafe.country : detectCountryFromBrowser();
+      const visitorCountry = hasCafesInCountry(detectedCountry) ? detectedCountry : ALL_FILTER;
+
       state.userLocation = location;
-
-      if (!location) {
-        state.activeDistrict = "전체";
-        if (state.cafes.length === 0) {
-          el.mapHeaderCaption.textContent = "표시 가능한 카페 데이터가 없습니다.";
-        }
-        return;
+      state.visitorCountry = visitorCountry;
+      state.activeCountry = visitorCountry;
+      state.activeDistrict = ALL_FILTER;
+      if (isNearbyCafe) {
+        state.activeCafeId = nearestCafe.id;
       }
-
-      const nearestCafe = resolveNearestCafe(location);
-      if (!nearestCafe) {
-        return;
+      if (state.cafes.length === 0) {
+        el.mapHeaderCaption.textContent = "표시 가능한 카페 데이터가 없습니다.";
+      } else if (visitorCountry !== ALL_FILTER) {
+        el.mapHeaderCaption.textContent = COUNTRY_LABELS[visitorCountry] + " 메이드 카페를 보여줍니다.";
+      } else {
+        el.mapHeaderCaption.textContent = "전체 메이드 카페를 보여줍니다.";
       }
-
-      state.activeDistrict = nearestCafe.district || "전체";
-      state.activeCafeId = nearestCafe.id;
-      el.mapHeaderCaption.textContent =
-        "현재 위치 기준 가까운 지역은 " + state.activeDistrict + " 입니다.";
     }
 
     function fitMapToCafes(cafesToFit) {
@@ -1680,7 +1764,8 @@
     function resetSearch() {
       el.searchInput.value = "";
       state.appliedKeyword = "";
-      state.activeDistrict = "전체";
+      state.activeCountry = state.visitorCountry;
+      state.activeDistrict = ALL_FILTER;
       syncRegionFilter();
       const filteredCafes = syncUI();
       fitMapToCafes(filteredCafes);
@@ -1694,6 +1779,12 @@
           event.preventDefault();
           applySearch();
         }
+      });
+      el.countryFilter.addEventListener("change", function () {
+        state.activeCountry = el.countryFilter.value || ALL_FILTER;
+        state.activeDistrict = ALL_FILTER;
+        syncRegionFilter();
+        applySearch();
       });
       el.regionFilter.addEventListener("change", function () {
         state.activeDistrict = el.regionFilter.value || "전체";
@@ -1856,11 +1947,12 @@
       // 카페 목록 페이지 등에서 /map?cafeId=... 로 들어오면 내 위치 대신 그 카페를 기준으로 보여준다
       const requestedCafe = getRequestedCafe();
       if (requestedCafe) {
-        state.activeDistrict = "전체";
+        state.activeCountry = ALL_FILTER;
+        state.activeDistrict = ALL_FILTER;
         state.activeCafeId = requestedCafe.id;
         el.mapHeaderCaption.textContent = requestedCafe.name + " 위치를 보여줍니다.";
       } else {
-        await applyNearestDistrictFromUserLocation();
+        await applyVisitorCountry();
       }
       syncRegionFilter();
     }
@@ -2149,6 +2241,7 @@
     function init() {
       loadSavedMapType();
       bindUI();
+      syncRegionFilter();
       setMapOverlay("loading");
       loadCafes()
         .then(function () {
