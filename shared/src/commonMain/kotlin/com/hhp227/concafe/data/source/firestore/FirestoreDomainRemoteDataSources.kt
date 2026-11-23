@@ -535,7 +535,7 @@ class FirestoreCastRemoteDataSource(
             val filteredWithDocs = parsedWithDocs.filter { (_, cast) ->
                 val matchesQuery = normalizedQuery == null || cast.name.contains(normalizedQuery, ignoreCase = true)
                 val matchesCafe = if (serverCafeFilterIds != null) true else targetCafeIds?.contains(cast.cafeId) ?: true
-                matchesQuery && matchesCafe
+                cast.isActive && matchesQuery && matchesCafe
             }
             val remaining = safePageSize - aggregated.size
             val takenWithDocs = filteredWithDocs.take(remaining)
@@ -563,7 +563,7 @@ class FirestoreCastRemoteDataSource(
             .recoverCatching { runCastByBirthdayKeyQuery(birthdayKey, null, safeLimit) }
             .getOrElse { throwable -> throw IllegalStateException("Failed to load birthday casts", throwable) }
         return parseCollectionGroupCastDocuments(castDocuments)
-            .filter { it.birthday.matchesMonthAndDay(month, dayOfMonth) }
+            .filter { it.isActive && it.birthday.matchesMonthAndDay(month, dayOfMonth) }
             .take(safeLimit)
     }
 

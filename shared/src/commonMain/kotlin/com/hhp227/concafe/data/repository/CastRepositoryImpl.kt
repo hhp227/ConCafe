@@ -97,12 +97,21 @@ class CastRepositoryImpl(
 
     override suspend fun getCafeCastListPage(cafeId: String, cursor: String?, pageSize: Int): PagedResult<CafeDetailCast> {
         val todayDate = todayDate()
-        val page = castRemoteDataSource.getCafeCastPageRemote(
+        var page = castRemoteDataSource.getCafeCastPageRemote(
             cafeId = cafeId,
             cursor = cursor,
             pageSize = pageSize
         )
-        val source = page.items
+        var source = page.items.filter { it.isActive }
+        // 비활동(INACTIVE) 캐스트만 담긴 페이지면 다음 페이지를 이어서 조회해 빈 페이지 반환을 방지
+        while (source.isEmpty() && page.hasNext && !page.nextCursor.isNullOrBlank()) {
+            page = castRemoteDataSource.getCafeCastPageRemote(
+                cafeId = cafeId,
+                cursor = page.nextCursor,
+                pageSize = pageSize
+            )
+            source = page.items.filter { it.isActive }
+        }
         val todayScheduleByCastId = castRemoteDataSource.getWorkingCastSchedulesByCafeAndDate(cafeId, todayDate)
         val sorted = source
             .sortedWith(

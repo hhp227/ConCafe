@@ -11,5 +11,6 @@ data class Cast(
     val conceptRole: String,
     val followerCount: Int,
     val rating: Double,
-    val visitCertificationCount: Int = 0
+    val visitCertificationCount: Int = 0,
+    val isActive: Boolean = true
 )

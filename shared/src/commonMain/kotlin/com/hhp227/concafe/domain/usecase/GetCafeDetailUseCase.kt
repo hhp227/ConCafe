@@ -92,7 +92,7 @@ class GetCafeDetailUseCase(
                 cafeId = cafeId,
                 date = currentDate
             )
-            val castItems = detail.casts.map { cast ->
+            val castItems = detail.casts.filter { cast -> cast.isActive }.map { cast ->
                 val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
                     cast = cast,

@@ -1857,7 +1857,8 @@ abstract class FirestoreBaseDataSource(
             rating = fields.getFirestoreDouble("rating") ?: fields.getFirestoreLong("rating")?.toDouble() ?: 0.0,
             visitCertificationCount = fields.getFirestoreLong("visitCertificationCount")?.toInt()
                 ?: fields.getFirestoreMap("stats")?.getFirestoreInt("visitCertificationCount")
-                ?: 0
+                ?: 0,
+            isActive = fields.getFirestoreString("rosterStatus") != CAST_ROSTER_STATUS_INACTIVE
         )
     }
 
@@ -2474,6 +2475,7 @@ abstract class FirestoreBaseDataSource(
         const val MAX_FIRESTORE_IN_FILTER_VALUES = 10
         const val REGION_FILTER_CAFE_CACHE_LIMIT = 200
         const val CAST_CURSOR_NULL_MARKER = "__NULL__"
+        const val CAST_ROSTER_STATUS_INACTIVE = "INACTIVE"
         const val COMMUNITY_POST_CURSOR_SEPARATOR = "|"
         val FAVORITE_CAFE_ID_FIELD_CANDIDATES = listOf("favoriteCafeIds", "favorites", "favoriteCafes")
     }
