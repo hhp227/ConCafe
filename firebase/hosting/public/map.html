@@ -762,10 +762,6 @@
         flex-direction: column;
       }
 
-      .results-head .ghost-button {
-        width: 100%;
-      }
-
       .map-credit {
         display: none;
       }
@@ -924,7 +920,6 @@
               <strong id="resultsTitle">검색 결과 0곳</strong>
               <span id="resultsSubtitle">Firestore에서 카페 데이터를 불러오는 중입니다.</span>
             </div>
-            <button class="ghost-button" id="fitAllButton" type="button">전체 보기</button>
           </div>
           <div class="results-list" id="sheetList"></div>
         </section>
@@ -1077,7 +1072,6 @@
       searchInput: document.getElementById("mapSearchInput"),
       searchButton: document.getElementById("searchButton"),
       resetButton: document.getElementById("resetButton"),
-      fitAllButton: document.getElementById("fitAllButton"),
       countryFilter: document.getElementById("countryFilter"),
       regionFilter: document.getElementById("regionFilter"),
       mapTypeFilter: document.getElementById("mapTypeFilter"),
@@ -1889,9 +1883,6 @@
 
       // Reviews - login CTA in prompt
       el.reviewLoginBtn.addEventListener("click", openAuthModal);
-      el.fitAllButton.addEventListener("click", function () {
-        fitMapToCafes(getFilteredCafes());
-      });
       el.recenterButton.addEventListener("click", function () {
         fitMapToCafes(getFilteredCafes());
       });
