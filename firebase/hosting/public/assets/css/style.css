@@ -580,6 +580,26 @@ a {
   color: var(--muted);
 }
 
+/* 푸터: 개인정보처리방침 아래에 앱 스토어 배지 */
+.footer-links {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.footer-store {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.footer-store img {
+  display: block;
+  width: auto;
+  height: 40px;
+}
+
 .notice {
   border: 1px dashed #f0b7ce;
   background: #fff2f8;
