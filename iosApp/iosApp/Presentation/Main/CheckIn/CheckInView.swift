@@ -676,14 +676,10 @@ private struct CheckInCastCard: View {
                     Text(String(cast.name.prefix(1)))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(ConCafeColors.primary)
-                    if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                       !rawImageUrl.isEmpty,
-                       let imageUrl = URL(string: rawImageUrl) {
-                        CachedAsyncImage(
-                            url: imageUrl,
-                            placeholder: Color.clear
-                        )
-                    }
+                    CastProfileImage(
+                        profileImageUrl: cast.profileImage,
+                        cafeImageUrl: cast.cafeThumbnailImage
+                    )
                 }
                 .frame(width: 56, height: 56)
                 .clipShape(Circle())

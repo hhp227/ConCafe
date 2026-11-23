@@ -60,6 +60,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.domain.model.CafeEventManagementItem
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -474,15 +475,13 @@ private fun CafeEventCastSection(
                                 )
                             )
                     ) {
-                        if (!cast.profileImage.isNullOrBlank()) {
-                            CompatImageDisplay(
-                                imageUrl = cast.profileImage,
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(CircleShape),
-                                applyRoundedClip = false
-                            )
-                        }
+                        CastProfileImage(
+                            profileImageUrl = cast.profileImage,
+                            cafeImageUrl = cast.cafeThumbnailImage,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                        )
                     }
                     Text(
                         text = cast.name,

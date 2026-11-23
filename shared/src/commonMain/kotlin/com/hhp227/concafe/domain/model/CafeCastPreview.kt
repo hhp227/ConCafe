@@ -4,5 +4,6 @@ data class CafeCastPreview(
     val id: String,
     val name: String,
     val isOnShift: Boolean,
-    val profileImage: String? = null
+    val profileImage: String? = null,
+    val cafeThumbnailImage: String? = null
 )

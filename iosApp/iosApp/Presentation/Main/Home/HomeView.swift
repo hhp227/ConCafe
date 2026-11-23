@@ -216,13 +216,14 @@ private struct HomeContentView: View {
                                 name: maid.name,
                                 subtitle: subtitle,
                                 imageUrl: maid.profileImage,
+                                fallbackImageUrl: maid.cafeThumbnailImage,
                                 metaText: String(format: String(localized: String.LocalizationValue("home_cast_followers"), table: "Localizable"), locale: Locale.current, maid.followerCount),
                                 onTap: { onAction(.maidTapped(id: maid.id)) }
                             )
                             .frame(width: 132, alignment: .leading)
                             .lazyListImagePrefetch(
                                 index: index,
-                                imageUrls: uiState.popularCasts.map { $0.profileImage },
+                                imageUrls: uiState.popularCasts.map { CastProfileImage.resolvedImageUrl(profileImageUrl: $0.profileImage, cafeImageUrl: $0.cafeThumbnailImage) },
                                 aheadCount: 10,
                                 displaySize: .thumbnail
                             )
@@ -316,10 +317,9 @@ private struct HomeContentView: View {
                                 ZStack {
                                     Circle()
                                         .fill(LinearGradient(colors: [ConCafeColors.primaryContainer, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
-                                    CachedAsyncImage(
-                                        url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
-                                        placeholder: birthdayCastFallbackImage,
-                                        displaySize: .thumbnail
+                                    CastProfileImage(
+                                        profileImageUrl: maid.profileImage,
+                                        cafeImageUrl: maid.cafeThumbnailImage
                                     )
                                 }
                                 .frame(width: proxy.size.width, height: proxy.size.height)
@@ -343,7 +343,7 @@ private struct HomeContentView: View {
                         }
                         .lazyListImagePrefetch(
                             index: index,
-                            imageUrls: uiState.birthdayCasts.map { $0.profileImage },
+                            imageUrls: uiState.birthdayCasts.map { CastProfileImage.resolvedImageUrl(profileImageUrl: $0.profileImage, cafeImageUrl: $0.cafeThumbnailImage) },
                             aheadCount: 10,
                             displaySize: .thumbnail
                         )
@@ -354,12 +354,6 @@ private struct HomeContentView: View {
             }
             .compatViewAlignedScrollSnap()
         }
-    }
-
-    private var birthdayCastFallbackImage: some View {
-        Image("maid_logo")
-            .resizable()
-            .scaledToFill()
     }
 
     private var cafeEventSection: some View {

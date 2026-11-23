@@ -327,11 +327,10 @@ private struct CafeEventCastSection: View {
                                 ZStack {
                                     Circle()
                                         .fill(LinearGradient(colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
-                                    if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                                       !rawImageUrl.isEmpty,
-                                       let imageUrl = URL(string: rawImageUrl) {
-                                        CachedAsyncImage(url: imageUrl, displaySize: .thumbnail)
-                                    }
+                                    CastProfileImage(
+                                        profileImageUrl: cast.profileImage,
+                                        cafeImageUrl: cast.cafeThumbnailImage
+                                    )
                                 }
                                 .frame(width: proxy.size.width, height: proxy.size.height)
                                 .clipShape(Circle())

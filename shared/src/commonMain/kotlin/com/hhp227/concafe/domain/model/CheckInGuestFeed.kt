@@ -23,5 +23,6 @@ data class CheckInCastSummary(
     val cafeName: String,
     val name: String,
     val profileImage: String?,
-    val todayVisit: Int
+    val todayVisit: Int,
+    val cafeThumbnailImage: String? = null
 )

@@ -42,7 +42,8 @@ import com.hhp227.concafe.domain.model.Cafe
 import com.hhp227.concafe.domain.model.Cast
 import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CapsuleDropdown
-import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
+import com.hhp227.concafe.presentation.component.resolveCastListImageUrl
 import com.hhp227.concafe.presentation.component.ConCafeTabBar
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyListGridImagePrefetch
@@ -161,7 +162,7 @@ fun ExploreContentScreen(
             if (uiState.selectedTab == ExploreUiState.TabType.CAFE) {
                 uiState.cafes.map { it.thumbnailImage }
             } else {
-                uiState.maids.map { it.profileImage }
+                uiState.maids.map { resolveCastListImageUrl(it.profileImage, it.cafeThumbnailImage) }
             }
         }
 
@@ -446,22 +447,13 @@ private fun MaidCard(maid: Cast, cafeName: String, onClick: () -> Unit) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (!maid.profileImage.isNullOrBlank()) {
-                    CompatImageDisplay(
-                        imageUrl = maid.profileImage,
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clip(RoundedCornerShape(16.dp)),
-                        applyRoundedClip = false
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(Color.White.copy(alpha = 0.55f))
-                    )
-                }
+                CastProfileImage(
+                    profileImageUrl = maid.profileImage,
+                    cafeImageUrl = maid.cafeThumbnailImage,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(RoundedCornerShape(16.dp))
+                )
             }
         }
         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

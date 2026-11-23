@@ -645,14 +645,10 @@ private struct CafeDashboardContentView: View {
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
-                                if let rawImageUrl = cast.profileImage?.trimmingCharacters(in: .whitespacesAndNewlines),
-                                   !rawImageUrl.isEmpty,
-                                   let imageUrl = URL(string: rawImageUrl) {
-                                    CachedAsyncImage(
-                                        url: imageUrl,
-                                        placeholder: Color.clear
-                                    )
-                                }
+                                CastProfileImage(
+                                    profileImageUrl: cast.profileImage,
+                                    cafeImageUrl: cast.cafeThumbnailImage
+                                )
                             }
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .clipShape(Circle())

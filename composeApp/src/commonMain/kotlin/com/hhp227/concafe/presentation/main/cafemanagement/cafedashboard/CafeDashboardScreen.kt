@@ -31,6 +31,7 @@ import com.hhp227.concafe.domain.model.CafeDashboardData
 import com.hhp227.concafe.domain.model.GuestCastSchedule
 import com.hhp227.concafe.domain.model.PendingCastClaimPreview
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
@@ -1549,14 +1550,13 @@ private fun CastPreviewItem(
                                 shape = CircleShape
                             )
                     )
-                    if (!cast.profileImage.isNullOrBlank()) {
-                        CompatImageDisplay(
-                            imageUrl = cast.profileImage,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                        )
-                    }
+                    CastProfileImage(
+                        profileImageUrl = cast.profileImage,
+                        cafeImageUrl = cast.cafeThumbnailImage,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(CircleShape)
+                    )
                 }
                 if (isSelected) {
                     Surface(

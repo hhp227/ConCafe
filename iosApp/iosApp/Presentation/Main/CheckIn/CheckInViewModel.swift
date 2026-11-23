@@ -416,7 +416,8 @@ final class CheckInViewModel: ObservableObject {
                 cafeName: cafe.name,
                 name: item.name,
                 profileImage: item.profileImage,
-                todayVisit: item.todayVisit
+                todayVisit: item.todayVisit,
+                cafeThumbnailImage: cafe.thumbnailImage ?? item.cafeThumbnailImage
             )
         }
         uiState.recentVisits = uiState.recentVisits.map { item in
@@ -471,7 +472,8 @@ final class CheckInViewModel: ObservableObject {
                 cafeName: item.cafeName,
                 name: cast.name,
                 profileImage: cast.profileImage,
-                todayVisit: item.todayVisit
+                todayVisit: item.todayVisit,
+                cafeThumbnailImage: cast.cafeThumbnailImage ?? item.cafeThumbnailImage
             )
         }
     }

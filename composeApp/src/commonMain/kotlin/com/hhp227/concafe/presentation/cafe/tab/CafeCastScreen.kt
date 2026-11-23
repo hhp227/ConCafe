@@ -22,6 +22,7 @@ import com.hhp227.concafe.presentation.cafe.CafeAction
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.colorFromHex
+import com.hhp227.concafe.presentation.component.resolveCastListImageUrl
 import com.hhp227.concafe.presentation.component.rememberImagePrefetcher
 import concafe.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -41,7 +42,7 @@ fun CafeCastScreen(
 
         LaunchedEffect(casts, imagePrefetcher) {
             imagePrefetcher.prefetch(
-                imageUrls = casts.map { it.cast.profileImage }.take(24),
+                imageUrls = casts.map { resolveCastListImageUrl(it.cast.profileImage, it.cast.cafeThumbnailImage) }.take(24),
                 displaySize = ImageDisplaySize.THUMBNAIL
             )
         }
@@ -60,6 +61,7 @@ fun CafeCastScreen(
                                     name = castItem.cast.name,
                                     subtitle = castItem.cast.desc,
                                     imageUrl = castItem.cast.profileImage,
+                                    fallbackImageUrl = castItem.cast.cafeThumbnailImage,
                                     attendanceStatusText = cafeCastAttendanceStatusText(attendanceStatus),
                                     isWorking = castItem.isWorking,
                                     subtitleMaxLines = 2,

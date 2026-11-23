@@ -553,19 +553,11 @@ private fun ProfileMyInfoScreen(
                                         .clip(CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (maid.profileImage.isNullOrBlank()) {
-                                        Box(
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .background(Brush.verticalGradient(listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)))
-                                        )
-                                    } else {
-                                        CompatImageDisplay(
-                                            imageUrl = maid.profileImage,
-                                            modifier = Modifier.matchParentSize(),
-                                            applyRoundedClip = false
-                                        )
-                                    }
+                                    CastProfileImage(
+                                        profileImageUrl = maid.profileImage,
+                                        cafeImageUrl = maid.cafeThumbnailImage,
+                                        modifier = Modifier.matchParentSize()
+                                    )
                                 }
                                 Text(
                                     maid.name,

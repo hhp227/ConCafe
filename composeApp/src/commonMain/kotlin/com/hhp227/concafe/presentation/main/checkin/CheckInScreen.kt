@@ -41,6 +41,7 @@ import com.hhp227.concafe.presentation.component.CafeSummaryCard
 import com.hhp227.concafe.presentation.component.CheckInCafeMap
 import com.hhp227.concafe.presentation.component.CheckInMapCameraTarget
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ShimmerCardListSkeleton
 import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
@@ -981,15 +982,13 @@ private fun PopularCastCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
-                    if (!cast.profileImage.isNullOrBlank()) {
-                        CompatImageDisplay(
-                            imageUrl = cast.profileImage,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape),
-                            applyRoundedClip = false
-                        )
-                    }
+                    CastProfileImage(
+                        profileImageUrl = cast.profileImage,
+                        cafeImageUrl = cast.cafeThumbnailImage,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(CircleShape)
+                    )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(

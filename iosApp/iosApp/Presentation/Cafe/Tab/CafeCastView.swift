@@ -38,6 +38,7 @@ struct CafeCastView: View {
                             name: maid.cast.name,
                             subtitle: maid.cast.desc,
                             imageUrl: maid.cast.profileImage,
+                            fallbackImageUrl: maid.cast.cafeThumbnailImage,
                             subtitleLineLimit: 2,
                             attendanceStatusText: cafeCastAttendanceStatusText(attendanceStatus),
                             isWorking: maid.isWorking,
@@ -49,7 +50,7 @@ struct CafeCastView: View {
                         }
                         .lazyListImagePrefetch(
                             index: index,
-                            imageUrls: maids.map { $0.cast.profileImage },
+                            imageUrls: maids.map { CastProfileImage.resolvedImageUrl(profileImageUrl: $0.cast.profileImage, cafeImageUrl: $0.cast.cafeThumbnailImage) },
                             aheadCount: 12,
                             displaySize: .thumbnail
                         )

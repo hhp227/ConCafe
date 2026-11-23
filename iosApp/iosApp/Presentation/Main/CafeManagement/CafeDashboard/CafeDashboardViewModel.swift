@@ -788,7 +788,8 @@ final class CafeDashboardViewModel: ObservableObject {
                                     id: preview.id,
                                     name: event.cast.name,
                                     isOnShift: preview.isOnShift,
-                                    profileImage: event.cast.profileImage
+                                    profileImage: event.cast.profileImage,
+                                    cafeThumbnailImage: event.cast.cafeThumbnailImage ?? preview.cafeThumbnailImage
                                 )
                             }
                         }

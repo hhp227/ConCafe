@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,6 +21,7 @@ fun ConCafeCastCard(
     name: String,
     subtitle: String,
     imageUrl: String? = null,
+    fallbackImageUrl: String? = null,
     modifier: Modifier = Modifier,
     imageHeight: Dp = 130.dp,
     subtitleMaxLines: Int = 1,
@@ -50,24 +50,11 @@ fun ConCafeCastCard(
                 .height(imageHeight)
                 .clip(RoundedCornerShape(imageCornerRadius))
         ) {
-            if (imageUrl.isNullOrBlank()) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(ConCafeColors.surfaceTint, ConCafeColors.primaryContainer)
-                            )
-                        )
-                )
-            } else {
-                CompatImageDisplay(
-                    imageUrl = imageUrl,
-                    modifier = Modifier
-                        .matchParentSize(),
-                    applyRoundedClip = false
-                )
-            }
+            CastProfileImage(
+                profileImageUrl = imageUrl,
+                cafeImageUrl = fallbackImageUrl,
+                modifier = Modifier.matchParentSize()
+            )
             if (!statusText.isNullOrBlank() || !conceptRole.isNullOrBlank()) {
                 Row(
                     modifier = Modifier

@@ -724,9 +724,9 @@ private struct ProfileMyInfoView: View {
                                     ZStack {
                                         Circle()
                                             .fill(LinearGradient(colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer], startPoint: .top, endPoint: .bottom))
-                                        CachedAsyncImage(
-                                            url: ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage),
-                                            placeholder: EmptyView()
+                                        CastProfileImage(
+                                            profileImageUrl: maid.profileImage,
+                                            cafeImageUrl: maid.cafeThumbnailImage
                                         )
                                         .frame(width: imageSize.width, height: imageSize.height)
                                         .clipped()

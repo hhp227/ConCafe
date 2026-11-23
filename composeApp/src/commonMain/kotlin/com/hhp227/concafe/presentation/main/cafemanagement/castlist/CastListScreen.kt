@@ -53,7 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hhp227.concafe.domain.model.CafeCastPreview
-import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
 import com.hhp227.concafe.presentation.component.ConCafeFormField
 import com.hhp227.concafe.presentation.component.ShimmerListSkeleton
 import com.hhp227.concafe.presentation.component.colorFromHex
@@ -289,14 +289,13 @@ private fun CastListItemCard(
                             shape = CircleShape
                         )
                 )
-                if (!cast.profileImage.isNullOrBlank()) {
-                    CompatImageDisplay(
-                        imageUrl = cast.profileImage,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                    )
-                }
+                CastProfileImage(
+                    profileImageUrl = cast.profileImage,
+                    cafeImageUrl = cast.cafeThumbnailImage,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                )
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

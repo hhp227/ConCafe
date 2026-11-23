@@ -190,7 +190,7 @@ private struct ExploreContentView: View {
                         maidCard(maid)
                             .lazyListImagePrefetch(
                                 index: index,
-                                imageUrls: uiState.maids.map { $0.profileImage },
+                                imageUrls: uiState.maids.map { CastProfileImage.resolvedImageUrl(profileImageUrl: $0.profileImage, cafeImageUrl: $0.cafeThumbnailImage) },
                                 aheadCount: 12,
                                 displaySize: .thumbnail
                             )
@@ -320,14 +320,10 @@ private struct ExploreContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             GeometryReader { proxy in
                 ZStack {
-                    placeholderMaidImage
-                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: maid.profileImage) {
-                        CachedAsyncImage(
-                            url: imageUrl,
-                            placeholder: Color.clear,
-                            displaySize: .thumbnail
-                        )
-                    }
+                    CastProfileImage(
+                        profileImageUrl: maid.profileImage,
+                        cafeImageUrl: maid.cafeThumbnailImage
+                    )
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -356,15 +352,6 @@ private struct ExploreContentView: View {
         .onTapGesture {
             onAction(.maidTapped(id: maid.id))
         }
-    }
-
-    private var placeholderMaidImage: some View {
-        LinearGradient(
-            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay(Image(systemName: "person.fill").foregroundStyle(Color.white.opacity(0.85)))
     }
 }
 

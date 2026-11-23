@@ -17,6 +17,8 @@ struct ConCafeCastCard: View {
 
     var imageUrl: String? = nil
 
+    var fallbackImageUrl: String? = nil
+
     var containerColor = ConCafeColors.background
 
     var containerCornerRadius: CGFloat = 18
@@ -45,19 +47,10 @@ struct ConCafeCastCard: View {
         VStack(alignment: .leading, spacing: 0) {
             GeometryReader { proxy in
                 ZStack {
-                    if let imageUrl = ImageUrlUtils.normalizedRemoteUrl(from: imageUrl) {
-                        CachedAsyncImage(
-                            url: imageUrl,
-                            placeholder: Color.clear,
-                            displaySize: .thumbnail
-                        )
-                    } else {
-                        LinearGradient(
-                            colors: [ConCafeColors.surfaceTint, ConCafeColors.primaryContainer],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    }
+                    CastProfileImage(
+                        profileImageUrl: imageUrl,
+                        cafeImageUrl: fallbackImageUrl
+                    )
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
                 .clipShape(RoundedRectangle(cornerRadius: imageCornerRadius, style: .continuous))
@@ -108,5 +101,37 @@ struct ConCafeCastCard: View {
         .clipShape(RoundedRectangle(cornerRadius: containerCornerRadius, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: containerCornerRadius, style: .continuous))
         .onTapGesture(perform: onTap)
+    }
+}
+
+/// 캐스트 목록용 프로필 이미지.
+/// 프로필 이미지 → 소속 카페 썸네일 → 기본 로고(maid_logo) 순서로 표시한다.
+struct CastProfileImage: View {
+    let profileImageUrl: String?
+
+    let cafeImageUrl: String?
+
+    var displaySize: ImageDisplaySize = .thumbnail
+
+    var body: some View {
+        if let url = ImageUrlUtils.normalizedRemoteUrl(from: profileImageUrl)
+            ?? ImageUrlUtils.normalizedRemoteUrl(from: cafeImageUrl) {
+            CachedAsyncImage(
+                url: url,
+                placeholder: Color.clear,
+                displaySize: displaySize
+            )
+        } else {
+            Image("maid_logo")
+                .resizable()
+                .scaledToFill()
+        }
+    }
+
+    static func resolvedImageUrl(profileImageUrl: String?, cafeImageUrl: String?) -> String? {
+        let profile = profileImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !profile.isEmpty { return profile }
+        let cafe = cafeImageUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return cafe.isEmpty ? nil : cafe
     }
 }

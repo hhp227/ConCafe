@@ -1,7 +1,6 @@
 package com.hhp227.concafe.presentation.main.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
@@ -40,7 +39,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,7 +52,9 @@ import com.hhp227.concafe.domain.model.CommunityPost
 import com.hhp227.concafe.domain.model.HomeBanner
 import com.hhp227.concafe.domain.model.HomeCafeEvent
 import com.hhp227.concafe.presentation.component.CompatImageDisplay
+import com.hhp227.concafe.presentation.component.CastProfileImage
 import com.hhp227.concafe.presentation.component.ConCafeCastCard
+import com.hhp227.concafe.presentation.component.resolveCastListImageUrl
 import com.hhp227.concafe.presentation.component.ImageDisplaySize
 import com.hhp227.concafe.presentation.component.LazyGridImagePrefetch
 import com.hhp227.concafe.presentation.component.LazyListImagePrefetch
@@ -95,11 +95,9 @@ import concafe.composeapp.generated.resources.home_section_nearby_cafe
 import concafe.composeapp.generated.resources.home_section_ongoing_cafe_event
 import concafe.composeapp.generated.resources.home_section_popular_cast
 import concafe.composeapp.generated.resources.home_show_more
-import concafe.composeapp.generated.resources.maid_logo
 import concafe.composeapp.generated.resources.signin_submit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.context.GlobalContext
 import com.hhp227.concafe.presentation.component.ConCafeColors
@@ -218,7 +216,7 @@ fun HomeContentScreen(
 
                 LazyListImagePrefetch(
                     state = popularCastListState,
-                    imageUrls = uiState.popularCasts.map { it.profileImage },
+                    imageUrls = uiState.popularCasts.map { resolveCastListImageUrl(it.profileImage, it.cafeThumbnailImage) },
                     aheadCount = 10,
                     displaySize = ImageDisplaySize.THUMBNAIL
                 )
@@ -247,6 +245,7 @@ fun HomeContentScreen(
                                 name = maid.name,
                                 subtitle = subtitle,
                                 imageUrl = maid.profileImage,
+                                fallbackImageUrl = maid.cafeThumbnailImage,
                                 modifier = Modifier.width(132.dp),
                                 metaText = stringResource(Res.string.home_cast_followers, maid.followerCount),
                                 onClick = { onAction(HomeAction.ClickMaid(maid.id)) }
@@ -331,7 +330,7 @@ fun HomeContentScreen(
 
                     LazyListImagePrefetch(
                         state = birthdayCastListState,
-                        imageUrls = uiState.birthdayCasts.map { it.profileImage },
+                        imageUrls = uiState.birthdayCasts.map { resolveCastListImageUrl(it.profileImage, it.cafeThumbnailImage) },
                         aheadCount = 10,
                         displaySize = ImageDisplaySize.THUMBNAIL
                     )
@@ -366,23 +365,13 @@ fun HomeContentScreen(
                                             )
                                         )
                                 ) {
-                                    Image(
-                                        painter = painterResource(Res.drawable.maid_logo),
-                                        contentDescription = null,
+                                    CastProfileImage(
+                                        profileImageUrl = maid.profileImage,
+                                        cafeImageUrl = maid.cafeThumbnailImage,
                                         modifier = Modifier
                                             .matchParentSize()
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
+                                            .clip(CircleShape)
                                     )
-                                    if (!maid.profileImage.isNullOrBlank()) {
-                                        CompatImageDisplay(
-                                            imageUrl = maid.profileImage,
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .clip(CircleShape),
-                                            applyRoundedClip = false
-                                        )
-                                    }
                                 }
                                 Text(
                                     maid.name,

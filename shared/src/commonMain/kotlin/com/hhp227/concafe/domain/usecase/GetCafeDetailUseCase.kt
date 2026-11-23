@@ -92,10 +92,11 @@ class GetCafeDetailUseCase(
                 cafeId = cafeId,
                 date = currentDate
             )
+            val cafeThumbnailImage = detail.cafe.thumbnailImage?.trim()?.takeIf { it.isNotEmpty() }
             val castItems = detail.casts.filter { cast -> cast.isActive }.map { cast ->
                 val todaySchedule = todayScheduleByCastId[cast.id]
                 CafeDetailCast(
-                    cast = cast,
+                    cast = cast.copy(cafeThumbnailImage = cast.cafeThumbnailImage ?: cafeThumbnailImage),
                     isWorking = todaySchedule?.isOnShift() ?: workingCastIds.contains(cast.id),
                     todaySchedule = todaySchedule
                 )
