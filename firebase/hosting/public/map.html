@@ -1554,7 +1554,7 @@
     }
 
     function updateSummary(filteredCafes) {
-      el.mapCafeCount.textContent = state.cafes.length + "곳";
+      el.mapCafeCount.textContent = filteredCafes.length + "곳";
       el.resultsTitle.textContent = "검색 결과 " + filteredCafes.length + "곳";
 
       if (filteredCafes.length === 0) {

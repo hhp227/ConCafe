@@ -48,13 +48,13 @@
             <div>
               <div class="eyebrow">커뮤니티</div>
               <h1>커뮤니티</h1>
-              <p>콘셉트 카페 이야기와 방문 후기를 자유롭게 나눠 보세요. 앱과 같은 게시판입니다.</p>
+              <p>콘셉트 카페 이야기와 방문 후기를 자유롭게 나눠 보세요.</p>
             </div>
             <button class="button button-primary" id="writePostButton" type="button">게시글 작성</button>
           </section>
 
           <section class="surface section" style="margin-top: 20px;">
-            <div class="community-list" id="postList"></div>
+            <ul class="community-list" id="postList"></ul>
             <p class="empty" id="postEmptyState">게시글을 불러오는 중입니다.</p>
             <div class="community-more">
               <button class="button button-ghost" id="loadMoreButton" type="button" hidden>더 보기</button>
@@ -93,31 +93,33 @@
           el[id] = document.getElementById(id);
         });
 
-        function imagesHtml(post) {
+        // 첫 사진만 썸네일로 보여주고, 여러 장이면 +N을 덧붙인다
+        function thumbHtml(post) {
           if (!post.imageUrls.length) {
             return "";
           }
-          const rest = post.imageUrls.length - 3;
-          return '<div class="community-card-images">' + post.imageUrls.slice(0, 3).map(function (url, index) {
-            const more = index === 2 && rest > 0 ? '<span class="community-card-more">+' + rest + "</span>" : "";
-            return '<span class="community-card-image"><img src="' + A.escapeHtml(url) + '" alt="" loading="lazy" />' + more + "</span>";
-          }).join("") + "</div>";
+          const rest = post.imageUrls.length - 1;
+          return '<span class="community-row-thumb"><img src="' + A.escapeHtml(post.imageUrls[0]) + '" alt="" loading="lazy" />' +
+            (rest > 0 ? '<span class="community-row-more">+' + rest + "</span>" : "") + "</span>";
         }
 
-        function postCardHtml(post) {
-          return '<a class="community-card" href="' + C.postUrl(post.id) + '">' +
-            '<div class="community-author">' + C.avatarHtml(post.userNickname) +
-            '<span class="community-author-name">' + A.escapeHtml(C.displayName(post.userNickname)) + "</span>" +
-            '<span class="community-date">' + A.escapeHtml(C.formatDate(post.createdAt)) + "</span></div>" +
-            '<strong class="community-card-title">' + A.escapeHtml(post.title) + "</strong>" +
-            (post.content.trim() ? '<p class="community-card-content">' + A.escapeHtml(post.content) + "</p>" : "") +
-            imagesHtml(post) +
-            '<div class="community-counts"><span>♡ 좋아요 ' + post.likeCount + "</span><span>💬 댓글 " + post.commentCount + "</span></div>" +
-            "</a>";
+        function postRowHtml(post) {
+          return '<li><a class="community-row" href="' + C.postUrl(post.id) + '">' +
+            '<div class="community-row-main">' +
+            '<strong class="community-row-title">' + A.escapeHtml(post.title) + "</strong>" +
+            (post.content.trim() ? '<p class="community-row-content">' + A.escapeHtml(post.content) + "</p>" : "") +
+            '<div class="community-row-meta">' +
+            '<span class="community-row-author">' + A.escapeHtml(C.displayName(post.userNickname)) + "</span>" +
+            "<span>" + A.escapeHtml(C.formatDate(post.createdAt)) + "</span>" +
+            "<span>♡ " + post.likeCount + "</span>" +
+            "<span>💬 " + post.commentCount + "</span>" +
+            "</div></div>" +
+            thumbHtml(post) +
+            "</a></li>";
         }
 
         function render() {
-          el.postList.innerHTML = state.posts.map(postCardHtml).join("");
+          el.postList.innerHTML = state.posts.map(postRowHtml).join("");
           el.postEmptyState.hidden = state.posts.length > 0;
           if (!state.posts.length) {
             el.postEmptyState.textContent = state.loaded ? "아직 게시글이 없습니다. 첫 번째 게시글을 남겨보세요!" : "게시글을 불러오는 중입니다.";
