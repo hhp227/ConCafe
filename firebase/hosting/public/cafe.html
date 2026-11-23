@@ -160,6 +160,11 @@
                   <strong>AI 이벤트 등록</strong>
                   <span>이벤트 안내 이미지를 AI로 분석해 카페 이벤트를 게시합니다.</span>
                 </a>
+                <!-- 로그인하지 않은 방문자에게만 보인다 -->
+                <button class="action-card login-nudge" id="loginNudge" type="button" hidden>
+                  <strong>로그인하고 리뷰 남기기</strong>
+                  <span>앱과 같은 계정으로 로그인하면 이 카페에 리뷰를 남길 수 있습니다.</span>
+                </button>
                 <a class="action-card" id="mapLink" href="/map" aria-disabled="true">
                   <strong>지도에서 보기</strong>
                   <span>카페 위치와 주변 카페를 지도에서 확인합니다.</span>
@@ -265,7 +270,10 @@
               <div class="section-header">
                 <div>
                   <h2>리뷰</h2>
-                  <p>방문자가 앱에서 남긴 리뷰입니다. 최신순으로 보여줍니다.</p>
+                  <p>방문자가 남긴 리뷰입니다. 최신순으로 보여줍니다.</p>
+                </div>
+                <div class="section-actions">
+                  <button class="button button-primary" id="reviewWriteButton" type="button">리뷰 쓰기</button>
                 </div>
               </div>
               <div class="review-summary" id="reviewSummary" hidden></div>
@@ -301,6 +309,13 @@
             </section>
           </div>
         </div>
+        <aside class="app-cta" aria-label="앱 안내">
+          <span>체크인·스탬프·캐스트 출근 알림은 콘카 앱에서 이용할 수 있어요.</span>
+          <span class="app-cta-links">
+            <a href="https://play.google.com/store/apps/details?id=com.hhp227.concafe" target="_blank" rel="noreferrer">Google Play</a>
+            <a href="https://apps.apple.com/kr/app/%EC%BD%98%EC%B9%B4/id6761295445" target="_blank" rel="noreferrer">App Store</a>
+          </span>
+        </aside>
         <footer class="footer">
           <span>© 2026 콘카(ConCafe)</span>
           <span><a href="/privacy">개인정보처리방침</a></span>
@@ -369,6 +384,7 @@
           "menuFilterGoodsCount", "menuList", "menuEmptyState",
           "eventModal", "eventModalTitle", "eventModalBody",
           "tabReviews", "panelReviews", "reviewSummary", "reviewList", "reviewEmptyState",
+          "loginNudge", "reviewWriteButton", "signInBtn",
         ].forEach(function (id) { el[id] = document.getElementById(id); });
 
         function loadingText(what) {
@@ -942,6 +958,23 @@
           renderReviews();
         }
 
+        // 웹 리뷰 작성은 지도 페이지의 카페 상세 패널에서 한다. 로그인 전이면 로그인 창부터 띄운다
+        function openSignIn() {
+          el.signInBtn.click();
+        }
+
+        function handleReviewWrite() {
+          if (state.user) {
+            window.location.href = "/map?cafeId=" + encodeURIComponent(cafeId);
+          } else {
+            openSignIn();
+          }
+        }
+
+        function renderLoginNudge() {
+          el.loginNudge.hidden = !!state.user;
+        }
+
         function renderAll() {
           renderCafe();
           renderCasts();
@@ -1019,6 +1052,7 @@
             setCafeEditing(false);
           }
           applyRoleButtons(isAdmin, canManage);
+          renderLoginNudge();
           updateEditAvailability();
           if (started) {
             renderCasts();
@@ -1055,6 +1089,8 @@
         });
         A.renderConceptOptions(el.editCafeConceptType);
         el.cafeEditButton.addEventListener("click", startCafeEdit);
+        el.loginNudge.addEventListener("click", openSignIn);
+        el.reviewWriteButton.addEventListener("click", handleReviewWrite);
         el.cafeEditCancelButton.addEventListener("click", cancelCafeEdit);
         el.cafeEditForm.addEventListener("submit", handleCafeEditSubmit);
         el.editCafeFillHoursButton.addEventListener("click", fillEditBusinessHours);
